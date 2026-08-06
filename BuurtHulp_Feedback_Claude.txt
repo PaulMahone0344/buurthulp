@@ -1,0 +1,221 @@
+BuurtHulp - Feedback op het pilotvoorstel
+Geschreven door Claude (AI) voor h - 10 juni 2026
+
+================================================================
+KORTE CONCLUSIE
+================================================================
+
+Sterk concept met een echte, urgente maatschappelijke behoefte. De
+combinatie ouderenhulp + jongerenparticipatie + wijkverbinding is precies
+het soort verhaal waar gemeenten op aanslaan. Het voorstel leest
+professioneel en de structuur is goed.
+
+MAAR: er zitten een paar harde gaten in die een beleidsmedewerker of
+jurist binnen vijf minuten ziet. Die moeten dicht voordat je dit echt naar
+een gemeente stuurt. Onderaan staat een prioriteitenlijst.
+
+Cijfer nu: 7/10 als pitchverhaal, 4/10 als uitvoerbaar voorstel.
+Met de fixes hieronder kan dat naar een 8,5.
+
+================================================================
+WAT GOED IS (BEHOUDEN)
+================================================================
+
+1. Probleem-oplossing past perfect. Langer thuis wonen, overbelaste
+   mantelzorgers, eenzaamheid, jongeren zonder structuur - dit zijn
+   letterlijk de dossiers waar gemeenten geld voor zoeken (Wmo-preventie).
+
+2. Telefonisch aanmeldpunt. Slim. Veel ouderen hebben geen smartphone.
+   Dit onderscheidt je van een gewone app en laat zien dat je de
+   doelgroep snapt.
+
+3. Veiligheid staat centraal. VOG, identiteitscontrole, koppeling aan
+   eigen wijk, wederzijdse beoordeling. Dit is exact de eerste vraag die
+   een gemeente stelt, en je hebt het antwoord klaar.
+
+4. Concrete pilotcijfers (100 ouderen, 50 jongeren, 500 hulpvragen) en
+   een meetbare-resultaten-sectie. Gemeenten houden van afrekenbare
+   doelen. Dit verlaagt hun risico.
+
+5. De positionering ("veilige wijkdienst", geen klusjesapp) is goed
+   gekozen. Spreekt fondsen en zorgpartners aan.
+
+================================================================
+DE HARDE GATEN (DICHTEN VOOR VERZENDING)
+================================================================
+
+1. JURIDISCHE STATUS VAN DE JONGEREN - GROOTSTE RISICO
+   "Jongeren verdienen geld" - maar wat zijn ze juridisch? Loondienst,
+   ZZP, of vrijwilligersvergoeding? Dit is in Nederland een echte
+   blokkade:
+   - Bij loondienst: jij bent werkgever, met alle verplichtingen.
+   - Bij ZZP: risico op schijnzelfstandigheid (Belastingdienst handhaaft
+     hier sinds 2025 weer streng op).
+   - Bij vrijwilligersvergoeding: max ca. EUR 2.100/jaar en EUR 210/maand,
+     en dan mag het geen "echt werk" zijn - wat dit wel is.
+   Een gemeente wil dit zwart op wit zien. Kies een model en onderbouw
+   het, het liefst met een fiscalist/jurist erbij.
+   Denk ook aan: minimumleeftijd, Arbeidstijdenwet voor minderjarigen,
+   schooltijden.
+
+2. HET VERDIENMODEL KLOPT NIET MET DE PILOT
+   EUR 3 commissie per klus x 500 klussen = EUR 1.500 over de hele pilot.
+   Daar betaal je geen lokale coordinator, geen platform, geen
+   telefoonlijn, geen screening en geen verzekering van. De pilot draait
+   dus volledig op gemeentebudget. Dat is prima - maar zeg dat dan
+   eerlijk en noem een bedrag. "Mogelijke financiele bijdrage" is te vaag;
+   een gemeente wil een begroting met een getal zien.
+
+3. NOEM EEN CONCREET BEDRAG
+   Nergens staat wat de pilot kost. Beleidsmedewerkers kunnen zonder
+   bedrag geen ja zeggen. Voeg een simpele begroting toe, bijv.:
+   coordinator, VOG-kosten (50x), verzekering, platform, communicatie =
+   totaal EUR X voor 6 maanden. Geef ook aan wat JIJ zelf inbrengt.
+
+4. VOG: WIE BETAALT EN HOE LANG DUURT HET?
+   Een VOG kost geld (ca. EUR 33-41 p.p.) en duurt 1-4 weken. Voor 50
+   jongeren is dat tijd en geld vooraf, voordat er een euro binnenkomt.
+   Benoem wie dit betaalt en plan het in de tijdlijn. Gemeenten kunnen
+   soms gratis VOG regelen voor vrijwilligers (Regeling Gratis VOG) -
+   dat kun je juist als pluspunt inzetten.
+
+5. AANSPRAKELIJKHEID EN VERZEKERING IS TE VAAG
+   "BuurtHulp regelt aansprakelijkheids- en ongevallenverzekering" -
+   prima, maar dit is jouw grootste reele risico: een jongere die schade
+   veroorzaakt of een ongeluk krijgt bij een oudere thuis. Maak concreet
+   welke verzekering, welke dekking, wie aansprakelijk is bij wat. Dit
+   stelt families en de gemeente gerust.
+
+6. AVG / PRIVACY ONTBREEKT VOLLEDIG
+   Je verwerkt gegevens van kwetsbare ouderen, soms zorg-gerelateerd.
+   Geen woord over AVG, gegevensopslag, of verwerkersovereenkomst met de
+   gemeente. Een gemeente MOET hiernaar vragen. Voeg een korte alinea toe.
+
+================================================================
+ZWAKKERE ONDERDELEN (VERBETEREN OF SCHRAPPEN)
+================================================================
+
+7. "BEKENDE AMBASSADEURS" - HEROVERWEEG
+   Een hele sectie over bekende personen voelt als opvulling en kan
+   averechts werken. Gemeenten beslissen op bewijs en risico, niet op
+   bekendheid. Als je geen concrete ambassadeur HEBT, beloof er dan geen.
+   Maak het kleiner (een regel) of haal het weg. Het leidt af van het
+   sterke, zakelijke deel.
+
+8. CONCURRENTIE NIET BENOEMD
+   Er bestaan al spelers: Buuv, WeHelpen, gemeentelijke
+   vrijwilligerscentrales, en commercieel Helpling / het Charly
+   Cares-model. Een gemeente denkt meteen "dit hebben we al". Voeg een
+   korte alinea toe: waarom is BuurtHulp anders/beter (screening +
+   betaald + jongeren-focus + telefoonlijn)?
+
+9. WMO-POSITIONERING: VOORZICHTIG
+   "Wmo-preventie" is een sterke haak, maar als je je te dicht tegen Wmo
+   aan positioneert, kun je in aanbestedingsregels belanden. Houd het bij
+   "preventief, aanvullend op Wmo, valt buiten de zorgplicht" zodat je dit
+   risico vermijdt.
+
+10. KWALITEIT VAN DE MATCH
+    50 jongeren voor 100 ouderen en 500 klussen klinkt mooi, maar
+    beschikbaarheid is het echte probleem (jongeren zijn er 's avonds en
+    in het weekend, ouderen willen vaak overdag). Zeg iets over hoe je
+    vraag en aanbod op tijd matcht, anders blijven hulpvragen liggen.
+
+================================================================
+PRIORITEITEN VOOR DE VOLGENDE VERSIE
+================================================================
+
+Moet, anders kan het niet de deur uit:
+  [1] Juridische status jongeren oplossen (punt 1)
+  [2] Begroting met concreet bedrag toevoegen (punt 2 + 3)
+  [3] AVG-alinea toevoegen (punt 6)
+  [4] Verzekering concreet maken (punt 5)
+
+Zou ik doen, maakt het veel sterker:
+  [5] VOG-kosten/tijd + Regeling Gratis VOG benoemen (punt 4)
+  [6] Korte concurrentie-alinea (punt 8)
+  [7] Ambassadeurs-sectie inkrimpen of schrappen (punt 7)
+
+Nice to have:
+  [8] Iets over matching/beschikbaarheid (punt 10)
+  [9] Wmo-formulering voorzichtiger (punt 9)
+
+================================================================
+EEN LAATSTE GEDACHTE
+================================================================
+
+Het sterkste aan dit voorstel is dat het een echt probleem oplost voor
+DRIE partijen tegelijk (ouderen, jongeren, gemeente) en dat je veiligheid
+serieus neemt. Dat is een zeldzaam goede uitgangspositie.
+
+Het zwakste is dat het nu nog leest als een visie en niet als een
+uitvoerbaar plan met bedragen en juridische helderheid. Dat is precies het
+verschil tussen "leuk idee" en "hier tekenen we voor". De fixes hierboven
+zijn allemaal te doen - dit is geen herontwerp, het is afmaken.
+
+Succes h. Goed idee, ga ermee door.
+
+- Claude
+
+================================================================
+EXTRA: LEUKE FUNCTIES / IDEEEN (ter inspiratie)
+================================================================
+
+Deze zijn niet nodig voor de pilot zelf, maar maken het product leuker en
+"sticky" - vooral om jongeren betrokken te houden. Bouw ze pas na de pilot,
+maar je kunt ze wel als visie noemen om enthousiasme te wekken.
+
+VOOR JONGEREN (motivatie + binding):
+
+  - Puntensysteem / XP. Per afgeronde klus punten. Punten = levels =
+    badges. Werkt aantoonbaar goed om jongeren actief te houden.
+  - Niveaus / titels. Bijv. "Buurthelper" -> "Wijkheld" -> "Buurtlegende".
+    Hoger niveau = toegang tot meer/betere klussen.
+  - Badges voor mijlpalen. "Eerste klus", "10 klussen", "5-sterren maand",
+    "Digitale held" (veel tech-hulp), "Tuinkampioen", etc.
+  - Streaks. Aantal weken achter elkaar actief - kleine bonus of badge.
+  - Leaderboard per wijk (anoniem of met voornaam). Vriendelijke
+    competitie, niet om geld maar om eer. Maandelijkse "helper van de
+    maand".
+  - Bonus voor moeilijke/ongewilde klussen. Klus die niemand oppakt krijgt
+    meer punten - lost het matching-probleem deels op.
+  - Verzilverbare punten. Punten inwisselen voor kleine beloningen:
+    cadeaubon, bioscoopkaartje, lokale winkel-tegoed. Of: punten doneren
+    aan een goed doel in de wijk (past bij het maatschappelijke verhaal).
+  - Officieel certificaat / referentie. Na X klussen een door de gemeente
+    erkend "vrijwilligers-/werkervaringscertificaat". Sterk voor CV en
+    studie. Dit is voor jongeren misschien wel waardevoller dan geld.
+  - Skills-profiel. Jongere bouwt zichtbaar profiel op (boodschappen,
+    tech-hulp, tuin, gezelschap). Ouderen kiezen op basis hiervan.
+
+VOOR OUDEREN (vertrouwen + gemak):
+
+  - Vaste helper / "mijn buurthelper". Na een goede klik dezelfde jongere
+    blijven aanvragen (staat al in plan - maak er een echte feature van met
+    favorieten).
+  - Eenvoudige grote-knop modus in de app. Extra grote tekst/knoppen,
+    spraakbediening. Toegankelijkheid als kernfunctie.
+  - "Praatje"-klussen los aanbieden. Sommige ouderen willen vooral contact.
+    Maak gezelschap een expliciete categorie, geen bijzaak.
+  - Bevestiging + foto na afloop. Familie op afstand ziet dat het gebeurd
+    is (bijv. boodschappen afgeleverd). Geeft mantelzorgers rust.
+
+VOOR DE WIJK / GEMEENTE (verhaal + zichtbaarheid):
+
+  - Wijk-impact dashboard. Live teller: "X klussen gedaan, Y uur
+    gezelschap, Z jongeren actief in jouw wijk". Mooi voor gemeente-PR.
+  - Team-challenges. School of jongerenclub neemt samen een wijk "onder
+    hun hoede" - groepsdoel. Verbindt onderwijs aan de pilot.
+  - Seizoensacties. "Boodschappen-marathon rond de feestdagen",
+    "tuin-opruimweek in het voorjaar". Houdt het levend.
+  - Verhalen-muur. Korte (anonieme) successverhalen van matches. Goud voor
+    communicatie naar gemeente en fondsen.
+
+LET OP - GAMIFICATIE-VALKUIL:
+  Punten/competitie mag NOOIT leiden tot gehaaste of slechte hulp aan
+  kwetsbare ouderen. Koppel beloningen altijd aan KWALITEIT (de
+  beoordeling door de oudere telt zwaarder dan aantal klussen). Anders
+  optimaliseren jongeren op snelheid in plaats van zorg. Dit is belangrijk -
+  noem het ook richting de gemeente, het laat zien dat je het doordacht hebt.
+
+- Claude

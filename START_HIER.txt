@@ -1,0 +1,11 @@
+BuurtHulp website openen
+
+Dubbelklik op:
+
+Open BuurtHulp Website.command
+
+Gebruik niet het bestand index.html in de website-map. Dit is een Vite-site
+en die moet via een lokale website-server draaien. De starter hierboven doet
+dat automatisch en opent daarna de juiste pagina:
+
+http://localhost:5173/

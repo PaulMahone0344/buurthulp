@@ -1,0 +1,480 @@
+BuurtHulp — Voorstel voor een gemeentelijke pilot
+Gescreende jongeren helpen kwetsbare ouderen in de eigen wijk
+
+
+Doel van dit voorstel
+
+BuurtHulp wil samen met uw gemeente een pilot starten waarin gescreende jongeren kleine, praktische hulpvragen van kwetsbare ouderen uitvoeren in hun eigen wijk. Met dit voorstel vragen wij om een lokale pilotwijk, toegang tot uw netwerk van wijkteams, scholen en welzijnsorganisaties, en een financiële bijdrage om de pilot mogelijk te maken. In ruil daarvoor levert BuurtHulp een werkend platform, een sluitend veiligheids- en privacykader, en een meetbare bijdrage aan twee gemeentelijke beleidsdoelen tegelijk: het tegengaan van eenzaamheid bij ouderen en het versterken van jongerenparticipatie.
+
+
+Korte samenvatting
+
+Veel ouderen hebben af en toe hulp nodig bij iets kleins: boodschappen halen, een lamp vervangen, een onkruidje wieden, iets uitleggen op de telefoon, of gewoon een praatje. Het is te klein voor een zorgorganisatie en te veel om steeds aan familie of buren te vragen. Tegelijkertijd zoeken veel jongeren naar een manier om iets te betekenen, werkervaring op te doen en wat bij te verdienen.
+
+BuurtHulp brengt deze twee groepen veilig bij elkaar. Een oudere meldt een hulpvraag aan — via een eenvoudige app, via de website, of via een telefonisch aanmeldpunt voor wie niet digitaal is. Een gescreende jongere uit dezelfde wijk pakt de klus op en voert hem uit tegen een eerlijke vergoeding. Na afloop beoordelen beide partijen elkaar, zodat vertrouwen en kwaliteit geborgd blijven.
+
+Wij stellen een pilot voor van zes maanden in één wijk: 100 ouderen, 50 gescreende jongeren, platform-gestuurde coördinatie met een klein onbetaald begeleidingsteam, met als doel 500 uitgevoerde hulpvragen. Dit voorstel beschrijft het probleem, de oplossing, de juridische en veiligheidskaders die wij vooraf hebben dichtgetimmerd, een eerlijke begroting, en de meetbare resultaten waarop de gemeente kan sturen.
+
+
+Het probleem
+
+Het aantal ouderen dat zelfstandig thuis woont neemt toe, terwijl de kring van mensen die hen kan helpen kleiner wordt. Kinderen wonen verder weg, buren kennen elkaar minder goed, en de druk op mantelzorgers en de formele zorg loopt op. Daardoor blijven juist de kleine dingen liggen — de dingen die niet onder de zorgplicht vallen maar wel het verschil maken tussen zelfredzaam en vastlopen.
+
+Het gaat om hulpvragen die te klein zijn voor een thuiszorgindicatie maar te groot om telkens aan een toevallige voorbijganger te vragen: een zware boodschappentas, een kapotte lamp op een hoogte waar de oudere niet meer bij kan, hulp bij een digitaal formulier, of de tuin die langzaam dichtgroeit. Stuk voor stuk klein, maar bij elkaar bepalend voor of iemand zich nog thuis voelt in het eigen huis.
+
+Tegelijk staan veel jongeren langs de zijlijn. Ze willen graag iets doen, betrokken zijn bij hun buurt en wat bijverdienen, maar bestaande vrijwilligersstructuren sluiten slecht op hen aan en regulier werk is voor jonge tieners moeilijk te vinden. Het reguliere vrijwilligersbestand vergrijst; jongeren zijn er sterk ondervertegenwoordigd. Hier ligt een dubbele kans: de behoefte van ouderen en de energie van jongeren met elkaar verbinden.
+
+
+De oplossing
+
+BuurtHulp is een platform dat ouderen met kleine hulpvragen koppelt aan gescreende jongeren uit dezelfde wijk. De werkwijze is bewust eenvoudig.
+
+Een oudere meldt een hulpvraag aan. Dat kan via de app of de website, maar nadrukkelijk ook telefonisch via het aanmeldpunt, of via een familielid, mantelzorger of wijkteam dat namens de oudere aanmeldt. De hulpvraag komt in het systeem, met een korte, functionele omschrijving en het gewenste tijdstip.
+
+Een gescreende jongere uit de wijk ziet de hulpvraag en pakt hem op. De jongere voert de klus uit en ontvangt daarvoor een eerlijke vergoeding. Na afloop beoordelen oudere en jongere elkaar. Bij een goede ervaring kan de oudere dezelfde jongere opnieuw vragen, zodat vertrouwde, terugkerende contacten ontstaan — een bekend gezicht in plaats van steeds een vreemde aan de deur.
+
+De kracht zit in de combinatie van laagdrempeligheid en veiligheid. Aanmelden kost een oudere geen moeite, en toch komt er nooit een ongecontroleerde onbekende over de vloer. Elke jongere is vooraf volledig gescreend, en elke klus is geregistreerd, verzekerd en herleidbaar.
+
+
+Het telefonisch aanmeldpunt
+
+Een groot deel van de kwetsbare ouderen is niet of nauwelijks digitaal vaardig. Een platform dat alleen via een app werkt, mist juist de mensen die de hulp het hardst nodig hebben. Daarom heeft BuurtHulp naast de app en de website een centraal telefonisch aanmeldpunt.
+
+Een oudere belt één vast nummer. Een medewerker noteert de hulpvraag, plaatst die in het systeem, en bevestigt de afspraak telefonisch of per sms. Aanmelden kan ook door een familielid, mantelzorger of wijkteam namens de oudere; in dat geval houdt de oudere altijd zelf de regie en ontvangt hij of zij een bevestiging. Zo bereikt BuurtHulp ook de ouderen die bij puur digitale platforms buiten beeld blijven, en blijft de drempel om hulp te vragen zo laag mogelijk.
+
+
+Veiligheid en screening
+
+Hulp aan huis bij kwetsbare ouderen vraagt om vertrouwen, en vertrouwen vraagt om zorgvuldige selectie. Geen enkele jongere wordt actief gezet voordat de volledige screening is doorlopen. Die screening bestaat uit:
+
+- identiteitsverificatie aan de hand van een geldig identiteitsbewijs;
+- selfie-verificatie om te controleren dat de aanmelder ook daadwerkelijk de persoon op het identiteitsbewijs is (uitsluitend als eenmalige controle, niet als biometrisch profiel);
+- telefoonnummer- en bankrekeningverificatie;
+- een geldige Verklaring Omtrent het Gedrag (VOG);
+- een persoonlijk intakegesprek.
+
+Daarbovenop geldt voor elke klus een wederzijdse beoordeling. Loopt er iets niet goed, dan wordt dat zichtbaar in het systeem en kan het begeleidingsteam ingrijpen. Een meld- en klachtenprocedure zorgt ervoor dat incidenten direct worden opgepakt, vastgelegd en geëvalueerd. Verzekering en screening vullen elkaar aan: screening voorkomt zoveel mogelijk vooraf, de verzekering vangt het normale ongelukken-risico achteraf op.
+
+De volgende secties werken de juridische vorm, de VOG-route, de verzekering en de privacybescherming concreet uit, zodat de gemeente vooraf weet dat deze kaders sluitend zijn.
+
+
+Juridische vorm en arbeidsvoorwaarden jongeren
+
+De juridische status van de deelnemende jongeren is bewust als eerste hoofdstuk uitgewerkt, omdat dit het meest gestelde aandachtspunt is bij gemeentelijke pilots met betaalde jongerenparticipatie. Hieronder zetten wij de drie denkbare constructies tegen elkaar af, benoemen wij de actuele risico's (situatie 2026) en adviseren wij één concrete, verdedigbare vorm voor BuurtHulp.
+
+Drie mogelijke constructies
+
+1. Vrijwilligersvergoeding (onbelaste forfaitaire vergoeding).
+De Belastingdienst kent een vrijstelling voor vrijwilligers die een vergoeding ontvangen die niet marktconform is. Voor 2026 gelden de volgende maxima, die alle drie tegelijk niet overschreden mogen worden:
+- maximaal € 220 per maand;
+- maximaal € 2.200 per kalenderjaar;
+- een uurtarief van maximaal € 3,40 per uur voor vrijwilligers jonger dan 21 jaar (€ 5,75 per uur voor 21 jaar en ouder).
+
+Blijft de vergoeding binnen deze grenzen, dan is er geen sprake van loon, hoeft er geen loonheffing te worden ingehouden, ontstaat er geen dienstverband en is er geen risico op schijnzelfstandigheid. Het bedrag wordt door de Belastingdienst gezien als kostenvergoeding, niet als beloning voor arbeid. Dit is verreweg de eenvoudigste en juridisch meest robuuste vorm voor een laagdrempelig buurtinitiatief.
+
+(De hier genoemde vrijwilligersmaxima voor 2026 — € 220 per maand, € 2.200 per jaar en € 3,40 respectievelijk € 5,75 per uur — zijn gebaseerd op de meest actuele bekendmakingen; de definitieve 2026-tarieven worden bij de Belastingdienst geverifieerd vóór de start van de pilot. Hetzelfde geldt voor de hieronder genoemde minimumjeugdloon-bedragen per 1 juli 2026.)
+
+Eén belangrijke kanttekening bij deze route. De vrijwilligersvergoeding houdt alleen stand zolang de vergoeding aantoonbaar binnen de forfaitaire normen blijft én niet wordt vormgegeven als marktconforme beloning voor arbeid die in de plaats komt van betaald werk. Diezelfde platform-sturing die ZZP onmogelijk maakt (plannen, accepteren, instructie, tarieven, klachtenprocedure), kan namelijk ook de kwalificatie "echt vrijwilligerswerk" onder druk zetten. BuurtHulp ondervangt dit bewust: de vergoeding wordt expliciet als forfaitaire onkostenvergoeding gepresenteerd — niet als "loon per klus" — en blijft binnen de uur-, maand- en jaargrenzen. Waar wenselijk vraagt BuurtHulp de Belastingdienst om vooroverleg of een schriftelijke bevestiging, zodat hierover vooraf zekerheid bestaat. Deze nuance sluit aan op de spanning die ook in het verzekeringshoofdstuk wordt benoemd; het is een beheersbaar restrisico, geen reden om van de vrijwilligersvergoeding af te zien.
+
+2. Zelfstandige (ZZP).
+Jongeren als zelfstandig ondernemer laten factureren is voor BuurtHulp ongeschikt en risicovol. Per 1 januari 2026 handhaaft de Belastingdienst weer volledig op schijnzelfstandigheid (Wet DBA). In 2026 geldt nog een "zachte landing" zonder verzuimboetes, maar bij opzet of grove schuld kunnen naheffingen én vergrijpboetes (10% tot 100% van de naheffing) worden opgelegd. Bepalend is niet wat er op papier staat, maar de feitelijke arbeidsrelatie: werk dat via een platform wordt gepland, geaccepteerd en gecontroleerd, met instructie, tarieven en een meld- en klachtenprocedure, voldoet vrijwel zeker aan de kenmerken van een gezagsverhouding. Bovendien geldt een wettelijk rechtsvermoeden van werknemerschap bij een tarief tot circa € 38 per uur — ruim boven wat BuurtHulp uitkeert. Een jongere van 15 tot 17 jaar als ZZP'er positioneren is daarom niet verdedigbaar en zou de gemeente en BuurtHulp blootstellen aan naheffings- en aansprakelijkheidsrisico. Deze route wordt afgeraden.
+
+3. Loondienst (arbeidsovereenkomst).
+Een echt dienstverband is juridisch zuiver, maar zwaar voor een kleinschalige pilot. Het betekent inhouding van loonheffing, afdracht van premies, doorbetaling bij ziekte, vakantiegeld en administratieve werkgeverslasten. Daarnaast geldt het wettelijk minimumjeugdloon: per 1 juli 2026 bruto € 5,17 per uur voor 16-jarigen en € 5,92 per uur voor 17-jarigen. Voor losse, onregelmatige klusjes van soms een half uur is een formeel dienstverband disproportioneel en praktisch onwerkbaar. Loondienst kan in een latere opschalingsfase aan de orde komen wanneer een jongere structureel veel uren maakt, maar past niet bij de pilot.
+
+Aanbevolen constructie: vrijwilligersvergoeding met harde drempelbewaking
+
+Wij adviseren BuurtHulp tijdens de pilot uitsluitend te werken met de onbelaste vrijwilligersvergoeding. Dit is de enige vorm die laagdrempelig en fiscaal zuiver is en die — mits de vergoeding als forfaitaire onkostenvergoeding binnen de normen wordt vormgegeven — geen risico op schijnzelfstandigheid oplevert. De jongere ontvangt een vergoeding voor zijn of haar inzet zonder dat een dienstverband of ondernemerschap ontstaat.
+
+Concreet betekent dit:
+- het platform bewaakt per jongere automatisch de drie wettelijke grenzen (uur, maand en jaar) en blokkeert nieuwe klussen zodra een grens in zicht komt;
+- het uurtarief blijft onder € 3,40 voor jongeren onder de 21 jaar. Het in het verdienmodel genoemde voorbeeld (bruto klusbedrag € 20, waarvan € 17 voor de jongere) is hierop afgestemd: de € 17 geldt als forfaitaire onkostenvergoeding binnen de maand- (€ 220) en jaarmaxima (€ 2.200), waarbij de begrenzing per maand en jaar borgt dat het uurtarief-equivalent binnen de norm blijft;
+- de jongere ontvangt vooraf een heldere deelnemersafspraak (geen arbeidsovereenkomst) waarin de aard van de vergoeding, de grenzen en het ontbreken van een dienstverband staan beschreven;
+- BuurtHulp legt per jongere een sluitende registratie aan van uitgekeerde vergoedingen, zodat bij vragen van de Belastingdienst direct kan worden aangetoond dat binnen de vrijstelling is gebleven.
+
+Het effect is dat de gemeente geen werkgeversrol of fiscaal risico draagt, dat geen sprake kan zijn van schijnzelfstandigheid, en dat de jongere toch een betrouwbare, betekenisvolle vergoeding ontvangt voor maatschappelijke inzet in de eigen wijk.
+
+Arbeidstijden en minimumleeftijd
+
+Ook bij een vrijwilligersvergoeding blijft de bescherming van minderjarigen uit de Arbeidstijdenwet en de Arbowetgeving het uitgangspunt; BuurtHulp hanteert deze normen vrijwillig als kader voor de inroostering.
+- 15 jaar: op schooldagen maximaal 2 uur per dag en 12 uur per week; in vakantieweken maximaal 8 uur per dag en 40 uur per week, en alleen tussen 07.00 en 19.00 uur (op niet-schooldagen tot 20.00 uur). Het werk moet licht en passend zijn en mag het schoolgaan niet hinderen.
+- 16 en 17 jaar: maximaal 9 uur per dienst en 45 uur per week, met ten minste 12 uur aaneengesloten rust per etmaal; niet werken tussen 23.00 en 06.00 uur. Schooltijd telt mee als arbeidstijd bij de planning.
+
+Op grond hiervan adviseren wij een minimumleeftijd van 16 jaar voor deelname aan BuurtHulp. Vanaf 16 jaar is de jongere niet langer volledig leerplichtig op fulltime basis, gelden ruimere en eenvoudiger te bewaken werktijden, en is de jongere doorgaans voldoende zelfstandig voor zelfstandig contact met kwetsbare ouderen. Jongeren van 15 jaar of jonger sluiten wij in de pilot uit; de strenge tijdsbeperkingen, het lichte-werk-vereiste en de geringere zelfstandigheid maken hen minder geschikt voor begeleide buurthulp aan ouderen. Bij een minimumleeftijd van 16 jaar blijft tevens een ruime marge bestaan tussen de toegestane uren en de vergoedingsmaxima, zodat overschrijding in de praktijk vrijwel uitgesloten is.
+
+Samenvatting voor de gemeente
+
+Voor de gemeente is de boodschap geruststellend: BuurtHulp kiest tijdens de pilot bewust voor de juridisch eenvoudigste en veiligste vorm — de onbelaste vrijwilligersvergoeding met geautomatiseerde drempelbewaking, een minimumleeftijd van 16 jaar en naleving van de Arbeidstijdenwet als kader. Hiermee is er geen dienstverband, geen schijnzelfstandigheid, geen fiscaal risico en geen werkgeversrol voor de gemeente, terwijl jongeren toch een betrouwbare vergoeding en waardevolle werkervaring opdoen.
+
+
+VOG en screening: kosten en doorlooptijd
+
+Elke jongere die via BuurtHulp bij ouderen thuiskomt, moet een geldige Verklaring Omtrent het Gedrag (VOG) hebben. De VOG is een verplichte schakel in de screening, naast identiteits-, selfie-, telefoonnummer- en bankrekeningverificatie en het intakegesprek. Hieronder maken we kosten, doorlooptijd en de route via de Regeling Gratis VOG concreet voor de pilot van 50 jongeren.
+
+Kosten per VOG (2026)
+
+Een VOG kost in 2026:
+- € 33,85 bij een digitale aanvraag die door de organisatie wordt klaargezet en die de aanvrager met DigiD afrondt;
+- € 41,35 bij een aanvraag via de balie van de gemeente;
+- € 92,90 voor de spoedprocedure (alleen relevant in uitzonderingsgevallen).
+
+Voor 50 jongeren komt dit bij de reguliere digitale route neer op 50 × € 33,85 = € 1.692,50. De begroting hanteert dit digitale bedrag als hoofdscenario en verwerkte post. Mocht in een enkel geval de balieroute nodig zijn (€ 41,35), dan loopt de post op tot maximaal 50 × € 41,35 = € 2.070; dat is de bovengrens, geen uitgangspunt. De spoedprocedure wordt niet standaard ingezet; door tijdig te starten is die niet nodig.
+
+Doorlooptijd
+
+De doorlooptijd van een VOG-aanvraag is normaliter 1 tot 4 weken. Justis hanteert een streeftermijn van maximaal 4 weken; in de praktijk is de verklaring vaak binnen 2 tot 3 weken binnen. BuurtHulp houdt voor de planning rekening met de bovengrens van 4 weken, plus de tijd die jongeren zelf nodig hebben om de aanvraag met DigiD af te ronden.
+
+Regeling Gratis VOG: het pluspunt voor de gemeente
+
+Voor vrijwilligers die met kwetsbare mensen werken — waaronder nadrukkelijk ouderen en mensen in een afhankelijkheidssituatie — bestaat de landelijke Regeling Gratis VOG. Deze regeling, uitgevoerd door het CIBG (ministerie van VWS) met screening door Justis, maakt de VOG voor de organisatie én de vrijwilliger volledig kosteloos. Voorwaarden voor toelating zijn onder meer:
+- de organisatie staat ingeschreven bij de KvK en beschikt over eHerkenning (niveau 2+);
+- de organisatie zet vrijwilligers in die met kwetsbare mensen werken;
+- de organisatie voert aantoonbaar preventie- en integriteitsbeleid voor veilig vrijwilligerswerk (denk aan een gedragscode/gedragsregels, een gedegen aannamebeleid en een vertrouwens(contact)persoon);
+- de aanvragers ontvangen niet al op grond van andere wet- of regelgeving een VOG.
+
+Aanmelden gebeurt via gratisvog.nl; na goedkeuring zet de organisatie de aanvragen klaar en ronden de vrijwilligers deze zelf af met DigiD.
+
+Eerlijke kanttekening en de route die BuurtHulp kiest
+
+We zijn hierover transparant: de Regeling Gratis VOG is bedoeld voor organisaties zonder winstoogmerk die met vrijwilligers werken. Omdat BuurtHulp-jongeren een vergoeding per klus ontvangen en BuurtHulp een platform met verdienmodel is, kwalificeert BuurtHulp niet automatisch als vrijwilligersorganisatie binnen deze regeling. Wij claimen de gratis route daarom niet ten onrechte. We zien wel twee realistische manieren om de VOG-kosten voor de pilot tot nul of vrijwel nul te brengen, beide in overleg met de gemeente:
+1. Via een lokale welzijns- of vrijwilligerspartner. Veel wijkteams, welzijnsorganisaties en vrijwilligerscentrales zijn al toegelaten tot de Regeling Gratis VOG. Door de screening van pilotdeelnemers onder de paraplu van zo'n reeds toegelaten partner te organiseren, kunnen de VOG's kosteloos worden aangevraagd. Dit sluit aan op de samenwerking met wijkteams, jongerenwerk en welzijn die de pilot sowieso vraagt.
+2. Via een gemeentelijke bijdrage. Indien de gratis route niet passend is, neemt BuurtHulp de VOG-kosten (maximaal € 1.692,50) op in de begroting als post die de gemeente desgewenst (deels) kan dekken als onderdeel van haar financiële bijdrage aan de pilot.
+
+Het pluspunt blijft: BuurtHulp voldoet inhoudelijk aan precies de eisen die de Regeling Gratis VOG stelt — werken met kwetsbare mensen én aantoonbaar preventie- en integriteitsbeleid (veiligheidsprotocol, gedragsregels, aannamebeleid/screening en een meld- en klachtenprocedure). Daarmee is gratis of gesubsidieerde VOG-screening goed haalbaar en hoeft de kostenpost de pilot niet te belasten.
+
+Inplanning in de tijdlijn
+
+VOG-screening zit vooraan in de onboarding, vóór de eerste hulpvraag wordt uitgevoerd. Concreet:
+1. Week 1–2 van de voorbereiding: aanmelding bij de Regeling Gratis VOG (samen met de welzijns-/vrijwilligerspartner) of besluit over de betaalde route met de gemeente.
+2. Week 2–3: jongeren doorlopen identiteits-, selfie-, telefoon- en bankrekeningverificatie en het intakegesprek; bij akkoord wordt de VOG-aanvraag klaargezet.
+3. Week 3–7: jongeren ronden de aanvraag af met DigiD; BuurtHulp houdt rekening met de doorlooptijd tot 4 weken.
+4. Pas na ontvangst en controle van een geldige VOG wordt een jongere actief gezet en gekoppeld aan hulpvragen in de eigen wijk.
+
+Door de VOG-fase volledig vóór de operationele start te plannen — met een buffer voor de doorlooptijd — gaat de pilot van dag één van start met uitsluitend gescreende jongeren, zonder vertraging in de uitvoering.
+
+
+Aansprakelijkheid en verzekering
+
+Bij hulp aan huis kan er iets misgaan. Een jongere die boodschappen tilt, een lamp vervangt of in de tuin werkt, kan onbedoeld schade veroorzaken (een gevallen vaas, een kras op de auto, waterschade) of zelf een ongeluk krijgen. Dit is het grootste reële risico van BuurtHulp, en juist daarom is het verzekeringsmodel sluitend, vooraf geregeld en transparant. De boodschap aan ouderen, families en gemeente is eenvoudig: niemand draagt dit risico alleen, en niemand hoeft achteraf uit te zoeken wie betaalt.
+
+Waarom de gangbare verzekeringen hier niet vanzelf dekken
+
+Het is belangrijk dat de gemeente weet wat er wel en niet geldt, zodat er geen verkeerde aannames in het voorstel sluipen.
+
+1. De VNG Vrijwilligersverzekering is hier niet de oplossing. Veel gemeenten (verzekerd via Centraal Beheer, voorwaarden LVV23) hebben een collectieve vrijwilligersverzekering met dekking voor aansprakelijkheid, ongevallen, persoonlijke eigendommen en rechtsbijstand, zonder eigen risico. Die verzekering stelt echter twee harde voorwaarden aan wie als vrijwilliger meeverzekerd is: "De vergoeding die u voor het werk krijgt, is een vrijwilligersvergoeding volgens de regeling van de Belastingdienst" én "Uw vrijwilligerswerk mag niet in de plaats van een betaalde baan op de arbeidsmarkt komen." De vrijwilligersvergoeding is in 2026 gemaximeerd op € 5,75 per uur (€ 3,40 voor jongeren onder 21), € 220 per maand en € 2.200 per jaar. Wanneer BuurtHulp jongeren een commerciële vergoeding zou betalen die boven dat plafond uitkomt en bedoeld is als betaald werk, voldoen die jongeren niet aan de definitie van "vrijwilliger" en valt de inzet buiten de VNG Vrijwilligersverzekering. Omdat de juridische vorm van BuurtHulp er bovendien bewust op gericht is binnen de vrijwilligersvergoeding te blijven, kan deze polis in voorkomende gevallen wel relevant zijn — maar wij rekenen er voor de kerndekking uitdrukkelijk niet op en regelen het zelf, zodat de gemeente haar bestaande polis niet hoeft op te rekken.
+
+2. De particuliere WA-verzekering (AVP) van de jongere dekt het ook niet. Een gewone aansprakelijkheidsverzekering voor particulieren sluit schade tijdens betaald werk expliciet uit. Schade die de jongere veroorzaakt tijdens een betaalde klus, valt daar dus buiten. Families kunnen er niet van uitgaan dat "de verzekering van die jongere het wel regelt".
+
+Deze twee punten betekenen niet dat het risico onverzekerbaar is, integendeel. Ze betekenen dat BuurtHulp het zelf moet regelen, centraal en aantoonbaar. Dat doen we.
+
+Het verzekeringsmodel van BuurtHulp
+
+BuurtHulp sluit, vergelijkbaar met hoe oppasplatform Charly Cares dit met verzekeraar Aon heeft opgezet, een platformdekking af die zowel de oudere (en diens woning/eigendommen) als de jongere beschermt. Het model bestaat uit drie lagen:
+
+- Bedrijfsaansprakelijkheidsverzekering (AVB) — zaak- en letselschade bij de oudere thuis. Dit is de kerndekking. De AVB vergoedt schade aan personen en spullen die tijdens een klus ontstaat en waarvoor aansprakelijkheid bestaat: van een omgevallen kast tot waterschade of letsel van de oudere. Dit is precies het instrument dat past bij werk via een platform, waar de particuliere WA-verzekering tekortschiet. De oudere en de familie hoeven hierdoor niet te procederen tegen een individuele jongere; de schade wordt via de polis van BuurtHulp afgewikkeld.
+- Collectieve ongevallenverzekering — als de jongere zelf iets overkomt. Krijgt de jongere tijdens een klus een ongeluk (val, snijwond, rugletsel), dan biedt deze dekking een uitkering bij blijvende invaliditeit of overlijden en toegang tot medische hulp. Net als bij het Charly Cares-model koppelen we hieraan een 24/7 medische assistentielijn, zodat er bij een incident direct iemand bereikbaar is.
+- Rechtsbijstand bij geschillen. Voor het zeldzame geval dat partijen het oneens zijn over schuld of schade, is rechtsbijstand inbegrepen, zodat geen enkele deelnemer met juridische kosten blijft zitten.
+
+Deelname aan de pilot is voor zowel ouderen als jongeren alleen mogelijk via het platform; daarmee is iedereen automatisch onder deze dekkingen verzekerd voor elke geregistreerde klus. Klussen buiten het platform om vallen er nadrukkelijk niet onder; dit is ook een veiligheids- en kwaliteitsargument om alles via BuurtHulp te laten lopen.
+
+Wie is waarvoor aansprakelijk
+
+- Schade bij de oudere veroorzaakt door de jongere: wordt afgewikkeld via de AVB van BuurtHulp. De oudere of familie meldt de schade bij BuurtHulp, niet bij de jongere persoonlijk.
+- Letsel van de jongere tijdens een klus: gedekt door de collectieve ongevallenverzekering, met medische assistentie.
+- De gemeente: draagt geen aansprakelijkheid voor de uitvoering van klussen en hoeft haar eigen (vrijwilligers)verzekering hier niet voor in te zetten. BuurtHulp is de organiserende partij en draagt het operationele risico.
+- Opzet, grove nalatigheid of fraude: hiervoor blijft de veroorzaker zelf aansprakelijk; daarop is de screening (identiteit, VOG, intake) en de wederzijdse beoordeling juist gericht. Verzekering vervangt geen zorgvuldige selectie, maar vangt het normale ongelukken-risico af.
+
+Schade- en incidentafhandeling in de praktijk
+
+Voor elke deelnemer geldt één helder pad, zodat het bij een incident nooit chaotisch wordt:
+
+1. Melden. De oudere, familie of jongere meldt het incident direct bij het begeleidingsteam of via het centrale aanmeldpunt of de app. Bij letsel: eerst de 24/7 medische lijn of 112.
+2. Vastleggen. Het begeleidingsteam registreert wat er is gebeurd (datum, klus, betrokkenen, korte omschrijving, foto's indien relevant). Omdat elke klus in het systeem staat, is altijd herleidbaar wie waar en wanneer aanwezig was.
+3. In behandeling nemen. BuurtHulp meldt de schade of het ongeval bij de verzekeraar en begeleidt de deelnemers door het proces. De deelnemer hoeft zelf geen verzekeringszaken uit te zoeken.
+4. Afhandelen en terugkoppelen. De verzekeraar handelt de schade af; BuurtHulp houdt oudere, familie en jongere op de hoogte tot het is afgerond.
+5. Leren. Elk incident wordt geëvalueerd en, indien nodig, leiden lessen tot aanpassing van het veiligheidsprotocol. Het aantal en type incidenten is bovendien een van de meetbare pilotresultaten.
+
+Een eventueel eigen risico (bij vergelijkbare platforms gebruikelijk in de orde van € 125 voor de werker) wordt vooraf transparant gecommuniceerd, zodat geen enkele deelnemer voor verrassingen komt te staan.
+
+Toekomstbestendigheid
+
+De Europese richtlijn over platformwerk beweegt richting verplichte ongevallen- en aansprakelijkheidsdekking voor platformwerkers (in België al per 2026 ingevoerd; Nederland implementeert dezelfde richtlijn). Het BuurtHulp-model loopt daar bewust op vooruit: een vooraf geregelde, platformbrede dekking is niet alleen geruststellend, maar ook in lijn met de richting waarin wet- en regelgeving zich ontwikkelt.
+
+De geruststelling, in één zin
+
+Voor de pilot regelt BuurtHulp zelf een platformbrede AVB, collectieve ongevallenverzekering en rechtsbijstand die elke geregistreerde klus dekken, zodat ouderen, families en gemeente weten dat schade en ongelukken vooraf zijn afgedekt, dat niemand met de kosten of de afhandeling alleen blijft staan, en dat de gemeente hiervoor niet haar eigen verzekeringen hoeft in te zetten. De exacte polis, verzekeraar en premie worden in de begroting van de pilot opgenomen en vóór de start van de pilot definitief vastgelegd en met de gemeente gedeeld.
+
+
+Privacy en gegevensbescherming (AVG)
+
+BuurtHulp verwerkt persoonsgegevens van twee groepen die de wetgever als kwetsbaar aanmerkt: ouderen en jongeren. Wij gaan daar bewust en terughoudend mee om. Privacy is voor ons geen sluitstuk maar een ontwerpprincipe: de inrichting van het platform, het aanmeldpunt en de screening is gebaseerd op dataminimalisatie en privacy by design en by default, zoals de Algemene verordening gegevensbescherming (AVG) voorschrijft. Hieronder leggen we concreet uit welke gegevens worden verwerkt, op welke grondslag, hoe ze worden beveiligd en bewaard, welke rechten betrokkenen hebben, en hoe de rolverdeling met de gemeente juridisch is geregeld.
+
+Welke persoonsgegevens worden verwerkt
+
+Wij verwerken alleen wat strikt nodig is om een hulpvraag veilig te kunnen koppelen en uitvoeren.
+
+Van ouderen (hulpvragers):
+- Naam, adres, telefoonnummer en eventueel e-mailadres.
+- De aard van de hulpvraag (bijvoorbeeld boodschappen, lamp vervangen, digitale hulp) en het tijdstip en de locatie.
+- Eventuele contactgegevens van een familielid, mantelzorger of wijkteam dat namens de oudere aanmeldt.
+- Wederzijdse beoordelingen na afloop en eventuele meldingen of klachten.
+
+Van jongeren (helpers):
+- Naam, adres, geboortedatum, telefoonnummer en e-mailadres.
+- Identiteitsverificatie (identiteitscontrole, selfie-verificatie, telefoonnummerverificatie).
+- Bankrekeningnummer (uitsluitend voor uitbetaling).
+- De Verklaring Omtrent het Gedrag (VOG): wij registreren of een geldige VOG is overgelegd; wij bewaren niet het VOG-document zelf langer dan voor de controle nodig is.
+- Uitgevoerde klussen, beschikbaarheid en beoordelingen.
+
+Bijzondere categorieën persoonsgegevens (gezondheid). Hoewel BuurtHulp uitdrukkelijk geen zorgplatform is, kan in de aard van een hulpvraag soms gezondheidsinformatie doorklinken (bijvoorbeeld "begeleiding naar een ziekenhuisafspraak" of "hulp omdat ik slecht ter been ben"). Dergelijke gegevens zijn op grond van artikel 9 AVG in beginsel verboden om te verwerken. Wij hanteren daarom het beginsel dat hulpvragen in neutrale, functionele bewoordingen worden vastgelegd en dat gezondheidsdetails niet worden uitgevraagd of opgeslagen. Waar een betrokkene zelf gezondheidsinformatie verstrekt, baseren wij ons op diens uitdrukkelijke toestemming (artikel 9 lid 2 onder a AVG) en beperken we de verwerking tot het strikt noodzakelijke. Biometrie wordt niet gebruikt: de selfie-verificatie dient uitsluitend voor een eenmalige identiteitscontrole en wordt niet omgezet in een biometrisch sjabloon.
+
+Grondslag voor de verwerking
+
+- Uitvoering van de overeenkomst (artikel 6 lid 1 onder b AVG): voor het matchen, plannen, uitvoeren en uitbetalen van hulpvragen tussen oudere en jongere.
+- Wettelijke verplichting (artikel 6 lid 1 onder c AVG): voor fiscale en administratieve bewaarplichten rond uitbetalingen.
+- Gerechtvaardigd belang (artikel 6 lid 1 onder f AVG): voor de veiligheidsscreening van jongeren, fraudepreventie en de klachten- en incidentenprocedure. Dit belang (de veiligheid van kwetsbare ouderen) is zwaarwegend en in balans gebracht met de rechten van de jongere.
+- Toestemming (artikel 6 lid 1 onder a, en voor gezondheidsgegevens artikel 9 lid 2 onder a AVG): voor optionele zaken en voor eventuele gevoelige informatie die een betrokkene zelf verstrekt. Toestemming is vrij, specifiek en te allen tijde intrekbaar.
+
+Voor de telefonische en namens-aanmelding (door familie, mantelzorger of wijkteam) leggen wij vast met welke betrokkenheid en op welke titel iemand aanmeldt, zodat de oudere altijd zelf de regie houdt en een bevestiging ontvangt.
+
+Dataminimalisatie en doelbinding
+
+Gegevens worden uitsluitend gebruikt voor het doel waarvoor ze zijn verzameld. We vragen niet meer uit dan nodig, koppelen jongere en oudere op wijkniveau zonder onnodige gegevensuitwisseling, en delen contactgegevens alleen voor zover een concrete klus dat vereist. Er vindt geen profilering of geautomatiseerde besluitvorming met rechtsgevolg plaats, en gegevens worden niet verkocht of voor commerciële doeleinden aan derden verstrekt.
+
+Opslag en beveiliging
+
+- Gegevens worden opgeslagen op servers binnen de Europese Economische Ruimte (EER); er vindt geen doorgifte naar landen buiten de EER plaats zonder passend beschermingsniveau.
+- Versleuteling van gegevens in transit (TLS) en at rest.
+- Toegang op basis van least privilege: de initiatiefnemer en de begeleidende vrijwilligers zien alleen de gegevens die voor hun taak nodig zijn, met logging van toegang.
+- Tweefactorauthenticatie voor beheeromgevingen en periodieke beveiligingscontroles.
+- Een vastgelegde procedure voor datalekken: een geconstateerd datalek wordt zonder onnodige vertraging en uiterlijk binnen 72 uur gemeld aan de Autoriteit Persoonsgegevens en, waar vereist, aan de betrokkenen (artikelen 33 en 34 AVG). De gemeente wordt als ketenpartner direct geïnformeerd.
+
+Bewaartermijnen
+
+Wij bewaren gegevens niet langer dan noodzakelijk:
+- Actieve account- en hulpvraaggegevens: voor de duur van het gebruik van het platform.
+- Na beëindiging van een account: verwijdering of anonimisering binnen een vooraf vastgelegde termijn, behoudens wettelijke bewaarplichten.
+- Financiële en fiscale gegevens (uitbetalingen): 7 jaar, conform de fiscale bewaarplicht.
+- Verificatiegegevens en het bewijs van een geldige VOG: alleen zolang de jongere actief is plus een korte aansluitende periode voor verantwoording bij incidenten; daarna verwijdering.
+- Meldingen en klachten: bewaard zolang nodig voor afhandeling, verzekering en aantoonbare opvolging, daarna verwijderd.
+
+Concrete termijnen worden vastgelegd in een bewaarschema dat onderdeel is van de pilotafspraken met de gemeente.
+
+Rechten van betrokkenen
+
+Ouderen en jongeren kunnen hun AVG-rechten eenvoudig uitoefenen: het recht op inzage, rectificatie, verwijdering ("vergetelheid"), beperking van de verwerking, dataportabiliteit en het recht van bezwaar, evenals het recht om gegeven toestemming in te trekken. Omdat het deels om minder digitaal vaardige ouderen gaat, kan een verzoek ook telefonisch via het aanmeldpunt of via een familielid of mantelzorger worden ingediend; wij ondersteunen daar actief bij. Verzoeken worden in beginsel binnen één maand kosteloos afgehandeld (artikel 12 AVG). Betrokkenen kunnen daarnaast altijd een klacht indienen bij de Autoriteit Persoonsgegevens.
+
+Rolverdeling: verwerker of verwerkingsverantwoordelijke, en de verwerkersovereenkomst
+
+De AVG bepaalt de rol aan de hand van de vraag wie het doel en de middelen van de verwerking vaststelt. Voor BuurtHulp ligt dit als volgt:
+
+- Voor de kern van de dienst (matching, screening, uitvoering en uitbetaling van hulpvragen) bepaalt BuurtHulp zelf doel en middelen. BuurtHulp is daarvoor zelfstandig verwerkingsverantwoordelijke. Betrokkenen sluiten rechtstreeks met BuurtHulp een gebruiksovereenkomst.
+- Wanneer de gemeente BuurtHulp inschakelt en daarbij zelf het doel en de kaders bepaalt (bijvoorbeeld het aanleveren van deelnemers via het wijkteam, of het laten verwerken van gegevens ten behoeve van gemeentelijk beleid op eenzaamheid of Wmo-preventie), verwerkt BuurtHulp die specifieke gegevens namens de gemeente. Voor dat deel treedt BuurtHulp op als verwerker en de gemeente als verwerkingsverantwoordelijke.
+
+Wanneer is een verwerkersovereenkomst nodig? Zodra BuurtHulp persoonsgegevens verwerkt namens de gemeente, is een verwerkersovereenkomst (artikel 28 lid 3 AVG) wettelijk verplicht. Wij stellen voor om bij de start van de pilot een verwerkersovereenkomst te sluiten die aansluit op de VNG-modelverwerkersovereenkomst voor gemeenten, met daarin onder meer: de categorieën gegevens en betrokkenen, de doeleinden, beveiligingsmaatregelen, geheimhouding, regels over subverwerkers, ondersteuning bij betrokkenrechten en datalekken, en afspraken over teruggave en verwijdering na afloop. Voor de rapportage richting de gemeente leveren wij uitsluitend geaggregeerde, niet tot personen herleidbare cijfers, zodat sturing op resultaat mogelijk is zonder onnodige gegevensdeling. Waar gemeente en BuurtHulp gezamenlijk doel en middelen zouden bepalen, leggen we dat vast als gezamenlijke verwerkingsverantwoordelijkheid (artikel 26 AVG); de basisopzet van de pilot vermijdt dit echter waar mogelijk, ten gunste van een heldere rolverdeling.
+
+DPIA: passend en uitgevoerd vóór de start
+
+Een Data Protection Impact Assessment (DPIA, gegevensbeschermingseffectbeoordeling) is hier op zijn plaats en wij voeren deze uit vóór de start van de pilot. De Autoriteit Persoonsgegevens merkt de verwerking van gegevens van kwetsbare groepen, waaronder uitdrukkelijk ouderen en kinderen of jongeren, aan als een criterium dat op een DPIA wijst, juist vanwege de machtsongelijkheid tussen betrokkene en verwerker. BuurtHulp raakt bovendien aan meerdere DPIA-criteria tegelijk (kwetsbare betrokkenen, mogelijke gevoelige gegevens, grootschalige verzameling van contact- en locatiegegevens, en het samenbrengen van twee groepen). De DPIA brengt de risico's in kaart, beschrijft de getroffen maatregelen en wordt gedeeld met de gemeente. Indien de DPIA hoge restrisico's zou aantonen, vindt voorafgaande raadpleging van de Autoriteit Persoonsgegevens plaats (artikel 36 AVG). Zo weet de gemeente vooraf dat de privacyrisico's van deze kwetsbare doelgroep gestructureerd zijn beoordeeld en afgedekt.
+
+Samengevat
+
+BuurtHulp verwerkt zo min mogelijk gegevens, op een heldere grondslag, binnen de EER, goed beveiligd, met korte bewaartermijnen en eenvoudig uit te oefenen rechten. Voor verwerkingen namens de gemeente sluiten we een verwerkersovereenkomst, en vóór de pilotstart leveren we een DPIA op. Daarmee voldoet de pilot aan de AVG en biedt zij de gemeente de zekerheid dat de privacy van ouderen en jongeren aantoonbaar geborgd is.
+
+
+Het pilotvoorstel
+
+Wij stellen een pilot voor van zes maanden in één wijk, met heldere, afgebakende cijfers:
+
+- 100 deelnemende ouderen (hulpvragers);
+- 50 gescreende jongeren (helpers);
+- platform-gestuurde coördinatie, met menselijke begeleiding door de initiatiefnemer en een klein team van 2 à 3 vrijwilligers (onbetaald);
+- doel: 500 uitgevoerde hulpvragen gedurende de pilot;
+- looptijd: 6 maanden, met de mogelijkheid om de opzet naar rato in te dikken tot 3 maanden.
+
+De coördinatie loopt grotendeels via het platform: matching, planning, screening-workflow, drempelbewaking, reviews, meldingen-triage en de rapportage aan de gemeente gebeuren geautomatiseerd. Het menselijke hart van de pilot wordt gevormd door de initiatiefnemer en 2 à 3 vrijwilligers, die de begeleiding van jongeren, de intakegesprekken, het contact met ouderen en hun families en de incident-opvolging verzorgen — onbetaald tijdens de pilot. Zo blijft de menselijke maat behouden zonder een dure betaalde coördinator. De screening en het verzekeringskader zijn vóór de operationele start volledig op orde; pas daarna gaan de eerste hulpvragen live.
+
+Matching en beschikbaarheid
+
+Een praktisch aandachtspunt dat wij vooraf benoemen, is het verschil in beschikbaarheid tussen de twee groepen. Jongeren zijn doorgaans vooral 's avonds, in het weekend en in schoolvakanties beschikbaar, terwijl ouderen hun hulpvragen het liefst overdag en doordeweeks geregeld zien. Zonder sturing zou dat tot een mismatch leiden: te veel aanbod op de momenten dat er weinig vraag is, en te weinig helpers op de gewilde dagdelen.
+
+BuurtHulp lost dit op drie manieren op. Ten eerste maakt het platform de beschikbaarheid van jongeren en de gewenste tijdvakken van ouderen vooraf inzichtelijk en stelt het geautomatiseerd matchvoorstellen voor, zodat vraag en aanbod gericht op elkaar worden afgestemd. Ten tweede stuurt het systeem op een ruim helperbestand (50 jongeren voor 100 ouderen) zodat ook de doordeweekse middagen gevuld raken, mede met jongeren die op bepaalde dagen vrij of vroeg uit zijn. Ten derde — en dit is het krachtigste instrument — kent het platform extra punten toe aan klussen in minder gewilde tijdvakken (zoals doordeweekse ochtenden en middagen). Deze bonuspunten maken juist de hulpvragen die anders blijven liggen aantrekkelijk om op te pakken, zodat de beschikbaarheid van jongeren beter aansluit op de behoefte van ouderen.
+
+
+Wat BuurtHulp en de gemeente leveren
+
+Wat BuurtHulp inbrengt (om niet, niet doorbelast aan de gemeente):
+
+- Ontwikkeling, eigendom én exploitatie van het platform (app, website, backend) — kosteloos door de initiatiefnemer verzorgd. Deze post staat op € 0; er worden geen platformkosten doorbelast aan de gemeente.
+- Het telefonisch aanmeldpunt — opzet en bemensing worden eveneens kosteloos door de initiatiefnemer verzorgd en staan op € 0 in de begroting.
+- Geautomatiseerde coördinatie via het platform (matching, planning, screening-flow, drempelbewaking, reviews, meldingen-triage en rapportage) — geen betaalde coördinator nodig. Deze post staat op € 0.
+- Menselijke begeleiding door de initiatiefnemer en 2 à 3 vrijwilligers (intake, incident-opvolging, contact met ouderen en families) — onbetaald tijdens de pilot.
+- Het complete screenings- en veiligheidsprotocol, de klachten- en incidentenprocedure en het AVG- en privacykader.
+- Projectleiding, kwaliteitsbewaking en eindrapportage met opschalingsadvies.
+- De commissie-inkomsten van € 1.500 worden in mindering gebracht op de te financieren kosten (zie de begroting).
+
+Wat gevraagd wordt van de gemeente:
+
+- Een (bescheiden) financiële bijdrage als cofinanciering van de pilot. Omdat de initiatiefnemer het platform en het telefonisch aanmeldpunt kosteloos verzorgt, de coördinatie geautomatiseerd is met onbetaalde menselijke begeleiding, en de hulpvrager de kluskosten betaalt, blijven alleen nog de screening, verzekering en communicatie over. Na aftrek van de eigen commissie-inkomsten resteert een te financieren bedrag van circa € 4.102,50 over 6 maanden (€ 5.602,50 minus € 1.500). Met gratis VOG via een welzijnspartner en de VNG Vrijwilligersverzekering kan die bijdrage richting nul gaan; de exacte verdeling stellen we graag samen vast.
+- Toegang en introductie: verbinding met wijkteams, jongerenwerk, scholen en welzijnsorganisaties.
+- Communicatie-ondersteuning richting ouderen en mantelzorgers (gemeentekanalen, wijkbladen, buurtnetwerken).
+- Een pilotwijk en een meedenkende contactpersoon (beleidsmedewerker), plus vaste evaluatiemomenten.
+
+
+Pilotbegroting
+
+Hieronder staat een realistische begroting voor een pilot van 6 maanden in één wijk (100 ouderen, 50 gescreende jongeren, platform-gestuurde coördinatie, doel: 500 uitgevoerde hulpvragen). De bedragen zijn richtbedragen op basis van actuele Nederlandse tarieven (2026). De begroting is bewust voorzichtig opgesteld: liever een eerlijke, navolgbare som dan een te rooskleurig plaatje.
+
+Uitgangspunten
+
+- Looptijd: 6 maanden (de bedragen schalen naar rato voor een variant van 3 maanden).
+- Coördinatie: geen betaalde coördinator. De operationele coördinatie verloopt geautomatiseerd via het platform; de menselijke begeleiding (intake, incident-opvolging, contact met ouderen/families) verzorgen de initiatiefnemer en 2 à 3 vrijwilligers onbetaald. Hierdoor staat de grootste kostenpost uit eerdere opzetten — een betaalde coördinator van circa € 18.000 — op € 0. Wil een gemeente toch een betaalde coördinator, dan kan die als aparte, optionele post worden toegevoegd.
+- VOG: het digitale tarief 2026 is € 33,85 per aanvraag (€ 41,35 via de balie). De begroting rekent met de digitale route als hoofdscenario (50 × € 33,85 = € 1.692,50); de balieroute (50 × € 41,35 = € 2.070) is de bovengrens voor het geval een enkele aanvraag toch via de balie loopt. Zie de toelichting hieronder over de mogelijke Gratis VOG-regeling.
+
+Kostenposten (6 maanden)
+
+- Screening jongeren – VOG — 50 × € 33,85 digitaal (bovengrens balieroute € 2.070; mogelijk € 0 via Gratis VOG-regeling): € 1.692,50
+- Aansprakelijkheids- en ongevallenverzekering — collectieve dekking voor 50 jongeren tijdens uitvoering hulpvragen, 6 maanden: € 1.500
+- Communicatiemateriaal — flyers, posters, wijkbrieven, infokaarten voor ouderen/mantelzorgers, materiaal wijkteams en scholen: € 1.500
+- Screening jongeren – overige verificatie — identiteits-, selfie-, telefoon- en bankrekeningverificatie, ca. € 8 p.p. × 50: € 400
+- Platform & coördinatie — app, website, backend, betaalafhandeling én geautomatiseerde coördinatie; kosteloos door de initiatiefnemer verzorgd: € 0
+- Telefonisch aanmeldpunt — centraal nummer, opzet en bemensing; kosteloos door de initiatiefnemer verzorgd: € 0
+- Menselijke begeleiding — initiatiefnemer + 2 à 3 vrijwilligers (intake, incident-opvolging, contact ouderen/families); onbetaald tijdens de pilot: € 0
+- Onvoorzien (ca. 10%) — marge voor extra VOG's (waaronder een eventuele balieroute), vertaal-/toegankelijkheidskosten, kleine bijstellingen: € 510
+- Totaal pilot (6 maanden): € 5.602,50
+
+De kluskosten zelf (de vergoeding voor de jongere) worden door de hulpvrager betaald via het klusbedrag en lopen dus niet via deze begroting; BuurtHulp houdt daarvan alleen de commissie van € 3 per klus over.
+
+Uitsplitsing per maand
+
+- Screening (VOG + overige verificatie): € 349
+- Verzekering: € 250
+- Communicatiemateriaal: € 250
+- Platform & coördinatie: € 0
+- Telefonisch aanmeldpunt: € 0
+- Onvoorzien: € 85
+- Totaal per maand: € 934
+
+(Eenmalige kosten zoals VOG-aanvragen en de eerste batch communicatiemateriaal vallen feitelijk vooral in de eerste maand; in de tabel zijn ze gemiddeld over de looptijd uitgesmeerd om een stabiel maandbeeld te geven.)
+
+Eerlijke onderbouwing: de pilot is niet kostendekkend
+
+Wij zijn hierover transparant. Het verdienmodel van BuurtHulp — een commissie van 15 tot 20% per klus — levert tijdens de pilot bewust onvoldoende op om de kosten te dekken. Reken het concreet voor:
+
+- Bij een gemiddelde klus met een bruto klusbedrag van € 20 geldt € 17 als forfaitaire onkostenvergoeding voor de jongere en houdt BuurtHulp € 3 over. Het uurtarief-equivalent van die € 17 blijft binnen de vrijwilligersnorm doordat het platform de uur-, maand- (€ 220) en jaargrenzen (€ 2.200) per jongere bewaakt en de vergoeding als onkostenvergoeding wordt vormgegeven.
+- Bij het doel van 500 uitgevoerde hulpvragen: 500 × € 3 = € 1.500 aan commissie-inkomsten over de hele pilot.
+
+Doordat de initiatiefnemer het platform en het telefonisch aanmeldpunt kosteloos verzorgt, de coördinatie geautomatiseerd is met onbetaalde menselijke begeleiding (initiatiefnemer + 2 à 3 vrijwilligers), en de hulpvrager de kluskosten betaalt, is de begroting teruggebracht tot € 5.602,50. Tegenover die kosten staat € 1.500 aan commissie-inkomsten — circa 27% van de pilotkosten. De resterende kosten zijn alleen nog screening, verzekering en communicatie. Het kleine restant draait op cofinanciering, maar de gevraagde bijdrage is hierdoor bescheiden (circa € 4.102,50) en kan met gratis VOG en de VNG Vrijwilligersverzekering verder richting nul gaan. Een volledig zelfdragend verdienmodel ontstaat na opschaling (meer wijken, meer volume, abonnementen voor woningcorporaties, zorginstellingen en welzijnsorganisaties).
+
+Mogelijke besparing op VOG- en verzekeringskosten
+
+Omdat jongeren via BuurtHulp werken met een kwetsbare doelgroep (ouderen), kan de VOG-screening via een reeds toegelaten welzijns- of vrijwilligerspartner onder de Regeling Gratis VOG (gratisvog.nl) worden georganiseerd. Lukt dat, dan vervalt het VOG-tarief en daalt de post screening met de begrote € 1.692,50. Wij rekenen in deze begroting bewust met de reële digitale kosten, zodat een meevaller (gratis VOG) mogelijk blijft in plaats van een tegenvaller. Daarnaast kennen veel gemeenten al een VNG Vrijwilligersverzekering (via Centraal Beheer); voor zover de jongeren binnen de vrijwilligersvergoeding blijven en daardoor onder die polis vallen, kan ook de verzekeringspost (circa € 1.500) geheel of gedeeltelijk vervallen. Beide mogelijkheden bespreken we graag bij de uitwerking, omdat ze de gevraagde bijdrage verder kunnen verlagen.
+
+
+Meetbare resultaten
+
+De pilot is zo opgezet dat de gemeente concreet kan sturen op resultaat. Wij rapporteren periodiek en leveren aan het einde een eindrapportage met opschalingsadvies. Voor de gemeente leveren wij uitsluitend geaggregeerde, niet tot personen herleidbare cijfers. Wij meten onder meer:
+
+- Aantal uitgevoerde hulpvragen (doel: 500) en het type hulpvragen.
+- Aantal actief deelnemende ouderen en jongeren.
+- Tevredenheid van ouderen en jongeren, op basis van de wederzijdse beoordelingen.
+- Het aandeel ouderen dat herhaaldelijk een beroep doet op dezelfde, vertrouwde helper.
+- Doorlooptijd tussen aanmelding van een hulpvraag en uitvoering.
+- Bereik via het telefonisch aanmeldpunt: hoeveel niet-digitale ouderen zijn bereikt die anders buiten beeld zouden blijven.
+- Aantal en type incidenten, en hoe deze zijn afgehandeld.
+- Indicatoren rond eenzaamheid en sociale verbinding (bijvoorbeeld via een korte beginmeting en eindmeting onder deelnemende ouderen).
+- Jongerenparticipatie: aantal jongeren dat werkervaring opdoet en een werkervaringscertificaat behaalt.
+
+Deze cijfers geven de gemeente een eerlijk beeld van wat de pilot oplevert, en vormen de basis voor een onderbouwd besluit over opschaling.
+
+
+Verdienmodel
+
+Het verdienmodel van BuurtHulp is eenvoudig en transparant: BuurtHulp houdt een commissie van 15 tot 20% per uitgevoerde klus. Bij een bruto klusbedrag van € 20 betekent dit dat € 17 als forfaitaire onkostenvergoeding voor de jongere geldt en BuurtHulp € 3 overhoudt. De vergoeding aan de jongere wordt vormgegeven binnen de grenzen van de onbelaste vrijwilligersvergoeding (uur-, maand- en jaarmaxima), zoals beschreven in het hoofdstuk over de juridische vorm; daardoor blijft ook het uurtarief-equivalent binnen de norm.
+
+De hulpvrager betaalt het klusbedrag; daarvan gaat € 17 naar de jongere en houdt BuurtHulp € 3 commissie over. Tijdens de pilot is dit model nog niet volledig kostendekkend, maar door de geautomatiseerde coördinatie en het gratis platform is het gat klein: zoals de begroting laat zien, dekt de commissie van € 1.500 al circa 27% van de pilotkosten (€ 5.602,50), en de resterende posten (screening, verzekering, communicatie) zijn beperkt. Een gezond, zelfstandig draaiend verdienmodel ontstaat pas na opschaling: meer wijken en meer volume, aangevuld met abonnementen voor woningcorporaties, zorginstellingen en welzijnsorganisaties die structureel hulp aan hun bewoners of cliënten willen ontsluiten. De pilot is daarmee een investering in een model dat zichzelf op termijn kan dragen.
+
+
+Positionering
+
+BuurtHulp positioneert zich nadrukkelijk als een preventieve, aanvullende voorziening, buiten de zorgplicht en buiten de Wmo-verstrekkingen. Het gaat om kleine, alledaagse hulpvragen die juist niet onder een indicatie of zorgaanbesteding vallen. BuurtHulp neemt geen geïndiceerde zorg of maatwerkvoorzieningen over en treedt daarmee niet in een aanbestedingsplichtig domein; de pilot is een aanvulling die voorkomt dat kleine problemen uitgroeien tot grote. Op die manier draagt BuurtHulp preventief bij aan langer zelfstandig thuis wonen en aan het ontlasten van mantelzorgers en formele zorg, zonder de bestaande zorgstructuren te raken.
+
+Daarbij dient één pilot tegelijk twee gemeentelijke beleidsterreinen: het tegengaan van eenzaamheid en het ondersteunen van ouderen enerzijds, en jongerenparticipatie anderzijds.
+
+
+Positionering ten opzichte van bestaande initiatieven
+
+Er bestaan in Nederland al diverse initiatieven die hulp tussen bewoners of betaalde huishoudelijke en oppasdiensten organiseren. BuurtHulp bouwt voort op de waarde die deze initiatieven hebben aangetoond en vult een aantal lacunes die juist bij kwetsbare ouderen en bij jongerenparticipatie blijven liggen. Hieronder schetsen we kort het bestaande landschap en daarna waarom BuurtHulp daar aanvullend op is.
+
+Wat er al is
+
+- BUUV is een buurtmarktplaats voor en door bewoners, actief in meerdere gemeenten (onder meer Haarlem, Amsterdam Zuid en Heerhugowaard). Bewoners plaatsen vraag en aanbod op digitale en fysieke prikborden en helpen elkaar zonder betaling; een onkostenvergoeding (bijvoorbeeld benzinekosten) is wel toegestaan. BUUV draait nadrukkelijk niet op het principe "voor wat hoort wat" en richt zich op vrijwillige, wederkerige burenhulp.
+- WeHelpen is een coöperatie (mede opgericht vanuit onder andere Achmea) en een landelijk, gratis online platform dat hulpvragers, mantelzorgers en vrijwilligers met elkaar verbindt. Het accent ligt op het organiseren van informele hulp en mantelzorg rond een persoon, met een gedeelde agenda, een logboek en een puntensysteem (credits) voor gegeven hulp. Het is een vrijwilligers- en mantelzorgomgeving, geen betaald-werkplatform.
+- Gemeentelijke vrijwilligerscentrales en steunpunten vrijwilligerswerk vormen in vrijwel elke gemeente het lokale aanspreekpunt. Zij bemiddelen tussen hulpvragen van ouderen (gezelschap, vervoer naar de dokter, boodschappen, administratie, tuin) en vrijwilligers, vaak met persoonlijk contact en een coördinator die de match maakt. Capaciteit en beschikbaarheid zijn afhankelijk van het lokale vrijwilligersbestand, dat overwegend uit oudere vrijwilligers bestaat.
+- Commerciële platforms organiseren betaalde diensten tussen particulieren. Helpling is het grootste schoonmaakplatform van Nederland: huishoudens boeken online een schoonmaker die zelf een uurtarief en agenda bepaalt, waarbij het platform circa 20% inhoudt. Charly Cares hanteert een vergelijkbaar model voor oppas: studentes worden persoonlijk gescreend, ouders boeken en betalen via de app met een oppastimer en een verplichte beoordeling na afloop. Beide modellen tonen aan dat een gescreend, betaald platform met app, eenvoudige boeking en wederzijdse beoordeling werkt. Ze zijn echter gericht op één specifieke dienst (schoonmaak respectievelijk oppas) en op een algemeen, digitaal vaardig publiek, niet op kwetsbare ouderen met kleine, gevarieerde hulpvragen. Bij Helpling oordeelde de Hoge Raad bovendien op 11 april 2025 dat de schoonmakers feitelijk als uitzendkrachten werken en niet als zelfstandigen, wat onderstreept hoe belangrijk een vooraf doordachte juridische status van de uitvoerders is.
+
+Waarom BuurtHulp aanvullend is
+
+BuurtHulp combineert sterke elementen uit beide werelden en voegt daar een aantal zaken aan toe die in geen van de bestaande initiatieven samenkomen:
+
+1. Gescreende jongeren met VOG als vaste uitvoerders. Waar burenhulpplatforms uitgaan van vrijwillige, ongescreende inzet en de commerciële platforms screenen op één dienst, koppelt BuurtHulp een complete screening (identiteits-, selfie-, telefoon- en bankrekeningverificatie, geldige VOG en een intakegesprek) aan een brede waaier van kleine praktische hulpvragen. Dat geeft het vertrouwensniveau dat juist bij hulp aan huis bij ouderen noodzakelijk is.
+2. Betaald werk specifiek voor jongeren. BUUV en WeHelpen werken zonder betaling of met credits; gemeentelijke vrijwilligerscentrales leunen op onbetaalde vrijwilligers. BuurtHulp biedt jongeren een betrouwbare vergoeding voor hun inzet. Dat verbreedt de groep mensen die zich beschikbaar stelt naar een leeftijdsgroep die in het reguliere vrijwilligersbestand juist ondervertegenwoordigd is, en maakt structurele beschikbaarheid realistischer.
+3. Telefonisch aanmeldpunt voor niet-digitale ouderen. Vrijwel alle genoemde platforms (BUUV, WeHelpen, Helpling, Charly Cares) zijn primair digitaal: de hulpvrager schrijft zich online in of boekt via een app. Een groot deel van de kwetsbare ouderen is daartoe niet in staat. BuurtHulp heeft naast app en website een centraal telefonisch aanmeldpunt waar een medewerker de hulpvraag noteert, in het systeem plaatst en de oudere telefonisch of per sms bevestigt. Aanmelden kan ook via familie, mantelzorger of wijkteam. Hiermee wordt een doelgroep bereikt die bij de bestaande digitale platforms buiten beeld blijft.
+4. Focus op jongerenparticipatie als doel op zich. De bestaande initiatieven zijn ofwel gericht op de hulpvrager (ouderenhulp, mantelzorg) ofwel op de dienst (schoonmaak, oppas). BuurtHulp koppelt ouderenhulp expliciet aan een maatschappelijk doel voor jongeren: werkervaring, verantwoordelijkheid en betrokkenheid bij de eigen buurt. Daarmee dient één pilot tegelijk twee gemeentelijke beleidsterreinen.
+5. Koppeling aan de eigen wijk en terugkerende contacten. BuurtHulp koppelt ouderen aan gescreende jongeren uit hun eigen wijk en stuurt op herhaalde inzet van dezelfde jongere na een goede ervaring. Dat versterkt vertrouwen en sociale verbinding op buurtniveau, terwijl het ouderen tegelijk de zekerheid van een vertrouwd, bekend gezicht biedt.
+
+BuurtHulp wil de bestaande structuren niet vervangen of verdringen. Voor wederkerige burenhulp blijven BUUV en WeHelpen waardevol, en de gemeentelijke vrijwilligerscentrales houden hun rol in vrijwilligersbemiddeling. BuurtHulp werkt juist samen met wijkteams, jongerenwerk, scholen en welzijn, en richt zich op het specifieke segment dat tussen deze initiatieven in valt: kleine hulpvragen van ouderen die voor reguliere vrijwilligersnetwerken lastig structureel in te vullen zijn, uitgevoerd door betaalde, gescreende jongeren, en ontsloten via een aanmeldpunt dat ook niet-digitale ouderen bereikt.
+
+
+Waarom nu
+
+De druk op de zorg en op mantelzorgers loopt op, het aantal zelfstandig wonende ouderen groeit, en eenzaamheid staat hoog op de gemeentelijke agenda. Tegelijk is er een generatie jongeren die graag iets wil betekenen maar moeilijk een ingang vindt. De techniek om beide groepen veilig te koppelen is er, het platform is gebouwd, en de juridische, fiscale en verzekeringskaders zijn — zoals dit voorstel laat zien — vooraf doordacht en sluitend. De ontwikkelingen in wet- en regelgeving rond platformwerk wijzen bovendien dezelfde kant op als het model van BuurtHulp. Dit is het moment om met een afgebakende, goed onderbouwde pilot ervaring op te doen en te leren wat werkt, voordat opgeschaald wordt.
+
+
+Volgende stap
+
+Wij nodigen de gemeente uit voor een kennismakingsgesprek waarin we het voorstel toelichten en samen verkennen welke pilotwijk geschikt is. Concreet stellen wij de volgende stappen voor:
+
+1. Een oriënterend gesprek met de betrokken beleidsmedewerker(s).
+2. Het samen vaststellen van de pilotwijk, de cofinancieringsverdeling en een meedenkende contactpersoon vanuit de gemeente.
+3. Het sluiten van de afspraken: pilotovereenkomst, verwerkersovereenkomst en het opleveren van de DPIA vóór de start.
+4. De voorbereidingsfase: werving en screening van jongeren, inrichting van het aanmeldpunt en de communicatie richting ouderen en mantelzorgers.
+5. De start van de pilot, met vaste evaluatiemomenten en een eindrapportage met opschalingsadvies.
+
+Wij denken graag mee over de precieze invulling en passen het voorstel aan op de wensen en de context van uw gemeente.
+
+
+Visie
+
+BuurtHulp wil uitgroeien tot een vertrouwd platform dat in elke wijk gescreende jongeren en kwetsbare ouderen veilig met elkaar verbindt — waar een oudere weet dat er altijd een bekend, betrouwbaar gezicht langskomt, en een jongere ervaart wat het betekent om iets voor een ander en voor de eigen buurt te doen. De pilot is de eerste stap; de ambitie is een schaalbaar model dat eenzaamheid tegengaat, ouderen langer zelfstandig laat wonen en jongeren een betekenisvolle start geeft.
+
+Onderstaande functies horen bij die toekomstvisie. Ze zijn nadrukkelijk geen pilot-vereiste, maar een doorontwikkelagenda die we ná een geslaagde pilot stapsgewijs uitrollen. We delen ze hier zodat de gemeente de volledige potentie van BuurtHulp meeweegt bij het besluit over opschaling.
+
+Een uitdrukkelijke waarschuwing vooraf, omdat dit het verschil maakt tussen een waardevol en een schadelijk platform. Gamificatie kan averechts werken wanneer beloningen aan snelheid of aantallen worden gekoppeld. Jongeren gaan dan optimaliseren op volume — zo snel mogelijk veel klussen afronden — ten koste van aandacht voor juist kwetsbare ouderen. Dat is het tegenovergestelde van wat BuurtHulp wil zijn. Daarom is het ontwerpprincipe van alle onderstaande functies dat beloningen primair aan kwaliteit worden gekoppeld, niet aan kwantiteit. De beoordeling van de oudere weegt structureel zwaarder dan het aantal uitgevoerde klussen. Geduld, vriendelijkheid, betrouwbaarheid en het serieus nemen van een hulpvraag leveren meer punten op dan tempo. Wie haast maakt ten koste van een oudere, daalt in plaats van stijgt. Op die manier stuurt het systeem jongeren richting het gedrag dat ouderen daadwerkelijk beschermt en waardeert.
+
+Voor jongeren: motivatie en erkenning
+
+- Punten- en ervaringssysteem: elke afgeronde, positief beoordeelde klus levert ervaringspunten op. Het zwaartepunt ligt bij de waardering van de oudere, niet bij het aantal klussen.
+- Niveaus en titels: jongeren groeien door herkenbare niveaus, bijvoorbeeld van Buurthelper naar Wijkheld naar Buurtlegende. Doorgroeien lukt alleen met aanhoudend hoge beoordelingen, niet door simpelweg veel te doen.
+- Badges voor mijlpalen: zichtbare erkenning voor betekenisvolle momenten, zoals een terugkerende oudere die opnieuw om dezelfde helper vraagt, een reeks uitstekende beoordelingen, of inzet bij digitale hulp.
+- Reeksen: beloning voor betrouwbare, regelmatige betrokkenheid over langere tijd, met behoud van kwaliteit als voorwaarde.
+- Anoniem wijk-klassement en "helper van de maand": een ranglijst op basis van waardering en betrouwbaarheid, niet op snelheid of volume. Anoniem opgezet om gezonde motivatie te stimuleren zonder onderlinge druk of privacyrisico.
+- Bonuspunten voor lastige of minder populaire klussen: klussen die anders blijven liggen (vroeg in de ochtend, vies werk, lastig bereikbaar, of op een doordeweeks dagdeel) leveren extra punten op. Dit lost een bekend matchingprobleem op: zo blijven juist de minder aantrekkelijke maar belangrijke hulpvragen aantrekkelijk om op te pakken.
+- Verzilverbare punten: opgebouwde punten zijn in te wisselen voor bijvoorbeeld een cadeaubon, een tegoed bij een lokale winkel, of een donatie aan een goed doel naar keuze. Dit verbindt inzet aan tastbare en lokale waarde, en geeft jongeren de keuze om hun beloning terug te geven aan de buurt.
+- Officieel erkend werkervaringscertificaat: na een door de gemeente erkende periode van kwalitatieve inzet ontvangt de jongere een werkervaringscertificaat dat bruikbaar is op het cv. Dit versterkt de positionering van BuurtHulp als maatschappelijke werkervaring en geeft jongeren aantoonbare meerwaarde voor school, vervolgopleiding of werk. De erkenning is gekoppeld aan kwaliteit en betrouwbaarheid, niet aan een aantal klussen.
+
+Voor ouderen: comfort, vertrouwen en gemoedsrust
+
+- Vaste of favoriete helper: na een goede ervaring kan een oudere dezelfde jongere als vaste of favoriete helper instellen, zodat vertrouwen en bekendheid kunnen groeien. Dit sluit aan op de bestaande werkwijze om bij voorkeur opnieuw dezelfde jongere te koppelen.
+- Toegankelijkheidsmodus met grote knoppen: een vereenvoudigde weergave met grote knoppen, groot lettertype en eenvoudige stappen voor ouderen die de standaardapp ingewikkeld vinden. Het telefonisch aanmeldpunt blijft altijd beschikbaar als volwaardig alternatief.
+- Gezelschap als expliciete categorie: gezelschap en een praatje worden niet weggestopt onder "klusjes", maar krijgen een eigen, gelijkwaardige plek. Dit maakt de drempel lager om om gezelschap te vragen en sluit direct aan op de doelstelling rond eenzaamheidsbestrijding.
+- Bevestiging en foto na afloop voor familie op afstand: met toestemming van de oudere ontvangt een gekoppeld familielid of mantelzorger een korte bevestiging en eventueel een foto na afronding (bijvoorbeeld de boodschappen op tafel, de opgeruimde tuin). Dit geeft familie op afstand gemoedsrust en versterkt de betrokkenheid van mantelzorgers.
+
+Voor wijk en gemeente: zichtbare impact en verbinding
+
+- Live wijk-impactdashboard: een actueel beeld van uitgevoerde hulpvragen, betrokken ouderen en jongeren, en sociale verbinding in de wijk. Geschikt voor verantwoording, communicatie en beleidsinzicht, met geaggregeerde en geanonimiseerde gegevens.
+- Team-uitdagingen met scholen: scholen of klassen kunnen zich als team inzetten voor de wijk, met gezamenlijke doelen die op kwaliteit en betrokkenheid sturen. Dit verankert jongerenparticipatie in het onderwijs en vergroot het bereik.
+- Seizoensacties: terugkerende thema-acties, zoals hulp bij het winterklaar maken van de tuin, sneeuw ruimen, of extra aandacht rond de feestdagen wanneer eenzaamheid vaak toeneemt.
+- Verhalenmuur: een plek waar (met toestemming) positieve ervaringen en korte verhalen van ouderen en jongeren worden gedeeld. Dit maakt de menselijke waarde van BuurtHulp zichtbaar en versterkt het vertrouwen in de buurt.
+
+Samengevat is de toekomstvisie om BuurtHulp uit te bouwen tot een platform dat jongeren langdurig motiveert, ouderen blijvend comfort en regie geeft, en de gemeente zichtbaar laat zien wat investeren in de buurt oplevert — met als onwrikbaar uitgangspunt dat alle beloningen de zorgvuldige, respectvolle behandeling van kwetsbare ouderen versterken in plaats van ondermijnen. Deze functies bouwen we gefaseerd uit op basis van de leerpunten uit de pilot.
