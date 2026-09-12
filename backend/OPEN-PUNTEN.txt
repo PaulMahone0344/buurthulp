@@ -1,0 +1,103 @@
+HEITJEHULP BACKEND — OPEN PUNTEN NA M1 (12 sep 2026)
+
+Alles hieronder is bewust NIET in M1 gebouwd. Het zijn keuzes die het
+plan openliet, of dingen die een hook (M6/M16) of een latere milestone
+vragen. Niets hiervan blokkeert M2.
+
+KEUZES DIE IK HEB GEMAAKT (hoofdstuk 4 liet ze open) — pas aan als je
+het anders wilt, het zijn allemaal keuzelijsten in 01-collections.mjs:
+ 1. hh_profielen.verificatiestatus en vog_status gebruiken dezelfde vier
+    waarden als de M3-statusmachine: nieuw | in_behandeling |
+    goedgekeurd | afgewezen.
+ 2. hh_koppelingen.rechten = keuze (meerdere): meekijken | plaatsen.
+    De regels kijken er in M1 nog NIET naar: een gekoppeld familielid
+    mag nu altijd meekijken én plaatsen. Zodra M9 de rechten echt wil
+    afdwingen: rule op hh_klussen.createRule uitbreiden met
+    @collection.hh_koppelingen.rechten ?= "plaatsen".
+ 3. hh_vergoedingen.status = open | uitbetaald | mislukt.
+ 4. hh_incidenten.soort = nood | probleem | overig.
+ 5. hh_betalingen.methode is vrije tekst (bv. "ideal"), geen keuzelijst;
+    M16 bepaalt de definitieve waarden.
+ 6. hh_wijken.postcodes is een json-lijst van postcode-cijfers
+    (["4003","4004"]), geen losse tekst.
+ 7. Extra indexen die niet in de prompt stonden maar wel logisch zijn:
+    hh_wijken (gemeente, wijk) uniek; hh_klustypes (naam) uniek;
+    hh_beoordelingen (klus, van_gebruiker) uniek (M7: één beoordeling
+    per klus per kant); zoekindexen op hh_klussen.status/hulpvrager/
+    toegewezen_jongere, hh_betalingen.psp_id, hh_vergoedingen.jongere,
+    hh_incidenten.melder.
+
+TECHNISCHE PUNTEN VOOR DE APP-AGENT (M2 en verder):
+ 8. taal heeft geen standaardwaarde op de server (PocketBase kent geen
+    default op een keuzeveld). De app moet bij registratie taal = "nl"
+    meesturen.
+ 9. Registreren: de app MOET rol meesturen (hulpvrager, jongere of
+    familie), anders weigert de server. Rol coordinator kan alleen door
+    een ingelogde coordinator worden aangemaakt (dat past wél in één
+    rule, dus geen handmatige superuser-stap nodig).
+10. Partiële updates: de rules met ":isset = false" (rol op hh_users,
+    bedragen/hulpvrager/geplaatst_door/toegewezen_jongere op hh_klussen,
+    screeningvelden op hh_profielen, afhandeling op hh_incidenten)
+    eisen dat de app alleen de gewijzigde velden stuurt. Een "heel
+    record terugsturen" wordt geweigerd met 404.
+11. Anonieme lijst-opvragen geven HTTP 200 met een lege lijst, geen 403
+    (PocketBase behandelt een list-rule als filter). Er lekt niets; de
+    rulecheck controleert dat er 0 rijen terugkomen. De prompt vroeg
+    "nooit 200" — dat is bij PocketBase voor lijsten technisch niet
+    haalbaar zonder de rule op null (= niemand) te zetten.
+12. Reputatie tonen (J19/O7: sterren en aantal klussen van de jongere
+    aan de oudere) kan nu NIET: hh_profielen is alleen leesbaar voor de
+    eigenaar en de coordinator, omdat er ook screening- en IBAN-velden
+    in staan. Opties voor M7: (a) sterren_gemiddeld en klussen_aantal
+    kopiëren naar hh_users (die is wél zichtbaar voor de oudere van een
+    toegewezen klus), of (b) een aparte publieke collectie
+    hh_reputatie. Voorkeur: (a), twee velden erbij, geen extra
+    collectie.
+13. Familielid ziet de jongere op de klus van zijn oudere NIET in
+    hh_users (naam/foto voor F3 "meekijken"). Dat vraagt een tweede
+    stap in de back-relatie op hh_users.listRule; in M9 toevoegen en
+    dan in de rulecheck bewijzen dat het niet lekt.
+14. Familielid kan geen beoordeling geven namens de oudere. Als O9 dat
+    voor familie ook moet kunnen (M9), createRule op hh_beoordelingen
+    uitbreiden.
+
+WAT EEN HOOK MOET BEWAKEN (M6 / M16), nu nog open op de server:
+15. Het statusovergangsschema (concept > open > geaccepteerd > onderweg
+    > bezig > afgerond, plus geannuleerd/probleem). In M1 mag een
+    deelnemer elke status naar elke andere zetten. Hook in M6.
+16. Logregels in hh_klus_status worden nu door de app zelf geschreven;
+    een hook (M6) moet ze automatisch schrijven bij elke statuswissel,
+    anders kan een app-bug het logboek overslaan.
+17. Bedragen: de oudere en het familielid mogen bij het aanmaken
+    bedrag_bruto/vergoeding_jongere/commissie zelf meesturen (de prompt
+    verbood dat alleen voor de jongere). M16 zegt: nooit in de app
+    rekenen. Dus in M16 een hook die bedragen uit hh_klustypes
+    overneemt en de drie velden ook voor hulpvrager/familie dichtzet.
+18. Dubbel accepteren (M5-race): de rule eist toegewezen_jongere leeg,
+    maar twee gelijktijdige verzoeken kunnen allebei de lege waarde
+    zien. M5 moet dit met een hook of een uniek mechanisme afvangen en
+    in een test bewijzen.
+19. Koppeling met toestemming (M9): nu maakt alleen de oudere de
+    koppeling aan. Een uitnodig-/bevestigstroom (familielid vraagt,
+    oudere bevestigt) is er nog niet.
+20. Telefoonverificatie (G5) en sms-leverancier: niets op de server.
+21. Verwijderen van een gebruiker (G7 "account wissen"): profiel en
+    push-tokens verdwijnen mee, maar zijn klussen/beoordelingen/
+    betalingen blijven met een lege verwijzing achter. PocketBase maakt
+    zo'n verwijzing vanzelf leeg (valkuil 12). Of dat AVG-technisch
+    voldoende is (anonimiseren vs. wissen) moet nog besloten worden.
+22. Onderstaande annuleer-reden (M6 "annuleren met reden") heeft geen
+    veld. Voorstel: hh_klus_status.toelichting (tekst). Niet toegevoegd
+    omdat hoofdstuk 4 het niet noemt.
+
+SERVER / BEHEER:
+23. PocketBase-versie is niet via de API zichtbaar (admin-UI is niet
+    publiek). v0.25.9 komt uit de qawayhabase-infra-docs; de API-vorm
+    (_superusers, fields-API, health.data.canBackup) bevestigt 0.23+.
+24. De seed-accounts staan op PRODUCTIE. Vóór de pilot: verwijderen of
+    wachtwoorden roteren. Ze zijn herkenbaar aan hh-seed-*@qawayah.nl
+    en "[seed kNN]" in klus-omschrijvingen.
+25. backend/seed-accounts.local.json (gitignored) bevat de wachtwoorden
+    voor de rulecheck. Raak je dat bestand kwijt: haal ze uit
+    GEHEIMEN.txt (kop "HeitjeHulp seed-accounts (prod, 12 sep 2026)")
+    of reset ze via de superuser.

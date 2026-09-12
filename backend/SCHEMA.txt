@@ -1,0 +1,307 @@
+HEITJEHULP — BACKEND-SCHEMA (M1)
+Server: https://api.qawayahbase.com (gedeelde PocketBase v0.25.9)
+Aangemaakt: 12 september 2026. Alle collecties beginnen met hh_.
+
+Dit bestand beschrijft in gewone taal wat er op de server staat: per
+collectie de velden, de verbanden (relaties), de indexen en wie wat mag.
+De scripts in scripts/ zijn de bron; dit bestand is de uitleg.
+
+================================================================
+ALGEMEEN
+================================================================
+
+Rollen (veld "rol" op hh_users):
+  hulpvrager    de oudere die hulp vraagt
+  jongere       de helper
+  familie       mantelzorger/kind, plaatst namens de oudere en kijkt mee
+  coordinator   meldkamer/gemeente, ziet en mag alles op hh_
+
+Afspraken die overal gelden:
+  - Bedragen staan in CENTEN als geheel getal (1000 = € 10,00).
+    Geen enkel bedragveld is verplicht, want PocketBase weigert 0 bij
+    een verplicht getalveld.
+  - Elke collectie heeft "created" en "updated" (automatisch gevuld).
+  - Veldnamen en keuzewaarden zijn Nederlands.
+  - Alleen ingelogde HeitjeHulp-gebruikers (uit hh_users) mogen iets.
+    Anoniem levert nooit gegevens op. Uitzondering: registreren.
+  - De coordinator mag alles op elke hh_-collectie.
+  - "Niet meesturen": sommige regels eisen dat een veld NIET in het
+    verzoek zit (technisch: @request.body.veld:isset = false). Dat
+    betekent voor de app: stuur alleen de velden mee die je wilt
+    wijzigen, nooit het hele record. Stuur je zo'n veld toch mee — ook
+    ongewijzigd — dan wordt het hele verzoek geweigerd.
+  - Een lijst-opvraag geeft nooit een foutmelding maar een gefilterde
+    lijst: wat je niet mag zien, staat er gewoon niet in (HTTP 200).
+    Eén record direct opvragen of wijzigen dat je niet mag zien geeft
+    404 (bestaan wordt niet verklapt). Aanmaken dat niet mag geeft 400.
+
+Verwijderen (cascade):
+  Verwijder je een gebruiker, dan verdwijnen automatisch zijn profiel
+  (hh_profielen) en zijn push-tokens. Verwijder je een klus, dan
+  verdwijnen de logregels (hh_klus_status). Verder verdwijnt niets
+  automatisch: klussen, betalingen en incidenten blijven altijd staan.
+
+================================================================
+1. hh_users  (inlog-collectie, 8 eigen velden + systeemvelden)
+================================================================
+Velden
+  email            e-mail, verplicht, uniek (inlognaam)
+  password         wachtwoord (systeem)
+  verified         e-mail bevestigd (systeem, alleen superuser zet dit)
+  rol              keuze, verplicht: hulpvrager | jongere | familie | coordinator
+  naam             tekst, verplicht
+  telefoon         tekst
+  geboortedatum    datum
+  foto             1 afbeelding (jpeg/png/webp/heic/gif, max 5 MB), miniatuur 200x200
+  wijk             verwijzing naar hh_wijken
+  taal             keuze: nl | ar | tr | en  (PocketBase kent geen
+                   standaardwaarde; app en seed zetten "nl")
+Regels
+  Lezen       jezelf; de coordinator ziet iedereen; verder alleen mensen
+              die bij je horen: de jongere die op jouw klus staat, de
+              oudere van wie je een klus doet, je gekoppelde familielid
+              of de oudere aan wie je gekoppeld bent.
+  Aanmaken    registreren mag iedereen (ook zonder in te loggen) met rol
+              hulpvrager, jongere of familie. Een coordinator-account
+              kan alleen een ingelogde coordinator aanmaken.
+  Bijwerken   jezelf, maar zonder het veld "rol" mee te sturen; de
+              coordinator mag alles (ook rol zetten).
+  Verwijderen jezelf, of de coordinator.
+
+================================================================
+2. hh_wijken  (4 velden)
+================================================================
+Velden
+  gemeente    tekst, verplicht (bv. Tiel)
+  wijk        tekst, verplicht (bv. Tiel-West)
+  postcodes   lijst van postcode-cijfers, bv. ["4003","4004"]
+  actief      ja/nee
+Index   gemeente + wijk is uniek
+Regels
+  Lezen       elke ingelogde gebruiker
+  Aanmaken/Bijwerken/Verwijderen   alleen coordinator
+
+================================================================
+3. hh_klustypes  (4 velden)
+================================================================
+Velden
+  naam              tekst, verplicht, uniek (boodschappen, tuin, ...)
+  icoon             tekst (naam van het icoon in de app)
+  richtduur         getal, minuten
+  richtvergoeding   getal, centen
+Regels
+  Lezen       elke ingelogde gebruiker
+  Aanmaken/Bijwerken/Verwijderen   alleen coordinator
+
+================================================================
+4. hh_profielen  (9 velden) — één per gebruiker
+================================================================
+Velden
+  gebruiker           verwijzing naar hh_users, verplicht, uniek;
+                      verdwijnt mee met de gebruiker
+  verificatiestatus   keuze: nieuw | in_behandeling | goedgekeurd | afgewezen
+  vog_status          keuze: nieuw | in_behandeling | goedgekeurd | afgewezen
+  iban_geverifieerd   ja/nee
+  straal_km           getal
+  beschikbaarheid     vrije structuur (json), bv. {"ma":["middag"],...}
+  klustypes           verwijzing naar hh_klustypes, meerdere (max 20)
+  sterren_gemiddeld   getal 0-5
+  klussen_aantal      geheel getal
+Regels
+  Lezen       eigen profiel; coordinator alles
+  Aanmaken    eigen profiel (gebruiker = jijzelf), zonder de velden
+              verificatiestatus, vog_status, iban_geverifieerd,
+              sterren_gemiddeld en klussen_aantal mee te sturen
+  Bijwerken   eigen profiel, dezelfde velden niet meesturen en ook
+              "gebruiker" niet; coordinator alles (screening)
+  Verwijderen eigen profiel, of coordinator
+
+================================================================
+5. hh_klussen  (15 velden) — het hart
+================================================================
+Velden
+  hulpvrager          verwijzing naar hh_users (de oudere), verplicht
+  geplaatst_door      verwijzing naar hh_users (wie hem invoerde)
+  klustype            verwijzing naar hh_klustypes
+  omschrijving        tekst
+  adres               tekst
+  lat, lon            getallen (kaart)
+  wanneer_van         datum/tijd
+  wanneer_tot         datum/tijd
+  status              keuze, verplicht: concept | open | geaccepteerd |
+                      onderweg | bezig | afgerond | geannuleerd | probleem
+  bedrag_bruto        centen (wat de oudere betaalt)
+  vergoeding_jongere  centen
+  commissie           centen
+  toegewezen_jongere  verwijzing naar hh_users
+  bron                keuze: app | telefoon | familie
+Indexen   status; hulpvrager; toegewezen_jongere (snel zoeken)
+Regels
+  Lezen       - de oudere zelf (hulpvrager = jij)
+              - de toegewezen jongere
+              - een jongere ziet daarnaast alle klussen met status open
+                waarvan de oudere in dezelfde wijk woont als hij
+                (jongere zonder wijk ziet niets extra's)
+              - een familielid ziet alles van de oudere(n) aan wie hij
+                gekoppeld is (hh_koppelingen)
+              - coordinator alles
+  Aanmaken    - oudere: hulpvrager = jijzelf, geplaatst_door = jijzelf,
+                bron = app, status concept of open, geen jongere
+              - familielid: geplaatst_door = jijzelf, bron = familie,
+                hulpvrager = een oudere aan wie je gekoppeld bent,
+                status concept of open, geen jongere
+              - coordinator: alles (bron telefoon)
+              - jongere: nooit
+  Bijwerken   - oudere of gekoppeld familielid: eigen klus, maar
+                hulpvrager en geplaatst_door niet meesturen
+              - jongere ACCEPTEERT: klus is open, nog geen jongere,
+                oudere woont in zijn wijk, en hij zet toegewezen_jongere
+                op zichzelf (mag tegelijk status = geaccepteerd)
+              - jongere VOERT UIT: klus is aan hem toegewezen; hij mag
+                status wijzigen maar stuurt toegewezen_jongere niet mee
+              - jongere mag NOOIT meesturen: bedrag_bruto,
+                vergoeding_jongere, commissie, hulpvrager, geplaatst_door
+              - coordinator alles
+  Verwijderen alleen een eigen klus met status concept, of de
+              coordinator. Een echte klus verdwijnt nooit stil.
+
+================================================================
+6. hh_klus_status  (4 velden) — logboek per statuswissel
+================================================================
+Velden
+  klus    verwijzing naar hh_klussen, verplicht; verdwijnt mee met de klus
+  door    verwijzing naar hh_users (wie)
+  van     keuze (de 8 statussen), leeg bij de eerste regel
+  naar    keuze (de 8 statussen), verplicht
+  ("wanneer" = created)
+Index   klus
+Regels
+  Lezen       deelnemer van de klus (oudere, toegewezen jongere,
+              gekoppeld familielid) of coordinator
+  Aanmaken    deelnemer van de klus, met door = jijzelf; of coordinator
+  Bijwerken/Verwijderen   alleen coordinator (logboek is onveranderlijk)
+
+================================================================
+7. hh_beoordelingen  (5 velden)
+================================================================
+Velden
+  klus            verwijzing naar hh_klussen, verplicht
+  van_gebruiker   verwijzing naar hh_users, verplicht
+  naar_gebruiker  verwijzing naar hh_users, verplicht
+  sterren         geheel getal 1-5
+  tekst           tekst
+Index   klus + van_gebruiker is uniek (één beoordeling per klus per kant)
+Regels
+  Lezen       wie hem gaf, wie hem kreeg, gekoppeld familielid van de
+              oudere, coordinator
+  Aanmaken    alleen op een klus met status afgerond, alleen door de
+              oudere of de toegewezen jongere van die klus, met
+              van_gebruiker = jijzelf en naar_gebruiker = de andere
+              deelnemer (niet jezelf); coordinator alles
+  Bijwerken   eigen beoordeling (tekst/sterren), zonder klus, van_ of
+              naar_gebruiker mee te sturen; coordinator alles
+  Verwijderen alleen coordinator
+
+================================================================
+8. hh_koppelingen  (3 velden) — familielid bij oudere
+================================================================
+Velden
+  oudere      verwijzing naar hh_users, verplicht
+  familielid  verwijzing naar hh_users, verplicht
+  rechten     keuze, meerdere: meekijken | plaatsen
+Index   oudere + familielid is uniek
+Regels
+  Lezen       de oudere, het familielid, coordinator
+  Aanmaken    alleen de oudere zelf (oudere = jijzelf) en alleen voor
+              een gebruiker met rol familie; of coordinator.
+              Een familielid kan zichzelf dus NIET koppelen.
+  Bijwerken   de oudere (rechten), zonder oudere/familielid te wijzigen;
+              coordinator
+  Verwijderen de oudere, het familielid, coordinator
+  Let op: in M1 staan de rechten nog niet in de andere regels; een
+  gekoppeld familielid mag nu meekijken én plaatsen (zie OPEN-PUNTEN).
+
+================================================================
+9. hh_vertrouwd  (2 velden) — vaste jongere van een oudere
+================================================================
+Velden
+  oudere   verwijzing naar hh_users, verplicht
+  jongere  verwijzing naar hh_users, verplicht
+Index   oudere + jongere is uniek
+Regels
+  Lezen       de oudere, de jongere, gekoppeld familielid, coordinator
+  Aanmaken    de oudere zelf, alleen voor een gebruiker met rol jongere;
+              coordinator
+  Bijwerken   alleen coordinator
+  Verwijderen de oudere, coordinator
+
+================================================================
+10. hh_betalingen  (7 velden)
+================================================================
+Velden
+  klus        verwijzing naar hh_klussen, verplicht
+  betaler     verwijzing naar hh_users
+  bedrag      centen
+  methode     tekst (bv. ideal)
+  psp_id      tekst (Mollie-betalingsnummer, komt in M16)
+  status      keuze, verplicht: open | betaald | mislukt | terugbetaald
+  betaald_op  datum/tijd
+Indexen   klus; psp_id
+Regels
+  Lezen       de betaler, de oudere van de klus, gekoppeld familielid,
+              coordinator. De jongere ziet betalingen niet.
+  Aanmaken/Bijwerken/Verwijderen   alleen coordinator (later: Mollie-hook)
+
+================================================================
+11. hh_vergoedingen  (4 velden) — uitbetaling aan jongere
+================================================================
+Velden
+  jongere  verwijzing naar hh_users, verplicht
+  periode  tekst, bv. 2026-09
+  bedrag   centen
+  status   keuze, verplicht: open | uitbetaald | mislukt
+Index   jongere
+Regels
+  Lezen       de jongere zelf, coordinator
+  Aanmaken/Bijwerken/Verwijderen   alleen coordinator
+
+================================================================
+12. hh_incidenten  (5 velden)
+================================================================
+Velden
+  klus          verwijzing naar hh_klussen (mag leeg: noodknop)
+  melder        verwijzing naar hh_users, verplicht
+  soort         keuze, verplicht: nood | probleem | overig
+  omschrijving  tekst
+  afhandeling   tekst (aantekening van de coordinator)
+Index   melder
+Regels
+  Lezen       de melder, coordinator
+  Aanmaken    iedereen ingelogd met melder = jijzelf; met een klus erbij
+              alleen als je deelnemer van die klus bent; zonder klus
+              altijd (noodknop). "afhandeling" niet meesturen.
+  Bijwerken/Verwijderen   alleen coordinator
+
+================================================================
+13. hh_push_tokens  (3 velden)
+================================================================
+Velden
+  gebruiker  verwijzing naar hh_users, verplicht; verdwijnt mee met de gebruiker
+  token      tekst, verplicht, uniek
+  platform   keuze: ios | android
+Regels
+  Lezen/Aanmaken/Bijwerken/Verwijderen   alleen eigen rijen
+  (gebruiker = jijzelf). Ook de coordinator ziet andermans tokens niet.
+
+================================================================
+SEED (testdata, scripts/03-seed.mjs)
+================================================================
+  2 wijken (Tiel-West, Passewaaij), 6 klustypes, 7 accounts
+  (hh-seed-<rol><n>@qawayah.nl, wachtwoorden in GEHEIMEN.txt),
+  7 profielen, 1 koppeling (oudere 1 ↔ familielid 1), 12 klussen
+  ([seed k01]..[seed k12] in de omschrijving, alle 8 statussen),
+  33 logregels, 2 beoordelingen, 1 vertrouwd, 1 incident, 2 betalingen.
+
+SMOKETEST (scripts/04-rulecheck.mjs)
+  218 controles, positief én negatief, ingelogd als de echte accounts.
+  Laatste run 12 sep 2026: 218 groen, 0 rood.
