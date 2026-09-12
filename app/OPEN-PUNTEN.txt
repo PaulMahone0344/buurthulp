@@ -1,5 +1,5 @@
-HEITJEHULP APP - OPEN PUNTEN UIT M0 (FUNDAMENT)
-Bijgewerkt: 12 september 2026
+HEITJEHULP APP - OPEN PUNTEN (M0 FUNDAMENT, M2 TOEGANG)
+Bijgewerkt: 12 september 2026 (M2)
 
 Alles hieronder viel op tijdens het bouwen van het fundament maar hoorde
 niet bij de opdracht. Niets hiervan is gebouwd; het staat hier zodat het
@@ -72,13 +72,15 @@ FONTS
 APP
 ----------------------------------------------------------------
 
-10. De dichtheid (normaal/groot) wordt nu alleen vanuit het tijdelijke
-    rolwisselscherm gezet. Straks moet hij de ingelogde rol volgen
-    (hulpvrager = groot) en mogelijk instelbaar zijn (G9).
+10. OPGELOST in M2. De dichtheid volgt de rol: lib/app/dichtheid_controller.dart
+    leidt hem af (ingelogd hulpvrager = groot; voor het inloggen de op G2
+    gekozen rol). Niemand zet hem nog met de hand. Instelbaar (G9) blijft
+    open.
 
-11. Geen appBarTheme in theme.dart; de AppBar van de stubs is de
-    Material 3-standaard (met surface-tint). Bij de echte schermen
-    beslissen of er een HhKop/HhScherm-steiger komt zoals ObyScreen.
+11. OPGELOST in M2. lib/design/components/hh_scherm.dart is de steiger
+    (kop in headlineMedium, HhTerugKnop met woord en raakvlak uit
+    theme.dart, veilige randen, scrollbaar of niet). Geen Material-AppBar
+    meer in de app; een appBarTheme is daarmee niet nodig.
 
 12. l10n/ en core/ zijn aangemaakt met alleen een README, zodat de
     mappenindeling gelijk is aan ObyCom. Vullen bij de eerste feature
@@ -91,3 +93,96 @@ APP
 
 14. Geen integration_test-map aangemaakt; het app-plan noemt die voor
     de doorlopende stromen. Toevoegen bij de eerste echte flow.
+
+----------------------------------------------------------------
+M2 TOEGANG (12 september 2026)
+----------------------------------------------------------------
+
+M2: 15. Sms-verificatie (G5 uit het app-plan) is niet gebouwd: geen
+    leverancier gekozen, kost per bericht. G5 is nu "Bevestig je
+    e-mailadres" via de ingebouwde PocketBase-verificatiemail
+    (requestVerification). Sms kan later als extra stap; de server heeft
+    er nog niets voor (backend OPEN-PUNT 20).
+
+M2: 16. Testaccounts op PROD, aangemaakt tijdens de handmatige smoke:
+    - hh-m2test-1@qawayah.nl  rol hulpvrager, STAAT NOG (verified=false,
+      taal=nl, telefoon 0612345678). Wachtwoord was willekeurig en is
+      nergens bewaard; opruimen (of wachtwoord resetten) via de superuser
+      voor de pilot.
+    - hh-m2test-2@qawayah.nl  rol jongere, aangemaakt en in dezelfde run
+      weer gewist via AuthGateway.accountWissen (G7-pad). Bestaat niet meer.
+
+M2: 17. De verificatiemail voor hh-m2test-1 is aangevraagd, maar of hij
+    aankomt (en met welke afzender) is niet gecontroleerd: de mail-
+    instellingen zijn server-breed op de gedeelde PocketBase. Zelfde geldt
+    voor de wachtwoord-resetmail (G6). Beide links openen in de browser op
+    de standaard PocketBase-pagina, niet in de app (geen deep link).
+
+M2: 18. Meldingen-schakelaar (G7) wordt lokaal bewaard in secure storage
+    (sleutel hh_meldingen_aan); hh_users heeft er geen veld voor en er is
+    nog geen push. Zodra push komt (hh_push_tokens, M6/M14) moet de keuze
+    op de server of in het push-token-beheer landen.
+
+M2: 19. 401 buiten de toegangslaag: de gateway kent de sessie niet, dus
+    er is geen centrale onderschepper. Elke latere repository die
+    Err(HhFoutSoort.nietIngelogd) terugkrijgt moet
+    SessieController.sessieVerlopen() aanroepen (zoals bijwerken en
+    accountWissen in M2 al doen); dan gaat de app naar G3 met melding.
+
+M2: 20. Ouderenregel "maximaal drie keuzes per scherm": G7 heeft voor de
+    hulpvrager vier acties (taal, meldingen, uitloggen, account wissen),
+    omdat de vaste beslissing alle vier voorschrijft. G2 heeft drie
+    ingangen plus de link "Ik heb al een account". Als drie echt hard is:
+    account wissen naar een tweede scherm, of de inlog-link op G2
+    anders vormgeven. Beslissing is aan het ontwerp.
+
+M2: 21. De taalkeuze op G7 is een HhKeuzerij met vier keuzes in een rij.
+    Op een smalle telefoon bij 200 procent tekst in dichtheid groot breekt
+    "Nederlands" midden in het woord (geen overloop, wel lelijk).
+    HhKeuzerij kent alleen een rij; twee rijen of een lijst is netter.
+
+M2: 22. G4 vraagt telefoon als niet-verplicht veld (hh_users.telefoon).
+    Het app-plan zegt "e-mail of telefoon", maar inloggen kan alleen met
+    e-mail: PocketBase gebruikt e-mail als identiteit van hh_users.
+    Telefoon-als-inlognaam is dus niet gebouwd.
+
+M2: 23. Hulp (G8) is bereikbaar via G3 ("Hulp nodig?"), via de landing en
+    rechtstreeks op /hulp (ook zonder sessie). Niet via G2, om G2 op de
+    drie ingangen te houden. Het meldkamernummer is een placeholder in
+    lib/core/config.dart (HhConfig.meldkamerTelefoon).
+
+M2: 24. Na inloggen landt elke rol op een landing (RolLandingScherm) met
+    naam, rol, bevestig-banner (als verified=false), instellingen, hulp en
+    uitloggen. Geen tabs; die komen per rol in M3-M10. Dan verdwijnt
+    lib/features/rol_landing_scherm.dart.
+
+M2: 25. Het tijdelijke rolwisselscherm van M0 is weg. lib/app/screens/
+    dev_screen.dart staat alleen in debug-builds op /dev (kDebugMode) en
+    wisselt de dichtheid via de gekozen rol; ingelogd volgt de dichtheid
+    altijd de rol van de gebruiker.
+
+M2: 26. Navigatie vanaf G2 gebruikt context.go, geen push: bij een
+    sessiewissel bekijkt de go_router-guard de basisroute van de stapel
+    (niet de gepushte route). Met push zou registreren op de rolroute
+    landen in plaats van op G5. Alle latere schermen die de sessie
+    veranderen moeten daarom als basisroute staan, of zelf navigeren.
+
+M2: 27. Punt 14 blijft open: de stroomtests staan in test/flow met
+    FakeAuthGateway (geen integration_test-map, geen echte server in
+    tests). De prod-smoke was handmatig en is niet vastgelegd.
+
+M2: 28. Teksten die nog in widgets staan (uit M0, niet verplaatst): de
+    soortnamen in HhMeldBalk (Informatie/Geslaagd/Waarschuwing/Fout), de
+    standaardlabels van HhLaadStaat en het woord "verplicht" in HhInvoer.
+    Alle M2-teksten staan in lib/l10n/teksten_nl.dart.
+
+M2: 29. iOS: CocoaPods heeft ios/Podfile, Podfile.lock en de xcconfig-
+    includes toegevoegd voor flutter_secure_storage en url_launcher.
+    Android is in M2 niet gebouwd (punt 13). Geen LSApplicationQueries-
+    Schemes voor tel: nodig, want de app roept alleen launchUrl aan (geen
+    canLaunchUrl); mislukt bellen geeft een meldbalk met het nummer.
+
+M2: 30. Offline bij het opstarten blijft de app op de splash met een
+    meldbalk en "Opnieuw proberen"; het token blijft bewaard. Er is geen
+    automatische herkansing (bijvoorbeeld zodra het netwerk terugkomt).
+

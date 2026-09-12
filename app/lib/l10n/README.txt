@@ -1,3 +1,3 @@
-Vertalingen (ARB-bestanden). Nog leeg in M0; schermteksten staan tot die
-tijd rechtstreeks in de widgets, in het Nederlands.
-Zelfde indeling als ObyCom/app/lib/l10n.
+Schermteksten. teksten_nl.dart is het enige bestand met zichtbare tekst;
+widgets bevatten geen losse strings. Vertalingen (ar/tr/en) komen later;
+de taalkeuze uit G7 wordt nu alleen opgeslagen in hh_users.taal.

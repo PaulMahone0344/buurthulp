@@ -1,80 +1,60 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:heitjehulp_app/app/app.dart';
-import 'package:heitjehulp_app/app/dichtheid_controller.dart';
-import 'package:heitjehulp_app/app/screens/rolwissel_screen.dart';
+import 'package:heitjehulp_app/app/paden.dart';
+import 'package:heitjehulp_app/app/router.dart';
+import 'package:heitjehulp_app/app/screens/dev_screen.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
+import 'package:heitjehulp_app/features/toegang/screen/welkom_screen.dart';
+import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
 
-Future<void> _pumpApp(WidgetTester tester) async {
-  await tester.pumpWidget(const ProviderScope(child: HeitjeHulpApp()));
-  await tester.pumpAndSettle();
-}
+import '../../support/hh_toegang_wikkel.dart';
 
 void main() {
   group('HeitjeHulpApp', () {
-    testWidgets('start op het tijdelijke rolwisselscherm', (tester) async {
-      await _pumpApp(tester);
+    testWidgets('start op de splash en komt zonder sessie op welkom', (
+      tester,
+    ) async {
+      await pompApp(tester, gateway: fakeMetAlleRollen());
 
-      expect(find.byType(RolwisselScreen), findsOneWidget);
-      expect(find.text('Rolwissel (tijdelijk)'), findsOneWidget);
+      expect(find.byType(WelkomScreen), findsOneWidget);
+      expect(find.text(TekstenNl.welkomTitel), findsOneWidget);
     });
 
-    for (final rol in ['Hulpvrager', 'Jongere', 'Familie', 'Coordinator']) {
-      testWidgets('navigeert naar de stub van $rol en weer terug', (
-        tester,
-      ) async {
-        await _pumpApp(tester);
+    testWidgets('"Ik zoek hulp" maakt de knoppen 60 hoog', (tester) async {
+      await pompApp(tester, gateway: fakeMetAlleRollen());
 
-        await tester.tap(find.widgetWithText(HhKnop, rol));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(RolwisselScreen), findsNothing);
-        expect(find.widgetWithText(AppBar, rol), findsOneWidget);
-        expect(
-          find.text('Dit deel van de app komt in een latere opdracht.'),
-          findsOneWidget,
-        );
-
-        await tester.tap(find.text('Terug naar rolwissel'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(RolwisselScreen), findsOneWidget);
-      });
-    }
-
-    testWidgets('dichtheid groot maakt de knoppen 60 hoog', (tester) async {
-      await _pumpApp(tester);
-
-      final normaal = tester.getSize(find.widgetWithText(HhKnop, 'Jongere'));
+      final normaal = tester
+          .getSize(find.widgetWithText(HhKnop, TekstenNl.keuzeHelpFamilielid))
+          .height;
       expect(
-        normaal.height,
+        normaal,
         greaterThanOrEqualTo(HhMaten.knopHoogte(HhDichtheid.normaal)),
       );
 
-      await tester.tap(find.text('Groot'));
+      await tester.tap(find.widgetWithText(HhKnop, TekstenNl.keuzeZoekHulp));
       await tester.pumpAndSettle();
 
-      final groot = tester.getSize(find.widgetWithText(HhKnop, 'Jongere'));
+      final groot = tester
+          .getSize(find.widgetWithText(HhKnop, TekstenNl.registrerenKnop))
+          .height;
       expect(
-        groot.height,
+        groot,
         greaterThanOrEqualTo(HhMaten.knopHoogte(HhDichtheid.groot)),
       );
-      expect(groot.height, greaterThan(normaal.height));
     });
-  });
 
-  group('DichtheidController', () {
-    test('start op normaal en wisselt met zet()', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    testWidgets('/dev bestaat alleen in debug-builds', (tester) async {
+      final container = await pompApp(tester, gateway: fakeMetAlleRollen());
 
-      expect(container.read(dichtheidControllerProvider), HhDichtheid.normaal);
-      container
-          .read(dichtheidControllerProvider.notifier)
-          .zet(HhDichtheid.groot);
-      expect(container.read(dichtheidControllerProvider), HhDichtheid.groot);
+      container.read(routerProvider).go(HhPaden.dev);
+      await tester.pumpAndSettle();
+
+      // Tests draaien in debug; daar bestaat de route.
+      expect(
+        find.byType(DevScreen),
+        kDebugMode ? findsOneWidget : findsNothing,
+      );
     });
   });
 }

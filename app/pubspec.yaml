@@ -15,11 +15,18 @@ dependencies:
   # Zelfde keuzes als ObyCom: Riverpod voor staat, go_router voor navigatie.
   flutter_riverpod: ^3.3.2
   go_router: ^17.3.0
+  # M2: PocketBase-client verpakt in lib/core/pb (gateway), sessie-token in
+  # secure storage, en de belknop naar de meldkamer in G8.
+  pocketbase: ^0.24.0+1
+  flutter_secure_storage: ^10.3.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Alleen voor de MockClient in de gateway-tests (http/testing.dart).
+  http: ^1.6.0
 
 flutter:
   uses-material-design: true
