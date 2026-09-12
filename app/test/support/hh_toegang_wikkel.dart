@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
+import 'package:heitjehulp_app/core/pb/profiel_gateway.dart';
+import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
@@ -69,6 +72,8 @@ ProviderContainer toegangContainer({
   SessieState? sessie,
   HhRol? gekozenRol,
   bool urlOpenerLukt = true,
+  ProfielGateway? profielGateway,
+  FotoKiezer? fotoKiezer,
 }) {
   final container = ProviderContainer(
     overrides: [
@@ -77,6 +82,14 @@ ProviderContainer toegangContainer({
         opslag ?? GeheugenKeyValueStore(),
       ),
       urlOpenerProvider.overrideWithValue((_) async => urlOpenerLukt),
+      // M3: screening van de jongere. Standaard een goedgekeurd profiel voor
+      // de test-jongere, zodat de landing /jongere bereikbaar blijft; de
+      // screeningtests geven hun eigen fake mee.
+      profielGatewayProvider.overrideWithValue(
+        profielGateway ??
+            FakeProfielGateway.goedgekeurd(testGebruiker(HhRol.jongere).id),
+      ),
+      fotoKiezerProvider.overrideWithValue(fotoKiezer ?? FakeFotoKiezer()),
       if (sessie != null)
         sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
       if (gekozenRol != null)

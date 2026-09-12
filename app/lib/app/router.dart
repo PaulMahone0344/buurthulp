@@ -6,7 +6,10 @@ import '../features/coordinator/screen/coordinator_stub_screen.dart';
 import '../features/familie/screen/familie_stub_screen.dart';
 import '../features/hulpvrager/hulpvrager_routes.dart';
 import '../features/hulpvrager/screen/hulpvrager_stub_screen.dart';
+import '../features/jongere/jongere_routes.dart';
+import '../features/jongere/provider/screening_providers.dart';
 import '../features/jongere/screen/jongere_stub_screen.dart';
+import '../features/jongere/screening_guard.dart';
 import '../features/toegang/model/sessie_state.dart';
 import '../features/toegang/provider/sessie_providers.dart';
 import '../features/toegang/screen/bevestig_email_screen.dart';
@@ -54,6 +57,11 @@ String? toegangRedirect(SessieState sessie, String locatie) {
 class _SessieListenable extends ChangeNotifier {
   _SessieListenable(Ref ref) {
     ref.listen(sessieControllerProvider, (vorige, nieuwe) => notifyListeners());
+    // M3: de screening-guard kijkt naar het profiel van de jongere.
+    ref.listen(
+      screeningControllerProvider,
+      (vorige, nieuwe) => notifyListeners(),
+    );
   }
 }
 
@@ -64,10 +72,17 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: HhPaden.splash,
     refreshListenable: listenable,
-    redirect: (context, state) => toegangRedirect(
-      ref.read(sessieControllerProvider),
-      state.matchedLocation,
-    ),
+    redirect: (context, state) =>
+        toegangRedirect(
+          ref.read(sessieControllerProvider),
+          state.matchedLocation,
+        ) ??
+        // M3: jongere zonder goedgekeurd profiel gaat van /jongere naar J9.
+        screeningRedirect(
+          ref.read(sessieControllerProvider),
+          ref.read(screeningControllerProvider),
+          state.matchedLocation,
+        ),
     routes: [
       GoRoute(
         path: HhPaden.splash,
@@ -118,6 +133,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const CoordinatorStubScreen(),
       ),
       ...hulpvragerRoutes(),
+      ...jongereRoutes(),
       // Alleen in debug-builds; een release kent dit pad niet.
       if (kDebugMode)
         GoRoute(

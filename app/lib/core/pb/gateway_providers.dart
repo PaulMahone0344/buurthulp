@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../key_value_store.dart';
 import 'auth_gateway.dart';
 import 'pocketbase_gateway.dart';
+import 'profiel_gateway.dart';
 
 /// De echte PocketBase-verbinding. Tests overriden [authGatewayProvider]
 /// met een [FakeAuthGateway] en [keyValueStoreProvider] met een
@@ -17,4 +18,9 @@ final authGatewayProvider = Provider<AuthGateway>(
 
 final keyValueStoreProvider = Provider<KeyValueStore>(
   (ref) => SecureKeyValueStore(),
+);
+
+/// M3: screening van de jongere. Tests overriden met [FakeProfielGateway].
+final profielGatewayProvider = Provider<ProfielGateway>(
+  (ref) => PocketBaseProfielGateway(ref.watch(pocketBaseGatewayProvider)),
 );

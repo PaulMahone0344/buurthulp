@@ -20,13 +20,17 @@ dependencies:
   pocketbase: ^0.24.0+1
   flutter_secure_storage: ^10.3.1
   url_launcher: ^6.3.2
+  # M3: foto, documentfoto en selfie (camera/galerij); verkleint zelf tot
+  # max 1600 px lange zijde via maxWidth/maxHeight.
+  image_picker: ^1.2.3
+  # M3: http.MultipartFile voor foto-uploads naar PocketBase (en de
+  # MockClient in de gateway-tests).
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  # Alleen voor de MockClient in de gateway-tests (http/testing.dart).
-  http: ^1.6.0
 
 flutter:
   uses-material-design: true
