@@ -21,8 +21,9 @@ class HhInvoer extends StatelessWidget {
     this.autofillHints,
     this.onChanged,
     this.onSubmitted,
+    this.maxRegels = 1,
     super.key,
-  });
+  }) : assert(maxRegels >= 1, 'minstens een regel');
 
   final String label;
   final TextEditingController? controller;
@@ -36,6 +37,10 @@ class HhInvoer extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+
+  /// Meer dan 1: een meerregelig veld (toelichting, M4) dat meegroeit tot
+  /// dit aantal regels en dan scrollt.
+  final int maxRegels;
 
   static const verplichtWoord = 'verplicht';
 
@@ -77,8 +82,12 @@ class HhInvoer extends StatelessWidget {
               controller: controller,
               enabled: isActief,
               obscureText: obscureText,
-              keyboardType: keyboardType,
+              keyboardType:
+                  keyboardType ??
+                  (maxRegels > 1 ? TextInputType.multiline : null),
               textInputAction: textInputAction,
+              minLines: 1,
+              maxLines: maxRegels,
               autofillHints: autofillHints,
               onChanged: onChanged,
               onSubmitted: onSubmitted,

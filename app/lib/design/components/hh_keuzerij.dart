@@ -11,11 +11,16 @@ class HhKeuze<T> {
     required this.waarde,
     required this.label,
     required this.icoon,
+    this.semantiekLabel,
   });
 
   final T waarde;
   final String label;
   final IconData icoon;
+
+  /// Wat de schermlezer voorleest als het label zelf niet genoeg zegt,
+  /// bijvoorbeeld met een werkwoord: "Kies boodschappen" (M4).
+  final String? semantiekLabel;
 }
 
 /// Rij van keuzeknoppen met icoon, naast elkaar en even breed. Met
@@ -120,7 +125,7 @@ class _KeuzeKnop<T> extends StatelessWidget {
       enabled: isActief,
       checked: isGekozen,
       inMutuallyExclusiveGroup: isExclusief,
-      label: keuze.label,
+      label: keuze.semantiekLabel ?? keuze.label,
       onTap: onTik,
       excludeSemantics: true,
       child: Material(
