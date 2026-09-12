@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/hh_fout.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_profiel.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/paden_klussen.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
 import 'package:heitjehulp_app/features/jongere/model/screening_stap.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
@@ -108,6 +109,45 @@ void main() {
         screeningRedirect(jongere, met(HhScreeningStatus.nieuw), HhPaden.hulp),
         isNull,
       );
+    });
+
+    test('M5: klussenpaden volgen dezelfde regel als /jongere', () {
+      final paden = [
+        HhPadenKlussen.mijnKlussen,
+        HhPadenKlussen.profiel,
+        HhPadenKlussen.instellingen,
+        HhPadenKlussen.klusDetail('abc'),
+      ];
+      for (final pad in paden) {
+        expect(HhPadenKlussen.isKlussenPad(pad), isTrue, reason: pad);
+        for (final status in HhScreeningStatus.values) {
+          expect(
+            screeningRedirect(jongere, met(status), pad),
+            status == HhScreeningStatus.goedgekeurd
+                ? isNull
+                : HhPadenJongere.overzicht,
+            reason: '$pad ${status.code}',
+          );
+        }
+        expect(
+          screeningRedirect(jongere, const AsyncLoading(), pad),
+          isNull,
+          reason: pad,
+        );
+        for (final rol in HhRol.values.where((r) => r != HhRol.jongere)) {
+          expect(
+            screeningRedirect(
+              SessieIngelogd(testGebruiker(rol)),
+              const AsyncData(ScreeningGegevens()),
+              pad,
+            ),
+            rol.pad,
+            reason: '$pad ${rol.code}',
+          );
+        }
+      }
+      expect(HhPadenKlussen.isKlussenPad(HhPaden.jongere), isFalse);
+      expect(HhPadenKlussen.isKlussenPad(HhPadenJongere.overzicht), isFalse);
     });
 
     test('een andere rol op een screeningpad gaat naar de eigen rolroute', () {
