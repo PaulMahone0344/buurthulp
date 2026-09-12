@@ -186,3 +186,531 @@ M2: 30. Offline bij het opstarten blijft de app op de splash met een
     meldbalk en "Opnieuw proberen"; het token blijft bewaard. Er is geen
     automatische herkansing (bijvoorbeeld zodra het netwerk terugkomt).
 
+
+================================================================
+M3 SCREENING JONGERE (12 sep 2026) — eigen nummering M3-1 t/m M3-16
+================================================================
+HEITJEHULP APP — OPEN PUNTEN NA M3 SCREENING JONGERE (12 sep 2026)
+
+Bewust NIET gebouwd of afwijkend van de letterlijke opdracht. Samenvoegen
+met app/OPEN-PUNTEN.txt zodra M3 en M4 allebei binnen zijn.
+
+AFWIJKINGEN VAN DE PROMPT (met reden)
+ M3-1. Rule "nieuw -> in_behandeling" accepteert ook een LEGE
+    verificatiestatus: (verificatiestatus = "nieuw" || verificatiestatus = "")
+    Reden: een profiel dat de app zelf aanmaakt (J1) heeft geen
+    verificatiestatus (PocketBase kent geen standaardwaarde op een
+    keuzeveld en de eigenaar mag het veld bij aanmaken niet meesturen).
+    Zonder deze toevoeging kon geen enkele echte jongere ooit indienen.
+    De app leest leeg als nieuw (HhScreeningStatus.vanCode). Bewezen in
+    07-screeningcheck (leeg -> in_behandeling mag, expliciet nieuw ook).
+ M3-2. Wijk (J6) staat op hh_users.wijk, niet op hh_profielen: de klussen-rule
+    kijkt naar @request.auth.wijk. J6 schrijft de wijk dus naar het account
+    (via ProfielGateway.werkAccountBij, zonder rol) en straal_km naar het
+    profiel.
+ M3-3. J9 heeft een extra tekstknop "Status vernieuwen". Zonder die knop zag
+    een jongere een goedkeuring door de meldkamer pas na een herstart van
+    de app; er is (nog) geen push of realtime (M8).
+ M3-4. Geboortedatum (J1) is een tekstveld dag-maand-jaar, geen datumkiezer:
+    showDatePicker spreekt Engels zolang de app geen vertalingen laadt
+    (l10n komt later). Minimumleeftijd wordt niet gecontroleerd (staat
+    nergens in het plan; wel iets voor de meldkamer/coordinator).
+ M3-5. Klussoorten (J8) staan in HhKeuzerij-rijen van twee, niet zes op een
+    rij: zes knoppen naast elkaar passen niet op 390 px bij 200 procent.
+ M3-6. De M3-profielvelden (verificatiestatus, foto, geboortedatum, wijk)
+    zitten NIET in HhGebruiker (M2-model, gedeeld met M4). Ze zitten in
+    een eigen HhAccountGegevens dat ProfielGateway apart ophaalt
+    (hh_users.getOne). Een tweede verzoek per laadbeurt; te vervangen door
+    velden op HhGebruiker zodra M3 en M4 samengevoegd zijn.
+
+NIET GEBOUWD / LATER
+ M3-7. Beschermde foto's (document_foto, selfie) worden in de app NIET
+    getoond; alleen "je foto is opgeslagen". Tonen vraagt een
+    bestandstoken (client.files.getToken) per weergave. Ook hh_users.foto
+    wordt nog niet als miniatuur getoond. Komt bij J19 (mijn profiel) /
+    M11 (ontwerp).
+ M3-8. Selfie (J3) is niet te testen op de iOS-simulator (geen camera). De
+    prod-smoke is daarom gedaan met de echte app-laag (ProfielGateway,
+    ScreeningController, guard) tegen prod als seed-jongere 1, in een
+    tijdelijke Flutter-test die niet is gecommit; op de simulator is de
+    app gestart en tot het inlogscherm doorlopen. Volledige doorloop van
+    J1-J9 met de vinger op een echte iPhone (camera, galerij,
+    permissiedialogen) staat open.
+ M3-9. Android: AndroidManifest heeft nog geen CAMERA-permissie-tekst nodig
+    (image_picker regelt de runtime-vraag), maar de Android-emulatorbuild
+    is in M3 niet gedraaid (alleen iOS-simulator, zoals de opdracht vroeg).
+M3-10. Foto's worden verkleind via image_picker (maxWidth/maxHeight 1600,
+    kwaliteit 85) en opnieuw gecodeerd als jpeg. HEIC uit de iOS-galerij
+    komt daardoor als jpeg aan. Geen aparte compressiestap; geen controle
+    op de 10 MB-grens in de app (server weigert dan met 400 ->
+    "ongeldige invoer").
+M3-11. J9 "Bel ons" gebruikt HhConfig.meldkamerTelefoon (placeholder
+    0800-0000000, zie app OPEN-PUNTEN G8).
+M3-12. VOG-status volgen: de jongere ziet vog_status alleen als pil; er is
+    geen koppeling met Justis (plan hoofdstuk 10, punt 3 staat nog open).
+M3-13. Na "ter controle aanbieden" kan de jongere zijn stappen nog steeds
+    bewerken (server staat over_mij/iban/... in in_behandeling toe). Of
+    dat gewenst is (bevriezen tot beoordeling) is een keuze voor de
+    coordinator-kant (M10/M14).
+M3-14. Testen: de M2-flowtests die als jongere inloggen krijgen in
+    test/support/hh_toegang_wikkel.dart standaard een goedgekeurd
+    fake-profiel (anders stuurt de nieuwe guard ze naar J9). Dat is een
+    bewuste, gedocumenteerde standaard; de screeningtests geven hun eigen
+    fake mee.
+
+BACKEND
+M3-15. 02-rules.mjs is na 06 niet meer "de waarheid" voor hh_profielen.update
+    en hh_klussen.list/view. 02 dry-run toont daar een verschil; 02 NIET
+    opnieuw met --apply draaien. Volgorde is nu 01 -> 02 -> 03 -> 05 -> 06
+    (staat in SCHEMA.txt).
+M3-16. 07-screeningcheck zet seed-jongere 1 altijd terug op de seed-waarden
+    (hardgecodeerd in het script, gelijk aan 03-seed PROFIELEN.jongere1).
+    Wijzigt 03-seed die waarden, dan 07 mee aanpassen.
+
+================================================================
+M4 HULPVRAAG PLAATSEN (12 sep 2026) — punten 31-55
+================================================================
+HEITJEHULP APP - OPEN PUNTEN M4 HULPVRAAG PLAATSEN (12 september 2026)
+
+Alles hieronder viel op tijdens het bouwen van O1-O6 en O12, maar hoorde
+niet bij de opdracht of vraagt een beslissing. Niets hiervan is gebouwd.
+Wordt later samengevoegd met app/OPEN-PUNTEN.txt (nummering loopt door
+vanaf M2: 31 en verder).
+
+----------------------------------------------------------------
+BEDRAGEN EN BACKEND
+----------------------------------------------------------------
+
+M4: 31. berekenBedragen (lib/features/hulpvrager/domein/bedragen.dart) is
+    de vaste pilotkeuze: bedrag_bruto = vergoeding_jongere =
+    hh_klustypes.richtvergoeding, commissie 0. De app rekent dus zelf en
+    stuurt de drie velden mee (de createRule staat dat de oudere toe).
+    Bij M16 (betalen) verhuist dit naar een server-hook die de bedragen
+    uit hh_klustypes overneemt en de velden voor hulpvrager/familie
+    dichtzet (backend OPEN-PUNT 17). Dan vervalt deze functie en blijft
+    alleen euroTekst over.
+
+M4: 32. De logregel in hh_klus_status (van concept, naar open, door ik)
+    schrijft de app zelf, direct na het aanmaken. Op prod bewezen dat de
+    createRule dit voor de oudere toestaat (smoke, punt 34). Mislukt de
+    logregel, dan staat de klus er wel; de oudere ziet daar niets van
+    (GeplaatsteHulpvraag.isLogGeschreven = false, alleen voor logs). Een
+    hook in M6 moet dit overnemen (backend OPEN-PUNT 16).
+
+M4: 33. lat en lon blijven leeg bij het plaatsen. Geocoding van het
+    samengestelde adres komt in M5 (klussen op kaart).
+
+M4: 34. PROD-SMOKE RECORD, OPRUIMEN VOOR DE PILOT:
+    hh_klussen id pe1m2o02y83pm79, hulpvrager = seed-oudere 1
+    (hh-seed-hulpvrager1@qawayah.nl), status open, bron app, klustype
+    boodschappen, bedrag_bruto = vergoeding_jongere = 1000, commissie 0,
+    omschrijving begint met "[m4-smoke]". Plus 1 logregel in
+    hh_klus_status (concept -> open). Verwijderen door de oudere is
+    geweigerd (status open, rule verbiedt dat; bewezen in de smoke).
+    Opruimen kan alleen als coordinator of superuser. Herhaalbaar via:
+    flutter test test/smoke/m4_prod_smoke_test.dart --dart-define=HH_SMOKE=true
+    (leest backend/seed-accounts.local.json; elke run maakt een nieuw
+    record).
+
+M4: 35. De adresvelden op hh_users (adres, postcode, plaats, contact_naam,
+    contact_telefoon) zijn zichtbaar voor iedereen die de hh_users-rij
+    mag zien (rules ongewijzigd): de oudere zelf, de coordinator, de
+    jongere op wie een klus van de oudere is toegewezen, een gekoppeld
+    familielid. Dat is voor de pilot de bedoeling (de jongere moet weten
+    waar hij heen moet), maar de contactpersoon is daarmee ook voor de
+    jongere zichtbaar. Als dat niet gewenst is: contact_* naar
+    hh_profielen (alleen eigenaar + coordinator) of een aparte
+    collectie. Beslissing is aan de eigenaar.
+
+----------------------------------------------------------------
+APP: SESSIE, ROUTER, GEDEELDE BESTANDEN
+----------------------------------------------------------------
+
+M4: 36. HhGebruiker (het sessiemodel van M2) kent de adresvelden niet en
+    is niet gewijzigd om M2/M3 niet te raken. M4 heeft een eigen model
+    HhGegevens (lib/features/hulpvrager/model) dat via de klus-gateway
+    apart wordt gelezen (GET hh_users/{id}) en partieel bijgewerkt.
+    Gevolg: wie op O12 zijn naam wijzigt, ziet de nieuwe naam op O1
+    ("Hallo ...") pas na opnieuw inloggen; O12 zelf toont hem meteen.
+    Bij het samenvoegen: de vijf velden aan HhGebruiker toevoegen en
+    SessieController een methode geven om de gebruiker te vervangen;
+    dan kan HhGegevens weg.
+
+M4: 37. lib/features/hulpvrager/screen/hulpvrager_stub_screen.dart heet
+    nog zo omdat router.dart (M2) en de M2-tests op de naam
+    HulpvragerStubScreen wijzen; hij bouwt nu HulpvragerHomeScreen (O1).
+    Bij het samenvoegen: router.dart direct naar HulpvragerHomeScreen,
+    stub verwijderen, test/flow/toegang_flow_test.dart aanpassen.
+
+M4: 38. Eén M2-test is aangepast: test/widget/features/toegang/
+    schermen_test.dart, geval "landing hulpvrager (niet bevestigd)" is
+    "landing familie (niet bevestigd)" geworden, omdat O1 geen
+    rolregel en geen uitlogknop meer heeft (die zitten in G7). O1 wordt
+    nu getest in test/widget/features/hulpvrager/schermen_test.dart.
+
+M4: 39. De M4-routes staan als losse top-level routes
+    (/hulpvrager/hulp-vragen/wat enz.) in
+    lib/features/hulpvrager/hulpvrager_routes.dart, niet als
+    kindroutes onder /hulpvrager (die route staat in router.dart en
+    blijft van M2). De guard in toegangRedirect kijkt alleen naar
+    HhPaden.rolPaden (exacte match): een jongere die naar
+    /hulpvrager/hulp-vragen/wat deeplinkt wordt NIET naar /jongere
+    gestuurd. O1 toont dan een leeg scherm (rolcheck in de widget); O2-O6
+    en O12 hebben die check niet, maar plaatsen mislukt dan op de
+    server-rule. Netter: in toegangRedirect op het pad-voorvoegsel van
+    de rol controleren (raakt lib/app, dus bij het samenvoegen).
+
+M4: 40. Twee design-componenten zijn additief uitgebreid (in de
+    koppel-commit): HhKeuze kreeg een optioneel semantiekLabel (voor
+    "Kies boodschappen"), HhInvoer kreeg maxRegels (meerregelige
+    toelichting; standaard 1, dus niets verandert voor M2/M3). HhInvoer
+    controleert niet dat obscureText en maxRegels > 1 niet samengaan
+    (TextField weigert dat met een assert).
+
+M4: 41. klusGatewayProvider staat in
+    lib/features/hulpvrager/provider/hulpvrager_providers.dart, niet
+    in lib/core/pb/gateway_providers.dart, om dat gedeelde bestand niet
+    te raken. Bij het samenvoegen verhuizen naar gateway_providers.dart.
+
+----------------------------------------------------------------
+APP: SCHERMEN EN OUDERENREGEL
+----------------------------------------------------------------
+
+M4: 42. Spraakinvoer (O4) is niet gebouwd. Er staat een uitgeschakelde
+    microfoonknop "Inspreken" met schermlezer-label "Spraakinvoer komt
+    later". Bouwen vraagt een spraak-naar-tekst-pakket (bv.
+    speech_to_text), microfoon-permissie in Info.plist en
+    AndroidManifest en een keuze wat er met de tekst gebeurt
+    (toelichting vullen).
+
+M4: 43. "Kies een dag" (O3) is een eigen dagkiezer: een volledig scherm
+    met de komende 14 dagen als grote knoppen ("donderdag 17
+    september"). Geen Material showDatePicker: die is Engels zonder
+    flutter_localizations (en dat pakket plus MaterialApp-delegates
+    zou app.dart raken) en heeft kleine raakvlakken. De grens van 14
+    dagen (HulpVragenWanneerScreen.dagenVooruit) is een keuze; de
+    prompt zei alleen "datumkiezer, groot".
+
+M4: 44. Extra controle bij Verder op O3, niet in de prompt: een dagdeel
+    dat al helemaal voorbij is (vandaag, ochtend, om 15:00) geeft de
+    melding "Dit moment is al voorbij. Kies een ander moment." De
+    server controleert dit niet.
+
+M4: 45. Ouderenregel "maximaal drie keuzes per scherm": aangehouden als
+    maximaal drie keuzes PER RIJ (HhKeuzerij). O2 toont zes soorten in
+    twee rijen van drie (meer dan zes: knop "Meer soorten hulp"); O3
+    heeft twee rijen van drie (dag, dagdeel); O4 heeft vier
+    invoervelden plus microfoon en Verder; O12 heeft zeven
+    invoervelden. Als "drie" ook voor invoervelden hard is, moet O12
+    in twee schermen (adres / contactpersoon). Beslissing is aan het
+    ontwerp.
+
+M4: 46. O6 heeft bewust GEEN terugknop (de ene uitzondering op "altijd
+    een terugknop"): O5 gebruikt context.go, de stapel van de stroom
+    is weg, en de ene knop "Naar het begin" gaat naar O1. Terug zou
+    een tweede keer plaatsen uitlokken.
+
+M4: 47. "Weet u het zeker?" komt alleen bij het verlaten via de
+    terugknop (of Android-terug) op O2, en alleen als er al iets is
+    gekozen. Op O3-O5 gaat terug naar de vorige stap met behoud van
+    invoer. Wie de app afsluit midden in de stroom, is het concept
+    kwijt (alleen in geheugen, niet bewaard).
+
+M4: 48. Klustype-iconen: hh_klustypes.icoon wordt via één mapping
+    (lib/features/hulpvrager/domein/klustype_icoon.dart, 10 namen)
+    vertaald; onbekende namen krijgen het helpende-handen-icoon. Wie
+    op het webpaneel een klustype toevoegt moet een van die namen
+    gebruiken, anders komt de terugval. De lijst uitbreiden is een
+    regel per icoon.
+
+M4: 49. De soorten hulp staan op naam gesorteerd (server sort=naam). Bij
+    meer dan zes verbergt "Meer" dus de alfabetisch laatste, niet de
+    minst belangrijke. Een veld "volgorde" op hh_klustypes zou beter
+    zijn; niet toegevoegd omdat hoofdstuk 4 het niet noemt.
+
+M4: 50. Postcode en plaats worden alleen op "niet leeg" gecontroleerd;
+    geen formaatcontrole (1234 AB). De server begrenst postcode op 7
+    tekens en geeft dan een 400 die de app als "Er klopt iets niet in
+    de ingevulde gegevens" toont.
+
+M4: 51. Tijdens het plaatsen (O5, spinner) doet de terugknop niets; het
+    verzoek is niet te annuleren. Bij een time-out zonder antwoord kan
+    de klus wel al bestaan terwijl de app een fout toont; opnieuw
+    tikken plaatst dan een tweede klus. Netter (M6/M8): een
+    idempotentiesleutel of "Mijn hulpvragen" eerst controleren.
+
+M4: 52. "Mijn hulpvragen" (O1) is een tijdelijke lege staat "Komt
+    binnenkort" tot O8 (M6/M7). Route /hulpvrager/mijn-hulpvragen kan
+    dan blijven.
+
+M4: 53. Datums gaan als UTC ISO-8601 naar de server (wanneer_van/tot);
+    weergave in de app is lokale tijd. De dagdeel-uren (9-12, 13-17,
+    18-20) zijn Nederlandse wandkloktijd; in de tests wordt met
+    .toLocal() vergeleken zodat ze onafhankelijk van de tijdzone van de
+    testmachine slagen.
+
+M4: 54. Tests: 97 M4-tests (unit 4 bestanden, widget schermen_test met
+    O1-O6/O12 in beide dichtheden en op 200 procent, stroomtest met
+    schermlezer-doorloop). De schermlezer-doorloop loopt de
+    semantiekboom zelf af (SemanticsTester uit flutter/test is niet
+    openbaar): elke knop een niet-leeg label, geen dubbele labels per
+    scherm, stapbalk meldt "Stap n van 4". De prod-smoke staat in
+    test/smoke en wordt zonder --dart-define=HH_SMOKE=true overgeslagen.
+
+M4: 55. Er bestaat nog geen "Hallo" met aanspreekvorm; O1 hergebruikt
+    TekstenNl.landingWelkom ("Hallo <naam>") uit M2 (je-vorm elders,
+    u-vorm in alle M4-teksten). Als M11 (ontwerp) een andere kop wil:
+    alleen teksten_hulpvrager_nl.dart aanpassen.
+
+================================================================
+M5 KLUSSEN VINDEN EN ACCEPTEREN (12 sep 2026) — punten 56-88
+================================================================
+HEITJEHULP APP - OPEN PUNTEN M5 KLUSSEN VINDEN EN ACCEPTEREN (12 sep 2026)
+
+Alles hieronder viel op tijdens het bouwen van J11-J14, de hook en de
+race-test, maar hoorde niet bij de opdracht of vraagt een beslissing.
+Wordt later samengevoegd met app/OPEN-PUNTEN.txt (nummering loopt door
+vanaf M4: 56 en verder).
+
+----------------------------------------------------------------
+AFWIJKINGEN VAN HET PLAN EN DE PROMPT (met reden)
+----------------------------------------------------------------
+
+M5: 56. KAART: het plan (hoofdstuk 1) noemt google_maps_flutter; gebouwd is
+    flutter_map 8.3 + OpenStreetMap-tegels (+ latlong2), zoals de prompt
+    (keuze 1) vroeg. Reden: geen Google-sleutel, geen kosten en geen
+    Google-voorwaarden in de pilot; de kaart is een lijstweergave met
+    markers, geen navigatie. Tegel-User-Agent "nl.heitjehulp.app"
+    (KlussenKaart.tegelUserAgent), bronvermelding "© OpenStreetMap-
+    bijdragers" rechtsonder. Voor de pilot valt dit binnen het OSM-
+    tegelbeleid (weinig gebruikers); bij opschalen een eigen tegelserver of
+    een betaalde tegeldienst kiezen. Wisselen naar Google raakt alleen
+    lib/features/jongere/klussen/widget/klussen_kaart.dart.
+
+M5: 57. STRAAL ("binnen de straal"): de jongere heeft geen coördinaten. Pilot
+    = wijk-gelijkheid (server-rule) + straal_km als CLIENT-filter op de
+    afstand tot het MIDDELPUNT van zijn wijk, en dat middelpunt is het
+    gemiddelde van de open klussen met lat/lon in die wijk (domein/
+    afstand.dart, middelpunt()). Zonder een enkele klus met locatie: geen
+    straalfilter. Gevolg: de afstand in de lijst ("ca. 1,2 km") is de
+    afstand tot dat middelpunt, niet tot het huis van de jongere, en een
+    uitschieter verschuift het middelpunt. Echte oplossing: het adres van de
+    jongere (J1/J6) geocoden en op hh_users of hh_profielen bewaren
+    (lat/lon), dan afstand en straal vanaf zijn eigen punt. Vraagt een
+    adresveld voor de jongere (nu alleen wijk) en dezelfde geocoding-hook.
+
+M5: 58. 409 BIJ ANDERE WIJK: de prompt zei "elke andere uitkomst 409 met
+    'Deze klus is net door iemand anders aangenomen.'". De hook geeft bij
+    een wijk-verschil ook 409, maar met een eigen melding ("Deze klus ligt
+    niet in jouw wijk.", reden: wijk), omdat de eerste zin daar niet klopt.
+    Bezet/niet open: 409 reden bezet met de gevraagde zin. Geen jongere,
+    niet goedgekeurd, geen wijk: 403 met eigen melding. Onbekend: 404.
+
+M5: 59. GEOCODING BIJ MISLUKTE ADRESWIJZIGING: wijzigt iemand het adres en
+    vindt Nominatim niets, dan zet de hook lat/lon op 0/0 (leeg) in plaats
+    van de oude coördinaten te laten staan (die horen bij het oude adres).
+    Wie bewust lat/lon meestuurt samen met een nieuw adres wordt daardoor
+    overschreven; dat doet nu niemand. Nominatim vond het seed-adres
+    "Passewaaijse Hogeweg 40, 4007 GS Tiel" niet (huisnummer ontbreekt in
+    OSM); de seed geeft zelf lat/lon mee, dus de hook slaat die over.
+
+M5: 60. GEOCODING KOST TIJD IN HET VERZOEK: de hook loopt in
+    onRecordCreateRequest/onRecordUpdateRequest, vóór het opslaan, met
+    time-out 5 s. Een klus plaatsen (O5) duurt daardoor typisch 0,3-0,8 s
+    langer; bij een trage Nominatim maximaal 5 s. Nominatim staat 1 verzoek
+    per seconde toe; in de pilot ruim voldoende, bij opschalen een eigen
+    geocoder of een betaalde dienst.
+
+M5: 61. M4-SMOKE-RECORD pe1m2o02y83pm79 (OPEN-PUNT 34) heeft geen lat/lon:
+    Nominatim vindt het smoke-adres niet. 11-accepteercheck sectie D laat
+    hem staan (0 gevuld, 1 overgeslagen). Verdwijnt zodra dat record wordt
+    opgeruimd.
+
+----------------------------------------------------------------
+BACKEND / RULES
+----------------------------------------------------------------
+
+M5: 62. ADRES VAN DE KLUS IS VOOR DE JONGERE AL ZICHTBAAR VÓÓR ACCEPTEREN
+    (server). hh_klussen.adres staat op het klusrecord zelf en PocketBase
+    kent geen veld-regels: elke goedgekeurde jongere in de wijk die de open
+    klus mag zien, krijgt het adres mee in de API. De APP toont het pas na
+    accepteren (J13: wijk + afstand, "Het adres zie je zodra je de klus
+    hebt aangenomen."), maar een directe API-aanroep laat het zien. Echt
+    afschermen kan met (a) een hook die adres wegstript uit list/view-
+    antwoorden voor niet-toegewezen jongeren, of (b) het adres alleen op
+    hh_users laten en op de klus alleen lat/lon (ruw) bewaren. Beslissing
+    is aan de eigenaar; voor de pilot is de app-kant afgeschermd.
+
+M5: 63. NAAM/FOTO VAN DE OUDERE: de hh_users-rule geeft de expand van
+    hulpvrager alleen mee aan een jongere die op een klus van die oudere
+    staat (nu of eerder). Een jongere die al eens voor mevrouw De Vries
+    werkte ziet haar naam dus ook op een NIEUWE open klus van haar (smoke:
+    oudereAlZichtbaarVooraf = true voor seed-jongere 1). De app toont naam
+    en foto pas na accepteren (isMijn), ongeacht wat de expand meegeeft.
+    Voor "een bekende oudere" is dat misschien juist wenselijk (O13
+    vertrouwde jongeren); dan isMijn-voorwaarde in J13 versoepelen.
+
+M5: 64. hh_users.foto van de oudere wordt in J13 als miniatuur (200x200)
+    getoond via een gewone bestands-URL (het veld is niet protected). Wordt
+    het veld later protected, dan is een bestandstoken nodig (zoals bij de
+    screeningfoto's, OPEN-PUNT 7).
+
+M5: 65. RACE-BESCHERMING zit in de transactie van de hook (runInTransaction
+    op de nonconcurrent SQLite-verbinding serialiseert; 20/20 ronden één
+    winnaar). De updateRule-tak "jongere accepteert" (02/06-rules) staat
+    nog open als vangnet en heeft die bescherming NIET: twee gelijktijdige
+    record-updates via de gewone API kunnen in theorie beide slagen
+    (backend OPEN-PUNT 18). De app gebruikt die tak niet meer. Zodra M6 de
+    statusmachine in een hook zet, de tak dichtzetten (toegewezen_jongere
+    nooit via record-update) en dat in 04-rulecheck aanpassen.
+
+M5: 66. De hook schrijft de logregel hh_klus_status zelf (open ->
+    geaccepteerd). De app schrijft bij accepteren dus GEEN logregel meer
+    (anders dan M4 bij plaatsen, OPEN-PUNT 32). Bij M6 (hook voor elke
+    statuswissel) verhuist ook de M4-logregel naar de server.
+
+M5: 67. Hook-deploy is per bestand naar /root/pb_hooks/ (gedeelde map met
+    agenda_*, obycom_*, oby_*, main.pb.js, tinker-ai). PocketBase herlaadt
+    en herstart zichzelf bij een bestandswijziging ("File ... changed,
+    restarting..." in journalctl); dat is een korte onderbreking (< 1 s)
+    voor ALLE projecten op de server. Deploy dus niet tijdens een piek.
+    Rollback = bestand verwijderen (10-hook-deploy.sh --rollback).
+
+M5: 68. 11-accepteercheck zet jongere 3 tijdelijk op in_behandeling (via de
+    superuser) om "niet goedgekeurd -> 403" te bewijzen en zet hem terug.
+    Loopt het script halverwege stuk, dan kan jongere 3 op in_behandeling
+    blijven staan; opnieuw draaien herstelt dat (sectie E), of handmatig
+    via de superuser.
+
+----------------------------------------------------------------
+APP: NAVIGATIE, GUARD, GEDEELDE BESTANDEN
+----------------------------------------------------------------
+
+M5: 69. JongereStubScreen heet nog zo (router.dart en de M2/M3-tests wijzen
+    op die naam) en bouwt nu KlussenHomeScreen (J11/J12), zoals M4 deed
+    met HulpvragerStubScreen (OPEN-PUNT 37). De M2-landing van de jongere
+    (naam, rol, uitloggen, "komt later") is weg; uitloggen zit onder de tab
+    Instellingen (G7), de screeningkaart onder de tab Profiel (J9).
+
+M5: 70. TABBALK is een eigen widget (JongereTabbalk + JongereTabScherm in
+    lib/features/jongere/klussen/widget/jongere_tabbalk.dart), geen
+    ShellRoute: de landing /jongere staat in router.dart (M2) buiten mijn
+    routes, en een ShellRoute zou die moeten omvatten. Elk tabscherm zet
+    de balk zelf onder zijn HhScherm (Scaffold in Scaffold; de buitenste
+    haalt de onderste veilige rand uit het kind). De tabs Profiel en
+    Instellingen zijn dunne wrappers (/jongere/profiel, /jongere/
+    instellingen) om J9 en G7 met de balk te tonen; M6-M8 hergebruiken
+    JongereTab/JongereTabScherm. Bij het samenvoegen met een ShellRoute
+    kunnen die wrappers weg.
+
+M5: 71. GUARD: screening_guard.dart (M3) is uitgebreid: de M5-paden
+    (/jongere/mijn-klussen, /jongere/klus/:id, /jongere/profiel,
+    /jongere/instellingen) volgen dezelfde regel als /jongere (niet
+    goedgekeurd -> J9; andere rol -> eigen rolroute). Dat dekt M4 OPEN-PUNT
+    39 voor de paden van de jongere; voor de hulpvrager-paden staat hij nog
+    open.
+
+M5: 72. klussenGatewayProvider staat in lib/features/jongere/klussen/
+    provider/klussen_providers.dart, niet in gateway_providers.dart
+    (zelfde keuze als M4, OPEN-PUNT 41). Bij het samenvoegen verhuizen.
+
+M5: 73. De klok komt uit hulpvrager_providers.klokProvider (M4); M5 heeft
+    geen eigen klok om niet twee klokken te hebben. Bij het samenvoegen
+    naar lib/core verhuizen. Ook hergebruikt uit M4: KlustypeIcoon (10
+    iconen; de M3-tabel hh_klustype_icoon.dart met 6 blijft alleen voor
+    J8) en HhDagdeel (ochtend/middag/avond).
+
+M5: 74. TEST-SUPPORT gewijzigd (gedeeld): test/support/hh_toegang_wikkel.dart
+    heeft nu toegangOverrides() naast toegangContainer(), een standaard
+    FakeKlussenGateway (leeg) en retry: (_, _) => null op de container.
+    Dat laatste omdat Riverpod 3 een provider die faalt automatisch
+    opnieuw probeert met een Timer; een fake die bewust "offline" is liet
+    daardoor een Timer achter na het einde van de test ("A Timer is still
+    pending"). In de app zelf blijft de automatische retry gewoon aan.
+    Aangepaste bestaande tests: screening_schermen_test (landing = J11),
+    screening_flow_test (J9 via tab Profiel), toegang_flow_test (uitloggen
+    via tab Instellingen), screening_guard_test (klussenpaden erbij).
+
+----------------------------------------------------------------
+APP: SCHERMEN
+----------------------------------------------------------------
+
+M5: 75. J11/J14 gebruiken een SingleChildScrollView met alle tegels, geen
+    lazy ListView: de lijst is in de pilot kort (tientallen), zo bestaat
+    elke tegel meteen voor de schermlezer en de tests. Bij honderden
+    klussen per wijk een ListView.builder nemen.
+
+M5: 76. FILTERBALK staat altijd open (soort in rijen van drie, dagdeel in
+    een rij). Bij 200 procent neemt hij een heel scherm; de lijst begint
+    daaronder. Een inklapbare balk ("Filters (2)") is netter; niet
+    gebouwd omdat de prompt een vaste balk beschrijft. De filterkeuze
+    blijft staan bij navigeren naar J13 en terug (klusFilterProvider).
+
+M5: 77. DAGDEEL-AFLEIDING: begintijd (lokaal) voor 12:00 = ochtend, 12:00-
+    17:59 = middag, vanaf 18:00 = avond (domein/dagdeel.dart). De oudere
+    kiest op O3 uit 9-12 / 13-17 / 18-20, dus alles wat de app plaatst valt
+    netjes; een klus die de meldkamer om 12:30 plant valt onder middag.
+
+M5: 78. J12 bij WEINIG HOOGTE (200 procent in de grote dichtheid, die de
+    jongere normaal niet krijgt): onder 480 px resthoogte scrolt het scherm
+    en krijgt de kaart een vaste hoogte van 280 px (_Kaart.
+    minimumHoogteVoorVullendeKaart / vasteKaartHoogte). Daarboven vult de
+    kaart de resthoogte. Twee maten in een scherm i.p.v. theme.dart: het
+    zijn lay-outdrempels, geen ontwerptokens; bij M11 naar theme.dart als
+    er een plek voor komt.
+
+M5: 79. J12: de kaart start op het middelpunt van de klussen (zoom 13,5),
+    of op Tiel-centrum zonder klussen; er is geen "mijn locatie"-knop en
+    geen automatische zoom-naar-alle-markers (flutter_map kan dat met
+    CameraFit.bounds; niet gedaan om de eerste versie klein te houden).
+    Kaart roteren staat uit.
+
+M5: 80. J13 "Klus aannemen" is direct, zonder bevestigingsvraag. Het plan
+    noemt geen bevestiging; bij een misklik kan de jongere nu niet zelf
+    terug (annuleren komt in M6). Overwegen: "Weet je het zeker?" of een
+    ongedaan-maken van 10 seconden.
+
+M5: 81. J13 na een 409 blijft de knop "Klus aannemen" staan (het detail
+    wordt niet herladen, want de klus is voor deze jongere niet meer op te
+    halen: 404 door de rule). Een tweede tik geeft opnieuw 409. De lijst is
+    wel ververst; terug brengt hem naar de bijgewerkte lijst.
+
+M5: 82. J13 toont richtduur uit hh_klustypes ("ongeveer 60 minuten"), niet
+    wanneer_tot - wanneer_van; de tijd zelf staat al in "van 14:00 tot
+    15:30".
+
+M5: 83. J14 "Vandaag" bevat ook klussen van vandaag waarvan het tijdstip al
+    voorbij is maar die nog niet afgerond zijn (status geaccepteerd/
+    onderweg/bezig). Historie = afgerond/geannuleerd/probleem of een
+    eerdere dag. Zonder datum en actief: gepland. Dagen zijn LOKAAL (server
+    bewaart UTC); getest met UTC-momenten rond middernacht.
+
+M5: 84. Statuspil (KlusStatusPil) gebruikt hhStatusStijlen uit theme.dart;
+    de Nederlandse namen staan in teksten_klussen_nl.dart ("Aangenomen"
+    voor geaccepteerd). J13 toont de pil alleen op een eigen klus.
+
+M5: 85. Pull-to-refresh op J11 en J14 (RefreshIndicator met de primaire
+    kleur). Geen realtime: een nieuwe klus in de wijk verschijnt pas na
+    verversen of terugkeer (push komt in M8).
+
+M5: 86. Afstandstekst: "ca. 1,2 km" met komma, onder 1 km "ca. 350 m"
+    (afgerond op 50 m, minimaal 50 m). Zonder coördinaten "Locatie
+    onbekend" met een doorgestreept-pin-icoon; zo'n klus telt op de kaart
+    in de badge "n zonder locatie".
+
+M5: 87. TESTS: 106 nieuwe M5-tests (unit 6 bestanden incl. haversine, dagdeel,
+    filter+straal, indeling incl. UTC, wanneer-tekst, gateway met
+    nep-server voor 200/409/403/404/401; widget: alle J11-J14-staten +
+    tabbladen in beide dichtheden en op 200 procent met semantiek, tabbalk,
+    lijst, kaart, detail, mijn klussen, statuspil; flow: filteren,
+    accepteren slaagt, 409 met melding + verversen, offline, kaart-markers,
+    guard, uitloggen via tab). De kaart draait in tests met NepTegels
+    (kaartTegelsProvider), zodat er nooit een tegel van internet komt.
+    Prod-smoke in test/smoke/m5_prod_smoke_test.dart
+    (--dart-define=HH_SMOKE=true), terugzetten met
+    node backend/scripts/11-accepteercheck.mjs --apply --alleen-terugzetten.
+
+M5: 88. Android-emulatorbuild is in M5 niet gedraaid (alleen iOS-simulator,
+    zoals de opdracht vroeg). flutter_map heeft geen platformcode, dus er
+    is geen manifest-wijziging nodig; internet-permissie staat al in de
+    debug-manifest.
