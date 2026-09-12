@@ -1,0 +1,93 @@
+HEITJEHULP APP - OPEN PUNTEN UIT M0 (FUNDAMENT)
+Bijgewerkt: 12 september 2026
+
+Alles hieronder viel op tijdens het bouwen van het fundament maar hoorde
+niet bij de opdracht. Niets hiervan is gebouwd; het staat hier zodat het
+niet kwijtraakt.
+
+----------------------------------------------------------------
+THEME.DART (niet gewijzigd; alleen gemeld)
+----------------------------------------------------------------
+
+1. tekstDerde (#8A9691) haalt op wit 3.06:1 en op oppervlak 2.79:1.
+   Dat is onder WCAG AA voor gewone tekst (4.5). Alleen bruikbaar voor
+   grote tekst of iconen op de witte achtergrond; op oppervlak nergens
+   voor. De contrasttest meet hem daarom alleen op wit, tegen 3.0.
+   Geen enkele widget uit M0 gebruikt hem.
+
+2. Status concept: de rand is HhKleuren.rand (#C7D4CF), 1.53:1 op wit.
+   Die pil leunt volledig op de gedempte tekst. De contrasttest sluit
+   concept uit van de rand-meting (bekende uitzondering, met opmerking).
+   Overwegen: rand van concept op tekstGedempt zetten, net als bij
+   geannuleerd. Beslissing is aan het ontwerp.
+
+3. theme.dart heeft geen tokens voor lijndikte. In de mockup staan
+   randen van 1, 2, 3, 4 en 8 en een stapbalk van 3 (normaal) en 16
+   (groot). Nu afgeleid: lib/design/lijn.dart leest "dun" uit
+   dividerTheme.thickness (1) en "dik" uit de focusrand van invoervelden
+   (2). De linkerrand van de MeldBalk en de hoogte van de stapbalk volgen
+   HhRuimte.xs via de trap (4 normaal, 8 groot). Wijkt dus licht af van de
+   mockup (3/16 en 3-pixel keuzerand). Netter: HhLijn-tokens in theme.dart.
+
+4. theme.dart heeft geen bewegingstokens (duur, curve). ObyCom heeft die
+   wel (Motion.fast/normal). Het skelet in HhLaadStaat pulseert nu met
+   een eigen constante (1400 ms, dekking tot 0.5) in het widgetbestand.
+
+5. Kleine losse getallen die geen kleur of maat zijn maar wel buiten
+   theme.dart staan, allemaal als benoemde constante:
+   - HhKeuzerij: demping uitgeschakeld 0.38 (Material-standaard)
+   - HhLaadStaat: skeletbalk-breedtes 0.6 en 0.35 van de rij
+   - HhLaadStaat: pulsduur en -dekking (zie punt 4)
+   Wil je dit strikt, dan horen ze als tokens in theme.dart.
+
+6. De mockup 1b geeft de informatie-MeldBalk een linkerrand in primair
+   (#17453E); theme.dart definieert apart HhKleuren.info (#14556F). De
+   widget volgt theme.dart (info). Beide halen ruim AA op oppervlak.
+
+7. HhTekst.themaVoor vult alleen zes stijlen (displaySmall, headlineMedium,
+   titleLarge, bodyLarge, bodyMedium, labelSmall). Alles wat Material
+   verder pakt (bodySmall, labelLarge voor knoppen, titleMedium voor de
+   AppBar) valt terug op de Material-standaard met het standaardfont.
+   Hulptekst en fouttekst in HhInvoer krijgen daarom bodyMedium expliciet
+   mee. De AppBar-titel van de stubs staat nog in het standaardfont.
+
+8. hhStatusStijlen bestaat, maar er is (nog) geen HhStatusPil-widget;
+   die stond niet in de opdracht. Komt logisch bij J14/O8.
+
+----------------------------------------------------------------
+FONTS
+----------------------------------------------------------------
+
+9. github.com/google/fonts levert Bricolage Grotesque en IBM Plex Sans
+   alleen nog als variabele fonts ([opsz,wdth,wght] / [wdth,wght]).
+   Flutter koppelt fontWeight niet vanzelf aan de wght-as; dat zou
+   fontVariations in theme.dart vragen. Daarom statische ttf's gebruikt
+   uit de bronrepo's: ateliertriay/bricolage (SemiBold, Bold) en IBM/plex
+   (Sans Regular/Medium/SemiBold/Bold). IBM Plex Mono Regular/Medium komt
+   wel uit google/fonts. Licenties: allemaal OFL.
+   Alleen de gewichten die theme.dart gebruikt zijn gebundeld (w400, w500,
+   w600, w700); italic ontbreekt bewust.
+
+----------------------------------------------------------------
+APP
+----------------------------------------------------------------
+
+10. De dichtheid (normaal/groot) wordt nu alleen vanuit het tijdelijke
+    rolwisselscherm gezet. Straks moet hij de ingelogde rol volgen
+    (hulpvrager = groot) en mogelijk instelbaar zijn (G9).
+
+11. Geen appBarTheme in theme.dart; de AppBar van de stubs is de
+    Material 3-standaard (met surface-tint). Bij de echte schermen
+    beslissen of er een HhKop/HhScherm-steiger komt zoals ObyScreen.
+
+12. l10n/ en core/ zijn aangemaakt met alleen een README, zodat de
+    mappenindeling gelijk is aan ObyCom. Vullen bij de eerste feature
+    met data (core) en bij de eerste vertaalde tekst (l10n).
+
+13. Android: flutter create heeft de standaard android/-map gemaakt;
+    niet gebouwd in M0 (alleen iOS-simulator). Package-naam is
+    nl.heitjehulp.heitjehulp_app; nog niet afgestemd op de storenaam
+    (open punt 2 in het app-plan).
+
+14. Geen integration_test-map aangemaakt; het app-plan noemt die voor
+    de doorlopende stromen. Toevoegen bij de eerste echte flow.
