@@ -1,0 +1,16 @@
+{
+  "name": "heitjehulp-backend",
+  "private": true,
+  "type": "module",
+  "description": "HeitjeHulp backend-schema (hh_-collecties) op de gedeelde PocketBase api.qawayahbase.com",
+  "scripts": {
+    "backup": "node scripts/00-backup.mjs",
+    "collections": "node scripts/01-collections.mjs",
+    "rules": "node scripts/02-rules.mjs",
+    "seed": "node scripts/03-seed.mjs",
+    "rulecheck": "node scripts/04-rulecheck.mjs"
+  },
+  "dependencies": {
+    "pocketbase": "^0.25.0"
+  }
+}
