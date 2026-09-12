@@ -104,7 +104,7 @@ Regels
   Aanmaken/Bijwerken/Verwijderen   alleen coordinator
 
 ================================================================
-4. hh_profielen  (9 velden) — één per gebruiker
+4. hh_profielen  (14 velden) — één per gebruiker
 ================================================================
 Velden
   gebruiker           verwijzing naar hh_users, verplicht, uniek;
@@ -117,13 +117,32 @@ Velden
   klustypes           verwijzing naar hh_klustypes, meerdere (max 20)
   sterren_gemiddeld   getal 0-5
   klussen_aantal      geheel getal
+  --- toegevoegd in M3 (scripts/05-screening-velden.mjs), additief ---
+  over_mij            tekst, max 500 (J1)
+  document_foto       1 afbeelding, max 10 MB, PROTECTED (J2): alleen op te
+                      halen met een bestandstoken van wie het record mag zien
+  selfie              1 afbeelding, max 10 MB, PROTECTED (J3)
+  iban                tekst, max 34 (J5); iban_geverifieerd blijft server-zaak
+  vog_aangevraagd_op  datum (J4, "Ik heb aangevraagd")
+  Let op: een profiel dat de app zelf aanmaakt heeft een LEGE
+  verificatiestatus en vog_status (geen standaardwaarde op een keuzeveld;
+  de eigenaar mag ze niet meesturen). Leeg = nieuw, voor app én rules.
 Regels
   Lezen       eigen profiel; coordinator alles
   Aanmaken    eigen profiel (gebruiker = jijzelf), zonder de velden
               verificatiestatus, vog_status, iban_geverifieerd,
               sterren_gemiddeld en klussen_aantal mee te sturen
-  Bijwerken   eigen profiel, dezelfde velden niet meesturen en ook
-              "gebruiker" niet; coordinator alles (screening)
+  Bijwerken   eigen profiel, zonder gebruiker, vog_status,
+              iban_geverifieerd, sterren_gemiddeld en klussen_aantal mee te
+              sturen. verificatiestatus mag de eigenaar ALLEEN meesturen als
+              hij van nieuw (of leeg) naar in_behandeling gaat ("ter
+              controle aanbieden", J9; M3, scripts/06-screening-rules.mjs):
+              (@request.body.verificatiestatus:isset = false ||
+               ((verificatiestatus = "nieuw" || verificatiestatus = "") &&
+                @request.body.verificatiestatus = "in_behandeling"))
+              Elke andere overgang (naar goedgekeurd, afgewezen, terug naar
+              nieuw, nogmaals in_behandeling) is voor de coordinator.
+              Coordinator alles (screening).
   Verwijderen eigen profiel, of coordinator
 
 ================================================================
@@ -151,7 +170,12 @@ Regels
               - de toegewezen jongere
               - een jongere ziet daarnaast alle klussen met status open
                 waarvan de oudere in dezelfde wijk woont als hij
-                (jongere zonder wijk ziet niets extra's)
+                EN zijn eigen hh_profielen-record verificatiestatus
+                "goedgekeurd" heeft (M3, scripts/06-screening-rules.mjs:
+                @collection.hh_profielen.gebruiker ?= @request.auth.id &&
+                @collection.hh_profielen.verificatiestatus ?= "goedgekeurd").
+                Jongere zonder wijk of zonder goedkeuring ziet niets
+                extra's; zijn toegewezen klussen blijven wél zichtbaar.
               - een familielid ziet alles van de oudere(n) aan wie hij
                 gekoppeld is (hh_koppelingen)
               - coordinator alles
@@ -314,4 +338,17 @@ SEED (testdata, scripts/03-seed.mjs)
 
 SMOKETEST (scripts/04-rulecheck.mjs)
   218 controles, positief én negatief, ingelogd als de echte accounts.
-  Laatste run 12 sep 2026: 218 groen, 0 rood.
+  Laatste run 12 sep 2026 (na M3-rules): 218 groen, 0 rood.
+
+SCREENINGCHECK (scripts/07-screeningcheck.mjs, M3)
+  72 controles: profiel aanmaken zonder geblokkeerde velden, alle
+  screeningvelden zetten incl. twee foto-uploads, geblokkeerde velden dicht,
+  statusmachine (alleen nieuw -> in_behandeling door de jongere), klussen pas
+  zichtbaar na goedkeuring (toegewezen klussen altijd), protected bestanden
+  (oudere krijgt 404, ook met bestandstoken). Gebruikt een tijdelijke jongere
+  (hh-screeningcheck-j@qawayah.nl, wordt verwijderd) en seed-jongere 1, die
+  aan het eind op de seed-waarden wordt teruggezet en nagemeten. Ook de
+  terugzet-knop na een handmatige app-smoke met jongere 1.
+  Laatste run 12 sep 2026: 72 groen, 0 rood.
+  Volgorde: 02 -> 05 -> 06. Draai 02-rules.mjs NIET opnieuw met --apply na
+  06 (dat zet de twee screeningregels terug naar M1).
