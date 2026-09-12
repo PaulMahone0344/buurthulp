@@ -42,7 +42,7 @@ Verwijderen (cascade):
   automatisch: klussen, betalingen en incidenten blijven altijd staan.
 
 ================================================================
-1. hh_users  (inlog-collectie, 8 eigen velden + systeemvelden)
+1. hh_users  (inlog-collectie, 13 eigen velden + systeemvelden)
 ================================================================
 Velden
   email            e-mail, verplicht, uniek (inlognaam)
@@ -56,6 +56,16 @@ Velden
   wijk             verwijzing naar hh_wijken
   taal             keuze: nl | ar | tr | en  (PocketBase kent geen
                    standaardwaarde; app en seed zetten "nl")
+  Toegevoegd in M4 (scripts/08-adres-velden.mjs, 12 sep 2026), voor het
+  voorvullen van de hulpvraag (O4) en "Mijn gegevens" (O12):
+  adres            tekst, max 200 (straat + huisnummer)
+  postcode         tekst, max 7
+  plaats           tekst, max 100
+  contact_naam     tekst, max 100 (contactpersoon)
+  contact_telefoon tekst, max 20
+  Rules ongewijzigd: wie de rij mag zien, ziet ook het adres (een jongere
+  dus alleen van een oudere op wie hij is toegewezen). Bewezen met
+  scripts/09-adrescheck.mjs (22 controles) en 04-rulecheck (218 groen).
 Regels
   Lezen       jezelf; de coordinator ziet iedereen; verder alleen mensen
               die bij je horen: de jongere die op jouw klus staat, de
