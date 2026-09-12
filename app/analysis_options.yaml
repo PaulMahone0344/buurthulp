@@ -1,0 +1,13 @@
+# Linterinstellingen, overgenomen uit ObyCom (zelfde eigenaar, zelfde
+# patroon). flutter analyze moet zonder enige melding door.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    avoid_print: error
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    avoid_print: true
