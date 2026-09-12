@@ -1,0 +1,173 @@
+PROMPT M1 - BACKEND-SCHEMA (HeitjeHulp)
+Gestuurd 12 sep 2026 als Fable-agent, met toestemming van Ibrahim voor prod.
+
+----------------------------------------------------------------
+
+Je maakt het backend-schema van HeitjeHulp aan op de GEDEELDE productie-
+PocketBase api.qawayahbase.com. Ibrahim heeft hier expliciet toestemming
+voor gegeven. Prefix hh_ voor alles. Er staan 129 collecties van andere
+projecten op deze server (agenda_, broute_, oby_, obycom_, tinker_,
+storybords_, factuurly_, saas_, team_, users, ...). Die raak je NOOIT aan,
+ook niet lezen-en-terugschrijven. Gecontroleerd vandaag: er bestaat nog
+geen enkele hh_- of buurthulp_-collectie op prod.
+
+LEES EERST
+1. "/Users/h/Desktop/huidige projecten/buurthulp/app-plan/HEITJEHULP-APP-PLAN.txt"
+   Hoofdstuk 2 (rollen), 4 (datamodel), M1 in hoofdstuk 7, hoofdstuk 9 (regels).
+2. /Users/h/.claude/projects/-Users-h/memory/reference_pb_api_rules.md
+   Alle bekende PocketBase-rule-valkuilen van deze eigenaar. Verplicht.
+3. /Users/h/.claude/projects/-Users-h/memory/reference_pb_jsvm_hooks.md
+   Alleen ter info; in M1 schrijf je geen hooks.
+4. Referentie-implementatie, zelfde server, zelfde eigenaar, bewezen patroon:
+   /Users/h/Desktop/meebezig/obycom_complit/ObyCom/scripts/
+   01-collections.mjs (aanmaken, idempotent, dry-run/--apply),
+   02-rules.mjs (rules), 03-seed.mjs (seed), 04-rulecheck.mjs (smoketest).
+   Neem dat patroon over: zelfde structuur, zelfde guards, zelfde
+   dry-run-eerst-discipline.
+
+CREDENTIALS
+Superuser staat in /Users/h/Desktop/qawayhabase/.env als PB_ADMIN_EMAIL en
+PB_ADMIN_PASSWORD. Laad ze met `set -a; . /Users/h/Desktop/qawayhabase/.env; set +a`
+en geef ze door als PB_SU_EMAIL/PB_SU_PASS (ObyCom-conventie) of lees ze
+direct. Zet ze nooit in een bestand dat in git komt. Log ze nooit.
+
+WAAR
+"/Users/h/Desktop/huidige projecten/buurthulp/backend/"
+Nieuwe map. Eigen package.json met pocketbase als dependency (npm).
+Structuur:
+  backend/scripts/01-collections.mjs   aanmaken + indexen, idempotent
+  backend/scripts/02-rules.mjs         API-rules, RULESET als één object
+  backend/scripts/03-seed.mjs          testdata
+  backend/scripts/04-rulecheck.mjs     smoketest per rule
+  backend/scripts/00-backup.mjs        schema-export van ALLE collecties
+                                       naar backend/backups/<datum>.json
+                                       (backups/ in .gitignore)
+  backend/SCHEMA.txt                   leesbaar overzicht: per collectie
+                                       velden, types, relaties, indexen,
+                                       en de vier rules in gewone taal
+  backend/OPEN-PUNTEN.txt
+Een andere agent bouwt tegelijk in "/Users/h/Desktop/huidige projecten/buurthulp/app/".
+Blijf uit app/ en app-plan/ (behalve lezen).
+
+VOLGORDE (strikt)
+1. Health-check: GET https://api.qawayahbase.com/api/health, noteer de
+   PB-versie. Verwacht 0.25+ (fields-API, niet schema-array).
+2. 00-backup draaien VOOR je iets schrijft. Bewaar het pad in je verslag.
+3. 01-collections dry-run, lees de uitvoer na, dan --apply.
+4. 02-rules dry-run, dan --apply.
+5. 03-seed --apply.
+6. 04-rulecheck. Pas klaar als alles groen is.
+7. Na afloop: tel de collecties op prod. Moet zijn 129 + jouw hh_-aantal,
+   en geen enkele niet-hh_-collectie mag gewijzigd zijn (vergelijk
+   `updated` van elke niet-hh_-collectie met de backup uit stap 2).
+
+DATAMODEL (hoofdstuk 4 is leidend; dit zijn de vaste keuzes erbij)
+- Veldnamen en enum-waarden in het NEDERLANDS, precies zoals hoofdstuk 4.
+- hh_users = auth-collectie. Velden: rol (select: hulpvrager, jongere,
+  familie, coordinator), naam, telefoon, geboortedatum (date), foto (file,
+  1 bestand, alleen image/*), wijk (relatie hh_wijken), taal (select: nl,
+  ar, tr, en; default nl). E-mail verplicht, telefoonverificatie is een
+  later punt.
+- hh_klussen.status = select met exact de acht waarden: concept, open,
+  geaccepteerd, onderweg, bezig, afgerond, geannuleerd, probleem.
+- hh_klussen.bron = select: app, telefoon, familie.
+- hh_betalingen.status = select: open, betaald, mislukt, terugbetaald.
+- hh_profielen: één per gebruiker, unieke index op gebruiker.
+- hh_koppelingen: unieke index op (oudere, familielid).
+- hh_vertrouwd: unieke index op (oudere, jongere).
+- hh_push_tokens: unieke index op token.
+- Bedragen als number in centen (integer). Geen required op number-velden
+  waar 0 geldig is (PB weigert 0 bij required, zie valkuil 10).
+- Elke collectie: autodate created + updated.
+- Relaties: cascadeDelete alleen op hh_klus_status, hh_push_tokens en
+  hh_profielen (verwijder gebruiker = verwijder afgeleide rijen). Elders
+  cascadeDelete=false; hh_klussen, hh_betalingen en hh_incidenten mogen
+  nooit stil verdwijnen.
+
+API-RULES (principes; werk ze per collectie uit en leg ze vast in SCHEMA.txt)
+- Nergens een lege rule ("" = publiek). Elke rule vereist minstens
+  @request.auth.id != "". Uitzondering: hh_klustypes en hh_wijken zijn
+  leesbaar voor elke ingelogde gebruiker, schrijfbaar alleen coordinator.
+- rol-check altijd expliciet met = en ||, nooit ~.
+- hulpvrager: ziet en bewerkt eigen hh_klussen (hulpvrager = auth.id),
+  eigen profiel, eigen koppelingen, eigen beoordelingen. Ziet nooit
+  bedragen-velden van anderen; ziet geen andere ouderen.
+- jongere: ziet hh_klussen met status open in eigen wijk (wijk-relatie
+  gelijk aan auth.wijk) plus klussen waar toegewezen_jongere = auth.id.
+  Kan status wijzigen op eigen toegewezen klus. Kan open klus accepteren
+  (toegewezen_jongere leeg -> auth.id). Het exacte status-overgangsschema
+  wordt later in een hook bewaakt; in M1 alleen: jongere mag bedrag_bruto,
+  vergoeding_jongere, commissie, hulpvrager en geplaatst_door NIET wijzigen
+  (@request.body.X:isset = false).
+- familie: alles wat de gekoppelde oudere ziet, via
+  @collection.hh_koppelingen (oudere ?= record.hulpvrager && familielid
+  ?= auth.id). Plaatst klussen namens de oudere met geplaatst_door =
+  auth.id en bron = familie.
+- coordinator: volledige toegang op alle hh_.
+- Anti-escalatie: op hh_users mag een gebruiker zichzelf bijwerken maar
+  niet rol (@request.body.rol:isset = false). Alleen coordinator zet rol.
+  Zelfregistratie (createRule) mag met rol hulpvrager, jongere of familie;
+  coordinator kan alleen door coordinator worden aangemaakt. Als dat niet
+  in één rule past: createRule = alleen niet-coordinator-rollen, en zet in
+  OPEN-PUNTEN dat coordinator-accounts handmatig/superuser worden gemaakt.
+- hh_klus_status: create door deelnemer van de klus (hulpvrager,
+  toegewezen_jongere, gekoppeld familielid) of coordinator; nooit update
+  of delete behalve coordinator.
+- hh_betalingen, hh_vergoedingen: lezen door betrokkene, schrijven alleen
+  coordinator (Mollie-hook komt in M16).
+- hh_incidenten: aanmaken door elke deelnemer, lezen door melder +
+  coordinator, bewerken alleen coordinator.
+- hh_push_tokens: eigen rijen alleen.
+- Multi-relatievelden: altijd `.id ?=`, nooit kaal `?=` (valkuil).
+- Test elke bewering hieronder in 04-rulecheck: positief EN negatief
+  (mag wel / mag niet). Minstens: oudere A ziet klus van oudere B niet;
+  jongere ziet open klus in eigen wijk wel, in andere wijk niet; jongere
+  kan bedrag niet wijzigen; familielid ziet klus van gekoppelde oudere wel,
+  van ongekoppelde niet; gebruiker kan eigen rol niet ophogen; anoniem
+  krijgt op elke hh_-collectie 400/403/404, nooit 200.
+
+SEED (03-seed.mjs, idempotent op e-mail)
+- 2 wijken in Tiel (bijv. Tiel-West en Passewaaij) met postcodes.
+- 6 klustypes: boodschappen, tuin, klusje in huis, telefoon/tablet-hulp,
+  wandelen/gezelschap, vervoer.
+- Accounts: 2 ouderen, 3 jongeren, 1 familielid (gekoppeld aan oudere 1),
+  1 coordinator. E-mails hh-seed-<rol><n>@qawayah.nl, sterke random
+  wachtwoorden. Schrijf de accounts + wachtwoorden NIET in git; voeg ze
+  toe onderaan /Users/h/Desktop/GEHEIMEN.txt onder de kop
+  "HeitjeHulp seed-accounts (prod, 12 sep 2026)".
+- 12 klussen verdeeld over alle acht statussen (minstens 1 per status),
+  bij beide ouderen, deels via familie geplaatst, een deel toegewezen aan
+  jongeren, met bijpassende hh_klus_status-logregels, 2 beoordelingen,
+  1 vertrouwd-relatie, 1 incident, 2 betalingen (1 betaald, 1 open).
+- Seed via superuser is toegestaan; de rulecheck logt daarna in als de
+  echte accounts.
+
+REGELS
+- Dry-run eerst, altijd. Print wat je ZOU doen voor je --apply draait.
+- Idempotent: tweede keer draaien mag niets breken en niets dupliceren.
+- Hard-guard in elk script: weiger elke collectienaam die niet met hh_
+  begint. Ook in de backup-vergelijking.
+- Geen hooks, geen server-restart, geen ssh in M1. Alles via de REST-API
+  vanaf de Mac.
+- Verzin geen extra collecties of velden. Twijfel -> OPEN-PUNTEN.txt.
+- GIT: git-root is de map buurthulp. De index bevat staged wijzigingen
+  buiten backend/ die niet van jou zijn, en een tweede agent commit
+  tegelijk onder app/. Daarom: nooit git add -A; stage alleen backend/
+  en commit uitsluitend met pathspec:
+  git -C "/Users/h/Desktop/huidige projecten/buurthulp" add backend/...
+  git -C "/Users/h/Desktop/huidige projecten/buurthulp" commit -m "feat: ..." -- backend
+  Krijg je index.lock: 2 seconden wachten en opnieuw, niet de lock
+  verwijderen.
+- backend/.gitignore: node_modules, backups/, .env, *.local.*
+- Commits: feat/fix/chore. Nederlands in commentaar en SCHEMA.txt.
+
+KLAAR ALS
+- 04-rulecheck volledig groen, met het aantal checks in je verslag.
+- Collectietelling klopt (129 + hh_) en geen niet-hh_-collectie gewijzigd.
+- SCHEMA.txt is compleet en leesbaar voor een niet-programmeur.
+- Seed-accounts staan in GEHEIMEN.txt.
+
+LEVER AAN HET EIND
+Kort verslag in het Nederlands: PB-versie, backup-pad, lijst hh_-
+collecties met aantal velden, aantal rulechecks groen/rood, commit-hashes,
+en OPEN-PUNTEN.txt integraal.

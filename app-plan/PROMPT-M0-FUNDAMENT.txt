@@ -1,0 +1,116 @@
+PROMPT M0 - FUNDAMENT (HeitjeHulp app)
+Plak dit in een verse sessie. Model: Sonnet, medium.
+
+----------------------------------------------------------------
+
+Je bouwt het fundament van een nieuwe Flutter-app: HeitjeHulp.
+
+WAT DE APP STRAKS DOET
+HeitjeHulp koppelt ouderen aan gescreende jongeren uit de eigen buurt
+voor kleine klusjes: boodschappen, tuin, een lamp vervangen, hulp met
+de telefoon. Vier rollen: hulpvrager (de oudere), jongere (de helper),
+familie (mantelzorger) en coordinator (meldkamer). Jij bouwt in deze
+opdracht nog geen enkel echt scherm - alleen het fundament waar alle
+latere schermen op staan.
+
+LEES EERST
+~/Desktop/huidige projecten/buurthulp/app-plan/HEITJEHULP-APP-PLAN.txt
+Hoofdstuk 1 (techniek), 2 (rollen) en 3 (schermen) geven je de context.
+Bouw niets uit hoofdstuk 3; dat komt in latere opdrachten.
+
+KIJK DAARNA IN OBYCOM
+~/Desktop/ObyCom is een bestaande Flutter-app van dezelfde eigenaar.
+Neem daaruit over: de mappenindeling, de keuze voor state-beheer, de
+manier waarop tests zijn opgezet en de linterinstellingen. Doel is dat
+er maar een patroon in zijn hoofd hoeft te zitten. Wijk daar alleen van
+af als iets in ObyCom aantoonbaar kapot of achterhaald is, en meld dat
+dan in je eindverslag.
+
+WAAR
+Nieuw Flutter-project in:
+~/Desktop/huidige projecten/buurthulp/app
+De map buurthulp bevat al een website en planbestanden. Laat alles
+buiten app/ ongemoeid.
+
+WAT JE BOUWT
+
+1. Projectopzet
+   - Flutter-project, Dart, null safety
+   - flutter analyze schoon, linterregels uit ObyCom
+   - Mappenindeling per functiegebied, niet per bestandstype
+   - go_router met een lege stub-pagina per rol:
+     /hulpvrager  /jongere  /familie  /coordinator
+   - Een tijdelijk rolwisselscherm op / zodat je tijdens het
+     ontwikkelen tussen de vier stubs kunt springen. Duidelijk
+     markeren als tijdelijk.
+
+2. theme.dart - het enige bestand met kleuren en maten
+   DEZE IS AL GEMAAKT. Neem hem over uit
+   ~/Desktop/huidige projecten/buurthulp/app-plan/theme.dart
+   en zet hem in lib/theme.dart. Hij komt uit de goedgekeurde
+   mockup, richting 1b "klinisch helder". Verzin geen eigen
+   waarden en wijzig geen kleur of maat. Valt je iets op dat niet
+   klopt, zet het in OPEN-PUNTEN.txt en ga door.
+
+   Wat erin staat, zodat je weet waar je mee werkt:
+   - kleuren, inclusief succes, waarschuwing, fout en info
+   - hhStatusStijlen: de acht klusstatussen als pil, gevuld voor
+     actieve statussen en alleen een rand voor wachtende
+   - tekststijlen met de fonts Bricolage Grotesque voor koppen,
+     IBM Plex Sans voor tekst en IBM Plex Mono voor labels
+   - ruimte 4 tot 48 en radius klein, midden, groot, rond
+   - twee dichtheden via HhDichtheid: normaal en groot. Groot is de
+     ouderenmaat, tekst vanaf 20 en knoppen 60 hoog. Alles loopt via
+     de tokens; nooit een losse override per scherm.
+
+   Zet de drie fonts erbij als bundel in pubspec.yaml. Haal ze van
+   Google Fonts en zet de bestanden in assets/fonts/. Niet via het
+   google_fonts-pakket ophalen; de app moet zonder internet starten.
+
+3. Widgets (in lib/widgets/, elk met een widgettest)
+   - Knop: varianten primair, tweede keus, tekstknop, gevaar;
+     maten normaal en groot; laadtoestand; uitgeschakelde toestand;
+     altijd minstens 48pt raakvlak, in de grote dichtheid 60pt
+   - Kaart: oppervlak met radius en optionele kop en actie
+   - Invoer: label, hulptekst, foutstaat, verplicht-markering
+   - Keuzerij: rij van keuzeknoppen met iconen, een of meer selecteerbaar
+   - Stapbalk: stap 2 van 4, met voortgang
+   - LegeStaat: icoon, titel, uitleg, optionele knop
+   - LaadStaat: skelet en spinner-variant
+   - MeldBalk: informatie, geslaagd, waarschuwing, fout
+
+4. Toegankelijkheid vanaf dag een
+   - Elke widget heeft een semantiek-label of neemt er een aan
+   - Tekst schaalt mee met de systeeminstelling tot 200 procent
+     zonder af te kappen; los dit op met wikkelen, niet met kleiner
+     maken
+   - Contrast van elke kleurcombinatie in theme.dart voldoet aan
+     WCAG AA. Schrijf een test die dat narekent.
+
+5. Tests
+   - Widgettest per onderdeel: rendert, reageert op tik, toont
+     uitgeschakelde en laadtoestand
+   - Een test die de app opstart en naar elke rol-stub navigeert
+   - De contrasttest uit punt 4
+
+KLAAR ALS
+- App start op iOS-simulator en op Android-emulator
+- flutter analyze geeft geen enkele melding
+- flutter test volledig groen
+- Geen enkele kleur of maat hardgecodeerd buiten theme.dart. Controleer
+  dit zelf met een zoekactie op Color( en op losse getallen in padding,
+  en meld het resultaat.
+
+REGELS
+- Blijf binnen ~/Desktop/huidige projecten/buurthulp/app
+- Raak geen PocketBase-server aan. Deze opdracht is puur lokaal.
+- Verzin geen functies. Wat niet in deze opdracht staat maar je wel
+  opvalt, zet je in app/OPEN-PUNTEN.txt.
+- Nooit git add -A. Stage per pad.
+- Commits in de vorm: feat: ..., fix: ..., chore: ...
+- Nederlands in code-commentaar en in schermteksten.
+
+LEVER AAN HET EIND
+Een kort verslag met: wat je uit ObyCom hebt overgenomen, welke tokens
+in theme.dart staan, de uitkomst van analyze en test, en de lijst uit
+OPEN-PUNTEN.txt.

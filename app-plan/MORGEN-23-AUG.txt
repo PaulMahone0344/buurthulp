@@ -1,0 +1,114 @@
+HEITJEHULP - WAAR WE GEBLEVEN ZIJN
+Stand van 22 augustus 2026, eind van de dag.
+Begin morgen met dit bestand.
+
+
+================================================================
+WAT DIT PROJECT IS
+================================================================
+
+HeitjeHulp koppelt ouderen aan gescreende jongeren uit de eigen
+buurt voor kleine klusjes. Vier rollen: hulpvrager (de oudere),
+jongere, familie en coordinator. Pilot met een gemeente.
+
+Map: ~/Desktop/huidige projecten/buurthulp
+  app-plan/   plan, prompts, theme.dart      <- hier gebeurt het nu
+  website/    bestaande site, React + Vite
+  app/        bestaat nog niet, komt uit M0
+
+
+================================================================
+VANDAAG AF
+================================================================
+
+1. Website gerebrand van BuurtHulp naar HeitjeHulp.
+   Negen bestanden, nul restanten. Tests 6/6 groen, build slaagt.
+   Ook de demo-accounts en het contactadres info@heitjehulp.nl.
+   Hero-afbeelding hernoemd met git mv.
+
+2. Volledig appplan geschreven: HEITJEHULP-APP-PLAN.txt
+   10 hoofdstukken, 16 milestones, 47 MVP-schermen.
+   Stack: Flutter en Dart, PocketBase met prefix hh_ op de
+   bestaande server, go_router, Mollie voor iDEAL.
+
+3. Vier dashboards vastgelegd, allemaal op het web en niet in de
+   app: meldkamer, screening, gemeentecijfers, systeembeheer.
+   Vandaar M14 en M15.
+
+4. Besluit: betalen gebeurt wel in de app, via Mollie met iDEAL.
+   Uitgewerkt als M16.
+
+5. Mockups gemaakt in Claude Design, twee richtingen.
+   Gekozen: richting 1b, klinisch helder.
+
+6. theme.dart geschreven uit die mockup. 308 regels. Kleuren,
+   acht statuspillen, tekststijlen, ruimte, radius, twee
+   dichtheden, maten voor iconen en avatar.
+
+7. PROMPT-M0-FUNDAMENT.txt klaar en aangepast: de agent verzint
+   geen tokens meer maar neemt theme.dart over.
+
+
+================================================================
+MORGEN ALS EERSTE
+================================================================
+
+Stap 1. Open een verse sessie, model Sonnet op medium.
+Stap 2. Plak de inhoud van PROMPT-M0-FUNDAMENT.txt.
+        Alles vanaf de regel "Je bouwt het fundament".
+Stap 3. Laat M0 draaien. Dat maakt het Flutter-project, de acht
+        widgets, go_router met vier stubs en de tests.
+Stap 4. Kom terug met zijn eindverslag, dan kijken we het na.
+
+M1 (backendschema) kan tegelijk, maar die raakt de echte
+PocketBase-server. Daar wil ik apart jouw ja voor hebben voordat
+ik die prompt schrijf.
+
+
+================================================================
+WAT NOG OPENSTAAT
+================================================================
+
+1. Woordmerk. De mockup stelde voor: kleine letters, tweekleurig,
+   punt in amber. Zit nog niet in theme.dart omdat het geen token
+   is. Vraag aan jou: als widget meegeven aan M0, of apart houden.
+
+2. Mollie en de geldstroom. Geld dat via het platform naar de
+   jongere loopt kan als betaaldienst gelden. Mollie Connect
+   splitst de uitbetaling. Even bij Mollie navragen wat zij voor
+   een pilot adviseren.
+
+3. Naam in de stores. heitjehulp.nl is van jou, maar de naam is
+   nog niet gecontroleerd in de App Store en Play Store.
+
+4. VOG-aanvraag. Via de gemeente of vraagt de jongere zelf aan.
+
+5. Sms-verificatie kost geld per bericht. Leverancier kiezen of
+   eerst alleen e-mail.
+
+
+================================================================
+KLEINE DINGEN DIE IK ZAG
+================================================================
+
+- De hero-afbeelding van de website is 2,2 MB PNG. Dat is ver
+  boven het budget voor een landingspagina. WebP of AVIF met
+  breedte en hoogte erbij lost het op. Apart klusje.
+
+- De mapnaam en de git-remote heten nog buurthulp. De code niet
+  meer. Geen haast, wel goed om te weten.
+
+- De zes plan- en feedbackbestanden in de hoofdmap staan nog vol
+  BuurtHulp, ook in de bestandsnamen. Bewust niet aangeraakt;
+  zeg het als je ze mee wilt hernoemen.
+
+
+================================================================
+BESTANDEN DIE ERTOE DOEN
+================================================================
+
+app-plan/HEITJEHULP-APP-PLAN.txt    het plan, 16 milestones
+app-plan/PROMPT-M0-FUNDAMENT.txt    prompt voor morgen
+app-plan/theme.dart                 de ontwerptokens
+app-plan/MOCKUP-ANTWOORDEN.txt      antwoorden voor Claude Design
+~/Downloads/HeitjeHulp-fundament-standalone.html   de mockups

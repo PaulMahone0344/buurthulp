@@ -1,0 +1,125 @@
+PROMPT M2 - TOEGANG (HeitjeHulp app)
+Gestuurd 12 sep 2026 als Fable-agent.
+
+----------------------------------------------------------------
+
+Je bouwt de toegangsstroom van de HeitjeHulp Flutter-app: schermen
+G1 t/m G8. M0 (fundament) en M1 (backend) zijn klaar.
+
+LEES EERST, IN DEZE VOLGORDE
+1. "/Users/h/Desktop/huidige projecten/buurthulp/app-plan/HEITJEHULP-APP-PLAN.txt"
+   Hoofdstuk 2 (rollen), hoofdstuk 3 blok "GEDEELD / TOEGANG" (G1-G9),
+   M2 in hoofdstuk 7, hoofdstuk 9 (regels).
+2. "/Users/h/Desktop/huidige projecten/buurthulp/app/OPEN-PUNTEN.txt"
+   Punt 10 (dichtheid volgt rol) en 11 (HhScherm-steiger) los je in M2 op.
+3. "/Users/h/Desktop/huidige projecten/buurthulp/backend/SCHEMA.txt"
+   Het echte schema op de server. hh_users is de auth-collectie.
+4. "/Users/h/Desktop/huidige projecten/buurthulp/backend/OPEN-PUNTEN.txt"
+   Punten 8, 9, 10 zijn harde eisen voor jou: taal="nl" meesturen bij
+   registratie; rol verplicht meesturen (hulpvrager|jongere|familie,
+   coordinator kan NIET zelf registreren); bij updates alleen gewijzigde
+   velden sturen, nooit een heel record.
+5. De bestaande app: "/Users/h/Desktop/huidige projecten/buurthulp/app/lib/"
+   Router in lib/app, widgets in lib/design/components (HhKnop, HhKaart,
+   HhInvoer, HhKeuzerij, HhStapbalk, HhLegeStaat, HhLaadStaat, HhMeldBalk),
+   theme.dart, HhDichtheidScope. Bouw HIEROP, verzin geen tweede set.
+6. Referentie voor de PocketBase-laag en de auth-flow van dezelfde eigenaar:
+   /Users/h/Desktop/meebezig/obycom_complit/ObyCom/app/lib/ (core/, features/)
+   Neem het patroon over: pocketbase-Dart-pakket verpakt in één eigen laag
+   (gateway) met een fake voor tests, sessie in secure storage, Riverpod.
+
+SERVER
+PB_URL = https://api.qawayahbase.com (gedeelde prod). Auth-collectie hh_users.
+Je mag met de app inloggen op prod met de seed-accounts uit
+"/Users/h/Desktop/huidige projecten/buurthulp/backend/seed-accounts.local.json"
+(gitignored). Je mag NIET: collecties wijzigen, seed-accounts wijzigen of
+verwijderen, scripts in backend/ draaien. Registreren van een testaccount op
+prod mag, met e-mail hh-m2test-<n>@qawayah.nl; meld welke je aanmaakte in
+OPEN-PUNTEN zodat ze later opgeruimd worden.
+
+BESLISSINGEN (vast, niet ter discussie in deze opdracht)
+- G5 telefoonverificatie: GEEN sms in de pilot (kost geld per bericht,
+  leverancier niet gekozen). Bouw G5 als e-mailbevestiging via de
+  ingebouwde PocketBase-verificatie (requestVerification). Schermtekst:
+  "Bevestig je e-mailadres". Zet in OPEN-PUNTEN dat sms later kan.
+- G2 rolkeuze: twee grote keuzes "Ik zoek hulp" (hulpvrager) en
+  "Ik wil helpen" (jongere), plus een kleinere derde ingang
+  "Ik help een familielid" (familie). Coordinator heeft geen registratie,
+  alleen inloggen (G3) met een bestaand account.
+- Dichtheid volgt rol: hulpvrager = HhDichtheid.groot, alle andere rollen
+  normaal. Vóór inloggen (G1-G4): groot zodra "Ik zoek hulp" is gekozen,
+  anders normaal.
+- Na inloggen landt elke rol in zijn eigen stub-route uit M0
+  (/hulpvrager /jongere /familie /coordinator). Bouw daar nog GEEN tabs of
+  inhoud; alleen een nette landing met naam, rol en uitlogknop. De echte
+  tabnavigatie komt per rol in M3-M10.
+- Het tijdelijke rolwisselscherm uit M0 verdwijnt uit de router. Bewaar
+  het als dev-only route /dev alleen in debug-builds (kDebugMode).
+- G7 instellingen: taal (nl/ar/tr/en, alleen opslaan in hh_users.taal;
+  vertalingen komen later), meldingen-schakelaar (alleen opslaan, geen
+  push), uitloggen, account wissen (met bevestiging, roept delete op
+  eigen hh_users-record; zie backend OPEN-PUNT 21).
+- G8 hulp: statische veelgestelde vragen, tekst mag je kort invullen
+  (5-6 vragen, gewone taal, per rol één blok). Plus telefoonnummer-knop
+  naar de meldkamer met een placeholder-nummer uit één constante.
+- Sessie: token in flutter_secure_storage, automatisch verversen bij
+  start (authRefresh), bij 401 terug naar G3 met melding. Offline:
+  HhMeldBalk "Geen verbinding" en de knop blijft bruikbaar voor opnieuw
+  proberen; nooit een kale exception.
+- Ouderenschermen (hulpvrager-pad in G2-G4, G7): maximaal drie keuzes
+  per scherm, altijd zichtbare terugknop, geen cijfers of statistiek.
+- Alle schermteksten Nederlands, in één bestand lib/l10n/teksten_nl.dart
+  (of het ObyCom-equivalent), nooit losse strings in widgets.
+
+WAT JE BOUWT
+- HhScherm-steiger (appBar-titel, terugknop, veilige randen, dichtheid)
+  zoals ObyScreen; alle G-schermen gebruiken hem.
+- Gateway-laag: lib/core/pb/ met PocketBase-client, AuthGateway
+  (registreren, inloggen, uitloggen, verversen, verificatie aanvragen,
+  wachtwoord-reset aanvragen, eigen record bijwerken, account wissen) en
+  een FakeAuthGateway voor tests. Alle server-fouten worden vertaald naar
+  Nederlandse meldingen (e-mail bestaat al, wachtwoord fout, geen
+  verbinding, e-mail nog niet bevestigd).
+- Sessie-state in Riverpod (huidige gebruiker, rol, dichtheid afgeleid).
+- Router-guard: niet ingelogd -> G1/G2; ingelogd -> rolroute; verkeerde
+  rolroute -> eigen rolroute.
+- Schermen G1 t/m G8.
+- Tests:
+  * unit: AuthGateway-foutvertaling, sessie-state, rol -> dichtheid,
+    rol -> route
+  * widget: elk G-scherm rendert in beide dichtheden, 200 procent tekst
+    zonder overloop, semantiek op elk interactief element
+  * flow-test met FakeAuthGateway: registreren als hulpvrager -> landt
+    op /hulpvrager in dichtheid groot; inloggen als elke van de vier
+    rollen -> juiste route; uitloggen -> terug naar G2; 401 -> G3 met
+    melding; offline -> meldbalk
+  * één handmatige smoke tegen prod met de seed-accounts (alle vier
+    rollen inloggen), uitkomst in je verslag. Niet als geautomatiseerde
+    test vastleggen.
+
+KLAAR ALS
+- flutter analyze zonder meldingen
+- flutter test volledig groen (M0-tests blijven groen)
+- flutter build ios --simulator --no-codesign slaagt
+- Alle vier rollen kunnen op prod inloggen en landen op de juiste route
+- Geen kleur of maat buiten theme.dart (zelfde zoekactie als M0, meld
+  het resultaat)
+
+REGELS
+- Blijf binnen "/Users/h/Desktop/huidige projecten/buurthulp/app".
+  Lezen buiten app/ mag; schrijven niet. backend/ niet aanraken.
+- Geen functies verzinnen. Niet gevraagd maar opgevallen -> app/OPEN-PUNTEN.txt
+  (bestaande punten laten staan, nieuwe onderaan met "M2:" ervoor;
+  punten 10 en 11 mag je als opgelost markeren).
+- GIT: git-root is buurthulp. Nooit git add -A. Alleen app/ stagen en
+  committen met pathspec:
+  git -C "/Users/h/Desktop/huidige projecten/buurthulp" commit -m "feat: ..." -- app
+  index.lock -> 2 seconden wachten, opnieuw.
+- Commits feat/fix/chore/test, Nederlands in commentaar en teksten.
+- Geen wachtwoorden in code, tests of commits. Seed-wachtwoorden alleen
+  lezen uit het gitignored bestand.
+
+LEVER AAN HET EIND
+Kort Nederlands verslag: wat je uit ObyCom overnam, lijst schermen +
+routes, uitkomst analyze/test/build, prod-smoke per rol, commit-hashes,
+aangemaakte testaccounts, en de nieuwe M2-regels uit OPEN-PUNTEN.txt.

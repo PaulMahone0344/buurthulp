@@ -1,0 +1,77 @@
+HEITJEHULP - ANTWOORDEN VOOR CLAUDE DESIGN
+Alles hieronder is om te kopieren en plakken.
+
+
+================================================================
+BLOK 1 - KLEUREN
+Plak dit in het veld voor logo, kleuren of screenshots.
+================================================================
+
+achtergrond   #f8faf7
+wit           #ffffff
+tekst         #142522
+tekst gedempt #5d6b67
+primair       #20584f  (diepgroen)
+primair donker #112421
+accent        #f2b052  (amber)
+lijn          #dce6e1
+focus         #ffcb70
+zacht groen   #e7f0ec
+zacht amber   #fbeed6
+
+Dit palet draait al op de HeitjeHulp-website, dus het is een
+startpunt, geen keurslijf. Een logo is er nog niet.
+
+
+================================================================
+BLOK 2 - OVER DE DOELGROEP
+Plak dit in het vrije veld van 400 tekens.
+================================================================
+
+Ouderen 70+, deels slechtziend, telefoon en tablet, vaak
+onzeker met apps. Jongeren 15-22, telefoon, gewend aan
+moderne apps. Coordinator werkt op desktop en zit niet in
+deze mockups. Belangrijkste flow: oudere plaatst hulpvraag
+in vier stappen. Op ouderenschermen maximaal drie keuzes,
+altijd een zichtbare terugknop, nooit cijfers of statistiek.
+
+
+================================================================
+BLOK 3 - DE MAP OM AAN TE KOPPELEN
+Attach a local codebase > Browse > wijs deze map aan:
+================================================================
+
+/Users/h/Desktop/huidige projecten/buurthulp
+
+
+================================================================
+BLOK 4 - DE AANVINKKEUZES
+================================================================
+
+Wat moet erin
+  AAN   De 8 widgets in alle varianten (componentblad)
+  AAN   Een voorbeeldscherm per rol
+  AAN   Toegankelijkheidsdemo: tekst op 200%
+  UIT   De vier rol-stubs
+  UIT   Het tijdelijke rolwisselscherm
+
+Dichtheid          Beide naast elkaar
+Aantal richtingen  Twee richtingen
+Uitstraling        Warm en dorps  +  Klinisch helder
+Frame              Los, geen frame
+Slotknop           Ask me follow-up questions
+
+
+================================================================
+BLOK 5 - WAT ER NOG OPENSTAAT
+Plak dit bij "Nog iets wat bij jou open staat?"
+================================================================
+
+Vijf dingen. 1) Er is nog geen logo, stel per richting een simpel
+woordmerk voor. 2) Alleen licht, geen donkere modus in de pilot.
+3) Een klus heeft acht statussen: concept, open, geaccepteerd,
+onderweg, bezig, afgerond, geannuleerd, probleem. Geef elke status
+een eigen pilkleur. 4) De noodknop moet onmiskenbaar zijn zonder de
+hele app alarmerend te maken. 5) Foto en naam van de jongere dragen
+het vertrouwen bij de oudere, behandel de avatar als hoofdelement
+en niet als versiering.
