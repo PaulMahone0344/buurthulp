@@ -199,6 +199,31 @@ Regels
   Verwijderen alleen een eigen klus met status concept, of de
               coordinator. Een echte klus verdwijnt nooit stil.
 
+  HOOK (M5, backend/pb_hooks/hh_klussen.pb.js, live op de server sinds
+  12 sep 2026 in /root/pb_hooks/; deploy met scripts/10-hook-deploy.sh,
+  bewijs met scripts/11-accepteercheck.mjs, 27 controles):
+  - POST /api/hh/klussen/{id}/accepteren — de nette weg om een klus aan
+    te nemen. Eist een ingelogde hh_users met rol jongere, een
+    hh_profielen-record met verificatiestatus goedgekeurd en een wijk op
+    het account. In EEN transactie: klus opnieuw laden, eisen status open
+    en toegewezen_jongere leeg en hulpvrager.wijk = wijk van de jongere,
+    dan toegewezen_jongere = jongere, status = geaccepteerd, plus een
+    logregel in hh_klus_status (door = jongere, van = open, naar =
+    geaccepteerd). Antwoorden: 200 {klus, status, toegewezen_jongere};
+    401 anoniem; 403 {melding, reden} geen jongere / niet goedgekeurd /
+    geen wijk; 404 onbekende klus; 409 {melding, reden: bezet|wijk}
+    ("Deze klus is net door iemand anders aangenomen." /
+    "Deze klus ligt niet in jouw wijk."). Twee jongeren die tegelijk
+    accepteren: precies een winnaar (20/20 ronden in 11-accepteercheck).
+    De updateRule-tak "jongere accepteert" blijft staan als vangnet.
+  - Geocoding: bij een API-create van hh_klussen met adres maar zonder
+    lat/lon, en bij een API-update waarin het adres verandert, vraagt de
+    hook Nominatim (OpenStreetMap, User-Agent "HeitjeHulp/0.1
+    (info@heitjehulp.nl)", time-out 5 s, countrycodes=nl) en zet lat/lon
+    vóór het opslaan. Mislukt het: lat/lon leeg (0/0), een logregel in
+    journalctl, het aanmaken gaat altijd door. Het accepteren via de route
+    loopt niet langs deze hook.
+
 ================================================================
 6. hh_klus_status  (4 velden) — logboek per statuswissel
 ================================================================
@@ -352,3 +377,18 @@ SCREENINGCHECK (scripts/07-screeningcheck.mjs, M3)
   Laatste run 12 sep 2026: 72 groen, 0 rood.
   Volgorde: 02 -> 05 -> 06. Draai 02-rules.mjs NIET opnieuw met --apply na
   06 (dat zet de twee screeningregels terug naar M1).
+
+ACCEPTEERCHECK (scripts/11-accepteercheck.mjs, M5)
+  27 controles tegen de hook hh_klussen.pb.js: route zonder auth 401,
+  geocoding bij aanmaken en adreswijziging (oudere 1, tijdelijke concept-
+  klus [accepteercheck]), eenmalig vullen van klussen zonder lat/lon,
+  rechten (oudere 403, niet-goedgekeurde jongere 403, andere wijk 409,
+  onbekend 404), RACE (20 ronden jongere 1 en 2 tegelijk op k02: precies
+  een 200, een 409 en een logregel per ronde), gewone acceptatie van k11
+  door jongere 1 plus tweede poging 409. Zet k02/k11/k03 aan begin en eind
+  terug op open zonder jongere en verwijdert de accepteer-logregels.
+  Laatste run 12 sep 2026: 27 groen, 0 rood; race 20/20 (j1 7, j2 13).
+  Terugzet-knop na een app-smoke: --apply --alleen-terugzetten.
+  Hook-deploy: scripts/10-hook-deploy.sh (lijst voor/na, node --check,
+  /tmp -> /root/pb_hooks/, geen restart, verify 401 + journalctl;
+  --rollback verwijdert het bestand weer).
