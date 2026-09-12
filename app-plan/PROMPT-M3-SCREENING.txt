@@ -1,0 +1,116 @@
+PROMPT M3 - SCREENING JONGERE (HeitjeHulp app)
+Gestuurd 12 sep 2026 als Fable-agent, parallel met M4.
+
+Lees eerst "/Users/h/Desktop/huidige projecten/buurthulp/app-plan/_GEDEELD-M3-M4.txt"
+en houd je eraan. Jouw feature-map: app/lib/features/jongere/.
+Jouw backend-scripts: 05-screening-velden.mjs, 06-screening-rules.mjs,
+07-screeningcheck.mjs. Jouw open-puntenbestand: app/OPEN-PUNTEN-M3.txt.
+
+LEES DAARNA
+- HEITJEHULP-APP-PLAN.txt: hoofdstuk 2, hoofdstuk 3 blok "JONGERE:
+  AANMELDEN EN SCREENING" (J1-J9), M3 in hoofdstuk 7.
+- backend/SCHEMA.txt (hh_users, hh_profielen, hh_klustypes, hh_wijken,
+  hh_klussen) en backend/OPEN-PUNTEN.txt (8-10, 12).
+- app/lib (M0+M2): core/pb, features/toegang, app/router.dart, l10n.
+- ObyCom-referentie voor foto-upload en profielstroom:
+  /Users/h/Desktop/meebezig/obycom_complit/ObyCom/app/lib/features/
+
+DEEL A - BACKEND (eerst, voor de app)
+Het schema mist velden voor de screening. Voeg ADDITIEF toe, alleen op
+hh_profielen, met een idempotent script 05-screening-velden.mjs
+(dry-run, dan --apply, na 00-backup):
+  over_mij            tekst, max 500
+  document_foto       1 bestand, alleen afbeeldingen, max 10 MB, protected
+  selfie              1 bestand, alleen afbeeldingen, max 10 MB, protected
+  iban                tekst, max 34
+  vog_aangevraagd_op  datum
+Bestaande velden en rijen blijven staan. Andere collecties niet aanraken.
+
+06-screening-rules.mjs past twee rules aan (dry-run, dan --apply):
+1. hh_profielen updateRule voor de eigenaar: hij mag verificatiestatus
+   ALLEEN meesturen als hij van "nieuw" naar "in_behandeling" gaat:
+   (@request.body.verificatiestatus:isset = false ||
+    (verificatiestatus = "nieuw" && @request.body.verificatiestatus = "in_behandeling"))
+   De overige geblokkeerde velden (vog_status, iban_geverifieerd,
+   sterren_gemiddeld, klussen_aantal, gebruiker) blijven geblokkeerd.
+   Coordinator blijft alles mogen.
+2. hh_klussen listRule/viewRule: de "jongere ziet open klussen in eigen
+   wijk"-tak krijgt een extra eis: zijn profiel heeft
+   verificatiestatus = "goedgekeurd". Gebruik het @collection-patroon
+   (@collection.hh_profielen.gebruiker ?= @request.auth.id &&
+    @collection.hh_profielen.verificatiestatus ?= "goedgekeurd").
+   Toegewezen klussen blijven zichtbaar ongeacht status.
+   Lees eerst hoe 02-rules.mjs de rule opbouwt en hergebruik de
+   bouwstenen; kopieer de RULESET-entry voor hh_klussen en hh_profielen
+   naar 06 en overschrijf alleen die twee. 02-rules.mjs zelf niet wijzigen.
+
+07-screeningcheck.mjs (--apply): logt in als seed-jongeres en bewijst:
+  - jongere kan eigen profiel aanmaken zonder geblokkeerde velden
+  - jongere kan over_mij, iban, straal_km, beschikbaarheid, klustypes,
+    vog_aangevraagd_op, document_foto, selfie zetten
+  - jongere kan vog_status en iban_geverifieerd NIET zetten
+  - jongere nieuw -> in_behandeling mag; in_behandeling -> goedgekeurd
+    mag NIET; goedgekeurd zetten door jongere mag NIET
+  - jongere met status nieuw ziet GEEN open klussen in eigen wijk;
+    dezelfde jongere na superuser-goedkeuring ziet ze WEL
+  - oudere kan document_foto van een jongere NIET ophalen
+  - superuser zet alles terug zoals het was (seed-status na de test
+    gelijk aan ervoor; meet het na)
+Daarna 04-rulecheck.mjs --apply opnieuw draaien: moet nog steeds
+volledig groen zijn (218). Meld beide tellingen.
+Vul in backend/SCHEMA.txt de sectie hh_profielen en de twee rules aan.
+
+DEEL B - APP
+Stroom voor de jongere direct na inloggen/registreren, zolang zijn
+profiel niet "goedgekeurd" is. Route-gezin onder /jongere/screening/...
+  J1 Profiel: foto (hh_users.foto, camera of galerij via image_picker),
+     geboortedatum (hh_users), over mij (hh_profielen.over_mij).
+     Maakt het hh_profielen-record aan als het nog niet bestaat.
+  J2 Identiteitscontrole: documentfoto (hh_profielen.document_foto) met
+     korte uitleg wat wel/niet zichtbaar mag zijn (BSN afschermen).
+  J3 Selfie (hh_profielen.selfie), alleen camera.
+  J4 VOG: uitleg, knop "VOG aanvragen" (opent
+     https://www.justis.nl/producten/verklaring-omtrent-het-gedrag-vog
+     via url_launcher), knop "Ik heb aangevraagd" zet
+     vog_aangevraagd_op = nu. Toont vog_status als pil (hhStatusStijlen
+     mag je hier NIET voor gebruiken, dat zijn klusstatussen; maak een
+     kleine HhScreeningPil op basis van succes/waarschuwing/info/fout
+     uit theme.dart).
+  J5 IBAN: invoer met NL-IBAN-validatie (mod-97), opslaan in
+     hh_profielen.iban. iban_geverifieerd blijft server-zaak.
+  J6 Werkgebied: wijk kiezen uit hh_wijken (actief), straal_km
+     (keuzerij 1/2/5/10).
+  J7 Beschikbaarheid: 7 dagen x 3 dagdelen (ochtend/middag/avond) als
+     json {"ma":["middag"],...} in hh_profielen.beschikbaarheid.
+  J8 Klussoorten: HhKeuzerij uit hh_klustypes (meerdere).
+  J9 Overzicht: per stap af/open, verificatiestatus en vog_status als
+     pil, knop "Ter controle aanbieden" die pas actief is als J1-J8 af
+     zijn en verificatiestatus = nieuw; zet nieuw -> in_behandeling.
+     Bij in_behandeling: rustige wachttekst. Bij afgewezen: tekst +
+     knop "Bel ons". Bij goedgekeurd: knop "Naar klussen" -> /jongere.
+- Guard: ingelogde jongere zonder profiel of met status != goedgekeurd
+  wordt vanaf /jongere naar /jongere/screening/overzicht geleid. Bouw
+  dit als redirect-uitbreiding in de bestaande router-guard, minimaal,
+  na opnieuw lezen van router.dart.
+- Landing /jongere (uit M2) blijft; voeg alleen een kaart "Screening:
+  <status>" toe die naar J9 gaat. Geen klussenlijst bouwen (M5).
+- Gateway: lib/core/pb/profiel_gateway.dart (+ fake): profiel ophalen/
+  aanmaken/bijwerken (alleen gewijzigde velden!), bestand uploaden,
+  wijken en klustypes ophalen. Foutvertaling naar Nederlands.
+- Foto's vóór upload verkleinen tot max 1600 px lange zijde.
+- Tests: unit (IBAN-validatie, beschikbaarheid-json heen/terug,
+  stap-afgerond-logica, status -> guard), widget (elk J-scherm, beide
+  dichtheden, 200 procent, semantiek), flow met fake (J1-J9 doorlopen,
+  ter controle aanbieden, guard-gedrag per status).
+- Prod-smoke met seed-jongere: profiel aanvullen, J9 indienen, daarna
+  via 07-check terugzetten. Meld het.
+
+KLAAR ALS
+- 07-screeningcheck groen en 04-rulecheck nog 218 groen
+- flutter analyze schoon, jouw tests groen, iOS-simulatorbuild slaagt
+- Seed-status op prod ongewijzigd na afloop
+
+LEVER
+Kort Nederlands verslag: velden toegevoegd, rules gewijzigd (letterlijk),
+tellingen 07 en 04, schermen + routes, analyze/test/build, prod-smoke,
+commit-hashes, OPEN-PUNTEN-M3.txt integraal.

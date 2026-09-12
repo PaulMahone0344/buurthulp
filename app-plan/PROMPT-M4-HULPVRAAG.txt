@@ -1,0 +1,105 @@
+PROMPT M4 - HULPVRAAG PLAATSEN (HeitjeHulp app)
+Gestuurd 12 sep 2026 als Fable-agent, parallel met M3.
+
+Lees eerst "/Users/h/Desktop/huidige projecten/buurthulp/app-plan/_GEDEELD-M3-M4.txt"
+en houd je eraan. Jouw feature-map: app/lib/features/hulpvrager/.
+Jouw backend-scripts: 08-adres-velden.mjs, 09-adrescheck.mjs.
+Jouw open-puntenbestand: app/OPEN-PUNTEN-M4.txt.
+
+LEES DAARNA
+- HEITJEHULP-APP-PLAN.txt: hoofdstuk 2, hoofdstuk 3 blok "OUDERE
+  (HULPVRAGER)" incl. de ontwerpregel erboven (max drie keuzes, tekst
+  20pt, knoppen 60pt, terugknop), M4 in hoofdstuk 7, hoofdstuk 10 punt 1.
+- backend/SCHEMA.txt (hh_users, hh_klussen, hh_klustypes, hh_klus_status)
+  en backend/OPEN-PUNTEN.txt (8-10, 15-17, 22).
+- app/lib (M0+M2): core/pb, features/toegang, app/router.dart, l10n,
+  theme.dart (HhDichtheid.groot is de ouderenmaat; alles via tokens).
+- Mockup ter referentie: "/Users/h/Downloads/vanaf 1 juli/HeitjeHulp-fundament-standalone.html"
+  (richting 1b, voorbeeldscherm oudere).
+
+DEEL A - BACKEND (eerst)
+hh_users mist adres en contactpersoon. Voeg ADDITIEF toe, alleen op
+hh_users, met 08-adres-velden.mjs (dry-run, --apply, na 00-backup):
+  adres            tekst, max 200 (straat + huisnummer)
+  postcode         tekst, max 7
+  plaats           tekst, max 100
+  contact_naam     tekst, max 100
+  contact_telefoon tekst, max 20
+Rules op hh_users NIET wijzigen (eigenaar mag zichzelf al bijwerken
+zonder rol). 09-adrescheck.mjs (--apply): seed-oudere zet adres en
+contact, leest terug, zet terug; jongere ziet adres van een oudere NIET
+tenzij toegewezen aan haar klus (bestaande regel, alleen bewijzen).
+Daarna 04-rulecheck.mjs --apply: moet 218 groen blijven. Meld beide.
+Vul backend/SCHEMA.txt sectie hh_users aan.
+
+BEDRAGEN (vaste keuze pilot, hoofdstuk 10 punt 1 + backend punt 17)
+Geen commissie in de pilot. Bij plaatsen zet de app:
+  bedrag_bruto = vergoeding_jongere = hh_klustypes.richtvergoeding
+  commissie = 0
+Eén pure functie berekenBedragen(klustype) in lib/features/hulpvrager/
+domein/, met unit-test. Bij M16 verhuist dit naar een hook; zet dat in
+OPEN-PUNTEN-M4.
+
+DEEL B - APP (ouderenregel op ELK scherm: max drie keuzes, HhDichtheid
+groot, altijd HhTerugKnop zichtbaar, geen cijfers behalve bedrag en tijd)
+  O1 Home /hulpvrager: vervangt de M2-landing voor de hulpvrager. Drie
+     grote knoppen: "Hulp vragen" -> O2; "Mijn hulpvragen" -> tijdelijke
+     LegeStaat "Komt binnenkort" (M6/M7 bouwt O8); "Bel ons" -> belt
+     HhConfig.meldkamerTelefoon (bestaande belknop-aanpak uit G8).
+     Klein: naam bovenaan, tandwiel -> /instellingen, "Mijn gegevens"
+     -> O12.
+  O2 Stap 1 van 4: wat heeft u nodig. HhKeuzerij met grote iconen uit
+     hh_klustypes (icoon-veld -> Icons-naam via één mapping in code met
+     nette fallback). Max 6 zichtbaar, dan "Meer".
+  O3 Stap 2 van 4: wanneer. Drie keuzes: Vandaag / Morgen / Kies een
+     dag (datumkiezer, groot). Daarna dagdeel: ochtend (9-12) / middag
+     (13-17) / avond (18-20) -> wanneer_van en wanneer_tot.
+  O4 Stap 3 van 4: waar en toelichting. Adres voorgevuld uit hh_users
+     (adres, postcode, plaats); bewerkbaar; toelichting als HhInvoer
+     (meerregelig). Spraakinvoer: NIET bouwen, alleen een uitgeschakelde
+     microfoonknop met semantiek "Spraakinvoer komt later" en een
+     OPEN-PUNT. Eerste keer zonder adres: O12 tussenvoegen.
+  O5 Stap 4 van 4: bevestigen. Samenvatting: wat, wanneer, waar,
+     richtduur (uit klustype, in gewone taal "ongeveer 1 uur"),
+     vergoeding (euro-notatie "€ 12,50"), akkoord-knop (groot, primair)
+     en terug. Plaatst hh_klussen met status "open", bron "app",
+     hulpvrager = geplaatst_door = ik, klustype, omschrijving, adres
+     (samengesteld), wanneer_van/tot, bedragen uit berekenBedragen.
+     lat/lon leeg laten (OPEN-PUNT: geocoding in M5). Schrijft daarna
+     één hh_klus_status-logregel (van: concept, naar: open, door: ik)
+     - als de rule dat toestaat; anders melden.
+  O6 Verstuurd: rustige bevestiging, "Wij zoeken iemand voor u",
+     één knop "Naar het begin" -> O1. Geen cijfers.
+  O12 Mijn gegevens: naam, telefoon, adres, postcode, plaats,
+     contactpersoon naam + telefoon. Opslaan stuurt ALLEEN gewijzigde
+     velden. Bereikbaar vanaf O1 en als tussenstap uit O4.
+- Stap-state: één Riverpod Notifier voor de conceptaanvraag (immutable
+  copyWith), terug-navigatie bewaart invoer, verlaten van de stroom
+  vraagt "Weet u het zeker?" (twee knoppen).
+- Gateway: lib/core/pb/klus_gateway.dart (+ fake): klustypes ophalen,
+  klus aanmaken, statuslog schrijven, eigen gebruiker bijwerken
+  (partieel). Foutvertaling Nederlands.
+- Toegankelijkheid: elke knop een semantiek-label met werkwoord
+  ("Kies boodschappen"), stapbalk meldt "Stap 2 van 4", focusvolgorde
+  logisch, tekst 200 procent zonder overloop. Schrijf een test die met
+  SemanticsTester de hele stroom als schermlezer doorloopt (labels
+  aanwezig, geen dubbele labels, knoppen als button gemarkeerd).
+- Tests: unit (berekenBedragen, wanneer -> van/tot incl. dagdelen en
+  "morgen" over maandgrens, adres samenstellen, concept-notifier),
+  widget (O1-O6, O12, dichtheid groot, 200 procent), flow met fake
+  (O1 -> O6 plaatst precies één klus met status open en juiste
+  bedragen; terugknop bewaart invoer).
+- Prod-smoke met seed-oudere: één echte klus plaatsen via de app-code
+  (omschrijving "[m4-smoke]"), teruglezen, dan verwijderen kan NIET
+  (status open, rule verbiedt) -> laat staan en meld het record-id in
+  OPEN-PUNTEN-M4 voor opruiming.
+
+KLAAR ALS
+- 09-adrescheck groen en 04-rulecheck nog 218 groen
+- flutter analyze schoon, jouw tests groen, iOS-simulatorbuild slaagt
+- Echte hh_klussen-rij met status open op prod, geplaatst via de app-code
+
+LEVER
+Kort Nederlands verslag: velden toegevoegd, tellingen 09 en 04,
+schermen + routes, analyze/test/build, prod-smoke record-id,
+commit-hashes, OPEN-PUNTEN-M4.txt integraal.

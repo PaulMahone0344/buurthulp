@@ -1,0 +1,130 @@
+PROMPT M5 - KLUSSEN VINDEN EN ACCEPTEREN (HeitjeHulp app)
+Gestuurd 12 sep 2026 als Fable-agent, na M3 en M4. Je werkt ALLEEN in de
+repo (geen tweede agent), maar houd de bestandsdiscipline uit
+_GEDEELD-M3-M4.txt aan: eigen routes-bestand, eigen teksten-bestand,
+eigen OPEN-PUNTEN-M5.txt, expliciete git-pathspecs, nooit git add -A,
+nooit `-- app`. Jouw feature-map: app/lib/features/jongere/klussen/.
+Jouw backend-scripts: 10-hook-deploy.sh, 11-accepteercheck.mjs.
+Jouw hook: backend/pb_hooks/hh_klussen.pb.js.
+
+LEES EERST
+- HEITJEHULP-APP-PLAN.txt: hoofdstuk 2, hoofdstuk 3 blok "JONGERE:
+  DAGELIJKS GEBRUIK" (J11-J14), M5 in hoofdstuk 7, hoofdstuk 9.
+- backend/SCHEMA.txt (hh_klussen, hh_klus_status, hh_profielen, hh_users,
+  hh_wijken, hh_klustypes) en backend/OPEN-PUNTEN.txt punten 15, 16, 18.
+- app/OPEN-PUNTEN-M3.txt en app/OPEN-PUNTEN-M4.txt (punt 33 lat/lon leeg,
+  punt 39 guard-prefix).
+- /Users/h/.claude/projects/-Users-h/memory/reference_pb_jsvm_hooks.md
+  VERPLICHT, elk punt. Vooral: e.next() op elk pad, helpers binnen de
+  handler, $app niet e.app, json-veld = byte-array (toString + JSON.parse),
+  require binnen handler, server draait UTC.
+- /Users/h/.claude/projects/-Users-h/memory/reference_pb_api_rules.md
+- app/lib: features/jongere (M3: screening, guard, paden_jongere,
+  teksten_jongere_nl), features/hulpvrager (M4: klus_gateway als
+  voorbeeld), core/pb, app/router.dart.
+- Referentie-hooks van dezelfde eigenaar op dezelfde server:
+  /Users/h/Desktop/meebezig/obycom_complit/ObyCom/pb_hooks/*.pb.js
+  (routes, requireAuth, runInTransaction, e.next()).
+
+VASTE KEUZES
+1. Kaart: flutter_map + OpenStreetMap-tegels (geen Google-sleutel, geen
+   kosten in de pilot). Tegel-User-Agent "nl.heitjehulp.app". Zet in
+   OPEN-PUNTEN-M5 dat het plan google_maps_flutter noemde en waarom
+   afgeweken. Package latlong2 erbij.
+2. Geocoding: server-side in de hook. Bij aanmaken van hh_klussen (en bij
+   wijzigen van adres) vraagt de hook Nominatim
+   (https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=nl&q=...)
+   met header User-Agent "HeitjeHulp/0.1 (info@heitjehulp.nl)" en zet
+   lat/lon. Mislukt het: lat/lon leeg laten, loggen, NOOIT het aanmaken
+   blokkeren. Max 1 verzoek per klus. Bestaande seed-klussen zonder
+   lat/lon: 11-accepteercheck vult ze eenmalig via een superuser-update
+   van hun adres (triggert de hook) of via een directe geocode-helper.
+3. "Binnen de straal": de jongere heeft geen coördinaten. Pilot =
+   wijk-gelijkheid (staat al in de rule) + straal_km als CLIENT-filter
+   op afstand tot het middelpunt van zijn wijk. Middelpunt = gemiddelde
+   lat/lon van de open klussen in die wijk, of leeg -> geen straalfilter.
+   Zet de echte oplossing (adres jongere geocoden) in OPEN-PUNTEN-M5.
+4. Accepteren gaat NIET via een record-update vanuit de app maar via een
+   eigen route in de hook:
+     POST /api/hh/klussen/{id}/accepteren
+   Vereist ingelogde hh_users met rol jongere en profiel goedgekeurd.
+   Binnen $app.runInTransaction: klus opnieuw laden, eisen status = open
+   en toegewezen_jongere leeg en wijk van de oudere = wijk van de jongere,
+   dan toegewezen_jongere = auth.id, status = geaccepteerd, opslaan, en
+   een hh_klus_status-logregel (door = auth.id, van = open, naar =
+   geaccepteerd) in dezelfde transactie. Elke andere uitkomst: 409 met
+   Nederlandse melding ("Deze klus is net door iemand anders
+   aangenomen."). De bestaande updateRule-tak "jongere accepteert" in
+   02/06-rules blijft staan als vangnet; niet wijzigen.
+5. Hook-bestand backend/pb_hooks/hh_klussen.pb.js. Deploy = kopiëren naar
+   de server root@178.104.171.224 map /root/pb_hooks/ (ssh-sleutel
+   ~/.ssh/id_ed25519). Ibrahim heeft toestemming gegeven. Werkwijze in
+   10-hook-deploy.sh:
+   - lijst /root/pb_hooks/ vóór en na; alleen jouw bestand mag nieuw
+     zijn; nooit een ander bestand aanraken of verwijderen
+   - `node --check` lokaal vóór het kopiëren (syntax; JSVM-API's zijn
+     globals)
+   - eerst naar /tmp/ op de server, dan cp naar /root/pb_hooks/
+   - PocketBase herlaadt hooks vanzelf bij bestandswijziging; GEEN
+     systemctl restart
+   - verify: route zonder auth -> 401/403 (niet 404); journalctl
+     -u pocketbase.service -n 20 op fouten
+   - rollback = het bestand weer verwijderen uit /root/pb_hooks/
+   Het script vraagt om bevestiging (y) vóór de kopieerstap; bij de
+   agent-run mag je die met `yes |` beantwoorden, want de toestemming is
+   gegeven.
+6. RACE-TEST (M5 "klaar als"): 11-accepteercheck.mjs --apply zet een
+   seed-klus op open zonder jongere, laat jongere 1 en jongere 2 (beide
+   goedgekeurd, zelfde wijk) TEGELIJK accepteren (Promise.all, minstens
+   20 herhalingen), en eist elke ronde precies één 200 en één 409, en
+   precies één logregel per ronde. Zet daarna alles terug. Meld de
+   telling. Bewijs ook: niet-goedgekeurde jongere -> 403, andere wijk
+   -> 409/403, oudere -> 403, anoniem -> 401.
+   Daarna 04-rulecheck --apply (218) en 07-screeningcheck --apply
+   opnieuw: beide groen.
+
+APP
+  J11 Home /jongere: vervangt de M2-landing voor de goedgekeurde jongere
+      (guard uit M3 blijft: niet goedgekeurd -> screening). Lijst open
+      klussen (klus_gateway-uitbreiding of eigen klussen_gateway.dart +
+      fake): klustype-icoon, wanneer in gewone taal, afstand als "ca.
+      1,2 km" (of niets zonder coördinaten), vergoeding. Filterbalk:
+      klustype (HhKeuzerij, meerdere) en dagdeel (ochtend/middag/avond,
+      afgeleid uit wanneer_van). Lege staat. Pull-to-refresh.
+      Bovenaan schakelaar Lijst | Kaart.
+  J12 Kaart: flutter_map, markers voor open klussen met lat/lon, tik ->
+      J13. Klussen zonder coördinaten tellen mee in een badge "n zonder
+      locatie" die naar de lijst gaat.
+  J13 Klusdetail: alles van de klus, naam + foto van de oudere (hh_users
+      viewRule staat dat toe voor open klus in eigen wijk? Controleer;
+      zo niet: alleen voornaam uit klus-expand of "een buurtbewoner",
+      en OPEN-PUNT), adres pas NA accepteren (voor accepteren alleen
+      wijk en afstand). Knop "Klus aannemen" -> route uit keuze 4;
+      409 -> HhMeldBalk met de melding en lijst verversen.
+  J14 Mijn klussen: tabbladen Vandaag / Gepland / Historie op basis van
+      toegewezen_jongere = ik en status/wanneer_van. Tik -> J13
+      (uitvoeren komt in M6; toon alleen status-pil met hhStatusStijlen).
+  Navigatie jongere: onderste tabbalk met Klussen (J11/J12), Mijn
+  klussen (J14), Profiel (M3-overzicht J9 als tijdelijke inhoud),
+  Instellingen. Bouw de tabbalk als eigen widget in features/jongere,
+  hergebruik in M6-M8.
+  Gateway-route-aanroep: pb.send('/api/hh/klussen/{id}/accepteren',
+  method POST) via de bestaande gateway-laag, met foutvertaling 409/403.
+  Tests: unit (dagdeel-afleiding, afstand-berekening (haversine),
+  filterlogica, vandaag/gepland/historie-indeling incl. UTC), widget
+  (J11-J14, 200 procent, semantiek), flow met fake (filteren, accepteren
+  slaagt, accepteren met 409 toont melding en ververst, kaart toont
+  markers). Prod-smoke: seed-jongere 1 haalt de lijst op en accepteert
+  een seed-klus via de route; daarna terugzetten via 11-check.
+
+KLAAR ALS
+- Race-test: 20/20 ronden precies één toewijzing.
+- Hook live, andere hooks onaangeraakt (lijst-vergelijking in verslag).
+- 04-rulecheck 218 groen, 07-screeningcheck groen, 11-check groen.
+- analyze schoon, alle tests groen, iOS-simulatorbuild slaagt.
+
+LEVER
+Kort Nederlands verslag: hook-inhoud (routes + geocoding) in drie zinnen,
+deploy-verificatie (lijst vóór/na, journalctl), race-telling, tellingen
+04/07/11, schermen + routes, analyze/test/build, prod-smoke,
+commit-hashes, OPEN-PUNTEN-M5.txt integraal.
