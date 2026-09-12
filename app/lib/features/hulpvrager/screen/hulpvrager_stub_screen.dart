@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../rol_landing_scherm.dart';
-import '../../toegang/model/hh_rol.dart';
+import 'hulpvrager_home_screen.dart';
 
-/// Landing voor de rol hulpvrager. Vult zich in latere opdrachten met de
-/// schermen uit hoofdstuk 3 van het app-plan.
+/// De rolroute /hulpvrager uit M2 wijst hierheen. Sinds M4 is dit O1
+/// ([HulpvragerHomeScreen]); de naam blijft tot de router en de M2-tests
+/// zijn samengevoegd (OPEN-PUNTEN-M4).
 class HulpvragerStubScreen extends StatelessWidget {
   const HulpvragerStubScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const RolLandingScherm(rol: HhRol.hulpvrager, icoon: Icons.elderly);
-  }
+  Widget build(BuildContext context) => const HulpvragerHomeScreen();
 }
