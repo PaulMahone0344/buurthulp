@@ -1,0 +1,182 @@
+import 'dart:typed_data';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/hh_fout.dart';
+import '../../../core/pb/gateway_providers.dart';
+import '../../../core/result.dart';
+import '../../toegang/model/hh_gebruiker.dart';
+import '../../toegang/model/hh_rol.dart';
+import '../../toegang/provider/sessie_providers.dart';
+import '../model/hh_profiel.dart';
+import '../model/hh_screening_status.dart';
+import '../model/screening_stap.dart';
+
+/// Houdt profiel en accountvelden van de ingelogde jongere bij. Laadt zodra
+/// een jongere is ingelogd; voor elke andere rol (of niemand) is de staat
+/// leeg zonder serververzoek. Een mislukte lading is een AsyncError met de
+/// [HhFout] als error; de schermen tonen dan fout.melding.
+class ScreeningController extends AsyncNotifier<ScreeningGegevens> {
+  @override
+  Future<ScreeningGegevens> build() async {
+    final gebruiker = ref.watch(huidigeGebruikerProvider);
+    if (gebruiker == null || gebruiker.rol != HhRol.jongere) {
+      return const ScreeningGegevens();
+    }
+    return _laad(gebruiker.id);
+  }
+
+  Future<ScreeningGegevens> _laad(String gebruikerId) async {
+    final gateway = ref.read(profielGatewayProvider);
+    final (profiel, account) = await (
+      gateway.haalProfiel(gebruikerId),
+      gateway.haalAccountGegevens(gebruikerId),
+    ).wait;
+    return switch ((profiel, account)) {
+      (
+        Ok<HhProfiel?>(waarde: final p),
+        Ok<HhAccountGegevens>(waarde: final a),
+      ) =>
+        ScreeningGegevens(profiel: p, account: a),
+      (Err<HhProfiel?>(:final fout), _) => throw fout,
+      (_, Err<HhAccountGegevens>(:final fout)) => throw fout,
+    };
+  }
+
+  /// Opnieuw laden, bijvoorbeeld na een fout of na een statuswijziging
+  /// door de meldkamer.
+  Future<void> vernieuw() async {
+    final gebruiker = _jongere;
+    if (gebruiker == null) return;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _laad(gebruiker.id));
+  }
+
+  /// Stuurt ALLEEN [velden]. Bestaat het profiel nog niet, dan wordt het
+  /// aangemaakt met deze velden (J1 is de eerste stap).
+  Future<Result<void>> werkProfielBij(Map<String, dynamic> velden) async {
+    final gebruiker = _jongere;
+    final huidig = state.value;
+    if (gebruiker == null || huidig == null) return _nietIngelogd;
+    final gateway = ref.read(profielGatewayProvider);
+    final profiel = huidig.profiel;
+    final result = profiel == null
+        ? await gateway.maakProfielAan(gebruiker.id, velden)
+        : await gateway.werkProfielBij(profiel.id, velden);
+    return _verwerk(result, (p) => huidig.copyWith(profiel: p));
+  }
+
+  Future<Result<void>> werkAccountBij(Map<String, dynamic> velden) async {
+    final gebruiker = _jongere;
+    final huidig = state.value;
+    if (gebruiker == null || huidig == null) return _nietIngelogd;
+    final result = await ref
+        .read(profielGatewayProvider)
+        .werkAccountBij(gebruiker.id, velden);
+    return _verwerk(result, (a) => huidig.copyWith(account: a));
+  }
+
+  /// [veld] is document_foto (J2) of selfie (J3). Zonder profiel wordt het
+  /// eerst leeg aangemaakt.
+  Future<Result<void>> uploadProfielFoto({
+    required String veld,
+    required Uint8List bytes,
+    required String bestandsnaam,
+  }) async {
+    final gebruiker = _jongere;
+    var huidig = state.value;
+    if (gebruiker == null || huidig == null) return _nietIngelogd;
+    if (huidig.profiel == null) {
+      final aangemaakt = await werkProfielBij(const {});
+      if (aangemaakt case Err<void>(:final fout)) return Result.err(fout);
+      huidig = state.value;
+      if (huidig?.profiel == null) return _nietIngelogd;
+    }
+    final result = await ref
+        .read(profielGatewayProvider)
+        .uploadProfielFoto(
+          profielId: huidig!.profiel!.id,
+          veld: veld,
+          bytes: bytes,
+          bestandsnaam: bestandsnaam,
+        );
+    final basis = huidig;
+    return _verwerk(result, (p) => basis.copyWith(profiel: p));
+  }
+
+  Future<Result<void>> uploadAccountFoto({
+    required Uint8List bytes,
+    required String bestandsnaam,
+  }) async {
+    final gebruiker = _jongere;
+    final huidig = state.value;
+    if (gebruiker == null || huidig == null) return _nietIngelogd;
+    final result = await ref
+        .read(profielGatewayProvider)
+        .uploadAccountFoto(
+          gebruikerId: gebruiker.id,
+          bytes: bytes,
+          bestandsnaam: bestandsnaam,
+        );
+    return _verwerk(result, (a) => huidig.copyWith(account: a));
+  }
+
+  /// J9: nieuw -> in_behandeling. Alleen dat ene veld gaat mee.
+  Future<Result<void>> terControleAanbieden() => werkProfielBij({
+    'verificatiestatus': HhScreeningStatus.inBehandeling.code,
+  });
+
+  Future<Result<void>> _verwerk<T>(
+    Result<T> result,
+    ScreeningGegevens Function(T waarde) bijwerken,
+  ) async {
+    switch (result) {
+      case Ok<T>(:final waarde):
+        state = AsyncData(bijwerken(waarde));
+        return Result.ok(null);
+      case Err<T>(:final fout):
+        if (fout.soort == HhFoutSoort.nietIngelogd) {
+          await ref.read(sessieControllerProvider.notifier).sessieVerlopen();
+        }
+        return Result.err(fout);
+    }
+  }
+
+  Result<void> get _nietIngelogd =>
+      Result.err(const HhFout(HhFoutSoort.nietIngelogd));
+
+  /// De ingelogde jongere, of null (niemand of een andere rol).
+  HhGebruiker? get _jongere {
+    final gebruiker = ref.read(huidigeGebruikerProvider);
+    if (gebruiker == null || gebruiker.rol != HhRol.jongere) return null;
+    return gebruiker;
+  }
+}
+
+final screeningControllerProvider =
+    AsyncNotifierProvider<ScreeningController, ScreeningGegevens>(
+      ScreeningController.new,
+    );
+
+/// Referentiedata voor J6 en J8. Een Err wordt een AsyncError met de
+/// [HhFout] als error.
+final wijkenProvider = FutureProvider<List<HhWijk>>((ref) async {
+  final result = await ref.watch(profielGatewayProvider).haalWijken();
+  return switch (result) {
+    Ok<List<HhWijk>>(:final waarde) => waarde,
+    Err<List<HhWijk>>(:final fout) => throw fout,
+  };
+});
+
+final klustypesProvider = FutureProvider<List<HhKlustype>>((ref) async {
+  final result = await ref.watch(profielGatewayProvider).haalKlustypes();
+  return switch (result) {
+    Ok<List<HhKlustype>>(:final waarde) => waarde,
+    Err<List<HhKlustype>>(:final fout) => throw fout,
+  };
+});
+
+/// De melding voor een AsyncError uit deze providers.
+String meldingVanFout(Object? error) => error is HhFout
+    ? error.melding
+    : const HhFout(HhFoutSoort.onbekend).melding;
