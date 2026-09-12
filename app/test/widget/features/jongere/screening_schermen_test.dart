@@ -6,8 +6,10 @@ import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_scherm.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/widget/jongere_tabbalk.dart';
 import 'package:heitjehulp_app/features/jongere/widget/hh_screening_pil.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
 
 import '../../../support/hh_jongere_wikkel.dart';
@@ -212,17 +214,14 @@ void main() {
       expect(find.byType(HhTerugKnop), findsOneWidget);
     });
 
-    testWidgets('landing toont de screeningkaart met status en knop', (
+    testWidgets('landing (M5: J11) toont de klussen en de tabbalk', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[17], dichtheid: HhDichtheid.normaal);
 
-      expect(find.text(TekstenJongereNl.landingScreening), findsOneWidget);
-      expect(find.text(TekstenJongereNl.statusGoedgekeurd), findsOneWidget);
-      expect(
-        find.widgetWithText(HhKnop, TekstenJongereNl.landingScreeningKnop),
-        findsOneWidget,
-      );
+      expect(find.text(TekstenKlussenNl.j11Titel), findsOneWidget);
+      expect(find.byType(JongereTabbalk), findsOneWidget);
+      expect(find.text(TekstenKlussenNl.tabProfiel), findsOneWidget);
     });
 
     testWidgets('J3 heeft alleen een cameraknop, geen galerij', (tester) async {

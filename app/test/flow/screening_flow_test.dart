@@ -18,6 +18,7 @@ import 'package:heitjehulp_app/features/jongere/screen/screening_vog_screen.dart
 import 'package:heitjehulp_app/features/jongere/screen/screening_werkgebied_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 
 import '../support/hh_jongere_wikkel.dart';
@@ -119,7 +120,7 @@ void main() {
   );
 
   testWidgets(
-    'guard: goedgekeurde jongere landt op /jongere met de screeningkaart',
+    'guard: goedgekeurde jongere landt op /jongere (J11) en bereikt J9 via de tab Profiel',
     (tester) async {
       await pompJongereApp(
         tester,
@@ -128,10 +129,11 @@ void main() {
       );
 
       expect(find.byType(JongereStubScreen), findsOneWidget);
-      expect(find.text(TekstenJongereNl.statusGoedgekeurd), findsOneWidget);
+      expect(find.text(TekstenKlussenNl.j11Titel), findsOneWidget);
 
-      await tikKnop(tester, TekstenJongereNl.landingScreeningKnop);
+      await tikTekst(tester, TekstenKlussenNl.tabProfiel);
       expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
+      expect(find.text(TekstenJongereNl.statusGoedgekeurd), findsWidgets);
 
       await tikKnop(tester, TekstenJongereNl.j9NaarKlussen);
       expect(find.byType(JongereStubScreen), findsOneWidget);

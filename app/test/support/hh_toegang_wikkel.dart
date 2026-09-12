@@ -4,10 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
+import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/profiel_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
@@ -62,10 +65,44 @@ class _VasteRol extends GekozenRolController {
   HhRol? build() => rol;
 }
 
-/// Een ProviderContainer met alles wat elke test deelt: fake gateway,
-/// geheugenopslag en een url-opener die nooit een plugin raakt. Wordt na
-/// de test opgeruimd. (Riverpod 3 exporteert het type Override niet, dus
-/// de lijst blijft hier binnen.)
+/// De overrides die elke test deelt: fake gateway, geheugenopslag, een
+/// url-opener die nooit een plugin raakt, en de M3/M5-fakes. Apart van de
+/// container zodat een feature-wikkel er eigen overrides bij kan leggen.
+/// (Riverpod 3 exporteert het type Override niet, dus dynamic.)
+List<dynamic> toegangOverrides({
+  required FakeAuthGateway gateway,
+  GeheugenKeyValueStore? opslag,
+  SessieState? sessie,
+  HhRol? gekozenRol,
+  bool urlOpenerLukt = true,
+  ProfielGateway? profielGateway,
+  FotoKiezer? fotoKiezer,
+  KlussenGateway? klussenGateway,
+}) => [
+  authGatewayProvider.overrideWithValue(gateway),
+  keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
+  urlOpenerProvider.overrideWithValue((_) async => urlOpenerLukt),
+  // M3: screening van de jongere. Standaard een goedgekeurd profiel voor
+  // de test-jongere, zodat de landing /jongere bereikbaar blijft; de
+  // screeningtests geven hun eigen fake mee.
+  profielGatewayProvider.overrideWithValue(
+    profielGateway ??
+        FakeProfielGateway.goedgekeurd(testGebruiker(HhRol.jongere).id),
+  ),
+  fotoKiezerProvider.overrideWithValue(fotoKiezer ?? FakeFotoKiezer()),
+  // M5: klussen van de jongere. Standaard een lege fake zonder netwerk;
+  // de klussentests geven hun eigen fake mee.
+  klussenGatewayProvider.overrideWithValue(
+    klussenGateway ?? FakeKlussenGateway(),
+  ),
+  if (sessie != null)
+    sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
+  if (gekozenRol != null)
+    gekozenRolProvider.overrideWith(() => _VasteRol(gekozenRol)),
+];
+
+/// Een ProviderContainer met [toegangOverrides]. Wordt na de test
+/// opgeruimd.
 ProviderContainer toegangContainer({
   required FakeAuthGateway gateway,
   GeheugenKeyValueStore? opslag,
@@ -74,26 +111,23 @@ ProviderContainer toegangContainer({
   bool urlOpenerLukt = true,
   ProfielGateway? profielGateway,
   FotoKiezer? fotoKiezer,
+  KlussenGateway? klussenGateway,
 }) {
   final container = ProviderContainer(
+    // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
+    // anders een Timer achterlaten na het einde van de test.
+    retry: (_, _) => null,
     overrides: [
-      authGatewayProvider.overrideWithValue(gateway),
-      keyValueStoreProvider.overrideWithValue(
-        opslag ?? GeheugenKeyValueStore(),
+      ...toegangOverrides(
+        gateway: gateway,
+        opslag: opslag,
+        sessie: sessie,
+        gekozenRol: gekozenRol,
+        urlOpenerLukt: urlOpenerLukt,
+        profielGateway: profielGateway,
+        fotoKiezer: fotoKiezer,
+        klussenGateway: klussenGateway,
       ),
-      urlOpenerProvider.overrideWithValue((_) async => urlOpenerLukt),
-      // M3: screening van de jongere. Standaard een goedgekeurd profiel voor
-      // de test-jongere, zodat de landing /jongere bereikbaar blijft; de
-      // screeningtests geven hun eigen fake mee.
-      profielGatewayProvider.overrideWithValue(
-        profielGateway ??
-            FakeProfielGateway.goedgekeurd(testGebruiker(HhRol.jongere).id),
-      ),
-      fotoKiezerProvider.overrideWithValue(fotoKiezer ?? FakeFotoKiezer()),
-      if (sessie != null)
-        sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
-      if (gekozenRol != null)
-        gekozenRolProvider.overrideWith(() => _VasteRol(gekozenRol)),
     ],
   );
   addTearDown(container.dispose);

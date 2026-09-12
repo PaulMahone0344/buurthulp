@@ -7,6 +7,7 @@ import '../features/familie/screen/familie_stub_screen.dart';
 import '../features/hulpvrager/hulpvrager_routes.dart';
 import '../features/hulpvrager/screen/hulpvrager_stub_screen.dart';
 import '../features/jongere/jongere_routes.dart';
+import '../features/jongere/klussen/klussen_routes.dart';
 import '../features/jongere/provider/screening_providers.dart';
 import '../features/jongere/screen/jongere_stub_screen.dart';
 import '../features/jongere/screening_guard.dart';
@@ -134,6 +135,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       ...hulpvragerRoutes(),
       ...jongereRoutes(),
+      ...klussenRoutes(),
       // Alleen in debug-builds; een release kent dit pad niet.
       if (kDebugMode)
         GoRoute(

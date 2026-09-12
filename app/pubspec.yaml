@@ -26,6 +26,10 @@ dependencies:
   # M3: http.MultipartFile voor foto-uploads naar PocketBase (en de
   # MockClient in de gateway-tests).
   http: ^1.6.0
+  # M5: klussen op kaart (J12) met OpenStreetMap-tegels; geen sleutel, geen
+  # kosten in de pilot (plan noemde google_maps_flutter, zie OPEN-PUNTEN-M5).
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
 
 dev_dependencies:
   flutter_test:
