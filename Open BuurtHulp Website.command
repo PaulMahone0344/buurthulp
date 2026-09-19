@@ -16,7 +16,7 @@ if [ ! -d "node_modules" ]; then
   echo
 fi
 
-if curl -fsS "$URL" 2>/dev/null | grep -q "BuurtHulp"; then
+if curl -fsS "$URL" 2>/dev/null | grep -q "HeitjeHulp"; then
   echo "De website draait al."
   open "$URL"
   echo "Geopend: $URL"
@@ -33,7 +33,7 @@ npm run dev -- --host localhost --strictPort > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 
 for _ in {1..40}; do
-  if curl -fsS "$URL" 2>/dev/null | grep -q "BuurtHulp"; then
+  if curl -fsS "$URL" 2>/dev/null | grep -q "HeitjeHulp"; then
     open "$URL"
     echo "Geopend: $URL"
     echo
