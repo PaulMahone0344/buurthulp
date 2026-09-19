@@ -25,11 +25,8 @@ abstract final class TekstenHulpvragerNl {
   static const homeMijnGegevens = 'Mijn gegevens';
   static const homeMijnGegevensSemantiek = 'Bekijk en wijzig mijn gegevens';
 
-  // Mijn hulpvragen (tijdelijk, tot O8)
-  static const mijnHulpvragenTitel = 'Mijn hulpvragen';
-  static const mijnHulpvragenKomtBinnenkort = 'Komt binnenkort';
-  static const mijnHulpvragenUitleg =
-      'Hier ziet u straks uw hulpvragen en wie er komt helpen.';
+  // "Mijn hulpvragen" is sinds M6 O8 (lib/features/hulpvrager/status);
+  // de teksten daarvan staan in teksten_uitvoeren_nl.dart.
 
   // O2 Wat
   static const watTitel = 'Wat heeft u nodig?';

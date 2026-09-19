@@ -15,6 +15,7 @@ import '../../toegang/model/hh_rol.dart';
 import '../../toegang/provider/sessie_providers.dart';
 import '../../toegang/screen/hulp_screen.dart';
 import '../paden_hulpvrager.dart';
+import '../status/paden_status.dart';
 import '../provider/concept_controller.dart';
 
 /// O1. Het begin voor de oudere: drie grote knoppen (hulp vragen, mijn
@@ -120,7 +121,7 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
             semantiekLabel: TekstenHulpvragerNl.homeMijnHulpvragenSemantiek,
             icoon: Icons.list_alt_outlined,
             soort: HhKnopSoort.tweedeKeus,
-            onPressed: () => context.push(HhPadenHulpvrager.mijnHulpvragen),
+            onPressed: () => context.push(HhPadenStatus.hulpvragen),
           ),
           SizedBox(height: tussen),
           HhKnop(

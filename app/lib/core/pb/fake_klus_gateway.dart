@@ -5,25 +5,12 @@ import '../hh_fout.dart';
 import '../result.dart';
 import 'klus_gateway.dart';
 
-/// Een geschreven logregel in de fake.
-class FakeLogregel {
-  const FakeLogregel({
-    required this.klusId,
-    required this.doorId,
-    required this.van,
-    required this.naar,
-  });
-
-  final String klusId;
-  final String doorId;
-  final String van;
-  final String naar;
-}
-
 /// Fake voor tests: nooit een verzoek naar de server. Stuurbaar met
-/// [isOffline] (alles mislukt met geenVerbinding), [volgendeFout] (de
-/// eerstvolgende aanroep mislukt) en [logMislukt] (alleen het statusloggen
-/// mislukt, zoals wanneer de rule dat weigert).
+/// [isOffline] (alles mislukt met geenVerbinding) en [volgendeFout] (de
+/// eerstvolgende aanroep mislukt).
+///
+/// M6: het statusloggen is uit de gateway gehaald; de hook schrijft de
+/// eerste logregel zelf bij het aanmaken van de klus.
 class FakeKlusGateway implements KlusGateway {
   FakeKlusGateway({
     List<HhKlustype> klustypes = const [],
@@ -35,12 +22,10 @@ class FakeKlusGateway implements KlusGateway {
   final Map<String, HhGegevens> _gegevens;
 
   bool isOffline = false;
-  bool logMislukt = false;
   HhFout? volgendeFout;
 
   /// Elke aangemaakte klus, in volgorde.
   final List<NieuweKlus> aangemaakteKlussen = [];
-  final List<FakeLogregel> logregels = [];
 
   /// Wat de laatste bijwerking meestuurde (alleen gewijzigde velden).
   Map<String, dynamic>? laatsteGegevensBody;
@@ -102,21 +87,5 @@ class FakeKlusGateway implements KlusGateway {
     if (fout != null) return Result.err(fout);
     aangemaakteKlussen.add(klus);
     return Result.ok('fake-klus-${aangemaakteKlussen.length}');
-  }
-
-  @override
-  Future<Result<void>> statusLoggen({
-    required String klusId,
-    required String doorId,
-    required String van,
-    required String naar,
-  }) async {
-    final fout = _neemFout();
-    if (fout != null) return Result.err(fout);
-    if (logMislukt) return Result.err(const HhFout(HhFoutSoort.geenToegang));
-    logregels.add(
-      FakeLogregel(klusId: klusId, doorId: doorId, van: van, naar: naar),
-    );
-    return Result.ok(null);
   }
 }

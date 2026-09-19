@@ -1,0 +1,229 @@
+OPEN PUNTEN M6 — KLUS UITVOEREN (19 september 2026)
+Geschreven door de M6-agent. Wordt later samengevoegd met
+app/OPEN-PUNTEN.txt (net als M3/M4/M5).
+
+Alles hieronder is gebouwd of bewezen tegen de FAKES. Wat alleen tegen de
+echte server te bewijzen is, staat expliciet als zodanig gemarkeerd: de
+M6-agent heeft NIETS naar productie geschreven.
+
+
+----------------------------------------------------------------
+UITROL: WAT NOG TEGEN DE ECHTE SERVER MOET
+----------------------------------------------------------------
+
+M6: 1. NIETS VAN M6 STAAT OP DE SERVER. De hook is uitgebreid maar niet
+    gedeployd, het veld hh_klus_status.toelichting bestaat nog niet, en de
+    twee rules staan nog op M3/M5. Gedraaid zijn alleen de dry-runs van
+    12, 13 en 14 (lezen). De uitrollijst staat in het verslag van deze
+    milestone; volgorde: 00-backup -> 12 --apply -> 13 --apply ->
+    10-hook-deploy.sh -> 14 --apply -> 04 --apply.
+
+M6: 2. 04-rulecheck.mjs is bijgewerkt maar NIET gedraaid (dat schrijft naar
+    prod). Verwachte telling 223 (was 218): vijf checks erbij. Wijkt het
+    getal af, dan is dat het eerste dat de hoofdsessie moet nakijken.
+
+M6: 3. De achterdeur-herkenning in de hook is FAIL-OPEN. Wie niet als
+    gewone hh_users-gebruiker te herkennen is (geen e.auth, of een auth uit
+    een andere collectie), mag door. Dat is bewust: op een gedeelde server
+    mag een superuser zich nooit kunnen buitensluiten, en de API-rules zijn
+    de eerste sluis. Het gevolg is wel dat de tweede sluis afhangt van
+    e.hasSuperuserAuth()/e.auth.collection().name; dat is ALLEEN tegen de
+    echte server te bewijzen (14-statuscheck sectie E doet dat).
+
+M6: 4. hh_klus_status.toelichting is een gewoon tekstveld (max 300). Wie de
+    logregel mag lezen, leest dus ook de annuleerreden — ook de jongere
+    leest de reden van de oudere en omgekeerd. Voor de pilot is dat de
+    bedoeling (eerlijkheid); wil je dat niet, dan moet de reden naar een
+    aparte collectie die alleen de coordinator ziet.
+
+
+----------------------------------------------------------------
+BACKEND: WAT M6 OPLOST EN WAT BLIJFT STAAN
+----------------------------------------------------------------
+
+M6: 5. backend OPEN-PUNT 15 (statusovergangsschema) is opgelost: de hook
+    dwingt geaccepteerd -> onderweg -> bezig -> afgerond af en laat geen
+    andere wissel via een record-update meer toe.
+
+M6: 6. backend OPEN-PUNT 16 (logregels door de app) is opgelost: de hook
+    schrijft de eerste regel bij het aanmaken, de regel concept -> open bij
+    het plaatsen, en een regel per statuswissel en per annulering.
+    hh_klus_status.createRule staat alleen nog open voor de coordinator.
+
+M6: 7. backend OPEN-PUNT 22 (geen veld voor de annuleerreden) is opgelost:
+    hh_klus_status.toelichting, tekst max 300 (12-status-velden.mjs).
+
+M6: 8. NIET ELKE statuswissel wordt door de hook gelogd. Gelogd worden: het
+    aanmaken, concept -> open, de drie stappen van de jongere en beide
+    annuleringen. Zet een COORDINATOR een status via een record-update
+    (dat mag hij), dan komt er geen logregel. Dat is bewust klein gehouden
+    (de prompt vroeg de eerste logregel en concept -> open); een
+    onRecordAfterUpdateSuccess die elke wissel logt kan later, maar hangt
+    af van de hook-volgorde op de gedeelde server (memory
+    reference_pb_jsvm_hooks punt 11).
+
+M6: 9. De statusmachine kent GEEN pad naar "probleem". Dat blijft M8
+    ("probleem melden"). Bij status bezig kan dus niemand annuleren: de
+    hook geeft 409 met reden "bezig" en een melding die naar bellen en
+    probleem melden wijst.
+
+M6: 10. Annuleren door de OUDERE laat toegewezen_jongere op de klus staan
+    (status geannuleerd). Zo ziet de jongere nog wat er met zijn klus
+    gebeurd is. Annuleren door de JONGERE maakt het veld wél leeg (de klus
+    gaat terug naar open). Bewust verschil; als de klus na annulering door
+    de oudere echt anoniem moet worden, is dat een aparte keuze.
+
+M6: 11. De belroute geeft het ECHTE telefoonnummer aan de app. Afschermen
+    (een tussennummer van een telefoniedienst zoals Twilio of MessageBird)
+    kost geld per gesprek en is voor de pilot NIET gebouwd — dat staat ook
+    zo in de prompt. Te kiezen vóór de pilot: leverancier, kosten per
+    minuut, en of de gesprekken bewaard worden (AVG).
+
+M6: 12. GECONTROLEERD zoals de prompt vroeg: de hh_users-rule geeft het
+    telefoonveld AL mee in een expand. Wie de hh_users-rij mag zien, ziet
+    alle velden (PocketBase kent geen veldrechten; zie
+    reference_pb_api_rules). Concreet: zodra de jongere is toegewezen, mag
+    hij de rij van de oudere lezen en dus ook telefoon, contact_telefoon,
+    adres, postcode en plaats — ook zonder de belroute. De belroute is
+    daarmee een NETTE weg, geen slot. Echt afschermen vraagt dat die velden
+    naar een aparte collectie gaan (of naar hh_profielen, alleen eigenaar +
+    coordinator) en dat alleen de hook ze leest. Dit is dezelfde
+    constatering als app OPEN-PUNT M4:35, nu bevestigd voor telefoon.
+
+M6: 13. De hook doet géén rate limiting. Iemand kan de belroute in een lus
+    aanroepen en zo een nummer blijven ophalen. Voor de pilot (klein,
+    gesloten) aanvaard; bij opschalen hoort daar een teller bij.
+
+
+----------------------------------------------------------------
+APP: SCHERMEN EN KEUZES
+----------------------------------------------------------------
+
+M6: 14. J15 staat op /jongere/klus/{id}/uitvoeren, onder het klusdetail van
+    M5. Daardoor dekt de bestaande screening-guard hem al
+    (HhPadenKlussen.isKlussenPad kijkt naar alles onder /jongere/klus/) en
+    komt "terug" vanzelf bij J13 of J14 uit.
+
+M6: 15. De stappenbalk toont VIER standen (Aangenomen, Onderweg,
+    Aangekomen, Afgerond), niet drie. HhStapbalk eist stap >= 1, en
+    "aangenomen, nog niets gedaan" is een echte stand. Onder de balk staat
+    per gezette stap het tijdstip uit de logregel (created).
+
+M6: 16. "bezig" heet voor de jongere "Aangekomen" (J15 in het plan) maar in
+    de statuspil van M5 nog "Bezig" (TekstenKlussenNl.statusBezig). Twee
+    woorden voor één status; bewust niet aan M5 geraakt. Bij het
+    samenvoegen kiezen.
+
+M6: 17. O7 houdt hooguit DRIE acties aan (Bellen, Hulp niet meer nodig,
+    Vernieuwen) plus de terugknop; een widgettest bewaakt dat per staat.
+    De annuleer-dialoog heeft vier keuzes onder elkaar (drie vaste redenen
+    plus "Iets anders") en daarnaast "Nee, laat maar staan". Dat volgt de
+    M4-lezing van de ouderenregel: maximaal drie keuzes PER RIJ
+    (OPEN-PUNT M4:45). Vindt het ontwerp dat te veel, dan moet de dialoog
+    een eigen scherm worden.
+
+M6: 18. Tikt de oudere een vaste reden aan, dan is dat METEEN de
+    bevestiging: er komt geen tweede "weet u het zeker?". De dialoogkop
+    ("Wilt u de hulp stoppen?") en de knop "Nee, laat maar staan" zijn de
+    rem. Eén tik minder voor een oudere; als dat te snel is, moet er een
+    tussenstap bij.
+
+M6: 19. De drie vaste redenen gaan als hele zin naar de server ("Het is al
+    opgelost."), omdat de hook minstens vijf tekens eist. De knoplabels op
+    het scherm zijn korter ("Het is al opgelost").
+
+M6: 20. O8 deelt in op STATUS, niet op datum: open = concept + open,
+    gepland = geaccepteerd + onderweg + bezig, afgerond = afgerond +
+    geannuleerd + probleem. Anders dan J14 (M5), dat ook naar de dag kijkt.
+    Bewust: de oudere denkt in "er komt iemand", niet in dagen.
+
+M6: 21. De tijdelijke M4-schermweergave "Mijn hulpvragen — komt binnenkort"
+    is WEG (scherm, route, pad en teksten). O1 wijst nu naar het nieuwe pad
+    /hulpvrager/hulpvragen. Aangepast: hulpvrager_routes.dart,
+    paden_hulpvrager.dart, hulpvrager_home_screen.dart,
+    teksten_hulpvrager_nl.dart, en twee tests.
+
+M6: 22. J13 heeft nu een bevestigingsvraag bij "Klus aannemen" (M5
+    OPEN-PUNT 80) en de knop verdwijnt na een 409 (M5 OPEN-PUNT 81). Beide
+    opgelost. Er is bewust GEEN ongedaan-maken van tien seconden gebouwd;
+    teruggeven kan via J15 met een reden.
+
+M6: 23. J14: tikken op een klus die LOOPT (geaccepteerd, onderweg, bezig)
+    opent nu J15; een klus die niet loopt opent nog steeds J13. Zo is J15
+    vanuit J13 én J14 bereikbaar, zoals de prompt vroeg.
+
+M6: 24. REALTIME: J15 en O7 volgen de ene klus met
+    client.collection('hh_klussen').subscribe(id, ...) achter de gateway,
+    als Stream. Komt er een wijziging binnen, dan wordt de klus vervangen
+    en worden de logregels opnieuw opgehaald. Valt de verbinding weg, dan
+    sluit de stroom stil en blijven de knop "Vernieuwen" en
+    pull-to-refresh werken. NIET getest tegen de echte server: een
+    realtime-verbinding is met een fake niet te bewijzen. Eerste ding om
+    na de uitrol met de hand te proberen (twee toestellen, of app +
+    webpaneel).
+
+M6: 25. De realtime-stroom heeft GEEN herverbindings-lus van onszelf. De
+    PocketBase-client probeert zelf te herverbinden; lukt dat niet, dan
+    staat het scherm stil tot iemand vernieuwt. Een zichtbare melding
+    "verbinding weg" is niet gebouwd (niet in de prompt).
+
+M6: 26. J15 laadt de klus via de UITVOER-gateway (expand met
+    toegewezen_jongere), niet via de klussen-gateway van M5. Twee gateways
+    lezen dus hh_klussen. Bewust gescheiden gehouden zoals de prompt vroeg
+    (eigen bestand lib/core/pb/uitvoer_gateway.dart); bij het samenvoegen
+    kunnen ze samen.
+
+M6: 27. HhKlus (M5-model) is ADDITIEF uitgebreid met jongereNaam,
+    jongereFotoUrl, oudereContactNaam, de constante expandMetJongere en de
+    afgeleide jongereVoornaam. Bestaande velden en gedrag ongewijzigd; alle
+    M5-tests blijven groen.
+
+M6: 28. De app kent een eigen kopie van de overgangstabel
+    (lib/features/jongere/uitvoeren/domein/klus_overgang.dart). Die dient
+    ALLEEN om de goede knop te tonen. Wijkt hij af van de hook, dan komt er
+    een 409 terug en laadt het scherm opnieuw. Een unittest legt de tabel
+    vast; hij moet met de hand gelijk gehouden worden aan de hook.
+
+M6: 29. De voornaam van de jongere is het eerste woord van hh_users.naam.
+    Bij "Sanne Bakker" klopt dat; bij een naam die met een tussenvoegsel
+    begint niet. Geen apart veld voor de roepnaam (niet in hoofdstuk 4).
+
+M6: 30. BEOORDELEN komt in M7. Na afgerond staat er op J15 alleen een
+    rustige eindstaat met "Naar mijn klussen"; er is geen knop verzonnen.
+    Een widgettest bewaakt dat het woord "beoordelen" nergens opduikt.
+
+M6: 31. Het telefoonnummer komt NOOIT als tekst op het scherm: de app
+    opent meteen de kiezer (url_launcher, tel:) en toont alleen "Je belt
+    <naam>." Lukt de kiezer niet, dan verschijnt "Bellen lukt niet op dit
+    toestel" — ook dan zonder nummer. Getest.
+
+M6: 32. De belknop gebruikt urlOpenerProvider uit hulp_screen.dart (M2),
+    net als G8, O1 en J4. Geen nieuwe dependency; pubspec.yaml is NIET
+    gewijzigd in M6.
+
+M6: 33. GeplaatsteHulpvraag heeft geen isLogGeschreven/logDetail meer en
+    KlusGateway geen statusLoggen. Twee M4-tests over de logregel zijn
+    vervangen door één die bewijst dat de app géén logregel meer schrijft.
+    De M4-prod-smoke leest de logregels nu alleen nog (de hook schrijft ze).
+
+M6: 34. TESTS: 88 nieuwe M6-tests bovenop de 526 van M5 (614 groen,
+    2 overgeslagen prod-smokes). Unit: overgangstabel + redenvalidatie
+    (klus_overgang_test), tab-indeling en statuszin van de oudere
+    (hulpvraag_indeling_test). Widget: elk M6-scherm in beide dichtheden
+    met semantiek en op 200 procent, de stappenbalk met tijden, de knop per
+    status, adres en contactpersoon, annuleren weg bij bezig, de eindstaat,
+    O7 met hooguit drie acties, de annuleer-dialoog zonder typen, O8 met
+    drie tabbladen. Flow met de fake: de hele reeks, 409 bij onderweg,
+    annuleren door de jongere (klus weg uit Mijn klussen, via de echte
+    app-router), annuleren door de oudere, bellen met en zonder nummer, en
+    een realtime-wissel die op O7 zichtbaar wordt.
+
+M6: 35. Er is GEEN prod-smoke-test voor M6 geschreven (test/smoke/), omdat
+    de M6-agent niet naar productie mag schrijven. 14-statuscheck.mjs doet
+    hetzelfde werk vanaf de serverkant; een app-smoke (jongere 1 loopt de
+    reeks door op een echte klus) kan de hoofdsessie na de uitrol met de
+    hand doen en daarna opruimen met
+    node backend/scripts/14-statuscheck.mjs --apply --alleen-opruimen.
+
+M6: 36. ANDROID-emulatorbuild is niet gedraaid (alleen iOS-simulator, zoals
+    de opdracht vroeg). M6 voegt geen platformcode toe.

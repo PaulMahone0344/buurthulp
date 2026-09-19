@@ -14,11 +14,14 @@ import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
+import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
 import '../../../hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
 import '../../../toegang/provider/sessie_providers.dart';
 import '../../model/hh_profiel.dart';
+import '../../uitvoeren/paden_uitvoeren.dart';
+import '../../uitvoeren/widget/annuleer_dialoog.dart';
 import '../../model/screening_stap.dart';
 import '../../provider/screening_providers.dart';
 import '../domein/afstand.dart';
@@ -31,8 +34,10 @@ import '../widget/klus_status_pil.dart';
 
 /// J13. Alles van de klus; adres en naam/foto van de oudere pas NA het
 /// accepteren (de hh_users-rule geeft de expand dan pas mee). De knop
-/// "Klus aannemen" gaat via de hook-route; een 409 toont de melding van de
-/// server en ververst de lijst.
+/// "Klus aannemen" vraagt eerst om een bevestiging (M5 OPEN-PUNT 80) en
+/// gaat dan via de hook-route; een 409 toont de melding van de server,
+/// ververst de lijst en laat de knop verdwijnen (M5 OPEN-PUNT 81). Is de
+/// klus van mij, dan gaat de hoofdknop naar J15 (uitvoeren).
 class KlusDetailScreen extends ConsumerStatefulWidget {
   const KlusDetailScreen({required this.klusId, super.key});
 
@@ -45,10 +50,18 @@ class KlusDetailScreen extends ConsumerStatefulWidget {
 class _KlusDetailScreenState extends ConsumerState<KlusDetailScreen> {
   bool _isBezig = false;
   bool _isAangenomen = false;
+  bool _isGeweigerd = false;
   String? _melding;
   HhMeldSoort _meldSoort = HhMeldSoort.fout;
 
   Future<void> _aannemen() async {
+    final ja = await vraagAannemenBevestiging(
+      context,
+      vraag: TekstenUitvoerenNl.j13BevestigVraag,
+      uitleg: TekstenUitvoerenNl.j13BevestigUitleg,
+      jaLabel: TekstenUitvoerenNl.j13BevestigJa,
+    );
+    if (!ja || !mounted) return;
     setState(() {
       _isBezig = true;
       _melding = null;
@@ -63,6 +76,9 @@ class _KlusDetailScreenState extends ConsumerState<KlusDetailScreen> {
           _meldSoort = HhMeldSoort.geslaagd;
           _melding = TekstenKlussenNl.j13Aangenomen;
         case Geweigerd(:final reden, :final melding):
+          // De klus is voor deze jongere niet meer op te halen (rule geeft
+          // 404), dus de knop verdwijnt; een tweede tik heeft geen zin.
+          _isGeweigerd = true;
           _meldSoort = HhMeldSoort.fout;
           _melding =
               melding ??
@@ -113,6 +129,7 @@ class _KlusDetailScreenState extends ConsumerState<KlusDetailScreen> {
         isMijn: value.isToegewezenAan(gebruiker?.id ?? ''),
         isBezig: _isBezig,
         isAangenomen: _isAangenomen,
+        isGeweigerd: _isGeweigerd,
         melding: _melding,
         meldSoort: _meldSoort,
         onAannemen: _aannemen,
@@ -146,6 +163,7 @@ class _Detail extends StatelessWidget {
     required this.isMijn,
     required this.isBezig,
     required this.isAangenomen,
+    required this.isGeweigerd,
     required this.melding,
     required this.meldSoort,
     required this.onAannemen,
@@ -158,6 +176,7 @@ class _Detail extends StatelessWidget {
   final bool isMijn;
   final bool isBezig;
   final bool isAangenomen;
+  final bool isGeweigerd;
   final String? melding;
   final HhMeldSoort meldSoort;
   final VoidCallback onAannemen;
@@ -281,11 +300,19 @@ class _Detail extends StatelessWidget {
             Text(TekstenKlussenNl.j13AangenomenUitleg, style: tekst.bodyMedium),
             SizedBox(height: tussen),
             HhKnop(
+              label: TekstenUitvoerenNl.j13Uitvoeren,
+              icoon: Icons.play_circle_outline,
+              onPressed: () =>
+                  context.push(HhPadenUitvoeren.uitvoeren(klus.id)),
+            ),
+            SizedBox(height: tussen),
+            HhKnop(
               label: TekstenKlussenNl.j13NaarMijnKlussen,
               icoon: Icons.assignment_turned_in_outlined,
+              soort: HhKnopSoort.tweedeKeus,
               onPressed: () => context.go(HhPadenKlussen.mijnKlussen),
             ),
-          ] else if (klus.isOpen)
+          ] else if (klus.isOpen && !isGeweigerd)
             HhKnop(
               label: TekstenKlussenNl.j13Aannemen,
               icoon: Icons.check_circle_outline,

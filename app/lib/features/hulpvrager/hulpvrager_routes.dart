@@ -7,9 +7,8 @@ import 'screen/hulp_vragen_waar_screen.dart';
 import 'screen/hulp_vragen_wanneer_screen.dart';
 import 'screen/hulp_vragen_wat_screen.dart';
 import 'screen/mijn_gegevens_screen.dart';
-import 'screen/mijn_hulpvragen_screen.dart';
 
-/// De routes van M4 (O2-O6, O12 en de tijdelijke "Mijn hulpvragen"). O1
+/// De routes van M4 (O2-O6 en O12). O1
 /// zit op de rolroute /hulpvrager uit M2. Wordt in lib/app/router.dart met
 /// een spread ingevoegd; de sessie-guard daar geldt ook hier.
 List<RouteBase> hulpvragerRoutes() => [
@@ -32,10 +31,6 @@ List<RouteBase> hulpvragerRoutes() => [
   GoRoute(
     path: HhPadenHulpvrager.hulpVragenVerstuurd,
     builder: (context, state) => const HulpVragenVerstuurdScreen(),
-  ),
-  GoRoute(
-    path: HhPadenHulpvrager.mijnHulpvragen,
-    builder: (context, state) => const MijnHulpvragenScreen(),
   ),
   GoRoute(
     path: HhPadenHulpvrager.gegevens,

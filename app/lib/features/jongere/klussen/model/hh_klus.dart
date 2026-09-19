@@ -32,6 +32,9 @@ class HhKlus {
     this.oudereNaam = '',
     this.oudereFotoUrl = '',
     this.oudereWijkId = '',
+    this.oudereContactNaam = '',
+    this.jongereNaam = '',
+    this.jongereFotoUrl = '',
   });
 
   final String id;
@@ -53,6 +56,17 @@ class HhKlus {
   final String oudereFotoUrl;
   final String oudereWijkId;
 
+  /// M6: de contactpersoon van de oudere (hh_users.contact_naam). De jongere
+  /// ziet die pas als de klus van hem is; het telefoonnummer nooit als tekst
+  /// (dat loopt via de belroute).
+  final String oudereContactNaam;
+
+  /// M6: naam en foto van de toegewezen jongere, uit de expand van
+  /// toegewezen_jongere. De oudere ziet die op O7 zodra er een jongere is;
+  /// leeg betekent "nog niemand" of "niet meegevraagd".
+  final String jongereNaam;
+  final String jongereFotoUrl;
+
   static const veldStatus = 'status';
   static const veldToegewezenJongere = 'toegewezen_jongere';
   static const veldWanneerVan = 'wanneer_van';
@@ -60,6 +74,16 @@ class HhKlus {
   /// Wat de lijst en het detail nodig hebben; klustype altijd, hulpvrager
   /// alleen zichtbaar na accepteren.
   static const expand = 'klustype,hulpvrager';
+
+  /// M6: wat de oudere op O7/O8 nodig heeft — ook de toegewezen jongere.
+  static const expandMetJongere = 'klustype,hulpvrager,toegewezen_jongere';
+
+  /// De voornaam van de jongere ("Sanne is onderweg naar u"); de server
+  /// bewaart de volle naam.
+  String get jongereVoornaam {
+    final delen = jongereNaam.trim().split(RegExp(r'\s+'));
+    return delen.isEmpty ? '' : delen.first;
+  }
 
   bool get heeftCoordinaten => lat != null && lon != null;
   bool get isOpen => status == HhKlusStatus.open && toegewezenJongereId.isEmpty;
@@ -79,10 +103,12 @@ class HhKlus {
   }) {
     final klustype = record.get<RecordModel?>('expand.klustype');
     final oudere = record.get<RecordModel?>('expand.hulpvrager');
+    final jongere = record.get<RecordModel?>('expand.toegewezen_jongere');
     final lat = record.getDoubleValue('lat');
     final lon = record.getDoubleValue('lon');
     final heeftPunt = lat != 0 || lon != 0;
     final foto = oudere?.getStringValue('foto') ?? '';
+    final jongereFoto = jongere?.getStringValue('foto') ?? '';
     return HhKlus(
       id: record.id,
       hulpvragerId: record.getStringValue('hulpvrager'),
@@ -108,6 +134,12 @@ class HhKlus {
           ? fotoUrl(oudere, foto)
           : '',
       oudereWijkId: oudere?.getStringValue('wijk') ?? '',
+      oudereContactNaam: oudere?.getStringValue('contact_naam') ?? '',
+      jongereNaam: jongere?.getStringValue('naam') ?? '',
+      jongereFotoUrl:
+          jongere != null && jongereFoto.isNotEmpty && fotoUrl != null
+          ? fotoUrl(jongere, jongereFoto)
+          : '',
     );
   }
 
@@ -126,6 +158,8 @@ class HhKlus {
     String? oudereNaam,
     String? oudereFotoUrl,
     String? adres,
+    String? jongereNaam,
+    String? jongereFotoUrl,
   }) {
     return HhKlus(
       id: id,
@@ -146,6 +180,9 @@ class HhKlus {
       oudereNaam: oudereNaam ?? this.oudereNaam,
       oudereFotoUrl: oudereFotoUrl ?? this.oudereFotoUrl,
       oudereWijkId: oudereWijkId,
+      oudereContactNaam: oudereContactNaam,
+      jongereNaam: jongereNaam ?? this.jongereNaam,
+      jongereFotoUrl: jongereFotoUrl ?? this.jongereFotoUrl,
     );
   }
 
@@ -156,6 +193,7 @@ class HhKlus {
       other.status == status &&
       other.toegewezenJongereId == toegewezenJongereId &&
       other.oudereNaam == oudereNaam &&
+      other.jongereNaam == jongereNaam &&
       other.adres == adres &&
       other.wanneerVan == wanneerVan;
 
@@ -165,6 +203,7 @@ class HhKlus {
     status,
     toegewezenJongereId,
     oudereNaam,
+    jongereNaam,
     adres,
     wanneerVan,
   );

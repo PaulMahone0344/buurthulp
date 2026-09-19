@@ -6,13 +6,17 @@ import 'pocketbase_gateway.dart';
 
 const hhKlustypesCollectie = 'hh_klustypes';
 const hhKlussenCollectie = 'hh_klussen';
-const hhKlusStatusCollectie = 'hh_klus_status';
 const hhUsersCollectieVoorGegevens = 'hh_users';
 
 /// Alles wat de hulpvraag-stroom (M4) van de server nodig heeft: de soorten
-/// hulp, de eigen gegevens (lezen en partieel bijwerken), een klus plaatsen
-/// en een logregel schrijven. Praat alleen tegen [PocketBaseGateway]; elke
-/// fout komt als Nederlandse [HhFout] terug in een [Result].
+/// hulp, de eigen gegevens (lezen en partieel bijwerken) en een klus
+/// plaatsen. Praat alleen tegen [PocketBaseGateway]; elke fout komt als
+/// Nederlandse [HhFout] terug in een [Result].
+///
+/// M6: het schrijven van de logregel in hh_klus_status is hier weggehaald.
+/// Dat doet de hook nu zelf bij het aanmaken van de klus (backend
+/// OPEN-PUNT 16, app OPEN-PUNT M4:32); hh_klus_status.createRule staat
+/// alleen nog open voor de coordinator.
 abstract interface class KlusGateway {
   /// Alle hh_klustypes, op naam gesorteerd.
   Future<Result<List<HhKlustype>>> klustypes();
@@ -28,14 +32,6 @@ abstract interface class KlusGateway {
 
   /// Maakt de klus aan en geeft het nieuwe id terug.
   Future<Result<String>> klusAanmaken(NieuweKlus klus);
-
-  /// Een regel in hh_klus_status: [van] leeg bij de eerste regel.
-  Future<Result<void>> statusLoggen({
-    required String klusId,
-    required String doorId,
-    required String van,
-    required String naar,
-  });
 }
 
 class PocketBaseKlusGateway implements KlusGateway {
@@ -84,22 +80,6 @@ class PocketBaseKlusGateway implements KlusGateway {
           .collection(hhKlussenCollectie)
           .create(body: klus.alsBody);
       return record.id;
-    });
-  }
-
-  @override
-  Future<Result<void>> statusLoggen({
-    required String klusId,
-    required String doorId,
-    required String van,
-    required String naar,
-  }) {
-    return _gateway.voerUit((client) async {
-      await client
-          .collection(hhKlusStatusCollectie)
-          .create(
-            body: {'klus': klusId, 'door': doorId, 'van': van, 'naar': naar},
-          );
     });
   }
 }

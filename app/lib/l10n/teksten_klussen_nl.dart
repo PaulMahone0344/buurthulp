@@ -79,8 +79,8 @@ abstract final class TekstenKlussenNl {
   static const j13Aannemen = 'Klus aannemen';
   static const j13Aangenomen = 'Je hebt deze klus aangenomen.';
   static const j13AangenomenUitleg =
-      'De klus staat nu bij Mijn klussen. Het uitvoeren komt in een volgende '
-      'versie van de app.';
+      'De klus staat nu bij Mijn klussen. Op de dag zelf zet je hier stap '
+      'voor stap door: op weg, aangekomen, klaar.';
   static const j13NaarMijnKlussen = 'Naar mijn klussen';
   static const j13Bezet = 'Deze klus is net door iemand anders aangenomen.';
   static const j13GeenToegang =

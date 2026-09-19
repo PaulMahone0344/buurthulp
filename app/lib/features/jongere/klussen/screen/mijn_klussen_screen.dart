@@ -15,6 +15,8 @@ import '../../../hulpvrager/provider/hulpvrager_providers.dart'
 import '../../../toegang/model/hh_rol.dart';
 import '../../../toegang/provider/sessie_providers.dart';
 import '../../provider/screening_providers.dart' show meldingVanFout;
+import '../../uitvoeren/domein/klus_overgang.dart';
+import '../../uitvoeren/paden_uitvoeren.dart';
 import '../domein/mijn_klussen_indeling.dart';
 import '../model/hh_klus.dart';
 import '../paden_klussen.dart';
@@ -24,7 +26,8 @@ import '../widget/klus_tegel.dart';
 
 /// J14. De klussen die aan de jongere zijn toegewezen, in drie tabbladen:
 /// vandaag, gepland, historie (status en wanneer_van, lokale dag). Tik op
-/// een klus opent J13; uitvoeren komt in M6, hier alleen de statuspil.
+/// een klus die loopt (geaccepteerd, onderweg, bezig) opent J15; de rest
+/// opent J13.
 class MijnKlussenScreen extends ConsumerStatefulWidget {
   const MijnKlussenScreen({super.key});
 
@@ -81,7 +84,12 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
               klus: klus,
               nu: nu,
               toonStatus: true,
-              onTik: () => context.push(HhPadenKlussen.klusDetail(klus.id)),
+              // Een klus die loopt opent meteen J15; de rest het detail.
+              onTik: () => context.push(
+                isInUitvoering(klus.status)
+                    ? HhPadenUitvoeren.uitvoeren(klus.id)
+                    : HhPadenKlussen.klusDetail(klus.id),
+              ),
             ),
             SizedBox(height: tussen),
           ],

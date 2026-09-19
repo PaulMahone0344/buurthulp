@@ -22,9 +22,6 @@ abstract final class HhPadenHulpvrager {
   /// O6.
   static const hulpVragenVerstuurd = '$_hulpVragen/verstuurd';
 
-  /// Tijdelijke lege staat tot O8 (M6/M7).
-  static const mijnHulpvragen = '$_basis/mijn-hulpvragen';
-
   /// O12.
   static const gegevens = '$_basis/gegevens';
 }

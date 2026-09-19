@@ -48,20 +48,14 @@ class NieuweKlus {
   };
 }
 
-/// Het antwoord van het plaatsen: het id van de klus en of de logregel in
-/// hh_klus_status is gelukt. De oudere ziet dit id nooit (geen cijfers op
-/// O6); het is er voor de smoke en het verslag.
+/// Het antwoord van het plaatsen: het id van de klus. De oudere ziet dit id
+/// nooit (geen cijfers op O6); het is er voor de smoke en het verslag.
+///
+/// M6: het veld isLogGeschreven is vervallen. De logregel in hh_klus_status
+/// schrijft de hook nu zelf bij het aanmaken (app OPEN-PUNT M4:32).
 @immutable
 class GeplaatsteHulpvraag {
-  const GeplaatsteHulpvraag({
-    required this.klusId,
-    required this.isLogGeschreven,
-    this.logDetail,
-  });
+  const GeplaatsteHulpvraag({required this.klusId});
 
   final String klusId;
-  final bool isLogGeschreven;
-
-  /// Technische reden als de logregel niet kon; nooit voor de gebruiker.
-  final String? logDetail;
 }
