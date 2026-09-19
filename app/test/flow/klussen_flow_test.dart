@@ -11,6 +11,7 @@ import 'package:heitjehulp_app/features/jongere/klussen/widget/klussen_kaart.dar
 import 'package:heitjehulp_app/features/jongere/screen/screening_overzicht_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/inloggen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_uitvoeren_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 
 import '../support/hh_jongere_wikkel.dart';
@@ -75,7 +76,10 @@ void main() {
       expect(find.byType(KlusDetailScreen), findsOneWidget);
       expect(find.text(TekstenKlussenNl.buurtbewoner), findsOneWidget);
 
+      // M6 (M5 OPEN-PUNT 80): eerst de bevestigingsvraag.
       await tikKnop(tester, TekstenKlussenNl.j13Aannemen);
+      expect(find.text(TekstenUitvoerenNl.j13BevestigVraag), findsOneWidget);
+      await tikKnop(tester, TekstenUitvoerenNl.j13BevestigJa);
 
       expect(fake.geaccepteerdeIds, ['k-ochtend']);
       expect(find.text(TekstenKlussenNl.j13Aangenomen), findsOneWidget);
@@ -116,6 +120,7 @@ void main() {
       );
 
       await tikKnop(tester, TekstenKlussenNl.j13Aannemen);
+      await tikKnop(tester, TekstenUitvoerenNl.j13BevestigJa);
 
       expect(fake.geaccepteerdeIds, isEmpty);
       expect(find.byType(HhMeldBalk), findsOneWidget);
@@ -124,6 +129,11 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(KlusDetailScreen), findsOneWidget);
+      // M5 OPEN-PUNT 81: na een 409 verdwijnt de knop.
+      expect(
+        find.widgetWithText(HhKnop, TekstenKlussenNl.j13Aannemen),
+        findsNothing,
+      );
       // De lijst is opnieuw opgehaald ...
       expect(fake.aantalOpenAanvragen, 2);
 
@@ -145,6 +155,7 @@ void main() {
 
     fake.isOffline = true;
     await tikKnop(tester, TekstenKlussenNl.j13Aannemen);
+    await tikKnop(tester, TekstenUitvoerenNl.j13BevestigJa);
     expect(find.text(TekstenNl.foutGeenVerbinding), findsOneWidget);
     expect(
       find.widgetWithText(HhKnop, TekstenKlussenNl.j13Aannemen),

@@ -11,7 +11,7 @@ import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wanneer_sc
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wat_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_home_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_gegevens_screen.dart';
-import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_hulpvragen_screen.dart';
+import 'package:heitjehulp_app/features/hulpvrager/status/screen/hulpvragen_lijst_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
@@ -138,7 +138,7 @@ void main() {
         DateTime.parse(body['wanneer_van'] as String).toLocal(),
         DateTime(2026, 9, 16, 13),
       );
-      expect(klusGateway.logregels.single.naar, 'open');
+      // M6: de app schrijft geen logregel meer; de hook doet dat.
 
       // Terug bestaat niet meer; naar het begin.
       expect(find.byType(HhTerugKnop), findsNothing);
@@ -276,11 +276,7 @@ void main() {
       await pompHulpvragerApp(tester, klusGateway: fakeKlusGateway());
 
       await _tik(tester, TekstenHulpvragerNl.homeMijnHulpvragen);
-      expect(find.byType(MijnHulpvragenScreen), findsOneWidget);
-      expect(
-        find.text(TekstenHulpvragerNl.mijnHulpvragenKomtBinnenkort),
-        findsOneWidget,
-      );
+      expect(find.byType(HulpvragenLijstScreen), findsOneWidget);
       await _terug(tester);
 
       await _tik(tester, TekstenHulpvragerNl.homeMijnGegevens);

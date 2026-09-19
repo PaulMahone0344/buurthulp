@@ -6,11 +6,14 @@ import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
 import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/profiel_gateway.dart';
+import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
+import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
@@ -78,6 +81,7 @@ List<dynamic> toegangOverrides({
   ProfielGateway? profielGateway,
   FotoKiezer? fotoKiezer,
   KlussenGateway? klussenGateway,
+  UitvoerGateway? uitvoerGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -94,6 +98,10 @@ List<dynamic> toegangOverrides({
   // de klussentests geven hun eigen fake mee.
   klussenGatewayProvider.overrideWithValue(
     klussenGateway ?? FakeKlussenGateway(),
+  ),
+  // M6: uitvoeren (J15, J16) en de status bij de oudere (O7, O8).
+  uitvoerGatewayProvider.overrideWithValue(
+    uitvoerGateway ?? FakeUitvoerGateway(),
   ),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
@@ -112,6 +120,7 @@ ProviderContainer toegangContainer({
   ProfielGateway? profielGateway,
   FotoKiezer? fotoKiezer,
   KlussenGateway? klussenGateway,
+  UitvoerGateway? uitvoerGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -127,6 +136,7 @@ ProviderContainer toegangContainer({
         profielGateway: profielGateway,
         fotoKiezer: fotoKiezer,
         klussenGateway: klussenGateway,
+        uitvoerGateway: uitvoerGateway,
       ),
     ],
   );

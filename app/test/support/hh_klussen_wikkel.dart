@@ -11,6 +11,7 @@ import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
@@ -18,6 +19,7 @@ import 'package:heitjehulp_app/features/jongere/jongere_routes.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/klussen_routes.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/model/hh_klus.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
+import 'package:heitjehulp_app/features/jongere/uitvoeren/uitvoeren_routes.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
@@ -156,6 +158,7 @@ ProviderContainer klussenContainer({
   GeheugenKeyValueStore? opslag,
   SessieState? sessie,
   DateTime? nu,
+  FakeUitvoerGateway? uitvoerGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -169,6 +172,7 @@ ProviderContainer klussenContainer({
         profielGateway:
             profielGateway ?? FakeProfielGateway.goedgekeurd(jongereId),
         klussenGateway: klussenGateway,
+        uitvoerGateway: uitvoerGateway,
       ),
       klokProvider.overrideWithValue(() => nu ?? klussenNu),
       kaartTegelsProvider.overrideWithValue(NepTegels.new),
@@ -189,6 +193,7 @@ Widget hhKlussenWikkel(
   HhDichtheid dichtheid = HhDichtheid.normaal,
   double tekstschaal = 1.0,
   ProviderContainer? container,
+  FakeUitvoerGateway? uitvoerGateway,
 }) {
   final router = GoRouter(
     initialLocation: pad,
@@ -199,6 +204,7 @@ Widget hhKlussenWikkel(
       ),
       ...jongereRoutes(),
       ...klussenRoutes(),
+      ...uitvoerenRoutes(),
     ],
   );
   return UncontrolledProviderScope(
@@ -209,6 +215,7 @@ Widget hhKlussenWikkel(
           profielGateway: profielGateway,
           sessie: sessie ?? SessieIngelogd(testGebruiker(HhRol.jongere)),
           nu: nu,
+          uitvoerGateway: uitvoerGateway,
         ),
     child: MaterialApp.router(
       theme: hhThema(dichtheid),
@@ -230,6 +237,7 @@ Future<ProviderContainer> pompKlussenApp(
   required FakeKlussenGateway klussenGateway,
   FakeProfielGateway? profielGateway,
   DateTime? nu,
+  FakeUitvoerGateway? uitvoerGateway,
 }) async {
   final opslag = GeheugenKeyValueStore({
     'hh_auth_token': testToken(HhRol.jongere),
@@ -239,6 +247,7 @@ Future<ProviderContainer> pompKlussenApp(
     profielGateway: profielGateway,
     opslag: opslag,
     nu: nu,
+    uitvoerGateway: uitvoerGateway,
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(

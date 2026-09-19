@@ -5,11 +5,13 @@ import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klus_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_gegevens.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_klustype.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart';
+import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/features/toegang/provider/sessie_providers.dart';
@@ -106,11 +108,18 @@ ProviderContainer hulpvragerContainer({
   SessieState? sessie,
   DateTime? nu,
   bool urlOpenerLukt = true,
+  FakeUitvoerGateway? uitvoerGateway,
 }) {
   final container = ProviderContainer(
+    // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
+    // anders een Timer achterlaten na het einde van de test.
+    retry: (_, _) => null,
     overrides: [
       authGatewayProvider.overrideWithValue(authGateway ?? fakeMetAlleRollen()),
       klusGatewayProvider.overrideWithValue(klusGateway),
+      uitvoerGatewayProvider.overrideWithValue(
+        uitvoerGateway ?? FakeUitvoerGateway(),
+      ),
       klokProvider.overrideWithValue(() => nu ?? testNu),
       keyValueStoreProvider.overrideWithValue(
         opslag ?? GeheugenKeyValueStore(),
@@ -134,6 +143,7 @@ Widget hhHulpvragerWikkel(
   double tekstschaal = 1.0,
   bool urlOpenerLukt = true,
   ProviderContainer? container,
+  FakeUitvoerGateway? uitvoerGateway,
 }) {
   return UncontrolledProviderScope(
     container:
@@ -142,6 +152,7 @@ Widget hhHulpvragerWikkel(
           klusGateway: klusGateway,
           sessie: sessie ?? SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
           urlOpenerLukt: urlOpenerLukt,
+          uitvoerGateway: uitvoerGateway,
         ),
     child: MaterialApp(
       theme: hhThema(dichtheid),
@@ -162,6 +173,7 @@ Future<ProviderContainer> pompHulpvragerApp(
   WidgetTester tester, {
   required FakeKlusGateway klusGateway,
   DateTime? nu,
+  FakeUitvoerGateway? uitvoerGateway,
 }) async {
   final opslag = GeheugenKeyValueStore({
     'hh_auth_token': testToken(HhRol.hulpvrager),
@@ -170,6 +182,7 @@ Future<ProviderContainer> pompHulpvragerApp(
     klusGateway: klusGateway,
     opslag: opslag,
     nu: nu,
+    uitvoerGateway: uitvoerGateway,
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(

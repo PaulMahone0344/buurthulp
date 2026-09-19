@@ -125,7 +125,9 @@ void main() {
       },
     );
 
-    test('schrijft daarna een logregel concept -> open door mij', () async {
+    // M6: de app schrijft GEEN logregel meer; dat doet de hook zelf bij het
+    // aanmaken van de klus (backend OPEN-PUNT 16, app OPEN-PUNT M4:32).
+    test('schrijft zelf geen logregel meer: alleen de klus gaat weg', () async {
       final gateway = fakeKlusGateway();
       final container = hulpvragerContainer(klusGateway: gateway);
 
@@ -134,26 +136,8 @@ void main() {
           .plaats(concept: compleetConcept(), gebruikerId: 'id-hulpvrager');
 
       final geplaatst = (result as Ok<GeplaatsteHulpvraag>).waarde;
-      expect(geplaatst.isLogGeschreven, isTrue);
-      expect(gateway.logregels.single.klusId, geplaatst.klusId);
-      expect(gateway.logregels.single.doorId, 'id-hulpvrager');
-      expect(gateway.logregels.single.van, 'concept');
-      expect(gateway.logregels.single.naar, 'open');
-    });
-
-    test('mislukte logregel: klus staat er, antwoord meldt het', () async {
-      final gateway = fakeKlusGateway()..logMislukt = true;
-      final container = hulpvragerContainer(klusGateway: gateway);
-
-      final result = await container
-          .read(hulpvraagPlaatserProvider)
-          .plaats(concept: compleetConcept(), gebruikerId: 'id-hulpvrager');
-
-      final geplaatst = (result as Ok<GeplaatsteHulpvraag>).waarde;
-      expect(geplaatst.isLogGeschreven, isFalse);
-      expect(geplaatst.logDetail, isNotNull);
+      expect(geplaatst.klusId, isNotEmpty);
       expect(gateway.aangemaakteKlussen, hasLength(1));
-      expect(gateway.logregels, isEmpty);
     });
 
     test('onvolledig concept plaatst niets', () async {

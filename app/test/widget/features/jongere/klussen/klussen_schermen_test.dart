@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_lege_staat.dart';
 import 'package:heitjehulp_app/design/components/hh_meld_balk.dart';
@@ -15,6 +16,7 @@ import 'package:heitjehulp_app/features/jongere/klussen/widget/jongere_tabbalk.d
 import 'package:heitjehulp_app/features/jongere/klussen/widget/klus_status_pil.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/widget/klus_tegel.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/widget/klussen_kaart.dart';
+import 'package:heitjehulp_app/features/jongere/uitvoeren/screen/klus_uitvoeren_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/screening_overzicht_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
@@ -66,6 +68,7 @@ Future<FakeKlussenGateway> _pomp(
   _Geval geval, {
   HhDichtheid dichtheid = HhDichtheid.normaal,
   double tekstschaal = 1.0,
+  FakeUitvoerGateway? uitvoerGateway,
 }) async {
   final fake = geval.fake();
   await tester.pumpWidget(
@@ -74,6 +77,7 @@ Future<FakeKlussenGateway> _pomp(
       klussenGateway: fake,
       dichtheid: dichtheid,
       tekstschaal: tekstschaal,
+      uitvoerGateway: uitvoerGateway,
     ),
   );
   await tester.pumpAndSettle();
@@ -396,10 +400,23 @@ void main() {
       expect(find.text(TekstenKlussenNl.j14LeegHistorie), findsOneWidget);
     });
 
-    testWidgets('tik op een klus opent J13 met de statuspil', (tester) async {
+    // M6: een klus die loopt (geaccepteerd/onderweg/bezig) opent J15; een
+    // afgeronde klus blijft het detail (J13) openen.
+    testWidgets('tik op een lopende klus opent J15', (tester) async {
       await _pomp(tester, _gevallen[5]);
-      await tester.ensureVisible(find.byType(KlusTegel));
-      await tester.tap(find.byType(KlusTegel));
+      await tester.ensureVisible(find.byType(KlusTegel).first);
+      await tester.tap(find.byType(KlusTegel).first);
+      await tester.pumpAndSettle();
+      expect(find.byType(KlusUitvoerenScreen), findsOneWidget);
+    });
+
+    testWidgets('tik op een afgeronde klus opent J13 met de statuspil', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[5]);
+      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
+      await tester.ensureVisible(find.byType(KlusTegel).first);
+      await tester.tap(find.byType(KlusTegel).first);
       await tester.pumpAndSettle();
       expect(find.byType(KlusDetailScreen), findsOneWidget);
       expect(find.byType(KlusStatusPil), findsOneWidget);

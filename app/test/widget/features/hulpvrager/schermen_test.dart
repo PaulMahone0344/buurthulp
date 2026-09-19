@@ -17,7 +17,6 @@ import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wanneer_sc
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wat_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_home_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_gegevens_screen.dart';
-import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_hulpvragen_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
@@ -47,7 +46,6 @@ const _gevallen = [
   _Geval('O5 bevestigen', HulpVragenBevestigenScreen(), vulConcept: true),
   _Geval('O6 verstuurd', HulpVragenVerstuurdScreen()),
   _Geval('O12 mijn gegevens', MijnGegevensScreen()),
-  _Geval('mijn hulpvragen (tijdelijk)', MijnHulpvragenScreen()),
 ];
 
 /// De maximale keuzes per rij (ouderenregel: drie).

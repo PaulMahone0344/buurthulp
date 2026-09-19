@@ -24,6 +24,7 @@ import 'package:heitjehulp_app/features/hulpvrager/model/hh_gegevens.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_klustype.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hulpvraag_concept.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/nieuwe_klus.dart';
+import 'package:heitjehulp_app/features/jongere/uitvoeren/model/hh_klus_logregel.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 
 const _isSmoke = bool.fromEnvironment('HH_SMOKE');
@@ -96,12 +97,6 @@ void main() {
       );
 
       final klusId = _ok<String>(await klussen.klusAanmaken(klus));
-      final log = await klussen.statusLoggen(
-        klusId: klusId,
-        doorId: gebruiker.id,
-        van: NieuweKlus.statusConcept,
-        naar: NieuweKlus.statusOpen,
-      );
 
       // Teruglezen als de oudere zelf.
       final terug = _ok(
@@ -118,10 +113,12 @@ void main() {
       );
       expect(terug.getIntValue('commissie'), 0);
 
+      // M6: de hook schrijft de eerste logregel zelf (leeg -> open); de app
+      // doet dat niet meer.
       final logs = _ok(
         await pb.voerUit(
           (client) => client
-              .collection(hhKlusStatusCollectie)
+              .collection(HhKlusLogregel.collectie)
               .getFullList(filter: 'klus = "$klusId"'),
         ),
       );
@@ -137,8 +134,8 @@ void main() {
       // Het enige dat naar buiten gaat: het record-id voor OPEN-PUNTEN-M4.
       // ignore: avoid_print
       print(
-        'M4-SMOKE klus=$klusId logregel=${log is Ok<void>} '
-        'logs=${logs.length} verwijderen_geweigerd=${verwijderd is Err<void>}',
+        'M4-SMOKE klus=$klusId logs=${logs.length} '
+        'verwijderen_geweigerd=${verwijderd is Err<void>}',
       );
     },
     skip: kanDraaien
