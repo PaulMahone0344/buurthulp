@@ -7,3 +7,6 @@ build/
 test-results/
 .DS_Store
 *.log
+
+# Claude Code worktrees van parallelle agenten
+.claude/
