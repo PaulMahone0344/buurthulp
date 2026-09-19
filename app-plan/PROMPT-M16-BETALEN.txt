@@ -16,6 +16,23 @@ LEES EERST
 - Mollie Payments API v2 (docs.mollie.com): create payment, get
   payment, webhook, refunds. Gebruik de docs, niet je geheugen.
 
+BESLUIT IBRAHIM 19 sep 2026: ER IS NOG GEEN MOLLIE-ACCOUNT, dat komt
+later. Betalen wordt WEL ingebouwd, maar staat uit tot de sleutel er
+is. Gevolgen:
+- Alles bouwen en testen tegen de nep-Mollie (71) en de fake gateway.
+  Geen enkele aanroep naar de echte Mollie, ook niet in dry-run.
+- Zonder HH_MOLLIE_KEY op de server is betalen "nog niet actief": de
+  hook-route GET /api/hh/betalen/actief geeft {actief: false}. De app
+  vraagt dat op en toont dan op O7 bij afgerond GEEN betaalknop maar
+  een rustige regel ("Betalen in de app komt binnenkort. U hoeft nu
+  niets te doen."); O16 en J18 tonen een nette lege staat. Geen
+  foutmeldingen, geen 503 in beeld. Met sleutel: {actief: true} en
+  alles werkt zonder nieuwe app-versie.
+- De bedragen-hook (keuze 1) staat los van Mollie en gaat WEL meteen
+  aan bij de uitrol.
+- Zet in OPEN-PUNTEN-M16 de aanzet-lijst: Mollie-account, iDEAL
+  activeren, test-sleutel op de server, 72 met --apply, daarna live.
+
 VASTE KEUZES
 1. PILOT-BEDRAGEN: bedrag_bruto = vergoeding_jongere = richtvergoeding
    van het klustype, commissie = 0. BEDRAGEN OP DE SERVER (backend 17):
