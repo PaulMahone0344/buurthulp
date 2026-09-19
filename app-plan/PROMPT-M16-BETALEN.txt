@@ -1,0 +1,112 @@
+PROMPT M16 - BETALEN IN DE APP (HeitjeHulp app)
+Geschreven 19 sep 2026. Bouwer = Opus-agent, ronde 5 (parallel).
+Lees EERST app-plan/_GEDEELD-RONDE5.txt; alles daar geldt.
+Feature-mappen: app/lib/features/hulpvrager/betalen/ en
+app/lib/features/jongere/vergoedingen/.
+Scripts: 70-79. Hook: backend/pb_hooks/hh_betalingen.pb.js.
+DIT IS GELD: liever te weinig bouwen en melden dan gokken.
+
+LEES EERST
+- HEITJEHULP-APP-PLAN.txt: O15, O16, J18 in hoofdstuk 3, M16 in
+  hoofdstuk 7, hoofdstuk 10 punt 1.
+- backend/SCHEMA.txt: hh_betalingen, hh_vergoedingen, hh_klussen
+  (bedragvelden), hh_klustypes.
+- backend/OPEN-PUNTEN.txt punt 5 en 17. app/OPEN-PUNTEN.txt: zoek op
+  "bedrag" (M4: berekenBedragen in de app, pilot-besluit commissie 0).
+- Mollie Payments API v2 (docs.mollie.com): create payment, get
+  payment, webhook, refunds. Gebruik de docs, niet je geheugen.
+
+VASTE KEUZES
+1. PILOT-BEDRAGEN: bedrag_bruto = vergoeding_jongere = richtvergoeding
+   van het klustype, commissie = 0. BEDRAGEN OP DE SERVER (backend 17):
+   jouw hook zet bij het aanmaken van een klus de drie bedragvelden uit
+   hh_klustypes en negeert wat het verzoek meestuurt; bij update door
+   een niet-coordinator worden ze teruggezet naar de opgeslagen waarde.
+   De M4-functie berekenBedragen in de app blijft alleen voor WEERGAVE
+   vooraf; haal het meesturen van bedragen uit de app en pas de
+   M4-tests aan. Commissiepercentage komt later uit hh_instellingen
+   (M14) -> open punt; nu hard 0 in een constante bovenin de hook.
+2. SLEUTEL NOOIT IN DE REPO OF DE APP. De hook leest
+   $os.getenv("HH_MOLLIE_KEY"). Ontbreekt hij: routes geven 503 met
+   nette melding en loggen een regel; niets anders gaat stuk. Alleen
+   test-sleutels (test_...) in deze milestone; de hook WEIGERT een
+   live_-sleutel zolang $os.getenv("HH_MOLLIE_LIVE") niet "ja" is.
+   De sleutel op de server zetten doet de hoofdsessie (uitrollijst).
+3. ROUTES in jouw hook:
+   POST /api/hh/klussen/{id}/betalen — alleen de oudere of
+     geplaatst_door, alleen bij status afgerond, alleen als er geen
+     betaling met status betaald is. Maakt (of hergebruikt een nog
+     open) hh_betalingen-record, maakt een Mollie-betaling (method
+     ideal, amount uit bedrag_bruto van de KLUS, description
+     "HeitjeHulp klus <korte id>", redirectUrl = app-link
+     heitjehulp://betaald?klus=<id>, webhookUrl =
+     https://api.qawayahbase.com/api/hh/mollie/webhook, metadata
+     {betaling: <record-id>}), bewaart psp_id, antwoordt {checkoutUrl}.
+   POST /api/hh/mollie/webhook — body id=tr_xxx (form-encoded, zonder
+     auth: dat hoort zo bij Mollie). NOOIT de body vertrouwen: haal de
+     betaling op bij Mollie met de sleutel en neem de status van daar.
+     paid -> betaling betaald + betaald_op, en boek de vergoeding voor
+     de jongere (keuze 4); failed/canceled/expired -> mislukt; refunds
+     aanwezig -> terugbetaald. Idempotent: dezelfde webhook tien keer
+     geeft een keer boeken. Onbekende id -> 200 zonder iets te doen
+     (Mollie verwacht 200; geen informatie lekken).
+   POST /api/hh/betalingen/{id}/terugbetalen — alleen coordinator;
+     Mollie refund voor het hele bedrag; status volgt via de webhook;
+     de geboekte vergoeding wordt teruggedraaid als die nog status open
+     heeft, anders 409 met melding (al uitbetaald = handwerk).
+4. VERGOEDING AAN DE JONGERE: Mollie keert niet uit aan derden zonder
+   een zwaarder product. Pilot: per jongere per maand een
+   hh_vergoedingen-record (periode JJJJ-MM, status open); de webhook
+   telt vergoeding_jongere van de betaalde klus erbij op. Uitbetalen =
+   de coordinator maakt zelf over en zet het record op uitbetaald (in
+   het paneel, M14/later) -> open punt. Om "per klus" te kunnen tonen:
+   nieuw veld hh_betalingen.vergoeding_periode (tekst) in script 70 en
+   een leesregel waarmee de jongere van ZIJN klussen alleen via jouw
+   route GET /api/hh/vergoedingen/mijn een lijst krijgt {klus, datum,
+   bedrag, betaald ja/nee, periode, uitbetaalstatus}; de jongere blijft
+   hh_betalingen zelf niet zien.
+5. Annuleren na betalen bestaat niet in de statusmachine (betalen kan
+   pas na afgerond); "bedragen kloppen bij annuleren" = een
+   geannuleerde klus kan niet betaald worden (409) en boekt niets.
+6. STOREREGELS: schrijf app/STORE-NOTITIE-BETALEN.txt (dienst in de
+   echte wereld, iDEAL toegestaan, geen in-app aankoop nodig; Apple
+   3.1.3(e)/3.1.5, Google Play payments policy "physical services").
+
+APP
+  O15 Betalen na afloop: vanuit O7 bij afgerond en onbetaald. Bedrag
+      groot, in woorden erbij ("vijftien euro"), een knop "Betalen met
+      iDEAL" -> checkoutUrl openen in de externe browser (url_launcher;
+      bank-apps werken niet goed in een webview). Terug in de app
+      (deep link heitjehulp://betaald, iOS + Android instellen):
+      scherm "We controleren uw betaling" dat de status OPHAALT en
+      WACHT (pollen elke 3 s, max 60 s, plus realtime op het
+      betalingsrecord); de app beslist zelf nooit dat er betaald is.
+      Mislukt -> rustige uitleg + opnieuw proberen. Ouderenregel.
+  O16 Mijn betalingen en bonnen: lijst betaalde klussen met datum en
+      bedrag, tik -> bon (klus, datum, bedrag, betaalkenmerk) met knop
+      Delen (tekst; PDF = open punt). Dit is de enige plek waar de
+      oudere bedragen in een lijst ziet; geen totalen, geen grafiek.
+  J18 Mijn vergoedingen: per klus, totaal deze maand, uitbetaalstatus
+      per periode, via de route uit keuze 4.
+  Gateway: betaal_gateway.dart + fake.
+  Tests: unit (centen -> "EUR 15,00" en -> woorden; periode-afleiding
+  incl. UTC-grens), widget (O15, wachtscherm, O16, J18; beide
+  dichtheden 200 procent; semantiek), flow met fake (betaald, mislukt
+  en opnieuw, time-out van het wachten, dubbel tikken maakt geen tweede
+  betaling).
+
+HOOK-TESTS ZONDER MOLLIE: zet alle Mollie-aanroepen in de hook achter
+een functie met de basis-URL uit $os.getenv("HH_MOLLIE_BASE") (standaard
+https://api.mollie.com). Schrijf backend/scripts/71-mollie-nep.mjs: een
+kleine lokale nep-Mollie (node http) voor wie lokaal een PocketBase
+draait. 72-betaalcheck.mjs (dry-run standaard; --apply alleen door de
+hoofdsessie met test-sleutel): open > betaald > vergoeding geboekt, tot
+op de cent; webhook 10x = 1x boeken; vervalste webhook-id doet niets;
+mislukt laat klus afgerond + onbetaald; niet-afgerond/geannuleerd 409;
+vreemde 403; jongere ziet hh_betalingen niet maar wel zijn eigen
+vergoedingenlijst; bedragen meesturen bij klus-create wordt genegeerd;
+terugbetalen draait de boeking terug; alles opruimen.
+
+KLAAR ALS: zie _GEDEELD-RONDE5 + node --check + nep-Mollie-doorloop
+beschreven en, als er lokaal geen PocketBase is, eerlijk gemeld als
+"niet gedraaid".

@@ -1,0 +1,165 @@
+PROMPT M6 - KLUS UITVOEREN (HeitjeHulp app)
+Geschreven 19 sep 2026. Bouwer = Opus-agent. Je werkt ALLEEN in de repo
+(geen tweede agent), maar houd de bestandsdiscipline uit
+_GEDEELD-M3-M4.txt aan: eigen routes-bestand, eigen teksten-bestand,
+eigen OPEN-PUNTEN-M6.txt, expliciete git-pathspecs, nooit git add -A,
+nooit `-- app`. Git altijd met
+  git -C "/Users/h/Desktop/huidige projecten/buurthulp" ...
+Jouw feature-mappen: app/lib/features/jongere/uitvoeren/ en
+app/lib/features/hulpvrager/status/.
+Jouw backend-scripts: 12-status-velden.mjs, 13-status-rules.mjs,
+14-statuscheck.mjs. Jouw hook: backend/pb_hooks/hh_klussen.pb.js
+(uitbreiden, niet herschrijven).
+
+BELANGRIJK: JIJ SCHRIJFT NIET NAAR PRODUCTIE
+Geen --apply, geen ssh, geen scp, geen 10-hook-deploy.sh, geen
+prod-smoke die records maakt of wijzigt. Je bouwt alles tot en met
+"klaar om uit te rollen" en stopt dan. De uitrol (scripts --apply,
+hook-deploy, checks tegen prod) doet de hoofdsessie na akkoord van
+Ibrahim. Dry-run (zonder --apply, alleen lezen) mag wel.
+
+LEES EERST
+- app-plan/HEITJEHULP-APP-PLAN.txt: hoofdstuk 2, hoofdstuk 3 (J15, J16,
+  O7, O8 en de ontwerpregel voor de oudere), M6 in hoofdstuk 7,
+  hoofdstuk 9.
+- app-plan/_GEDEELD-M3-M4.txt (vaste regels, geldt ook voor jou).
+- backend/SCHEMA.txt secties hh_klussen, hh_klus_status, hh_users.
+- backend/OPEN-PUNTEN.txt punten 15, 16, 22.
+- app/OPEN-PUNTEN.txt punten M4:32, M5:65, M5:66, M5:80, M5:81.
+- backend/pb_hooks/hh_klussen.pb.js helemaal, inclusief het commentaar
+  bovenaan (statuscode-verlies binnen runInTransaction).
+- /Users/h/.claude/projects/-Users-h/memory/reference_pb_jsvm_hooks.md
+  VERPLICHT, elk punt. En reference_pb_api_rules.md in dezelfde map.
+- backend/scripts/_lib.mjs, 06-screening-rules.mjs, 11-accepteercheck.mjs
+  (patroon voor jouw scripts), 04-rulecheck.mjs.
+- app/lib: features/jongere/klussen (M5: J13, J14, tabbalk,
+  klussen_gateway), features/hulpvrager (M4: O1, klus_gateway),
+  core/pb, app/router.dart.
+
+VASTE KEUZES
+1. STATUSMACHINE OP DE SERVER, via een route in de hook:
+     POST /api/hh/klussen/{id}/status      body {naar}
+   Toegestaan, alleen voor de toegewezen jongere:
+     geaccepteerd -> onderweg -> bezig -> afgerond
+   Geen stappen overslaan, niet terug. In de app heet "bezig"
+   "Aangekomen" (J15: onderweg > aangekomen > afgerond).
+   Binnen $app.runInTransaction: klus opnieuw laden, overgang toetsen,
+   status opslaan, logregel hh_klus_status (door, van, naar) in dezelfde
+   transactie. Tijdstempel = created van de logregel.
+   Antwoorden zoals bij accepteren: 200 {klus, status}; 401; 403 niet de
+   toegewezen jongere; 404; 409 {melding, reden: overgang} met
+   Nederlandse melding.
+2. ANNULEREN, ook een route:
+     POST /api/hh/klussen/{id}/annuleren   body {reden}
+   reden verplicht, 5 tot 300 tekens.
+   - Oudere (hulpvrager) of degene in geplaatst_door: mag bij status
+     open, geaccepteerd, onderweg. Klus -> geannuleerd.
+   - Toegewezen jongere: mag bij geaccepteerd, onderweg. Klus gaat
+     TERUG naar open en toegewezen_jongere wordt leeg, zodat een andere
+     jongere hem kan aannemen. De oudere heeft de hulp nog steeds nodig.
+   - Bij bezig: niemand annuleert; dat wordt "probleem melden" in M8.
+     Zet dat in OPEN-PUNTEN-M6.
+   De reden komt in de logregel: nieuw veld hh_klus_status.toelichting
+   (tekst, max 300) via 12-status-velden.mjs.
+3. DE ACHTERDEUR DICHT (backend 15/16, app M5:65):
+   - onRecordUpdateRequest op hh_klussen: een niet-coordinator mag via
+     een gewone record-update status alleen van concept naar open
+     zetten (de oudere die zijn concept plaatst). Elke andere
+     statuswijziging en elke wijziging van toegewezen_jongere via
+     record-update -> 403. Superuser en coordinator mogen alles.
+     De bestaande geocoding in dezelfde hook blijft werken; e.next() op
+     elk pad.
+   - 13-status-rules.mjs: de updateRule-takken "jongere accepteert" en
+     "jongere voert uit" verwijderen (jongere kan hh_klussen niet meer
+     via record-update wijzigen). hh_klus_status.createRule -> alleen
+     coordinator; de hook schrijft via $app en heeft geen rule nodig.
+   - Eerste logregel (leeg -> concept/open) en concept -> open schrijft
+     de hook voortaan zelf (onRecordAfterCreateSuccess /
+     onRecordAfterUpdateSuccess of in de request-hook; kies wat volgens
+     de gotchas-memory veilig is). Haal het schrijven van de logregel
+     uit de app (M4:32) en pas de M4-tests daarop aan.
+   - 04-rulecheck.mjs bijwerken: de controles die de oude takken
+     bewezen worden controles dat ze nu geweigerd worden. Noem de
+     nieuwe telling in je verslag (was 218).
+4. BELLEN (J16), pilotversie: echt afschermen vraagt een
+   telefonie-dienst en kost geld. Niet bouwen. Pilot:
+     GET /api/hh/klussen/{id}/bel
+   geeft {nummer} alleen aan een deelnemer van de klus (oudere,
+   geplaatst_door, toegewezen jongere) en alleen bij status
+   geaccepteerd, onderweg of bezig. De jongere krijgt het nummer van de
+   oudere (hh_users.telefoon, anders contact_telefoon); de oudere
+   krijgt het nummer van de jongere. De app opent meteen de kiezer
+   (url_launcher, tel:) en toont het nummer NIET als tekst. Geen nummer
+   bekend -> nette melding. Zet in OPEN-PUNTEN-M6: echte afscherming
+   (dienst kiezen) en dat de hh_users-rule het telefoonveld mogelijk al
+   meegeeft in een expand (controleer en meld wat je vindt).
+5. BEVESTIGEN BIJ AANNEMEN (M5:80): J13 "Klus aannemen" krijgt een
+   bevestigingsvraag (ja / nee). Na een 409 verdwijnt de knop (M5:81).
+6. LIVE STATUS: J15 en O7 volgen de ene klus via PocketBase realtime
+   (subscribe op dat record) achter de gateway als Stream; de fake
+   gateway kan statussen uitzenden. Valt de verbinding weg: knop
+   "Vernieuwen" en pull-to-refresh blijven werken.
+
+APP
+  J15 Klus uitvoeren /jongere/klussen/:id/uitvoeren: bereikbaar vanuit
+      J13/J14 zodra de klus van mij is. Een grote knop per stap: "Ik ga
+      op weg" -> "Ik ben er" -> "Klus is klaar". Stappenbalk
+      (HhStapbalk) met tijd per gezette stap uit de logregels. Adres en
+      contactpersoon zichtbaar (M4 punt 35). Knop Bellen (J16). Knop
+      "Ik kan toch niet" -> annuleren met verplichte reden; niet
+      zichtbaar bij bezig. 409 -> HhMeldBalk + herladen. Na afgerond:
+      rustige eindstaat (beoordelen komt in M7, geen knop verzinnen).
+  J16 Bellen: geen eigen scherm nodig; knop + bevestigregel "Je belt
+      mevrouw/meneer <naam>". Route uit keuze 4.
+  O7  Status hulpvraag /hulpvrager/hulpvragen/:id: ouderenregel (max
+      drie keuzes, grote tekst en knoppen, zichtbare terug-knop, geen
+      cijfers of statistiek). Toont in gewone taal waar de klus staat
+      ("Sanne is onderweg naar u"), foto + voornaam van de jongere
+      zodra er een is, afgesproken tijd, knop Bellen, knop Annuleren
+      (met reden: drie vaste redenen als grote keuzes + "anders", zodat
+      de oudere niet hoeft te typen). Geen jongere: "We zoeken iemand
+      voor u."
+  O8  Mijn hulpvragen /hulpvrager/hulpvragen: tabbladen Open / Gepland
+      / Afgerond (open = concept+open; gepland = geaccepteerd, onderweg,
+      bezig; afgerond = afgerond, geannuleerd, probleem). Tik -> O7.
+      Koppel de bestaande O1-knop "Mijn hulpvragen" hieraan.
+  Gateway: eigen bestand lib/core/pb/uitvoer_gateway.dart + fake
+  (zetStatus, annuleer, belNummer, volgKlus, logregels). Foutvertaling
+  401/403/404/409 zoals klussen_gateway.
+  Tests: unit (overgangstabel gespiegeld in de app alleen om knoppen te
+  tonen, tab-indeling O8, redenvalidatie), widget (J15, O7, O8 in beide
+  dichtheden op 200 procent met semantiek; O7 ouderenregel: max drie
+  acties), flow met fake (hele reeks geaccepteerd -> afgerond, 409
+  onderweg, annuleren door jongere -> klus weg uit Mijn klussen,
+  annuleren door oudere, bellen zonder nummer, realtime-wissel
+  zichtbaar op O7).
+
+BACKEND-CHECK (14-statuscheck.mjs, dry-run standaard, --apply doet het
+echt; JIJ draait alleen de dry-run): met seed-accounts bewijzen: hele
+reeks via de route + precies een logregel per wissel; overslaan -> 409;
+terug -> 409; andere jongere -> 403; oudere zet status -> 403; anoniem
+-> 401; annuleren oudere (open, geaccepteerd, onderweg goed; bezig 409);
+annuleren jongere -> klus open + jongere leeg + toelichting in log;
+reden te kort -> 400; record-update status door jongere en door oudere
+-> geweigerd; concept -> open door oudere mag nog en geeft een
+logregel; bel-route: deelnemer goed, vreemde 403, status open 409;
+aan het eind alles terugzetten. Race: twee gelijke statusverzoeken
+tegelijk, 20 ronden, elke ronde precies een 200 en een logregel.
+
+KLAAR ALS (jouw deel)
+- analyze schoon, alle tests groen (ook de oude 526), iOS-simulatorbuild
+  slaagt.
+- `node --check` op de hook schoon; 12/13/14 en 04 draaien in dry-run
+  zonder fout.
+- SCHEMA.txt: secties hh_klussen (hook + regels) en hh_klus_status
+  aangevuld, minimale edit.
+- Commits: feat backend, feat app, test, en als laatste
+  "chore: M6 koppelen in router/pubspec" met alleen gedeelde bestanden.
+
+LEVER
+Kort Nederlands verslag: routes en overgangstabel in vijf regels, wat
+er in de rules verandert, UITROLLIJST voor de hoofdsessie (exacte
+commando's in volgorde, met verwachte tellingen), schermen + routes,
+analyze/test/build, commit-hashes, OPEN-PUNTEN-M6.txt integraal.
+Houd het klein: geen brede inspectie-scripts, geen functies buiten
+deze prompt; twijfel -> OPEN-PUNTEN-M6.txt.

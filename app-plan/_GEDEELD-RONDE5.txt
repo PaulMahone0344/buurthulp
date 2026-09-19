@@ -1,0 +1,77 @@
+GEDEELDE REGELS RONDE 5 (zes Opus-agenten tegelijk: M7, M8, M9, M10, M14, M16)
+Geschreven 19 sep 2026. Elke agent leest dit blok helemaal.
+
+EIGEN WERKBOOM
+Je werkt in een EIGEN git-worktree op een eigen branch (ronde5/m<n>),
+afgetakt van de stand na M6. Vijf andere agenten werken tegelijk in hun
+eigen worktree. De hoofdsessie voegt de branches daarna samen. Houd
+daarom je wijzigingen in gedeelde bestanden zo klein mogelijk (een
+regel erbij, nooit herschikken of herformatteren), anders botst het
+samenvoegen.
+- Git altijd met `git -C <jouw worktree>`. Nooit git add -A. Stage
+  expliciete paden. Niet pushen. Niet in andermans worktree of in de
+  hoofdmap /Users/h/Desktop/huidige projecten/buurthulp schrijven.
+- Niet in git zit (en dus niet in je worktree):
+  backend/seed-accounts.local.json. Kopieer het uit de hoofdmap naar
+  jouw worktree (het is gitignored; nooit loggen of committen).
+- Flutter-agenten: maak in je worktree een symlink
+  app/build -> ~/flutter-builds/heitjehulp-m<n>-build (map eerst
+  aanmaken), daarna `flutter pub get`. De iOS-simulatorbuild draai je
+  EEN keer, helemaal aan het eind (zes builds tegelijk maken de Mac
+  traag; loopt hij vast, wacht 2 minuten en probeer een keer opnieuw).
+
+JIJ SCHRIJFT NIET NAAR PRODUCTIE
+Geen --apply, geen ssh/scp, geen hook-deploy, geen prod-smoke die
+records maakt of wijzigt. api.qawayahbase.com is gedeelde productie
+met andere live apps. Dry-run (alleen lezen) mag. Superuser voor
+dry-run: `set -a; . ~/Desktop/qawayhabase/.env; set +a`, nooit loggen.
+Je levert een UITROLLIJST; de hoofdsessie rolt uit, een M tegelijk.
+
+EIGEN BESTANDEN, GEEN GEDEELDE
+- Hook: eigen bestand (naam staat in je prompt). hh_klussen.pb.js van
+  M5/M6 alleen LEZEN. Heb je daar iets in nodig: schrijf het op in je
+  verslag onder "NODIG IN hh_klussen.pb.js", bouw het niet.
+- Backend-scripts: eigen nummerreeks (staat in je prompt). Bestaande
+  scripts 00-14 niet wijzigen. Rules wijzig je met een EIGEN
+  rules-script dat alleen jouw collecties/takken raakt en de rest laat
+  staan (lees eerst de actuele rule van de server in dry-run; de
+  scripts 02, 06 en 13 hebben elkaar al overschreven, dus vertrouw de
+  server, niet de oude scripts). Nieuwe controles komen in je EIGEN
+  check-script, niet in 04-rulecheck.
+- backend/SCHEMA.txt: alleen een eigen sectie ONDERAAN toevoegen
+  ("M<n> - ..."). Bestaande secties niet bewerken; wat daar anders
+  moet, meld je in je verslag.
+- App: eigen feature-map, eigen <feature>_routes.dart, eigen
+  paden-klasse, eigen lib/l10n/teksten_<feature>_nl.dart, eigen
+  gateway + fake in lib/core/pb/. In router.dart, gateway_providers.dart
+  en pubspec.yaml precies de minimale regels, in een aparte laatste
+  commit "chore: M<n> koppelen".
+- Open punten: app/OPEN-PUNTEN-M<n>.txt (M14: website/OPEN-PUNTEN-M14.txt).
+
+VASTE REGELS (plan hoofdstuk 9 + eerdere rondes)
+- Lees VERPLICHT voor hooks en rules:
+  /Users/h/.claude/projects/-Users-h/memory/reference_pb_jsvm_hooks.md
+  /Users/h/.claude/projects/-Users-h/memory/reference_pb_api_rules.md
+- Bouw op wat er is: HhScherm, HhKnop, HhKaart, HhInvoer, HhKeuzerij,
+  HhStapbalk, HhLegeStaat, HhLaadStaat, HhMeldBalk, HhDichtheidScope,
+  Result/Ok/Err, HhFout, SessieController, Riverpod, go_router.
+- Geen kleur of maat buiten theme.dart. Nederlands in teksten en
+  commentaar. Geen losse strings in widgets.
+- Ouderenschermen: maximaal drie keuzes, grote tekst en knoppen,
+  zichtbare terug-knop, NOOIT cijfers of statistiek.
+- Alleen hh_-collecties. Niets van moskee, broute, agenda, oby, tinker.
+- Test eerst, dan bouwen. Geen functies verzinnen; twijfel -> open punt.
+- Houd het klein: geen brede inspectie-scripts, max een herstelronde
+  per falende stap, dan melden.
+
+KLAAR (jouw deel) = analyze schoon, alle tests groen (ook de oude),
+iOS-simulatorbuild slaagt (M14: `npm test` + `npm run build` groen),
+`node --check` op je hook, je scripts draaien in dry-run zonder fout.
+
+LEVER
+Kort Nederlands verslag: wat gebouwd, routes/schermen, wat er op de
+server verandert (velden, rules, hook-routes), UITROLLIJST (exacte
+commando's in volgorde met verwachte tellingen), NODIG IN
+hh_klussen.pb.js (of "niets"), gedeelde bestanden die je raakte (pad +
+regel), analyze/test/build, branch + commit-hashes, je OPEN-PUNTEN
+integraal.
