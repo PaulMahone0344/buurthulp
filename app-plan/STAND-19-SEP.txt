@@ -7,27 +7,55 @@ Stand van 19 september 2026. Begin de volgende sessie met dit bestand.
 OVERZICHT 17 MILESTONES
 ================================================================
 
-  KLAAR EN IN MAIN        M0 M1 M2 M3 M4 M5 M6 M10
-  LOOPT (Opus-agent)      M7  beoordelen
-  GESTOPT, HALF WERK      M8 M9 M14 M16   (zie hieronder)
-  NIET GESTART            M15 M11 M12 M13
+  KLAAR, IN MAIN EN LIVE OP DE SERVER   M0 M1 M2 M3 M4 M5 M6 M10
+  GESTOPT, HALF WERK                    M7 M8 M9 M14 M16 (zie hieronder)
+  NIET GESTART                          M15 M11 M12 M13
 
-Besluit Ibrahim 19 sep: na M7 GEEN nieuwe agenten meer starten tot hij
-het zegt. Vier agenten zijn op zijn verzoek stilgezet.
+ER LOOPT GEEN ENKELE AGENT MEER. Besluit Ibrahim 19 sep: alle agenten
+stil, geen nieuwe starten tot hij het zegt.
+
+M6 + M10 UITGEROLD 19 sep 16:51 (ja van Ibrahim): veld
+hh_klus_status.toelichting, twee rules (achterdeur dicht), hooks
+hh_klussen.pb.js en hh_coordinator.pb.js in /root/pb_hooks/.
+Nagemeten op de server: 14-statuscheck 78 groen, 04-rulecheck 223,
+50-koppelcheck 60, 07-screeningcheck 72, 11-accepteercheck 27, 0 rood.
+Back-up vooraf: backend/backups/2026-09-19T14-48-14.json.
+Uitrollen lukt alleen met auto-mode UIT (Claude Code weigert anders
+"Production Deploy"). 10-hook-deploy.sh kent alleen hh_klussen.pb.js;
+een andere hook gaat met de hand: scp naar /tmp, cp naar
+/root/pb_hooks/, lijst voor en na vergelijken, route moet 401 geven.
 Bouwers = Opus-agenten. Opus schrijft nooit naar productie; de
 hoofdsessie (Fable) rolt uit na een ja van Ibrahim.
 
 
 ================================================================
-DE VIER GESTOPTE AGENTEN - WAAR ZE WAREN
+DE VIJF GESTOPTE AGENTEN - WAAR ZE WAREN
 ================================================================
 
 Elke agent heeft een eigen werkboom (git worktree) en branch. Het
-halve werk staat daar ONGECOMMIT; er is niets weg. Alle vier staan op
-commit f98053c (main na M6, vóór de M10-merge).
+halve werk staat daar ONGECOMMIT; er is niets weg. M8, M9, M14 en M16
+staan op commit f98053c (main na M6, vóór de M10-merge); M7 op 2ff5c2a
+(main met M10).
 
 Werkbomen staan in:
   /Users/h/Desktop/huidige projecten/buurthulp/.claude/worktrees/
+
+M7  BEOORDELEN                   branch ronde5/m7
+    map      agent-a5129af7532a5e9cf
+    af       de hele BACKEND-kant, dry-runs groen, node --check groen:
+             backend/scripts/20-reputatie-velden.mjs
+             backend/scripts/21-reputatie-rules.mjs
+             backend/scripts/22-beoordelingcheck.mjs
+             backend/pb_hooks/hh_beoordelingen.pb.js
+    bezig    niets half; geen open bestand
+    nog      de hele APP-kant: J17, J19, O9, gateway + fake, teksten,
+             tests, routerkoppeling, OPEN-PUNTEN-M7, SCHEMA-sectie
+    lees     app/STAND-M7.txt IN DIE WERKBOOM: de agent schreef zelf
+             15 punten op (o.a. J17 hoort op /jongere/klus/:id/
+             beoordelen; hh_profielen heeft de twee velden al; rules
+             van hh_beoordelingen zijn al goed; nodig in
+             hh_klussen.pb.js: klussen_aantal bijwerken bij afgerond)
+    prompt   app-plan/PROMPT-M7-BEOORDELEN.txt
 
 M8  MELDINGEN EN VEILIGHEID      branch ronde5/m8
     map      agent-a6686d36c2ba2465b
@@ -66,6 +94,7 @@ M16 BETALEN (Mollie staat uit)   branch ronde5/m16
     prompt   app-plan/PROMPT-M16-BETALEN.txt
     let op   nog geen Mollie-account; betalen wordt ingebouwd maar
              blijft uit tot HH_MOLLIE_KEY op de server staat.
+    klaar    het Mollie-onderzoek: app-plan/ONDERZOEK-MOLLIE-API.txt
 
 HERVATTEN, twee manieren:
   a. Zelfde agent verder laten gaan (kan alleen in dezelfde Claude-
@@ -79,6 +108,9 @@ HERVATTEN, twee manieren:
 LESSEN VAN VANDAAG (voor de volgende ronde agenten)
 ================================================================
 
+0. Bouw-agenten starten soms zelf HULP-agenten (zoek- of leeswerk).
+   Die lopen door als je de bouwer stopt. Na stoppen altijd de lijst
+   met agenten nakijken en de rest ook stoppen.
 1. Een verse agent-werkboom start op de ALLEREERSTE commit (eff155a),
    niet op main. Zet in de agent-opdracht: eerst
    `git reset --hard <hash van main>`.
