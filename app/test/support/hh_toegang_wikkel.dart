@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
+import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
 import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/profiel_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
+import 'package:heitjehulp_app/features/coordinator/provider/coordinator_providers.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
@@ -78,6 +81,7 @@ List<dynamic> toegangOverrides({
   ProfielGateway? profielGateway,
   FotoKiezer? fotoKiezer,
   KlussenGateway? klussenGateway,
+  CoordinatorGateway? coordinatorGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -94,6 +98,12 @@ List<dynamic> toegangOverrides({
   // de klussentests geven hun eigen fake mee.
   klussenGatewayProvider.overrideWithValue(
     klussenGateway ?? FakeKlussenGateway(),
+  ),
+  // M10: de landing /coordinator (C1) praat meteen met de server en zet
+  // een realtime-verbinding op. Standaard een lege fake zonder netwerk; de
+  // coordinatortests geven hun eigen fake mee.
+  coordinatorGatewayProvider.overrideWithValue(
+    coordinatorGateway ?? FakeCoordinatorGateway(),
   ),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
