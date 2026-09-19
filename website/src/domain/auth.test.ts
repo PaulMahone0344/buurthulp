@@ -4,8 +4,8 @@ import { authenticateDemoUser, roleHomeViews, roleLabels } from './auth'
 describe('authenticateDemoUser', () => {
   it('logs an admin into the admin panel with the expected role label', () => {
     const session = authenticateDemoUser({
-      email: 'admin@buurthulp.local',
-      password: 'buurthulp-admin',
+      email: 'admin@heitjehulp.local',
+      password: 'heitjehulp-admin',
       role: 'admin',
     })
 
@@ -23,8 +23,8 @@ describe('authenticateDemoUser', () => {
 
   it('rejects a valid account when the selected role does not match', () => {
     const session = authenticateDemoUser({
-      email: 'admin@buurthulp.local',
-      password: 'buurthulp-admin',
+      email: 'admin@heitjehulp.local',
+      password: 'heitjehulp-admin',
       role: 'helper',
     })
 
@@ -36,7 +36,7 @@ describe('authenticateDemoUser', () => {
 
   it('rejects an invalid password without exposing account details', () => {
     const session = authenticateDemoUser({
-      email: 'jongere@buurthulp.local',
+      email: 'jongere@heitjehulp.local',
       password: 'verkeerd',
       role: 'helper',
     })

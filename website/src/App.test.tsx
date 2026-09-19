@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
 
-describe('BuurtHulp role login flow', () => {
+describe('HeitjeHulp role login flow', () => {
   it('lets an admin log in and see the admin panel', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -11,9 +11,9 @@ describe('BuurtHulp role login flow', () => {
     await user.click(screen.getByRole('button', { name: 'Inloggen' }))
     await user.click(screen.getByRole('radio', { name: 'Admin' }))
     await user.clear(screen.getByLabelText('E-mail'))
-    await user.type(screen.getByLabelText('E-mail'), 'admin@buurthulp.local')
+    await user.type(screen.getByLabelText('E-mail'), 'admin@heitjehulp.local')
     await user.clear(screen.getByLabelText('Wachtwoord'))
-    await user.type(screen.getByLabelText('Wachtwoord'), 'buurthulp-admin')
+    await user.type(screen.getByLabelText('Wachtwoord'), 'heitjehulp-admin')
     await user.click(screen.getByRole('button', { name: 'Inloggen als Admin' }))
 
     expect(

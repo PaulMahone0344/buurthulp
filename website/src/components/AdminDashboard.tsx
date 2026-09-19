@@ -98,7 +98,7 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
       <aside className="dashboard-sidebar">
         <div className="dashboard-brand">
           <ShieldCheck size={25} />
-          <span>BuurtHulp Admin</span>
+          <span>HeitjeHulp Admin</span>
         </div>
         <nav className="dashboard-nav" aria-label="Admin navigatie">
           <a className="is-active" href="#admin-overzicht">Overzicht</a>
@@ -118,7 +118,7 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
           <div>
             <p className="section-label">Pilotwijk {user.neighborhood}</p>
             <h1>Admin panel</h1>
-            <p>Welkom terug, {user.name}. Hier beheer je de BuurtHulp-pilot.</p>
+            <p>Welkom terug, {user.name}. Hier beheer je de HeitjeHulp-pilot.</p>
           </div>
           <button className="button button--primary" type="button">
             Nieuwe hulpvraag

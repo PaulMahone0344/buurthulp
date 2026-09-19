@@ -29,14 +29,14 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
-import heroImage from '../../assets/buurthulp-hero.png'
+import heroImage from '../../assets/heitjehulp-hero.png'
 import {
   budgetHonesty,
   budgetPerMonth,
   budgetPosts,
   budgetToFinance,
   budgetTotal,
-  buurthulpDelivers,
+  heitjehulpDelivers,
   competitors,
   differentiators,
   featureGroups,
@@ -107,11 +107,11 @@ export function LandingPage({ onOpenLogin }: LandingPageProps) {
       {/* ---------- HERO ---------- */}
       <header className="lp-topbar">
         <div className="lp-shell lp-topbar__inner">
-          <a className="lp-brand" href="#top" aria-label="BuurtHulp home">
+          <a className="lp-brand" href="#top" aria-label="HeitjeHulp home">
             <span className="lp-brand__mark">
               <HandHeart size={20} strokeWidth={2.3} />
             </span>
-            <span>BuurtHulp</span>
+            <span>HeitjeHulp</span>
           </a>
           <nav className="lp-nav" aria-label="Hoofdnavigatie">
             {navLinks.map((link) => (
@@ -179,7 +179,7 @@ export function LandingPage({ onOpenLogin }: LandingPageProps) {
             ))}
           </div>
           <div className="lp-help-card" aria-label="Soorten hulpvragen">
-            <p className="lp-help-card__label">Waarbij BuurtHulp helpt</p>
+            <p className="lp-help-card__label">Waarbij HeitjeHulp helpt</p>
             {helpTypes.map((type) => (
               <div className="lp-help-row" key={type}>
                 <span className="lp-dot" />
@@ -238,7 +238,7 @@ export function LandingPage({ onOpenLogin }: LandingPageProps) {
             <span className="lp-eyebrow">Telefonisch aanmeldpunt</span>
             <h2 className="lp-h2">Ook de oudere zonder smartphone bereiken.</h2>
             <p className="lp-body">
-              Een groot deel van de kwetsbare ouderen is niet digitaal vaardig. Daarom heeft BuurtHulp
+              Een groot deel van de kwetsbare ouderen is niet digitaal vaardig. Daarom heeft HeitjeHulp
               naast de app en website één vast telefoonnummer. Een medewerker noteert de hulpvraag,
               plaatst die in het systeem en bevestigt telefonisch of per sms. Aanmelden kan ook door
               familie, mantelzorger of wijkteam — de oudere houdt altijd zelf de regie.
@@ -377,9 +377,9 @@ export function LandingPage({ onOpenLogin }: LandingPageProps) {
           <div className="lp-delivery">
             <div className="lp-delivery__col">
               <h3 className="lp-delivery__title">
-                <HandHeart size={20} /> Wat BuurtHulp inbrengt
+                <HandHeart size={20} /> Wat HeitjeHulp inbrengt
               </h3>
-              {buurthulpDelivers.map((d) => (
+              {heitjehulpDelivers.map((d) => (
                 <div className="lp-delivery__item" key={d.title}>
                   <CheckCircle2 size={18} />
                   <div>
@@ -427,7 +427,7 @@ export function LandingPage({ onOpenLogin }: LandingPageProps) {
               </div>
             </div>
             <div className="lp-compare__ours">
-              <p className="lp-compare__label lp-compare__label--accent">Wat BuurtHulp uniek maakt</p>
+              <p className="lp-compare__label lp-compare__label--accent">Wat HeitjeHulp uniek maakt</p>
               <div className="lp-diff-grid">
                 {differentiators.map((d) => (
                   <article className="lp-diff" key={d.title}>
@@ -544,7 +544,7 @@ export function LandingPage({ onOpenLogin }: LandingPageProps) {
             </p>
           </div>
           <div className="lp-cta__actions">
-            <a className="lp-btn lp-btn--primary" href="mailto:info@buurthulp.nl">
+            <a className="lp-btn lp-btn--primary" href="mailto:info@heitjehulp.nl">
               Kennismaking plannen
               <ArrowUpRight size={18} />
             </a>
@@ -561,7 +561,7 @@ export function LandingPage({ onOpenLogin }: LandingPageProps) {
             <span className="lp-brand__mark lp-brand__mark--dark">
               <HandHeart size={18} strokeWidth={2.3} />
             </span>
-            <span>BuurtHulp</span>
+            <span>HeitjeHulp</span>
           </a>
           <p>Veilige ouderenhulp · jongerenparticipatie · sterkere buurten</p>
         </div>

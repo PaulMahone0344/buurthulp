@@ -1,4 +1,4 @@
-// Inhoud van de BuurtHulp-landingspagina, afgeleid van het gemeentelijke
+// Inhoud van de HeitjeHulp-landingspagina, afgeleid van het gemeentelijke
 // pilotvoorstel (v2). Eén bron voor alle teksten zodat de pagina-opbouw
 // in LandingPage.tsx zuiver presentatie blijft.
 
@@ -82,7 +82,7 @@ export const heroPoints: string[] = [
 
 export const problemText: string[] = [
   'Steeds meer ouderen wonen langer zelfstandig thuis, terwijl de kring die hen helpt kleiner wordt. Juist de kleine dingen blijven liggen — een zware boodschappentas, een lamp die te hoog hangt, een digitaal formulier, een tuin die dichtgroeit. Te klein voor een zorgindicatie, te veel om steeds aan familie te vragen.',
-  'Tegelijk staan veel jongeren langs de zijlijn. Ze willen iets betekenen, werkervaring opdoen en bijverdienen, maar vinden moeilijk een ingang. BuurtHulp verbindt die behoefte en die energie — veilig, lokaal en meetbaar.',
+  'Tegelijk staan veel jongeren langs de zijlijn. Ze willen iets betekenen, werkervaring opdoen en bijverdienen, maar vinden moeilijk een ingang. HeitjeHulp verbindt die behoefte en die energie — veilig, lokaal en meetbaar.',
 ]
 
 export const pilotStats: Stat[] = [
@@ -152,12 +152,12 @@ export const kaders: Kader[] = [
     tab: 'Juridische vorm',
     title: 'Onbelaste vrijwilligersvergoeding, met harde drempelbewaking',
     intro:
-      'De juridische status van de jongeren is bewust het eerste wat is dichtgetimmerd. Tijdens de pilot werkt BuurtHulp uitsluitend met de onbelaste vrijwilligersvergoeding — de eenvoudigste en fiscaal meest robuuste vorm.',
+      'De juridische status van de jongeren is bewust het eerste wat is dichtgetimmerd. Tijdens de pilot werkt HeitjeHulp uitsluitend met de onbelaste vrijwilligersvergoeding — de eenvoudigste en fiscaal meest robuuste vorm.',
     points: [
       'Maxima 2026: € 220 per maand, € 2.200 per jaar, € 3,40 per uur (onder 21 jaar). Het platform bewaakt deze grenzen automatisch.',
       'Geen dienstverband en geen ZZP-constructie — dus geen schijnzelfstandigheid en geen werkgeversrol of fiscaal risico voor de gemeente.',
       'Minimumleeftijd 16 jaar; de Arbeidstijdenwet wordt vrijwillig als kader voor de inroostering aangehouden.',
-      'De vergoeding wordt expliciet als onkostenvergoeding vormgegeven, niet als loon per klus; waar gewenst vraagt BuurtHulp de Belastingdienst om vooroverleg.',
+      'De vergoeding wordt expliciet als onkostenvergoeding vormgegeven, niet als loon per klus; waar gewenst vraagt HeitjeHulp de Belastingdienst om vooroverleg.',
     ],
     footnote:
       'Bedragen op basis van de meest actuele bekendmakingen; definitieve 2026-tarieven worden vóór de start bij de Belastingdienst geverifieerd.',
@@ -171,7 +171,7 @@ export const kaders: Kader[] = [
       'Geen enkele jongere wordt actief gezet voordat de complete screening is doorlopen. De VOG-fase wordt volledig vóór de operationele start gepland, met buffer voor de doorlooptijd.',
     points: [
       'VOG digitaal € 33,85 per aanvraag (50 × € 33,85 = € 1.692,50), verwerkt in de begroting. Balieroute € 41,35 als bovengrens.',
-      'Doorlooptijd 1 tot 4 weken; BuurtHulp plant met de bovengrens, zodat de pilot vanaf dag één met gescreende jongeren start.',
+      'Doorlooptijd 1 tot 4 weken; HeitjeHulp plant met de bovengrens, zodat de pilot vanaf dag één met gescreende jongeren start.',
       'Via een reeds toegelaten welzijns- of vrijwilligerspartner kan de Regeling Gratis VOG de kosten tot vrijwel nul terugbrengen.',
       'Naast de VOG: identiteits-, selfie-, telefoon- en bankrekeningverificatie plus een persoonlijk intakegesprek.',
     ],
@@ -182,9 +182,9 @@ export const kaders: Kader[] = [
     tab: 'Verzekering',
     title: 'Platformbrede dekking, vooraf geregeld',
     intro:
-      'Hulp aan huis kan misgaan — dat is het grootste reële risico. Daarom regelt BuurtHulp zelf een sluitende, platformbrede dekking voor elke geregistreerde klus, vergelijkbaar met hoe Charly Cares dit met verzekeraar Aon opzette.',
+      'Hulp aan huis kan misgaan — dat is het grootste reële risico. Daarom regelt HeitjeHulp zelf een sluitende, platformbrede dekking voor elke geregistreerde klus, vergelijkbaar met hoe Charly Cares dit met verzekeraar Aon opzette.',
     points: [
-      'Bedrijfsaansprakelijkheid (AVB): zaak- en letselschade bij de oudere thuis wordt via de polis van BuurtHulp afgewikkeld, niet via de jongere persoonlijk.',
+      'Bedrijfsaansprakelijkheid (AVB): zaak- en letselschade bij de oudere thuis wordt via de polis van HeitjeHulp afgewikkeld, niet via de jongere persoonlijk.',
       'Collectieve ongevallenverzekering voor de jongere, met een 24/7 medische assistentielijn bij een incident.',
       'Rechtsbijstand bij geschillen, zodat niemand met juridische kosten blijft zitten.',
       'De gemeente draagt geen aansprakelijkheid en hoeft haar eigen vrijwilligersverzekering hier niet voor in te zetten.',
@@ -196,7 +196,7 @@ export const kaders: Kader[] = [
     tab: 'Privacy (AVG)',
     title: 'Privacy by design voor een kwetsbare doelgroep',
     intro:
-      'BuurtHulp verwerkt gegevens van twee groepen die de wetgever als kwetsbaar aanmerkt. Privacy is geen sluitstuk maar een ontwerpprincipe: dataminimalisatie en privacy by design en by default.',
+      'HeitjeHulp verwerkt gegevens van twee groepen die de wetgever als kwetsbaar aanmerkt. Privacy is geen sluitstuk maar een ontwerpprincipe: dataminimalisatie en privacy by design en by default.',
     points: [
       'Alleen strikt noodzakelijke gegevens; geen profilering, geen geautomatiseerde besluiten, geen verkoop aan derden.',
       'Opslag binnen de EER, versleuteld in transit en at rest, toegang op basis van least privilege met logging.',
@@ -222,11 +222,11 @@ export const budgetPosts: BudgetPost[] = [
 
 export const budgetHonesty: string[] = [
   'De coördinatie loopt grotendeels via het platform: matching, planning, screening-workflow, drempelbewaking, reviews, meldingen-triage en de rapportage aan de gemeente gebeuren geautomatiseerd. De menselijke begeleiding — intakegesprekken, incident-opvolging en contact met ouderen en families — verzorgen de initiatiefnemer en een klein team van 2 à 3 vrijwilligers, tijdens de pilot kosteloos. Daardoor vervalt de dure coördinatorpost en daalt de begroting naar € 5.602,50, zonder in te leveren op de menselijke maat.',
-  'De hulpvrager betaalt de kluskosten: van een bruto klusbedrag (voorbeeld € 20) gaat € 17 als forfaitaire onkostenvergoeding naar de jongere en houdt BuurtHulp € 3 commissie. Bij 500 klussen is dat circa € 1.500, dat in mindering komt op de gevraagde bijdrage.',
+  'De hulpvrager betaalt de kluskosten: van een bruto klusbedrag (voorbeeld € 20) gaat € 17 als forfaitaire onkostenvergoeding naar de jongere en houdt HeitjeHulp € 3 commissie. Bij 500 klussen is dat circa € 1.500, dat in mindering komt op de gevraagde bijdrage.',
   'Na aftrek van die commissie resteert een te financieren bedrag van circa € 4.102,50 over 6 maanden. Met gratis VOG via een welzijnspartner (− € 1.692,50) en de VNG Vrijwilligersverzekering (− ± € 1.500) kan de gevraagde gemeentebijdrage richting nul gaan.',
 ]
 
-export const buurthulpDelivers: DeliveryItem[] = [
+export const heitjehulpDelivers: DeliveryItem[] = [
   { title: 'Platform & aanmeldpunt — gratis', text: 'App, website, backend én het telefonisch aanmeldpunt worden kosteloos door de initiatiefnemer verzorgd; deze posten staan op € 0 in de begroting.' },
   { title: 'Geautomatiseerde coördinatie', text: 'Matching, planning, screening-flow, drempelbewaking, reviews en rapportage lopen via het platform — geen betaalde coördinator nodig.' },
   { title: 'Menselijke begeleiding door vrijwilligers', text: 'De initiatiefnemer en 2 à 3 vrijwilligers doen intake, incident-opvolging en contact met ouderen en families — onbetaald tijdens de pilot.' },
@@ -312,4 +312,4 @@ export const nextSteps: string[] = [
 ]
 
 export const visionText =
-  'BuurtHulp wil uitgroeien tot een vertrouwd platform dat in elke wijk gescreende jongeren en kwetsbare ouderen veilig verbindt — waar een oudere weet dat er altijd een bekend, betrouwbaar gezicht langskomt, en een jongere ervaart wat het betekent om iets voor een ander en de eigen buurt te doen.'
+  'HeitjeHulp wil uitgroeien tot een vertrouwd platform dat in elke wijk gescreende jongeren en kwetsbare ouderen veilig verbindt — waar een oudere weet dat er altijd een bekend, betrouwbaar gezicht langskomt, en een jongere ervaart wat het betekent om iets voor een ander en de eigen buurt te doen.'

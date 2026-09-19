@@ -46,7 +46,7 @@ export function LoginPanel({ onLogin, onCancel }: LoginPanelProps) {
   }
 
   return (
-    <section className="auth-shell" aria-label="BuurtHulp inloggen">
+    <section className="auth-shell" aria-label="HeitjeHulp inloggen">
       <div className="auth-panel">
         <button className="ghost-button auth-panel__back" type="button" onClick={onCancel}>
           Terug naar homepage
@@ -56,7 +56,7 @@ export function LoginPanel({ onLogin, onCancel }: LoginPanelProps) {
             <LockKeyhole size={24} />
           </span>
           <p className="section-label">Inloggen</p>
-          <h1>Kies je rol en ga naar je BuurtHulp omgeving.</h1>
+          <h1>Kies je rol en ga naar je HeitjeHulp omgeving.</h1>
           <p>
             Deze eerste versie gebruikt veilige demo-accounts. De koppeling met
             PocketBase staat klaar voor echte accounts zodra de collecties zijn
