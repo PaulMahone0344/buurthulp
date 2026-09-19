@@ -12,6 +12,13 @@
 // Herhaalbaar: ruimt eigen testrijen op vóór en na de run en zet seedwaarden
 // die tijdens de test veranderen terug.
 //
+// M6 (19 sep 2026): de takken "jongere accepteert" en "jongere voert uit" zijn
+// uit hh_klussen.updateRule gehaald en hh_klus_status.createRule staat alleen
+// nog open voor de coordinator (13-status-rules.mjs). De controles die die
+// takken bewezen, bewijzen nu dat ze GEWEIGERD worden. Daarnaast weigert de
+// hook elke statuswissel via een record-update behalve concept -> open (en
+// schrijft hij daarbij zelf de logregel). Verwachte telling: 223 (was 218).
+//
 // DRAAIEN:
 //   set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
 //   node scripts/04-rulecheck.mjs --apply     (zonder --apply: alleen uitleg)
@@ -91,6 +98,7 @@ async function main() {
   const betalingK08 = await su.collection('hh_betalingen').getFirstListItem(`klus = "${K.k08}"`);
   const beoordelingHv1 = await su.collection('hh_beoordelingen').getFirstListItem(`klus = "${K.k07}" && van_gebruiker = "${U.hulpvrager1}"`);
   const logK04 = await su.collection('hh_klus_status').getFirstListItem(`klus = "${K.k04}" && naar = "geaccepteerd"`);
+  const seedK02 = await su.collection('hh_klussen').getOne(K.k02);
   const profielJ1 = await su.collection('hh_profielen').getFirstListItem(`gebruiker = "${U.jongere1}"`);
   const profielJ2 = await su.collection('hh_profielen').getFirstListItem(`gebruiker = "${U.jongere2}"`);
 
@@ -246,8 +254,19 @@ async function main() {
   if (kc) opruimen.push(['hh_klussen', kc.id]);
 
   kop('F. hh_klussen — bijwerken door oudere en familie');
-  const u1 = await mag('oudere 1 kan eigen klus annuleren (status)', () => hv1.collection('hh_klussen').update(K.k02, { status: 'geannuleerd' }));
-  if (u1) await su.collection('hh_klussen').update(K.k02, { status: 'open' });
+  // M6: de hook laat een niet-coordinator nog maar EEN statuswissel toe via
+  // een record-update (concept -> open). Annuleren gaat sinds M6 via
+  // POST /api/hh/klussen/{id}/annuleren.
+  await magNiet('oudere 1 kan status van eigen klus niet via record-update wijzigen (M6-hook)', () => hv1.collection('hh_klussen').update(K.k02, { status: 'geannuleerd' }));
+  const u1 = await mag('oudere 1 kan omschrijving van eigen klus wel wijzigen', () => hv1.collection('hh_klussen').update(K.k02, { omschrijving: `${MERK} bijgewerkt` }));
+  if (u1) await su.collection('hh_klussen').update(K.k02, { omschrijving: seedK02.omschrijving });
+  const u0 = await mag('oudere 1 kan eigen concept k01 op open zetten (de ene toegestane wissel)', () => hv1.collection('hh_klussen').update(K.k01, { status: 'open' }));
+  if (u0) {
+    const logsK01 = await su.collection('hh_klus_status').getFullList({ filter: `klus = "${K.k01}" && van = "concept" && naar = "open"` });
+    check('en de hook schrijft daarbij zelf een logregel concept -> open', logsK01.length >= 1, `${logsK01.length} regels`);
+    for (const l of logsK01) await su.collection('hh_klus_status').delete(l.id);
+    await su.collection('hh_klussen').update(K.k01, { status: 'concept' });
+  }
   await magNiet('oudere 1 kan hulpvrager van eigen klus niet wijzigen', () => hv1.collection('hh_klussen').update(K.k02, { hulpvrager: U.hulpvrager2 }));
   await magNiet('oudere 1 kan klus van oudere 2 niet wijzigen', () => hv1.collection('hh_klussen').update(K.k03, { omschrijving: MERK }));
   const u2 = await mag('familielid kan klus van gekoppelde oudere bijwerken', () => fam.collection('hh_klussen').update(K.k11, { adres: 'Prins Bernhardlaan 12, 4003 AB Tiel' }));
@@ -256,15 +275,17 @@ async function main() {
   await magNiet('oudere 1 kan open klus niet verwijderen (nooit stil verdwijnen)', () => hv1.collection('hh_klussen').delete(K.k02));
   await magNiet('jongere 1 kan toegewezen klus niet verwijderen', () => j1.collection('hh_klussen').delete(K.k04));
 
-  kop('G. hh_klussen — jongere: accepteren en uitvoeren, bedragen dicht');
-  const acc1 = await mag('jongere 1 accepteert open klus k02 in eigen wijk', () => j1.collection('hh_klussen').update(K.k02, { toegewezen_jongere: U.jongere1, status: 'geaccepteerd' }));
-  if (acc1) await su.collection('hh_klussen').update(K.k02, { toegewezen_jongere: '', status: 'open' });
+  kop('G. hh_klussen — jongere: de achterdeur is dicht (M6), bedragen dicht');
+  // M6 (13-status-rules): de takken "jongere accepteert" en "jongere voert
+  // uit" zijn uit de updateRule gehaald. Accepteren gaat via
+  // POST .../accepteren (M5), de statusmachine via .../status en
+  // .../annuleren (M6). Beide bewezen in 11- en 14-check.
+  await magNiet('jongere 1 kan k02 NIET meer via record-update accepteren', () => j1.collection('hh_klussen').update(K.k02, { toegewezen_jongere: U.jongere1, status: 'geaccepteerd' }));
   await magNiet('jongere 3 (Passewaaij) kan k02 (Tiel-West) niet accepteren', () => j3.collection('hh_klussen').update(K.k02, { toegewezen_jongere: U.jongere3, status: 'geaccepteerd' }));
   await magNiet('jongere 2 kan k04 (al toegewezen aan jongere 1) niet overnemen', () => j2.collection('hh_klussen').update(K.k04, { toegewezen_jongere: U.jongere2 }));
   await magNiet('jongere 1 kan open klus niet aan jongere 2 toewijzen', () => j1.collection('hh_klussen').update(K.k02, { toegewezen_jongere: U.jongere2 }));
   await magNiet('jongere 1 kan bij accepteren geen bedrag meesturen', () => j1.collection('hh_klussen').update(K.k02, { toegewezen_jongere: U.jongere1, bedrag_bruto: 99999 }));
-  const st = await mag('jongere 1 zet eigen klus k04 op onderweg', () => j1.collection('hh_klussen').update(K.k04, { status: 'onderweg' }));
-  if (st) await su.collection('hh_klussen').update(K.k04, { status: 'geaccepteerd' });
+  await magNiet('jongere 1 kan eigen klus k04 NIET meer via record-update op onderweg zetten', () => j1.collection('hh_klussen').update(K.k04, { status: 'onderweg' }));
   await magNiet('jongere 1 kan bedrag_bruto van eigen klus niet wijzigen', () => j1.collection('hh_klussen').update(K.k04, { bedrag_bruto: 99999 }));
   await magNiet('jongere 1 kan vergoeding_jongere niet wijzigen', () => j1.collection('hh_klussen').update(K.k04, { vergoeding_jongere: 99999 }));
   await magNiet('jongere 1 kan commissie niet wijzigen', () => j1.collection('hh_klussen').update(K.k04, { commissie: 0 }));
@@ -274,6 +295,8 @@ async function main() {
   await magNiet('jongere 1 kan klus van jongere 2 (k05) niet wijzigen', () => j1.collection('hh_klussen').update(K.k05, { status: 'bezig' }));
   const cb = await mag('coordinator kan bedrag wel wijzigen', () => co.collection('hh_klussen').update(K.k04, { bedrag_bruto: 1300 }));
   if (cb) await su.collection('hh_klussen').update(K.k04, { bedrag_bruto: 1250 });
+  const cs = await mag('coordinator kan de status wel via record-update wijzigen (M6-hook laat hem door)', () => co.collection('hh_klussen').update(K.k04, { status: 'onderweg' }));
+  if (cs) await su.collection('hh_klussen').update(K.k04, { status: 'geaccepteerd' });
 
   // =========================================================================
   kop('H. hh_klus_status — logregels');
@@ -284,11 +307,13 @@ async function main() {
   check('familielid ziet logregels van gekoppelde oudere', logsFam.some((l) => l.klus === K.k07) && !logsFam.some((l) => l.klus === K.k08));
   const logsJ1 = await j1.collection('hh_klus_status').getFullList();
   check('jongere 1 ziet logregels van toegewezen klus k04, niet van k05', logsJ1.some((l) => l.klus === K.k04) && !logsJ1.some((l) => l.klus === K.k05));
-  const l1 = await mag('jongere 1 logt statuswissel op eigen klus k04', () => j1.collection('hh_klus_status').create({ klus: K.k04, door: U.jongere1, van: 'geaccepteerd', naar: 'onderweg' }));
-  if (l1) opruimen.push(['hh_klus_status', l1.id]);
+  // M6 (13-status-rules): logregels schrijft alleen de hook nog (via $app,
+  // langs de rules heen) of de coordinator. De app schrijft er geen meer.
+  await magNiet('jongere 1 kan GEEN logregel meer schrijven op eigen klus k04', () => j1.collection('hh_klus_status').create({ klus: K.k04, door: U.jongere1, van: 'geaccepteerd', naar: 'onderweg' }));
   await magNiet('jongere 1 kan geen logregel op k03 (niet van hem) maken', () => j1.collection('hh_klus_status').create({ klus: K.k03, door: U.jongere1, van: 'open', naar: 'geaccepteerd' }));
   await magNiet('oudere 1 kan geen logregel namens jongere 1 maken (door ≠ auth)', () => hv1.collection('hh_klus_status').create({ klus: K.k04, door: U.jongere1, van: 'geaccepteerd', naar: 'onderweg' }));
-  const l2 = await mag('familielid logt annulering op klus van gekoppelde oudere', () => fam.collection('hh_klus_status').create({ klus: K.k11, door: U.familie1, van: 'open', naar: 'geannuleerd' }));
+  await magNiet('familielid kan GEEN logregel meer schrijven op klus van gekoppelde oudere', () => fam.collection('hh_klus_status').create({ klus: K.k11, door: U.familie1, van: 'open', naar: 'geannuleerd' }));
+  const l2 = await mag('coordinator kan wel een logregel schrijven', () => co.collection('hh_klus_status').create({ klus: K.k11, door: U.coordinator1, van: 'open', naar: 'geannuleerd', toelichting: `${MERK} handmatig` }));
   if (l2) opruimen.push(['hh_klus_status', l2.id]);
   await magNiet('jongere 1 kan logregel niet wijzigen', () => j1.collection('hh_klus_status').update(logK04.id, { naar: 'afgerond' }));
   await magNiet('oudere 1 kan logregel niet verwijderen', () => hv1.collection('hh_klus_status').delete(logK04.id));

@@ -188,14 +188,15 @@ Regels
               - jongere: nooit
   Bijwerken   - oudere of gekoppeld familielid: eigen klus, maar
                 hulpvrager en geplaatst_door niet meesturen
-              - jongere ACCEPTEERT: klus is open, nog geen jongere,
-                oudere woont in zijn wijk, en hij zet toegewezen_jongere
-                op zichzelf (mag tegelijk status = geaccepteerd)
-              - jongere VOERT UIT: klus is aan hem toegewezen; hij mag
-                status wijzigen maar stuurt toegewezen_jongere niet mee
-              - jongere mag NOOIT meesturen: bedrag_bruto,
-                vergoeding_jongere, commissie, hulpvrager, geplaatst_door
+              - jongere: NIETS meer via een gewone record-update. De twee
+                takken "jongere accepteert" en "jongere voert uit" zijn in
+                M6 uit de rule gehaald (scripts/13-status-rules.mjs);
+                accepteren en de statusmachine lopen via de hook-routes.
               - coordinator alles
+              - EXTRA SLOT (M6-hook, zie hieronder): binnen wat de rule
+                toestaat weigert de hook voor een niet-coordinator elke
+                statuswijziging behalve concept -> open, en elke wijziging
+                van toegewezen_jongere.
   Verwijderen alleen een eigen klus met status concept, of de
               coordinator. Een echte klus verdwijnt nooit stil.
 
@@ -224,8 +225,51 @@ Regels
     journalctl, het aanmaken gaat altijd door. Het accepteren via de route
     loopt niet langs deze hook.
 
+  HOOK M6 (zelfde bestand, bewijs met scripts/14-statuscheck.mjs):
+  - POST /api/hh/klussen/{id}/status  body {naar} — de statusmachine,
+    alleen voor de TOEGEWEZEN jongere:
+      geaccepteerd -> onderweg -> bezig -> afgerond
+    Geen stap overslaan, nooit terug. In EEN transactie: klus opnieuw
+    laden, de overgang toetsen, opslaan, en een logregel in
+    hh_klus_status (door, van, naar). Antwoorden: 200 {klus, status};
+    400 {melding, reden:"naar"} zonder of met een onbekende doelstatus;
+    401 anoniem; 403 {reden:"nietvanjou"}; 404; 409 {reden:"overgang"}.
+    Twee gelijktijdige verzoeken: precies één 200, één 409, één logregel.
+  - POST /api/hh/klussen/{id}/annuleren  body {reden} — reden verplicht,
+    5 t/m 300 tekens, komt in hh_klus_status.toelichting.
+      * oudere (hulpvrager) of geplaatst_door: mag bij open, geaccepteerd
+        en onderweg; de klus gaat naar geannuleerd (de jongere blijft
+        eraan hangen zodat hij ziet wat er gebeurde).
+      * toegewezen jongere: mag bij geaccepteerd en onderweg; de klus gaat
+        TERUG naar open en toegewezen_jongere wordt leeg, zodat een andere
+        jongere hem kan aannemen.
+      * bij status bezig annuleert niemand (409 {reden:"bezig"}); dat wordt
+        "probleem melden" in M8.
+    Antwoorden: 200 {klus, status}; 400 {reden:"reden"}; 401;
+    403 {reden:"geendeelnemer"}; 404; 409 {reden:"bezig"|"status"}.
+  - GET /api/hh/klussen/{id}/bel — pilotversie van "afgeschermd bellen"
+    (J16). Geeft {nummer, naam} aan een deelnemer van de klus (oudere,
+    geplaatst_door, toegewezen jongere) en alleen bij status geaccepteerd,
+    onderweg of bezig. De jongere krijgt het nummer van de oudere
+    (hh_users.telefoon, anders contact_telefoon), de oudere dat van de
+    jongere. Antwoorden: 200; 401; 403 {reden:"geendeelnemer"}; 404;
+    409 {reden:"status"|"geennummer"}. ECHT afschermen (een tussennummer
+    van een telefoniedienst) is bewust niet gebouwd.
+  - ACHTERDEUR DICHT (onRecordUpdateRequest op hh_klussen): een
+    niet-coordinator mag via een gewone record-update alleen nog
+    concept -> open zetten. Elke andere statuswijziging en elke wijziging
+    van toegewezen_jongere geeft 403 met een Nederlandse melding.
+    Superuser en coordinator mogen alles; de herkenning is bewust
+    fail-open (wie niet als gewone hh_users-gebruiker te herkennen is,
+    mag door), zodat een superuser zich nooit kan buitensluiten.
+  - LOGREGELS SCHRIJFT DE HOOK: bij een API-create van een hh_klussen
+    schrijft hij de eerste regel (van = leeg, naar = de status waarmee de
+    klus ontstaat, door = geplaatst_door), en bij een record-update
+    concept -> open de regel concept -> open. De app schrijft geen
+    logregels meer.
+
 ================================================================
-6. hh_klus_status  (4 velden) — logboek per statuswissel
+6. hh_klus_status  (5 velden) — logboek per statuswissel
 ================================================================
 Velden
   klus    verwijzing naar hh_klussen, verplicht; verdwijnt mee met de klus
@@ -233,11 +277,19 @@ Velden
   van     keuze (de 8 statussen), leeg bij de eerste regel
   naar    keuze (de 8 statussen), verplicht
   ("wanneer" = created)
+  Toegevoegd in M6 (scripts/12-status-velden.mjs, 19 sep 2026):
+  toelichting  tekst, max 300. Alleen gevuld bij een annulering: de
+               verplichte reden die de oudere of de jongere opgaf
+               (backend OPEN-PUNT 22). Wie de logregel mag lezen, ziet
+               dus ook de reden.
 Index   klus
 Regels
   Lezen       deelnemer van de klus (oudere, toegewezen jongere,
               gekoppeld familielid) of coordinator
-  Aanmaken    deelnemer van de klus, met door = jijzelf; of coordinator
+  Aanmaken    ALLEEN de coordinator (M6, scripts/13-status-rules.mjs).
+              De logregels schrijft de hook zelf via $app; die loopt niet
+              langs de rules. De app schrijft er geen meer (app
+              OPEN-PUNT M4:32, M5:66, backend OPEN-PUNT 16).
   Bijwerken/Verwijderen   alleen coordinator (logboek is onveranderlijk)
 
 ================================================================
@@ -362,8 +414,14 @@ SEED (testdata, scripts/03-seed.mjs)
   33 logregels, 2 beoordelingen, 1 vertrouwd, 1 incident, 2 betalingen.
 
 SMOKETEST (scripts/04-rulecheck.mjs)
-  218 controles, positief én negatief, ingelogd als de echte accounts.
+  Controles positief én negatief, ingelogd als de echte accounts.
   Laatste run 12 sep 2026 (na M3-rules): 218 groen, 0 rood.
+  In M6 bijgewerkt: de controles die de twee jongere-takken bewezen,
+  bewijzen nu dat ze GEWEIGERD worden; erbij kwamen de omschrijving van
+  een eigen klus wijzigen, concept -> open door de oudere (met de logregel
+  van de hook), de coordinator die de status wél via een record-update mag
+  wijzigen, en de coordinator die wél een logregel mag schrijven.
+  Verwachte telling na de M6-uitrol: 223. Nog niet gedraaid met --apply.
 
 SCREENINGCHECK (scripts/07-screeningcheck.mjs, M3)
   72 controles: profiel aanmaken zonder geblokkeerde velden, alle
@@ -392,3 +450,27 @@ ACCEPTEERCHECK (scripts/11-accepteercheck.mjs, M5)
   Hook-deploy: scripts/10-hook-deploy.sh (lijst voor/na, node --check,
   /tmp -> /root/pb_hooks/, geen restart, verify 401 + journalctl;
   --rollback verwijdert het bestand weer).
+
+STATUSCHECK (scripts/14-statuscheck.mjs, M6)
+  Bewijst de drie M6-routes, de dichte achterdeur en de logregels van de
+  hook, met de echte seed-accounts maar met EIGEN klussen (merk
+  "[statuscheck]", oudere 1, Tiel-West, met lat/lon zodat Nominatim niet
+  nodig is). De twaalf seed-klussen worden niet aangeraakt; alles wordt
+  aan het eind verwijderd en nagemeten.
+  A opruimen, B de drie routes bestaan (anoniem 401), C de eerste logregel
+  komt van de hook, D concept -> open door de oudere mag nog en logt,
+  E achterdeur dicht (jongere en oudere kunnen status en toewijzing niet
+  meer via een record-update wijzigen; losse logregels geweigerd;
+  coordinator mag wel), F de hele reeks met precies één logregel per
+  wissel, G weigeringen (overslaan 409, terug 409, andere jongere 403,
+  oudere 403, onbekend 404, lege doelstatus 400), H annuleren door de
+  oudere (open/geaccepteerd/onderweg 200, bezig 409, afgerond 409, vreemde
+  403, reden te kort/lang 400), I annuleren door de jongere (klus terug
+  naar open, jongere leeg, reden in de toelichting, een andere jongere kan
+  hem daarna aannemen), J de belroute (jongere krijgt het nummer van de
+  oudere en omgekeerd, vreemde 403, status open 409, zonder nummer 409,
+  terugval op contact_telefoon), K RACE (20 ronden, twee clients van
+  jongere 1 tegelijk dezelfde stap: één 200, één 409, één logregel),
+  L opruimen en nameten.
+  Opruim-knop na een app-smoke: --apply --alleen-opruimen.
+  Nog niet gedraaid met --apply (M6 leverde alleen de dry-run).
