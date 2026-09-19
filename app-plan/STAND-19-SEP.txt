@@ -1,0 +1,125 @@
+HEITJEHULP - WAAR WE GEBLEVEN ZIJN
+Stand van 19 september 2026. Begin de volgende sessie met dit bestand.
+(Vervangt MORGEN-13-SEP.txt als startbestand.)
+
+
+================================================================
+OVERZICHT 17 MILESTONES
+================================================================
+
+  KLAAR EN IN MAIN        M0 M1 M2 M3 M4 M5 M6 M10
+  LOOPT (Opus-agent)      M7  beoordelen
+  GESTOPT, HALF WERK      M8 M9 M14 M16   (zie hieronder)
+  NIET GESTART            M15 M11 M12 M13
+
+Besluit Ibrahim 19 sep: na M7 GEEN nieuwe agenten meer starten tot hij
+het zegt. Vier agenten zijn op zijn verzoek stilgezet.
+Bouwers = Opus-agenten. Opus schrijft nooit naar productie; de
+hoofdsessie (Fable) rolt uit na een ja van Ibrahim.
+
+
+================================================================
+DE VIER GESTOPTE AGENTEN - WAAR ZE WAREN
+================================================================
+
+Elke agent heeft een eigen werkboom (git worktree) en branch. Het
+halve werk staat daar ONGECOMMIT; er is niets weg. Alle vier staan op
+commit f98053c (main na M6, vóór de M10-merge).
+
+Werkbomen staan in:
+  /Users/h/Desktop/huidige projecten/buurthulp/.claude/worktrees/
+
+M8  MELDINGEN EN VEILIGHEID      branch ronde5/m8
+    map      agent-a6686d36c2ba2465b
+    af       backend/scripts/30-meldingen-collectie.mjs
+             backend/scripts/31-meldingen-rules.mjs
+    bezig    de hook-helper en de hook hh_meldingen.pb.js
+    nog      hele app-kant (meldingen-overzicht, O10, O11), check 32,
+             tests
+    prompt   app-plan/PROMPT-M8-MELDINGEN.txt
+
+M9  FAMILIE                      branch ronde5/m9
+    map      agent-a77c27b8f3798f07b
+    af       backend/scripts/40-familie-velden.mjs (werkt in dry-run)
+    bezig    script 41, het gericht herschrijven van de familie-rules
+    nog      hook hh_familie.pb.js, F1-F3, toestemmingsblok op O12,
+             check 42, tests
+    prompt   app-plan/PROMPT-M9-FAMILIE.txt
+
+M14 BEHEERPANEEL WEB             branch ronde5/m14
+    map      agent-a6e9c4893dd7bee35
+    af       eerste tests geschreven (rood, zoals bedoeld):
+             website/src/beheer/data/filters.test.ts
+             website/src/beheer/data/tegels.test.ts
+             website/src/beheer/data/types.ts
+             website/src/beheer/navigatie.test.ts
+    bezig    de implementatie bij die tests
+    nog      vrijwel alles: meldkamer, screening, systeembeheer,
+             auditlog, scripts 60-62, hook hh_beheer.pb.js
+    prompt   app-plan/PROMPT-M14-BEHEERPANEEL.txt
+
+M16 BETALEN (Mollie staat uit)   branch ronde5/m16
+    map      agent-a67ae81e97b543ffc
+    bezig    backend/scripts/70-betaal-velden.mjs (half)
+    nog      vrijwel alles: hook hh_betalingen.pb.js, nep-Mollie 71,
+             check 72, O15, O16, J18, tests
+    prompt   app-plan/PROMPT-M16-BETALEN.txt
+    let op   nog geen Mollie-account; betalen wordt ingebouwd maar
+             blijft uit tot HH_MOLLIE_KEY op de server staat.
+
+HERVATTEN, twee manieren:
+  a. Zelfde agent verder laten gaan (kan alleen in dezelfde Claude-
+     sessie als waarin hij gestart is).
+  b. Nieuwe agent in dezelfde werkboom: geef hem de prompt van die M
+     plus "je werkt verder in <map>, lees eerst wat er al staat".
+  Eerst in die werkboom `git merge main` doen, zodat M10 erbij zit.
+
+
+================================================================
+LESSEN VAN VANDAAG (voor de volgende ronde agenten)
+================================================================
+
+1. Een verse agent-werkboom start op de ALLEREERSTE commit (eff155a),
+   niet op main. Zet in de agent-opdracht: eerst
+   `git reset --hard <hash van main>`.
+2. CocoaPods op deze Mac is stuk (/usr/local/bin/pod is een x86-Ruby,
+   geen Rosetta). In een verse werkboom faalt de iOS-simulatorbuild.
+   Vervanging = `flutter build bundle`. In de hoofdmap werkt de
+   iOS-build wel (Pods staan er al). Moet gemaakt zijn vóór M13.
+3. Agenten raken alleen eigen bestanden; botsingen bij samenvoegen
+   zaten alleen in router.dart, test/support/hh_toegang_wikkel.dart en
+   SCHEMA.txt en waren steeds "beide kanten houden".
+4. Nooit meer backend/scripts/02-rules.mjs of 06-screening-rules.mjs
+   met --apply draaien na script 13: die zetten de M6-rules terug.
+
+
+================================================================
+OPEN VOOR IBRAHIM (keuzes)
+================================================================
+
+1. Telefoon en adres van de oudere zijn voor de TOEGEWEZEN jongere
+   via de API leesbaar (PocketBase kent geen rechten per veld). Echt
+   afschermen = die velden naar een aparte collectie. (M6 punt 12)
+2. Echte push naar een gesloten app bestaat niet: vraagt Firebase +
+   Apple-sleutel + verzender. Noodmelding komt nu alleen binnen als de
+   app van de coordinator open staat. (M10 punt 1)
+3. Mollie-account aanmaken, later. (M16)
+4. Nog van 13 sep: contrast concept-pil, G7 vier acties, klusadres
+   zichtbaar vóór accepteren, device-test + Android-build, storenaam,
+   GitHub-toegang collega.
+5. Opruimen vóór de pilot: seed-accounts, hh-m2test-1, smoke-klus
+   pe1m2o02y83pm79.
+
+
+================================================================
+BESTANDEN DIE ERTOE DOEN
+================================================================
+
+app-plan/HEITJEHULP-APP-PLAN.txt      het plan, 17 milestones
+app-plan/_GEDEELD-RONDE5.txt          regels voor parallelle agenten
+app-plan/PROMPT-M6..M16-*.txt         de prompts (M15, M11-M13 nog niet)
+app/OPEN-PUNTEN.txt                   open punten M0-M5
+app/OPEN-PUNTEN-M6.txt, -M10.txt      nog samen te voegen
+backend/SCHEMA.txt                    schema in gewone taal
+backend/pb_hooks/hh_klussen.pb.js     hook M5 + M6
+backend/pb_hooks/hh_coordinator.pb.js hook M10
