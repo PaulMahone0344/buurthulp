@@ -55,7 +55,8 @@ void main() {
         5,
       );
 
-      // Rustige eindstaat, geen knop voor beoordelen (dat komt in M7).
+      // Rustige eindstaat zonder stapknop; beoordelen (M7) test
+      // beoordelen_flow_test.
       expect(find.text(TekstenUitvoerenNl.j15Afgerond), findsOneWidget);
       expect(
         find.widgetWithText(HhKnop, TekstenUitvoerenNl.j15KnopAfgerond),

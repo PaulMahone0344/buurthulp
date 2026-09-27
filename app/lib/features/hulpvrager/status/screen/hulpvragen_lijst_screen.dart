@@ -6,16 +6,20 @@ import '../../../../app/navigatie.dart';
 import '../../../../app/paden.dart';
 import '../../../../core/hh_fout.dart';
 import '../../../../design/components/hh_keuzerij.dart';
+import '../../../../design/components/hh_knop.dart';
 import '../../../../design/components/hh_laad_staat.dart';
 import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
 import '../../../jongere/klussen/model/hh_klus.dart';
+import '../../../jongere/reputatie/provider/beoordeling_providers.dart';
 import '../../../toegang/model/hh_rol.dart';
 import '../../../toegang/provider/sessie_providers.dart';
+import '../../beoordelen/paden_beoordelen.dart';
 import '../../provider/hulpvrager_providers.dart' show klokProvider;
 import '../domein/hulpvraag_indeling.dart';
 import '../paden_status.dart';
@@ -53,6 +57,9 @@ class _HulpvragenLijstScreenState extends ConsumerState<HulpvragenLijstScreen> {
 
     final stand = ref.watch(mijnHulpvragenProvider);
     final nu = ref.watch(klokProvider)();
+    // M7: welke hulpvragen de oudere al beoordeelde. Zolang dat niet bekend
+    // is, geen knop "Hoe ging het?".
+    final gegeven = ref.watch(gegevenBeoordelingenProvider).value;
 
     final inhoud = switch (stand) {
       AsyncData<List<HhKlus>>(:final value) => () {
@@ -85,6 +92,22 @@ class _HulpvragenLijstScreenState extends ConsumerState<HulpvragenLijstScreen> {
               nu: nu,
               onTik: () => context.push(HhPadenStatus.hulpvraag(klus.id)),
             ),
+            if (klus.status == HhKlusStatus.afgerond &&
+                klus.jongereVoornaam.isNotEmpty &&
+                gegeven != null &&
+                !gegeven.containsKey(klus.id)) ...[
+              SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+              HhKnop(
+                label: TekstenBeoordelenNl.o7HoeGingHet,
+                semantiekLabel: TekstenBeoordelenNl.o7HoeGingHetSemantiek(
+                  klus.jongereVoornaam,
+                ),
+                icoon: Icons.thumb_up_outlined,
+                soort: HhKnopSoort.tweedeKeus,
+                onPressed: () =>
+                    context.push(HhPadenBeoordelen.beoordelen(klus.id)),
+              ),
+            ],
             SizedBox(height: tussen),
           ],
         ];

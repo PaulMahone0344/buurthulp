@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigatie.dart';
 import '../../../../core/hh_fout.dart';
@@ -11,6 +12,7 @@ import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_meld_balk.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
@@ -20,6 +22,7 @@ import '../../../jongere/uitvoeren/domein/klus_overgang.dart';
 import '../../../jongere/uitvoeren/provider/uitvoeren_providers.dart';
 import '../../../jongere/uitvoeren/widget/bel_actie.dart';
 import '../../../jongere/uitvoeren/widget/persoon_regel.dart';
+import '../../beoordelen/paden_beoordelen.dart';
 import '../../provider/hulpvrager_providers.dart' show klokProvider;
 import '../domein/hulpvraag_indeling.dart';
 import '../paden_status.dart';
@@ -150,6 +153,10 @@ class _Inhoud extends StatelessWidget {
     final heeftJongere = klus.jongereVoornaam.isNotEmpty;
     final magBellen = heeftJongere && magBellenBij(klus.status);
     final magStoppen = magOudereAnnuleren(klus.status);
+    // M7: bij afgerond "Hoe ging het?" (O9). Bellen en stoppen zijn dan al
+    // weg, dus het blijven hooguit drie acties. Nooit sterren van de jongere
+    // op dit scherm (ouderenregel).
+    final magBeoordelen = heeftJongere && klus.status == HhKlusStatus.afgerond;
     final wanneer = wanneerTekst(klus.wanneerVan, klus.wanneerTot, nu);
 
     return HhScherm(
@@ -235,6 +242,18 @@ class _Inhoud extends StatelessWidget {
                   icoon: Icons.cancel_outlined,
                   soort: HhKnopSoort.tweedeKeus,
                   onPressed: isBezig ? null : onStop,
+                ),
+                SizedBox(height: tussen),
+              ],
+              if (magBeoordelen) ...[
+                HhKnop(
+                  label: TekstenBeoordelenNl.o7HoeGingHet,
+                  semantiekLabel: TekstenBeoordelenNl.o7HoeGingHetSemantiek(
+                    klus.jongereVoornaam,
+                  ),
+                  icoon: Icons.thumb_up_outlined,
+                  onPressed: () =>
+                      context.push(HhPadenBeoordelen.beoordelen(klus.id)),
                 ),
                 SizedBox(height: tussen),
               ],

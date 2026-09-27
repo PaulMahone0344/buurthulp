@@ -16,8 +16,8 @@ import 'package:heitjehulp_app/features/jongere/klussen/widget/jongere_tabbalk.d
 import 'package:heitjehulp_app/features/jongere/klussen/widget/klus_status_pil.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/widget/klus_tegel.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/widget/klussen_kaart.dart';
+import 'package:heitjehulp_app/features/jongere/reputatie/screen/mijn_reputatie_screen.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/screen/klus_uitvoeren_screen.dart';
-import 'package:heitjehulp_app/features/jongere/screen/screening_overzicht_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -177,8 +177,9 @@ void main() {
       await tikTekst(tester, TekstenKlussenNl.tabMijnKlussen);
       expect(find.byType(MijnKlussenScreen), findsOneWidget);
 
+      // M7: de tab Profiel is J19 (mijn profiel en reputatie).
       await tikTekst(tester, TekstenKlussenNl.tabProfiel);
-      expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
+      expect(find.byType(MijnReputatieScreen), findsOneWidget);
       expect(find.byType(JongereTabbalk), findsOneWidget);
 
       await tikTekst(tester, TekstenKlussenNl.tabInstellingen);
