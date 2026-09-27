@@ -6,6 +6,7 @@ import '../../../app/paden.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../design/lijn.dart';
 import '../../../l10n/teksten_coordinator_nl.dart';
+import '../../meldingen/widget/meldingen_bel.dart';
 import '../../../theme.dart';
 import '../paden_coordinator.dart';
 import '../provider/coordinator_providers.dart';
@@ -210,7 +211,8 @@ class CoordinatorTabScherm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child,
+      // M8: het belletje met de ongelezen-teller in de kop.
+      body: MeldingenKop(child: child),
       bottomNavigationBar: CoordinatorTabbalk(actief: actief),
     );
   }

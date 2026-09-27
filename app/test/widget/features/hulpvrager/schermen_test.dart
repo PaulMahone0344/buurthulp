@@ -17,9 +17,11 @@ import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wanneer_sc
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wat_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_home_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_gegevens_screen.dart';
+import 'package:heitjehulp_app/features/hulpvrager/veiligheid/screen/bel_ons_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_meldingen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
 
@@ -187,20 +189,21 @@ void main() {
       }
     });
 
-    testWidgets('bel ons dat mislukt toont het nummer in een meldbalk', (
+    // M8: "Bel ons" op O1 opent O10; daar zit nu het bellen.
+    testWidgets('bel ons (O10) dat mislukt toont het nummer in een meldbalk', (
       tester,
     ) async {
       final klusGateway = fakeKlusGateway();
       await tester.pumpWidget(
         hhHulpvragerWikkel(
-          const HulpvragerHomeScreen(),
+          const BelOnsScreen(),
           klusGateway: klusGateway,
           urlOpenerLukt: false,
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(TekstenHulpvragerNl.homeBelOns));
+      await tester.tap(find.text(TekstenMeldingenNl.o10Bellen));
       await tester.pumpAndSettle();
 
       expect(
