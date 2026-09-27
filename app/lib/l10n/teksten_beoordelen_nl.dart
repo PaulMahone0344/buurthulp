@@ -40,6 +40,8 @@ abstract final class TekstenBeoordelenNl {
   static const kiesSterren = 'Kies eerst hoeveel sterren je geeft.';
   static const tekstTeLang = 'Je tekst is langer dan 500 tekens.';
   static const nietAfgerond = 'Beoordelen kan pas als de klus klaar is.';
+  static const nietAfgerondUitleg =
+      'Staat de klus op afgerond, dan kun je hier sterren geven.';
   static const nietToegestaan = 'Deze beoordeling kan niet worden opgeslagen.';
   static const nietGevonden = 'Deze beoordeling bestaat niet meer.';
 
@@ -57,8 +59,6 @@ abstract final class TekstenBeoordelenNl {
   static const j19GeenTeksten = 'Nog geen beoordelingen met tekst.';
   static const j19Screening = 'Mijn screening';
   static const j19LadenMislukt = 'Je reputatie kon niet worden geladen.';
-  static String j19BeoordelingSemantiek(String sterren, String tekst) =>
-      '$sterren. $tekst';
 
   // ---- Aanhaakpunten jongere (J14, J15) ------------------------------
   static const j14NogBeoordelen = 'Nog beoordelen';
@@ -88,6 +88,8 @@ abstract final class TekstenBeoordelenNl {
   static const o9KiesSterren = 'Tik eerst op een ster.';
   static const o9TekstTeLang = 'Uw tekst is te lang. Maak hem wat korter.';
   static const o9NietAfgerond = 'U kunt pas iets zeggen als de hulp klaar is.';
+  static const o9NietAfgerondUitleg =
+      'Als de hulp klaar is, kunt u hier zeggen hoe het ging.';
   static const o9LadenMislukt = 'Deze hulpvraag kon niet worden geladen.';
 
   // ---- Aanhaakpunten oudere (O7, O8) --------------------------------
