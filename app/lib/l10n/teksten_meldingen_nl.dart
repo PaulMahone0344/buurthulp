@@ -64,8 +64,6 @@ abstract final class TekstenMeldingenNl {
   static const o10ProbleemMelden = 'Probleem melden';
   static const o10ProbleemMeldenSemantiek =
       'Meld een probleem of vraag nu om hulp';
-  static String bellenLuktNiet(String nummer) =>
-      'Bellen lukt niet vanaf dit toestel. Het nummer is $nummer.';
 
   // ---- O11 Probleem melden / noodknop ----------------------------------
   static const o11Titel = 'Probleem melden';
