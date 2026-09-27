@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
+import 'package:heitjehulp_app/core/pb/beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
@@ -16,6 +18,7 @@ import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/coordinator/provider/coordinator_providers.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
+import 'package:heitjehulp_app/features/jongere/reputatie/provider/beoordeling_providers.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
@@ -86,6 +89,7 @@ List<dynamic> toegangOverrides({
   KlussenGateway? klussenGateway,
   UitvoerGateway? uitvoerGateway,
   CoordinatorGateway? coordinatorGateway,
+  BeoordelingGateway? beoordelingGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -112,6 +116,11 @@ List<dynamic> toegangOverrides({
   // coordinatortests geven hun eigen fake mee.
   coordinatorGatewayProvider.overrideWithValue(
     coordinatorGateway ?? FakeCoordinatorGateway(),
+  ),
+  // M7: J14, J15, O7 en O8 vragen welke klussen al beoordeeld zijn.
+  // Standaard een lege fake zonder netwerk.
+  beoordelingGatewayProvider.overrideWithValue(
+    beoordelingGateway ?? FakeBeoordelingGateway(),
   ),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),

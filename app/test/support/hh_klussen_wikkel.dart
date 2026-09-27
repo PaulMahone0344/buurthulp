@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
+import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
@@ -159,6 +160,7 @@ ProviderContainer klussenContainer({
   SessieState? sessie,
   DateTime? nu,
   FakeUitvoerGateway? uitvoerGateway,
+  FakeBeoordelingGateway? beoordelingGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -173,6 +175,7 @@ ProviderContainer klussenContainer({
             profielGateway ?? FakeProfielGateway.goedgekeurd(jongereId),
         klussenGateway: klussenGateway,
         uitvoerGateway: uitvoerGateway,
+        beoordelingGateway: beoordelingGateway,
       ),
       klokProvider.overrideWithValue(() => nu ?? klussenNu),
       kaartTegelsProvider.overrideWithValue(NepTegels.new),
@@ -238,6 +241,7 @@ Future<ProviderContainer> pompKlussenApp(
   FakeProfielGateway? profielGateway,
   DateTime? nu,
   FakeUitvoerGateway? uitvoerGateway,
+  FakeBeoordelingGateway? beoordelingGateway,
 }) async {
   final opslag = GeheugenKeyValueStore({
     'hh_auth_token': testToken(HhRol.jongere),
@@ -248,6 +252,7 @@ Future<ProviderContainer> pompKlussenApp(
     opslag: opslag,
     nu: nu,
     uitvoerGateway: uitvoerGateway,
+    beoordelingGateway: beoordelingGateway,
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(
