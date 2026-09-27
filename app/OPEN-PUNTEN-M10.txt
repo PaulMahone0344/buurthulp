@@ -1,0 +1,70 @@
+OPEN PUNTEN M10 — COORDINATOR IN DE APP (C1, C2)
+Geschreven 19 september 2026, bij het bouwen van M10 in een eigen worktree.
+Alles hier is bewust NIET gebouwd: het stond niet in de prompt, of er moet
+eerst een keuze worden gemaakt.
+
+1. PUSH NAAR EEN GESLOTEN APP ONTBREEKT (belangrijkste)
+   Het plan zegt bij M10: "een noodmelding komt binnen enkele seconden
+   binnen met push". Gebouwd is de realtime-verbinding op hh_incidenten:
+   een nieuwe melding staat binnen enkele seconden bovenaan en het toestel
+   trilt — zolang de app OPEN staat. Een gesloten of weggeswipete app
+   krijgt niets. Echte push (APNs/FCM via hh_push_tokens) is M8 laag 2 en
+   bestaat nog niet. Zolang dat er niet is, is de meldkamer niet alleen van
+   deze app afhankelijk te maken voor noodmeldingen.
+
+2. DE REALTIME-VERBINDING HERSTELT ZICHZELF NIET
+   Valt de verbinding weg (tunnel, wifi naar 4G), dan stopt de stroom en
+   komt er geen nieuwe melding meer binnen tot de coordinator zelf
+   ververst. De lijst blijft bewust staan (een hapering mag hem niet
+   leegmaken) en de fout wordt genegeerd, maar er is geen zichtbaar
+   "verbinding kwijt"-teken en geen automatische herverbinding. Keuze
+   nodig: een balkje in beeld, een timer die opnieuw abonneert, of allebei.
+
+3. "AFGEHANDELD" LEUNT OP EEN GEVULD TEKSTVELD
+   hh_incidenten heeft geen statusveld; afgehandeld = het veld afhandeling
+   is niet leeg. Dat werkt, maar kent geen tussenstand ("ik ben ermee
+   bezig") en geen tijdstip of naam van wie het afhandelde. Als het
+   webpaneel (M14) daar wel mee wil werken, hoort er een echt statusveld
+   plus afgehandeld_door/afgehandeld_op bij. Niet zelf toegevoegd: dat is
+   een schemawijziging buiten deze opdracht.
+
+4. GEEN PAGINERING
+   C1 haalt alle meldingen op (getFullList) en C2 alle open klussen; de
+   koppellijst haalt alle goedgekeurde jongeren op. In de pilot (Tiel, twee
+   wijken) is dat een handvol rijen. Bij opschaling moet hier paginering of
+   een serverfilter bij.
+
+5. VRIJGEVEN KAN ALLEEN VANAF GEACCEPTEERD EN ONDERWEG
+   Zo staat het in de prompt, en zo doet de hook het. Een klus die op
+   "bezig" of "probleem" staat kan de coordinator in de app dus niet
+   doorzetten. Dat is waarschijnlijk precies wat M6 wil (bezig = de jongere
+   is ter plaatse), maar het is niet expliciet besloten. Vraag voor de
+   hoofdsessie.
+
+6. DE COORDINATOR KAN IN DE APP GEEN KLUS ANNULEREN OF AANMAKEN
+   Bewust klein gehouden: alleen koppelen en vrijgeven. Telefonische
+   intake (bron = telefoon), annuleren en de screening blijven in het
+   webpaneel (M14). Als de meldkamer onderweg tóch een klus moet kunnen
+   aanmaken, is dat een nieuwe opdracht, geen uitbreiding van M10.
+
+7. DE WIJKWAARSCHUWING VALT WEG ZONDER WIJK
+   De waarschuwing "andere wijk" vergelijkt de wijk van de jongere met die
+   van de oudere. Heeft een van de twee geen wijk ingesteld, dan komt er
+   geen waarschuwing — noch in de app, noch in het andere_wijk-veld van de
+   hook. De koppeling mag dan gewoon door (dat is het nut van handmatig),
+   maar de coordinator ziet niet dat hij het niet kon controleren.
+
+8. EEN MELDING DIRECT OPENEN WERKT ALLEEN VANUIT DE LIJST
+   Het C1-detail leest de melding uit de lijst die al in de app zit; er is
+   geen losse ophaal per incident. Een directe link naar
+   /coordinator/melding/<id> (bijvoorbeeld straks vanuit een push) toont
+   daarom "kon niet worden geladen" zolang de lijst nog niet binnen is. Bij
+   M8 laag 2 hoort hier een ophaal-per-id bij.
+
+9. GEEN EIGEN MODEL GEDEELD MET M5
+   C2 gebruikt een eigen model (HhCoordinatorKlus) naast HhKlus van M5,
+   omdat de coordinator andere velden nodig heeft (created voor "open
+   sinds", naam en wijk van de oudere altijd zichtbaar, de toegewezen
+   jongere erbij). Dat is dubbeling die bij M11 (ontwerp toepassen) of een
+   latere opruimronde samengevoegd kan worden. Niet nu gedaan: dan had ik
+   een M5-bestand moeten wijzigen, en dat botst met de parallelle ronde.

@@ -474,3 +474,71 @@ STATUSCHECK (scripts/14-statuscheck.mjs, M6)
   L opruimen en nameten.
   Opruim-knop na een app-smoke: --apply --alleen-opruimen.
   Nog niet gedraaid met --apply (M6 leverde alleen de dry-run).
+
+================================================================
+M10 - COORDINATOR IN DE APP (19 sep 2026)
+================================================================
+
+GEEN veld- of rule-wijzigingen. De coordinator mocht al alles lezen en
+schrijven op hh_incidenten, hh_klussen, hh_klus_status, hh_profielen en
+hh_users; dat is met een dry-run op de server nagemeten en volstaat voor
+C1 en C2. M10 voegt alleen een hook toe.
+
+HOOK (backend/pb_hooks/hh_coordinator.pb.js, eigen bestand naast
+hh_klussen.pb.js; deploy met scripts/10-hook-deploy.sh, bewijs met
+scripts/50-koppelcheck.mjs):
+
+  - POST /api/hh/klussen/{id}/koppelen — body { jongere }
+    Handmatig koppelen door de coordinator (C2). In EEN transactie: klus
+    opnieuw laden, eisen status open en toegewezen_jongere leeg, de
+    jongere moet rol jongere hebben en een hh_profielen-record met
+    verificatiestatus goedgekeurd; dan toegewezen_jongere = jongere,
+    status = geaccepteerd, plus een logregel in hh_klus_status (door =
+    coordinator, van = open, naar = geaccepteerd, toelichting
+    "handmatig gekoppeld"). De uitkomst op de klus is EXACT gelijk aan
+    accepteren door de jongere zelf.
+    De WIJK hoeft NIET gelijk te zijn — dat is juist het nut van
+    handmatig koppelen. Het antwoord meldt met andere_wijk of de oudere
+    in een andere wijk woont dan de jongere; de app waarschuwt daarmee
+    vóór het bevestigen, de route weigert er niet op.
+    Antwoorden: 200 {klus, status, toegewezen_jongere, andere_wijk};
+    400 {melding, reden: geenjongere} geen jongere in de body;
+    401 anoniem; 403 {melding, reden: rol} geen coordinator;
+    404 onbekende klus; 409 {melding, reden: bezet | jongeronbekend |
+    geenjongere | nietgoedgekeurd}.
+
+  - POST /api/hh/klussen/{id}/vrijgeven — body { reden }
+    Doorzetten (C2): de coordinator haalt de jongere van een klus die op
+    geaccepteerd of onderweg staat. Klus terug naar status open met een
+    lege toegewezen_jongere, plus een logregel (van = de oude status,
+    naar = open, toelichting "vrijgegeven: <reden>"). Daarna kan hij
+    opnieuw koppelen. Een reden is verplicht (max 200 tekens).
+    Antwoorden: 200 {klus, status: "open", van}; 400 {melding, reden:
+    geenreden}; 401 / 403 / 404 zoals hierboven; 409 {melding, reden:
+    nietvrijtegeven} als de klus niet op geaccepteerd of onderweg staat.
+
+  Beide routes gaan bewust NIET via een record-update: zo kan er nooit
+  een statuswissel zonder logregel bestaan, ook niet naast de
+  update-blokkade die M6 voor niet-coordinatoren zet.
+
+  LET OP hh_klus_status.toelichting komt van M6 (scripts/12-status-
+  velden.mjs). Op 19 sep 2026 bestond het veld nog niet; zolang dat zo
+  is koppelt en vrijgeeft de hook gewoon, maar laat PocketBase de
+  toelichting stil vallen. Rol M6-script 12 dus vóór deze hook uit.
+
+KOPPELCHECK (scripts/50-koppelcheck.mjs, M10)
+  Dry-run standaard (--apply schrijft). Bewijst op de echte server, met
+  de echte seed-accounts: routes bestaan (anoniem 401), rechten (jongere
+  en oudere 403, geen jongere in de body 400, onbekende klus 404),
+  koppelen levert exact dezelfde klusvelden en logregel-vorm als
+  accepteren (k11 gekoppeld naast k02 geaccepteerd, veld voor veld),
+  409 bezet bij een tweede koppeling en bij een klus die al geaccepteerd
+  is, 409 bij een oudere/onbekend id/niet-goedgekeurde jongere (jongere 3
+  gaat tijdelijk op in_behandeling en weer terug), 200 met andere_wijk
+  true over de wijkgrens, vrijgeven vanaf geaccepteerd en vanaf onderweg
+  plus opnieuw koppelen, 400 zonder reden, 409 op een open klus, en een
+  RACE van 20 ronden waarin de coordinator koppelt terwijl jongere 1
+  accepteert (precies één winnaar en één logregel per ronde). Raakt
+  k02/k03/k04/k05/k11 en zet ze aan begin en eind terug; de toelichting-
+  controles worden overgeslagen zolang het veld ontbreekt.
+  Terugzet-knop na een app-smoke: --apply --alleen-terugzetten.

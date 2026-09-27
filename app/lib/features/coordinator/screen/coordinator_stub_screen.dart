@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../../rol_landing_scherm.dart';
-import '../../toegang/model/hh_rol.dart';
+import 'coordinator_incidenten_screen.dart';
 
-/// Landing voor de rol coordinator. Vult zich in latere opdrachten met de
-/// schermen uit hoofdstuk 3 van het app-plan.
+/// Landing voor de rol coordinator: C1, de meldingen die binnenkomen, met
+/// de tabbalk eronder (M10). Heette een stub tot M10 hem vulde; de naam
+/// blijft staan zodat router.dart niets hoeft te veranderen.
 class CoordinatorStubScreen extends StatelessWidget {
   const CoordinatorStubScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const RolLandingScherm(
-      rol: HhRol.coordinator,
-      icoon: Icons.support_agent,
-    );
+    return const CoordinatorIncidentenScreen();
   }
 }

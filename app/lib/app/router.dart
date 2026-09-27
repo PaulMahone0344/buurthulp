@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/coordinator/coordinator_guard.dart';
+import '../features/coordinator/coordinator_routes.dart';
 import '../features/coordinator/screen/coordinator_stub_screen.dart';
 import '../features/familie/screen/familie_stub_screen.dart';
 import '../features/hulpvrager/hulpvrager_routes.dart';
@@ -85,6 +87,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ref.read(sessieControllerProvider),
           ref.read(screeningControllerProvider),
           state.matchedLocation,
+        ) ??
+        // M10: alleen de coordinator komt op de paden onder /coordinator.
+        coordinatorRedirect(
+          ref.read(sessieControllerProvider),
+          state.matchedLocation,
         ),
     routes: [
       GoRoute(
@@ -140,6 +147,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ...klussenRoutes(),
       ...uitvoerenRoutes(),
       ...statusRoutes(),
+      ...coordinatorRoutes(),
       // Alleen in debug-builds; een release kent dit pad niet.
       if (kDebugMode)
         GoRoute(
