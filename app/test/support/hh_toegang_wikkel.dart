@@ -6,15 +6,18 @@ import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_familie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
+import 'package:heitjehulp_app/core/pb/familie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/coordinator/provider/coordinator_providers.dart';
+import 'package:heitjehulp_app/features/familie/provider/familie_providers.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
@@ -86,6 +89,7 @@ List<dynamic> toegangOverrides({
   KlussenGateway? klussenGateway,
   UitvoerGateway? uitvoerGateway,
   CoordinatorGateway? coordinatorGateway,
+  FamilieGateway? familieGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -112,6 +116,11 @@ List<dynamic> toegangOverrides({
   // coordinatortests geven hun eigen fake mee.
   coordinatorGatewayProvider.overrideWithValue(
     coordinatorGateway ?? FakeCoordinatorGateway(),
+  ),
+  // M9: F1 en het blok op O12 vragen meteen de koppelingen op. Standaard
+  // een lege fake zonder netwerk.
+  familieGatewayProvider.overrideWithValue(
+    familieGateway ?? FakeFamilieGateway(),
   ),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),

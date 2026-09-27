@@ -15,6 +15,7 @@ import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../familie_toestemming/familie_toestemming_blok.dart';
 import '../model/hh_gegevens.dart';
 import '../provider/hulpvrager_providers.dart';
 
@@ -141,6 +142,9 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
               label: TekstenHulpvragerNl.gegevensLaden,
             ),
           },
+          // M9: wie van de familie meekijkt, of dat wil.
+          SizedBox(height: tussen),
+          const FamilieToestemmingBlok(),
         ],
       ),
     );
