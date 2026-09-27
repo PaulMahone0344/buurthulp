@@ -542,3 +542,68 @@ KOPPELCHECK (scripts/50-koppelcheck.mjs, M10)
   k02/k03/k04/k05/k11 en zet ze aan begin en eind terug; de toelichting-
   controles worden overgeslagen zolang het veld ontbreekt.
   Terugzet-knop na een app-smoke: --apply --alleen-terugzetten.
+
+================================================================
+M7 - BEOORDELEN EN VERTROUWEN (19 sep 2026, afgemaakt 27 sep 2026)
+================================================================
+
+VELDEN (scripts/20-reputatie-velden.mjs, additief, alleen hh_users)
+  hh_users krijgt dezelfde twee velden die hh_profielen al sinds M1 heeft:
+    sterren_gemiddeld   getal 0-5, niet verplicht (0 = nog geen
+                        beoordeling), op 1 decimaal
+    klussen_aantal      geheel getal >= 0, niet verplicht
+  Waarom een kopie op hh_users (backend OPEN-PUNT 12, optie a): hh_profielen
+  is alleen leesbaar voor de eigenaar en de coordinator. De oudere (en straks
+  de familie) mag hh_users van zijn toegewezen jongere wel lezen.
+
+RULES (scripts/21-reputatie-rules.mjs, alleen hh_users)
+  createRule en updateRule van hh_users worden GEWIKKELD, niet herschreven:
+    (huidige rule) && @request.body.sterren_gemiddeld:isset = false
+                   && @request.body.klussen_aantal:isset = false
+  Niemand zet de twee velden via de API: niet bij registreren, niet bij
+  eigen gegevens bijwerken, ook de coordinator niet. De hook schrijft ze via
+  $app (dat loopt niet langs de rules); een superuser kan het met de hand.
+  Draai 21 NA 02, 06 en 13; draai die drie daarna niet meer met --apply
+  (dan valt het slot eraf; 21 opnieuw draaien zet het terug).
+  hh_profielen: niets te doen, de twee velden zijn daar al geblokkeerd.
+  hh_beoordelingen: niets te doen. De rules en de unieke index klus +
+  van_gebruiker (sectie 7) dekken M7 al precies.
+
+REKENREGEL (backend/pb_hooks/hh_reputatie.js, gewoon .js, GEEN hook)
+  Voor één persoon:
+    sterren_gemiddeld = gemiddelde van alle hh_beoordelingen met
+                        naar_gebruiker = die persoon, Math.round(x*10)/10
+                        (.5 naar boven); 0 zonder beoordelingen
+    klussen_aantal    = aantal hh_klussen met status afgerond waarin die
+                        persoon toegewezen_jongere of hulpvrager is
+  Geschreven op hh_users EN op het hh_profielen-record van die persoon (als
+  dat bestaat). De app rekent dit nooit zelf uit; hij rondt alleen af voor
+  de weergave, gespiegeld aan deze regel.
+
+WIE ROEPT HEM AAN (altijd binnen de handler met
+require(`${__hooks}/hh_reputatie.js`), fouten houden nooit iets tegen)
+  - hh_beoordelingen.pb.js: onRecordCreateRequest en onRecordUpdateRequest
+    op hh_beoordelingen, ná e.next(), voor naar_gebruiker en van_gebruiker.
+  - hh_klussen.pb.js, statusroute (M6): na de transactie, bij de stap naar
+    afgerond, voor de jongere en de oudere. Zo telt een afgeronde klus mee
+    ook als er (nog) niemand beoordeelt.
+  - hh_klussen.pb.js, onRecordUpdateRequest: zet de coordinator of een
+    superuser een klus op of van afgerond, dan voor de jongere (nu en
+    vóór de wijziging) en de oudere.
+  NIET: een beoordeling die de coordinator verwijdert (geen delete-hook),
+  en records die niet via de API ontstaan. 22-beoordelingcheck zet dat
+  recht.
+
+DEPLOY
+  scripts/23-hook-deploy.sh zet hh_reputatie.js en hh_beoordelingen.pb.js
+  op de server (10-hook-deploy.sh kent alleen hh_klussen.pb.js). Eerst 23,
+  dan 10 (hh_klussen.pb.js heeft hh_reputatie.js nodig).
+
+BEOORDELINGCHECK (scripts/22-beoordelingcheck.mjs, dry-run standaard)
+  Leest zonder --apply: velden op hh_users, sloten in de rules, unieke index,
+  velden op hh_profielen. Met --apply met eigen klussen "[beoordelingcheck]":
+  C niet bij een niet-afgeronde klus, C2 afgerond telt al mee zonder
+  beoordeling, D vreemde/jezelf/namens een ander geweigerd, E een per kant,
+  F gemiddelde en telling na 1, 2, 3 beoordelingen en na een wijziging (op
+  hh_users en hh_profielen), G de velden zelf meesturen geweigerd, H de
+  oudere ziet de twee velden van zijn toegewezen jongere, I opruimen.

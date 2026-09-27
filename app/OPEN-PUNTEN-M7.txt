@@ -1,0 +1,161 @@
+OPEN PUNTEN M7 — BEOORDELEN EN VERTROUWEN (J17, J19, O9)
+Geschreven 27 september 2026, bij het afmaken van M7 op branch ronde5/m7
+(cloudsessie, zonder toegang tot de PocketBase-server). Alles hier is bewust
+NIET gebouwd: het stond niet in de prompt, er moet eerst een keuze worden
+gemaakt, of het kon vanuit de cloud niet.
+
+
+================================================================
+UITROLLIJST (NIETS HIERVAN IS GEDRAAID)
+================================================================
+Vanuit de cloud is er niets tegen de server gedraaid, ook geen dry-run.
+Alleen `node --check` op elk .js/.mjs dat M7 raakte, plus een proef van de
+rekenregel in hh_reputatie.js met een nep-$app in Node (groen).
+
+Vooraf, in backend/:
+  set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  (en backend/seed-accounts.local.json moet er staan, voor stap 6)
+
+  1. node scripts/00-backup.mjs
+       verwacht: schema-export van alle collecties in backups/<datum>.json
+       (alleen-lezen; 00 kent geen --apply)
+
+  2. node scripts/20-reputatie-velden.mjs            (dry-run eerst)
+     node scripts/20-reputatie-velden.mjs --apply
+       verwacht: 2 velden toegevoegd aan hh_users (sterren_gemiddeld,
+       klussen_aantal); volgens de dry-run van 19 sep heeft hh_users daarna
+       22 velden. Tweede run: 0 toegevoegd.
+
+  3. node scripts/21-reputatie-rules.mjs             (dry-run: toont het verschil)
+     node scripts/21-reputatie-rules.mjs --apply
+       verwacht: 2 rules bijgewerkt (hh_users.createRule en .updateRule).
+       Tweede run: 0. LET OP: na 02, 06 en 13; die daarna niet opnieuw met
+       --apply draaien (dan valt het slot eraf; dan 21 nog eens draaien).
+
+  4. yes | bash scripts/23-hook-deploy.sh
+       verwacht: in /root/pb_hooks/ precies twee bestanden erbij:
+       hh_reputatie.js en hh_beoordelingen.pb.js; journalctl zonder
+       laadfouten. (NIEUW script: 10-hook-deploy.sh kent alleen
+       hh_klussen.pb.js, zie punt 1 hieronder.)
+
+  5. yes | bash scripts/10-hook-deploy.sh
+       verwacht: hh_klussen.pb.js bijgewerkt (geen nieuw bestand in de
+       lijst), route zonder auth -> 401/403. Na stap 4, want de statusroute
+       doet nu require(hh_reputatie.js) bij de stap naar afgerond.
+
+  6. node scripts/22-beoordelingcheck.mjs            (dry-run: 6 leescontroles)
+     node scripts/22-beoordelingcheck.mjs --apply
+       verwacht: alle checks groen, 0 rood (C, C2, D, E, F met 5 -> 5,0 /
+       5+4 -> 4,5 / 5+4+4 -> 4,3 / wijziging 4 -> 2 geeft 3,7, G, H),
+       alles opgeruimd en de reputatie van jongere 1 en oudere 1 terug op
+       de beginstand.
+       Opruim-knop na een handmatige app-test:
+       node scripts/22-beoordelingcheck.mjs --apply --alleen-opruimen
+
+  Rollback: bash scripts/23-hook-deploy.sh --rollback haalt beide
+  M7-bestanden weg; hh_klussen.pb.js van vóór M7 terugzetten met
+  git checkout 2ff5c2a -- backend/pb_hooks/hh_klussen.pb.js en stap 5.
+  De twee velden op hh_users mogen blijven staan (niemand kan ze zetten).
+
+
+================================================================
+OPEN PUNTEN
+================================================================
+
+1. 10-HOOK-DEPLOY.SH ZET ALLEEN hh_klussen.pb.js NEER (ook M10 raakt dit)
+   Het script heeft BESTAND="hh_klussen.pb.js" vast staan. De uitrollijst in
+   de oude STAND-M7 zei "10-hook-deploy.sh: hh_beoordelingen.pb.js erbij";
+   dat klopte dus niet. M7 heeft daarom een eigen 23-hook-deploy.sh. Let
+   op: de SCHEMA-sectie van M10 zegt ook "deploy met 10-hook-deploy.sh"
+   voor hh_coordinator.pb.js, en dat werkt om dezelfde reden niet. Voor de
+   hoofdsessie: een algemeen deployscript met een bestandsnaam als
+   argument zou beide oplossen (00-14 mocht ik niet wijzigen).
+
+2. BESTAANDE AFGERONDE KLUSSEN WORDEN NIET MET TERUGWERKENDE KRACHT GETELD
+   klussen_aantal wordt nu bijgewerkt bij elke beoordeling en bij elke stap
+   naar afgerond. Klussen die al vóór de uitrol afgerond waren, tellen pas
+   mee zodra er voor die persoon een van die twee dingen gebeurt. Voor de
+   pilot (alleen seed-data) maakt dat niets uit. Moet het wel kloppen vanaf
+   dag één, dan is er een eenmalig herreken-script nodig (superuser, alle
+   hh_users met rol jongere/hulpvrager door hh_reputatie.js halen). Niet
+   gebouwd: stond niet in de prompt.
+
+3. HET SLOT GELDT OOK VOOR DE COORDINATOR
+   De prompt zei "niemand mag ze via de API zetten"; zo is 21 gebouwd. Een
+   superuser kan de velden nog met de hand zetten, en de hook schrijft via
+   $app. Wil de coordinator een getal kunnen corrigeren, dan moet het slot
+   alleen op de niet-coordinator-tak van de rule.
+
+4. VERWIJDEREN DOOR DE COORDINATOR WERKT HET GEMIDDELDE NIET BIJ
+   Er is geen delete-hook: het gemiddelde blijft op de oude waarde tot de
+   volgende beoordeling of afgeronde klus van die persoon. Verwijderen mag
+   alleen de coordinator. Een onRecordDeleteRequest-hook erbij is klein,
+   maar niet gevraagd.
+
+5. REQUEST-HOOKS, GEEN AFTER-SUCCESS-HOOKS
+   Bewust (zie de kop van hh_beoordelingen.pb.js: de after-success-keten op
+   deze gedeelde server heeft eerder stilgestaan). Gevolg: een beoordeling
+   of statuswissel die niet via de API loopt (een script via $app) werkt de
+   reputatie niet bij.
+
+6. TELLEN MET findRecordsByFilter EN LIMIT 0
+   Haalt alle beoordelingen en afgeronde klussen van één persoon op. Voor
+   de pilot prima; bij honderden klussen per persoon moet dat een
+   COUNT/AVG-query op de database worden.
+
+7. TEKST MAX 500 STAAT ALLEEN IN DE APP
+   hh_beoordelingen.tekst heeft op de server geen maximum (SCHEMA sectie 7:
+   "tekst tekst"). De app weigert meer dan 500 tekens; een directe
+   API-aanroep niet. Een max op het veld is een schemawijziging buiten deze
+   opdracht.
+
+8. MELDING BIJ DUBBEL: "U" VOOR DE OUDERE, "JE" VOOR DE JONGERE
+   De prompt noemt "U heeft al een beoordeling gegeven." Dat staat letterlijk
+   op O9. J17 zegt "Je hebt al een beoordeling gegeven.", omdat de hele
+   jongerenkant "je" gebruikt. Na die melding schakelt het scherm naar
+   wijzigen: de sterren die de gebruiker net koos blijven staan en "Opslaan"
+   overschrijft de bestaande beoordeling.
+
+9. J19 "LAATSTE BEOORDELINGEN MET TEKST"
+   Gelezen als: de vijf nieuwste beoordelingen die een tekst hebben (sterren
+   zonder tekst tellen wel mee in het gemiddelde, maar staan niet in de
+   lijst). Zonder naam van de oudere erbij: de jongere mag hh_users van een
+   oudere alleen lezen zolang die op zijn klus staat, en een naam is voor de
+   reputatie niet nodig. Keuze bevestigen.
+
+10. DE OUDERE WEET NIET DAT DE JONGERE ZIJN TEKST LEEST
+    De readRule laat naar_gebruiker de beoordeling lezen, en J19 toont de
+    tekst. J17 zegt dat tegen de jongere ("De oudere kan dit lezen."), O9
+    zegt het niet tegen de oudere, om het scherm kort te houden. Keuze: een
+    zin erbij op O9, of zo laten.
+
+11. GEEN TERMIJN OM TE BEOORDELEN
+    Een afgeronde klus blijft beoordeelbaar en wijzigbaar, ook na maanden.
+    "Nog beoordelen" (J14) en "Hoe ging het?" (O8) blijven dus staan tot het
+    gebeurd is. Een termijn (bijvoorbeeld 14 dagen) vraagt een rule-
+    uitbreiding.
+
+12. FAMILIE BEOORDEELT NIET NAMENS DE OUDERE (backend OPEN-PUNT 14)
+    Bewust niet gebouwd; hoort bij M9. Een hulpvraag die de familie plaatste
+    (geplaatst_door) kan alleen de oudere zelf beoordelen.
+
+13. DE OUDERE ZIET NERGENS STERREN
+    Ouderenregel: O7 toont bij de jongere geen sterren, O9 heeft geen
+    cijfers (sterren in woorden: Slecht ... Heel goed). Dat de oudere de
+    twee velden van zijn jongere MAG lezen (22, controle H) is voor de
+    familie-app later, niet voor de app van de oudere.
+
+14. GEEN HERINNERING OM TE BEOORDELEN
+    "Nog beoordelen" en "Hoe ging het?" staan alleen in de lijsten. Een
+    melding na afronden hoort bij M8 (meldingen).
+
+15. iOS-SIMULATORBUILD NIET GEDRAAID
+    Deze sessie draaide in een Linux-container zonder Xcode. flutter analyze
+    en flutter test zijn groen (Flutter 3.41.9, Dart 3.11.5); de
+    simulatorbuild moet op de Mac nog één keer.
+
+16. ONTWERP VAN DE STERREN
+    De sterren zijn primair (donkergroen) en krijgen hun betekenis uit de
+    vorm (gevuld, half, open), niet uit kleur: de accentkleur haalt op wit
+    het contrast voor een bedieningselement niet. Maat = de icoonmaat van de
+    Keuzerij, tikvlak = knophoogte. Kan in M11 (ontwerp) anders.
