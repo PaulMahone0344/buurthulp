@@ -35,6 +35,7 @@ class HhKlus {
     this.oudereContactNaam = '',
     this.jongereNaam = '',
     this.jongereFotoUrl = '',
+    this.geplaatstDoorId = '',
   });
 
   final String id;
@@ -66,6 +67,10 @@ class HhKlus {
   /// leeg betekent "nog niemand" of "niet meegevraagd".
   final String jongereNaam;
   final String jongereFotoUrl;
+
+  /// M9: wie de klus plaatste (de oudere zelf, of een familielid namens
+  /// hem). F3 laat alleen bij eigen geplaatste klussen "stoppen" zien.
+  final String geplaatstDoorId;
 
   static const veldStatus = 'status';
   static const veldToegewezenJongere = 'toegewezen_jongere';
@@ -140,6 +145,7 @@ class HhKlus {
           jongere != null && jongereFoto.isNotEmpty && fotoUrl != null
           ? fotoUrl(jongere, jongereFoto)
           : '',
+      geplaatstDoorId: record.getStringValue('geplaatst_door'),
     );
   }
 
@@ -183,6 +189,7 @@ class HhKlus {
       oudereContactNaam: oudereContactNaam,
       jongereNaam: jongereNaam ?? this.jongereNaam,
       jongereFotoUrl: jongereFotoUrl ?? this.jongereFotoUrl,
+      geplaatstDoorId: geplaatstDoorId,
     );
   }
 
