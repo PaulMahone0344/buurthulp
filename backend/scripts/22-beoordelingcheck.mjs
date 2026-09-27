@@ -9,6 +9,8 @@
 //   B. voorwaarden: de twee velden staan op hh_users, de sloten staan in de
 //      createRule en de updateRule, de unieke index klus+van_gebruiker bestaat
 //   C. niet bij een klus die nog niet afgerond is -> geweigerd
+//   C2. de stap naar afgerond telt al mee in klussen_aantal, vóór er een
+//      beoordeling is (hh_klussen.pb.js roept hh_reputatie.js aan)
 //   D. een vreemde (jongere 2) beoordeelt een klus van een ander -> geweigerd;
 //      jezelf beoordelen -> geweigerd
 //   E. de oudere beoordeelt de jongere; tweede keer dezelfde kant -> geweigerd
@@ -25,7 +27,7 @@
 // Opruim-knop na een handmatige app-test:
 //   node scripts/22-beoordelingcheck.mjs --apply --alleen-opruimen
 //
-// DRAAIEN (na 20 --apply, 21 --apply en 10-hook-deploy.sh):
+// DRAAIEN (na 20 --apply, 21 --apply, 23-hook-deploy.sh en 10-hook-deploy.sh):
 //   set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
 //   node scripts/22-beoordelingcheck.mjs --apply    (zonder --apply: alleen uitleg + leescontroles)
 
@@ -73,10 +75,10 @@ async function probeer(actie) {
 // Alle eigen klussen weghalen; hun beoordelingen horen daar niet bij (geen
 // cascade op hh_beoordelingen), dus die gaan eerst apart weg.
 async function opruimen(su) {
-  const eigen = await su.collection('hh_klussen').getFullList({ filter: `omschrijving ~ "${MERK}"` });
+  const eigen = await su.collection('hh_klussen').getFullList({ filter: su.filter('omschrijving ~ {:merk}', { merk: MERK }) });
   let beoordelingenWeg = 0;
   for (const k of eigen) {
-    const rijen = await su.collection('hh_beoordelingen').getFullList({ filter: `klus = "${k.id}"` });
+    const rijen = await su.collection('hh_beoordelingen').getFullList({ filter: su.filter('klus = {:klus}', { klus: k.id }) });
     for (const b of rijen) {
       await su.collection(assertHh('hh_beoordelingen')).delete(b.id);
       beoordelingenWeg++;
@@ -94,7 +96,7 @@ async function reputatie(su, gebruikerId) {
   const u = await su.collection('hh_users').getOne(gebruikerId);
   let profiel = null;
   try {
-    profiel = await su.collection('hh_profielen').getFirstListItem(`gebruiker = "${gebruikerId}"`);
+    profiel = await su.collection('hh_profielen').getFirstListItem(su.filter('gebruiker = {:gebruiker}', { gebruiker: gebruikerId }));
   } catch (_) {
     profiel = null;
   }
@@ -112,7 +114,7 @@ async function herstelReputatie(su, gebruikerId, begin) {
     .collection(assertHh('hh_users'))
     .update(gebruikerId, { sterren_gemiddeld: begin.sterren, klussen_aantal: begin.aantal });
   if (begin.profielSterren !== null) {
-    const profiel = await su.collection('hh_profielen').getFirstListItem(`gebruiker = "${gebruikerId}"`);
+    const profiel = await su.collection('hh_profielen').getFirstListItem(su.filter('gebruiker = {:gebruiker}', { gebruiker: gebruikerId }));
     await su
       .collection(assertHh('hh_profielen'))
       .update(profiel.id, { sterren_gemiddeld: begin.profielSterren, klussen_aantal: begin.profielAantal });
@@ -262,6 +264,20 @@ async function main() {
 
   const klus1 = await klusTotAfgerond('klus 1');
 
+  kop('C2. Afgerond telt meteen mee, ook zonder beoordeling');
+  {
+    const jongere = await reputatie(su, jongereId);
+    check(
+      `klussen_aantal jongere 1 is +1 na afgerond — gemeten ${jongere.aantal}`,
+      jongere.aantal === beginJongere.aantal + 1,
+    );
+    const oudere = await reputatie(su, oudereId);
+    check(
+      `klussen_aantal oudere 1 is +1 na afgerond — gemeten ${oudere.aantal}`,
+      oudere.aantal === beginOudere.aantal + 1,
+    );
+  }
+
   kop('D. Alleen deelnemers, nooit jezelf');
   {
     const vreemde = await beoordeelAls(j2, acc.jongere2.id, klus1, oudereId, 5);
@@ -374,7 +390,7 @@ async function main() {
   {
     const weg = await opruimen(su);
     check(`${weg.klussen} eigen klus(sen) en ${weg.beoordelingen} beoordeling(en) verwijderd`, weg.klussen > 0);
-    const over = await su.collection('hh_klussen').getFullList({ filter: `omschrijving ~ "${MERK}"` });
+    const over = await su.collection('hh_klussen').getFullList({ filter: su.filter('omschrijving ~ {:merk}', { merk: MERK }) });
     check('geen eigen klussen meer over', over.length === 0, `${over.length} over`);
 
     await herstelReputatie(su, jongereId, beginJongere);
