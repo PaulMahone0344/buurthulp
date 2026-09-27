@@ -166,6 +166,7 @@ class HhKlus {
     String? adres,
     String? jongereNaam,
     String? jongereFotoUrl,
+    String? geplaatstDoorId,
   }) {
     return HhKlus(
       id: id,
@@ -189,7 +190,7 @@ class HhKlus {
       oudereContactNaam: oudereContactNaam,
       jongereNaam: jongereNaam ?? this.jongereNaam,
       jongereFotoUrl: jongereFotoUrl ?? this.jongereFotoUrl,
-      geplaatstDoorId: geplaatstDoorId,
+      geplaatstDoorId: geplaatstDoorId ?? this.geplaatstDoorId,
     );
   }
 
