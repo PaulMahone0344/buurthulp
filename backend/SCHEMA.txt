@@ -542,3 +542,61 @@ KOPPELCHECK (scripts/50-koppelcheck.mjs, M10)
   k02/k03/k04/k05/k11 en zet ze aan begin en eind terug; de toelichting-
   controles worden overgeslagen zolang het veld ontbreekt.
   Terugzet-knop na een app-smoke: --apply --alleen-terugzetten.
+
+================================================================
+M9 - FAMILIE (19 sep 2026, afgemaakt 27 sep 2026)
+================================================================
+
+VELD (scripts/40-familie-velden.mjs, additief, alleen hh_koppelingen)
+  status   keuze, één: aangevraagd | actief (niet verplicht; de hook en
+           de rules zetten hem). 40 vult elke bestaande koppeling zonder
+           status op "actief" (de seed-koppeling blijft dus werken).
+
+HOOK (backend/pb_hooks/hh_familie.pb.js + hh_familie_hulp.js, deploy met
+scripts/43-hook-deploy.sh; 10-hook-deploy.sh kent alleen hh_klussen.pb.js)
+  POST /api/hh/koppelingen/aanvragen   body {email_oudere}
+    Alleen rol familie. Bestaat er een hulpvrager met dat adres en nog
+    geen koppeling: koppeling status aangevraagd, rechten leeg (via $app;
+    de createRule blijft dicht voor het familielid). Antwoord ALTIJD:
+    200 {melding: "Als dit adres bij ons bekend is, krijgt uw familielid
+    een vraag om toestemming."}. Verder 400 {reden: email}, 401, 403
+    {reden: rol}, 429 {reden: limiet} na 5 aanvragen per familielid per
+    UTC-dag (teller in $app.store(), met de koppelingen van vandaag als
+    ondergrens).
+  onRecordCreateRequest hh_koppelingen: de bestaande weg (oudere of
+    coordinator maakt de koppeling) geeft status actief en, zonder
+    meegestuurde rechten, meekijken + plaatsen.
+  onRecordUpdateRequest hh_koppelingen: naar actief ("Ja") zonder rechten
+    geeft er beide. "Nee" en "Ontkoppelen" zijn een gewone delete.
+
+RULES (scripts/41-familie-rules.mjs, GERICHT GEWIKKELD: alleen de
+familie-takken, de rest van elke rule blijft letterlijk staan)
+  Elke familie-tak (@collection.hh_koppelingen.oudere ?= X &&
+  @collection.hh_koppelingen.familielid ?= @request.auth.id) krijgt erbij:
+    && @collection.hh_koppelingen.status ?= "actief"
+    && @collection.hh_koppelingen.rechten ?= "meekijken"   bij list/view
+    && @collection.hh_koppelingen.rechten ?= "plaatsen"    bij create/update/delete
+  Zo ook de plaats-tak van hh_klussen.createRule (plaatsen).
+  hh_users list/view:
+    - het familielid ziet de oudere pas bij een actieve koppeling;
+    - de oudere ziet het familielid altijd (ook bij een aanvraag);
+    - NIEUW (backend OPEN-PUNT 13): het familielid ziet de toegewezen
+      jongere op een klus van zijn oudere, bij een actieve koppeling met
+      recht meekijken (hh_klussen_via_toegewezen_jongere.hulpvrager.
+      hh_koppelingen_via_oudere...).
+  Collecties met een familie-tak: hh_users, hh_klussen, hh_klus_status,
+  hh_beoordelingen, hh_vertrouwd, hh_betalingen, hh_incidenten.
+  VOLGORDE: 40, dan 43, dan 41. Draai 02, 06 of 13 daarna niet opnieuw met
+  --apply (dan valt de wikkel eraf; 41 opnieuw draaien zet hem terug).
+
+FAMILIECHECK (scripts/42-familiecheck.mjs, dry-run standaard)
+  Zonder --apply: veld, geen lege status, de wikkel in de rules, de route
+  (anoniem 401). Met --apply, met tijdelijke accounts en klussen
+  "[familiecheck]": hetzelfde antwoord voor bekend en onbekend adres;
+  aangevraagd geeft geen toegang (klussen, hh_users, logregels, jongere);
+  alleen de oudere beslist; na Ja toegang; plaatsen alleen met recht
+  plaatsen; de jongere van mijn oudere zichtbaar en niemand anders; geen
+  lek via een ander, actief familielid van een andere oudere; Nee; limiet
+  5 per dag; alles opgeruimd.
+  Test zonder server: node --test backend/tests/*.test.mjs (19 tests, o.a.
+  de wikkel van 41).
