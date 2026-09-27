@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:heitjehulp_app/app/router.dart';
 import 'package:heitjehulp_app/core/pb/beoordeling_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
+import 'package:heitjehulp_app/features/hulpvrager/beoordelen/paden_beoordelen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/status/paden_status.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/paden_klussen.dart';
 import 'package:heitjehulp_app/features/jongere/reputatie/model/hh_beoordeling.dart';
@@ -14,7 +16,9 @@ import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
 
 import '../support/hh_beoordelen_wikkel.dart';
+import '../support/hh_hulpvrager_wikkel.dart';
 import '../support/hh_jongere_wikkel.dart';
+import '../support/hh_klussen_wikkel.dart';
 import '../support/hh_uitvoeren_wikkel.dart';
 
 Future<void> _tikSter(WidgetTester tester, int ster) async {
@@ -282,6 +286,47 @@ void main() {
       );
       expect(find.text('Goed geholpen met de tuin.'), findsOneWidget);
       expect(find.text(TekstenBeoordelenNl.j19Klussen(2)), findsOneWidget);
+    });
+  });
+
+  group('de echte router (met guard) kent de M7-routes', () {
+    testWidgets('jongere: J17 onder /jongere/klus/:id/beoordelen', (
+      tester,
+    ) async {
+      final container = await pompKlussenApp(
+        tester,
+        klussenGateway: fakeKlussen(mijn: testMijnKlussen()),
+        uitvoerGateway: fakeUitvoer(status: HhKlusStatus.afgerond),
+        beoordelingGateway: fakeBeoordeling(),
+      );
+      container
+          .read(routerProvider)
+          .go(HhPadenReputatie.beoordelen('k-uitvoeren'));
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenBeoordelenNl.j17Titel), findsOneWidget);
+      expect(find.byType(SterrenKiezer), findsOneWidget);
+    });
+
+    testWidgets('oudere: O9 onder /hulpvrager/hulpvragen/:id/beoordelen', (
+      tester,
+    ) async {
+      final container = await pompHulpvragerApp(
+        tester,
+        klusGateway: fakeKlusGateway(),
+        uitvoerGateway: fakeUitvoer(
+          status: HhKlusStatus.afgerond,
+          ikBen: oudereId,
+        ),
+        beoordelingGateway: fakeBeoordeling(ikBen: oudereId),
+      );
+      container
+          .read(routerProvider)
+          .go(HhPadenBeoordelen.beoordelen('k-uitvoeren'));
+      await tester.pumpAndSettle();
+      expect(
+        find.widgetWithText(HhKnop, TekstenBeoordelenNl.o9DuimOmhoog),
+        findsOneWidget,
+      );
     });
   });
 }
