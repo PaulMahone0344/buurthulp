@@ -34,7 +34,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { superuserClient, userClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
+import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { REPUTATIE_VELDEN } from './20-reputatie-velden.mjs';
 import { REPUTATIE_SLOT } from './21-reputatie-rules.mjs';
 
@@ -106,6 +106,27 @@ async function reputatie(su, gebruikerId) {
     profielSterren: profiel ? Number(profiel.sterren_gemiddeld ?? 0) : null,
     profielAantal: profiel ? Number(profiel.klussen_aantal ?? 0) : null,
   };
+}
+
+// Wat er AL op de server staat voor deze persoon, zoals hh_reputatie.js het
+// telt (seed-klussen die al afgerond waren, seed-beoordelingen). De velden
+// zelf zeggen dat niet: die worden pas bij een event herberekend.
+async function basis(su, gebruikerId) {
+  const beoordelingen = await su
+    .collection('hh_beoordelingen')
+    .getFullList({ filter: su.filter('naar_gebruiker = {:g}', { g: gebruikerId }) });
+  const sterren = beoordelingen.map((b) => Number(b.sterren || 0)).filter((x) => x > 0);
+  const klussen = await su.collection('hh_klussen').getFullList({
+    filter: su.filter('status = "afgerond" && (toegewezen_jongere = {:g} || hulpvrager = {:g})', { g: gebruikerId }),
+  });
+  return { sterren, aantal: klussen.length };
+}
+
+// Het gemiddelde dat de hook moet geven: bestaande sterren + [erbij].
+function gemiddeldMet(b, erbij) {
+  const alle = [...b.sterren, ...erbij];
+  if (!alle.length) return 0;
+  return Math.round((alle.reduce((x, y) => x + y, 0) / alle.length) * 10) / 10;
 }
 
 // De reputatievelden terugzetten op de waarde van vóór de run.
@@ -197,6 +218,11 @@ async function main() {
   const oudereId = acc.hulpvrager1.id;
   const beginJongere = await reputatie(su, jongereId);
   const beginOudere = await reputatie(su, oudereId);
+  const basisJongere = await basis(su, jongereId);
+  const basisOudere = await basis(su, oudereId);
+  console.log(
+    `  · al op de server voor jongere 1: ${basisJongere.aantal} afgeronde klus(sen), ${basisJongere.sterren.length} beoordeling(en)`,
+  );
   console.log(
     `  · beginstand jongere 1: ${beginJongere.sterren} sterren, ${beginJongere.aantal} klussen (wordt teruggezet)`,
   );
@@ -269,12 +295,12 @@ async function main() {
     const jongere = await reputatie(su, jongereId);
     check(
       `klussen_aantal jongere 1 is +1 na afgerond — gemeten ${jongere.aantal}`,
-      jongere.aantal === beginJongere.aantal + 1,
+      jongere.aantal === basisJongere.aantal + 1,
     );
     const oudere = await reputatie(su, oudereId);
     check(
       `klussen_aantal oudere 1 is +1 na afgerond — gemeten ${oudere.aantal}`,
-      oudere.aantal === beginOudere.aantal + 1,
+      oudere.aantal === basisOudere.aantal + 1,
     );
   }
 
@@ -303,8 +329,8 @@ async function main() {
   kop('F. Gemiddelde en telling');
   {
     const na1 = await reputatie(su, jongereId);
-    check(`na 1 beoordeling (5) is het gemiddelde 5 — gemeten ${na1.sterren}`, na1.sterren === 5);
-    check(`de telling staat op 1 afgeronde klus — gemeten ${na1.aantal}`, na1.aantal === beginJongere.aantal + 1);
+    check(`na 1 beoordeling (5) — verwacht ${gemiddeldMet(basisJongere, [5])}, gemeten ${na1.sterren}`, na1.sterren === gemiddeldMet(basisJongere, [5]));
+    check(`de telling staat op 1 afgeronde klus — gemeten ${na1.aantal}`, na1.aantal === basisJongere.aantal + 1);
     check(
       `hh_profielen krijgt dezelfde waarden — gemeten ${na1.profielSterren}/${na1.profielAantal}`,
       na1.profielSterren === na1.sterren && na1.profielAantal === na1.aantal,
@@ -314,15 +340,15 @@ async function main() {
     const r2 = await beoordeelAls(hv1, oudereId, klus2, jongereId, 4);
     check('tweede beoordeling aangemaakt', r2.status === 200, `status ${r2.status}`);
     const na2 = await reputatie(su, jongereId);
-    check(`5 en 4 geeft 4,5 — gemeten ${na2.sterren}`, na2.sterren === 4.5);
-    check(`de telling staat op 2 — gemeten ${na2.aantal}`, na2.aantal === beginJongere.aantal + 2);
+    check(`+5 en 4 — verwacht ${gemiddeldMet(basisJongere, [5, 4])}, gemeten ${na2.sterren}`, na2.sterren === gemiddeldMet(basisJongere, [5, 4]));
+    check(`de telling staat op 2 — gemeten ${na2.aantal}`, na2.aantal === basisJongere.aantal + 2);
 
     const klus3 = await klusTotAfgerond('klus 3');
     const r3 = await beoordeelAls(hv1, oudereId, klus3, jongereId, 4);
     check('derde beoordeling aangemaakt', r3.status === 200, `status ${r3.status}`);
     const na3 = await reputatie(su, jongereId);
-    check(`5, 4 en 4 geeft 4,3 (afgerond op 1 decimaal) — gemeten ${na3.sterren}`, na3.sterren === 4.3);
-    check(`de telling staat op 3 — gemeten ${na3.aantal}`, na3.aantal === beginJongere.aantal + 3);
+    check(`+5, 4 en 4 — verwacht ${gemiddeldMet(basisJongere, [5, 4, 4])}, gemeten ${na3.sterren}`, na3.sterren === gemiddeldMet(basisJongere, [5, 4, 4]));
+    check(`de telling staat op 3 — gemeten ${na3.aantal}`, na3.aantal === basisJongere.aantal + 3);
 
     // Wijzigen mag (eigen beoordeling, zonder klus/van/naar mee te sturen).
     const gewijzigd = await probeer(() =>
@@ -330,7 +356,7 @@ async function main() {
     );
     check('de oudere mag zijn eigen beoordeling wijzigen', gewijzigd.status === 200, `status ${gewijzigd.status}`);
     const naWijziging = await reputatie(su, jongereId);
-    check(`5, 4 en 2 geeft 3,7 — gemeten ${naWijziging.sterren}`, naWijziging.sterren === 3.7);
+    check(`+5, 4 en 2 — verwacht ${gemiddeldMet(basisJongere, [5, 4, 2])}, gemeten ${naWijziging.sterren}`, naWijziging.sterren === gemiddeldMet(basisJongere, [5, 4, 2]));
     check(
       `hh_profielen loopt mee na de wijziging — gemeten ${naWijziging.profielSterren}`,
       naWijziging.profielSterren === naWijziging.sterren,
@@ -353,8 +379,10 @@ async function main() {
     const gewoon = await probeer(() => j1.collection('hh_users').update(jongereId, { telefoon: '06-10000001' }));
     check('een gewone wijziging (telefoon) mag nog wel', gewoon.status === 200, `status ${gewoon.status}`);
 
+    // ANONIEM, zoals de app registreert. Als superuser gaat het altijd door
+    // (die loopt niet langs de rules).
     const registratie = await probeer(() =>
-      su.collection('hh_users').create({
+      anonClient().collection('hh_users').create({
         email: `hh-beoordelingcheck-${Date.now()}@qawayah.nl`,
         password: 'beoordelingcheck1234',
         passwordConfirm: 'beoordelingcheck1234',
@@ -378,7 +406,7 @@ async function main() {
     if (gezien.record) {
       check(
         `sterren_gemiddeld komt mee — gemeten ${gezien.record.sterren_gemiddeld}`,
-        Number(gezien.record.sterren_gemiddeld ?? -1) === 3.7,
+        Number(gezien.record.sterren_gemiddeld ?? -1) === gemiddeldMet(basisJongere, [5, 4, 2]),
       );
       check('klussen_aantal komt mee', Number(gezien.record.klussen_aantal ?? -1) > 0);
     }

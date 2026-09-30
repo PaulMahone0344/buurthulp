@@ -17,7 +17,7 @@ test('idempotent: twee keer wikkelen = een keer', () => {
 
 test('familie-tak vraagt actief EN meekijken op hetzelfde pad', () => {
   assert.match(FAMILIE_MEEKIJKEN, /ontvanger\.hh_koppelingen_via_oudere\.status \?= "actief"/);
-  assert.match(FAMILIE_MEEKIJKEN, /ontvanger\.hh_koppelingen_via_oudere\.rechten \?= "meekijken"/);
+  assert.match(FAMILIE_MEEKIJKEN, /ontvanger\.hh_koppelingen_via_oudere\.rechten \?~ "meekijken"/);
 });
 
 test('weigert lege of onbekende rule', () => {

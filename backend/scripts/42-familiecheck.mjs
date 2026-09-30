@@ -89,9 +89,21 @@ async function opruimen(su) {
   const tijdelijk = await su.collection('hh_users').getFullList({
     filter: su.filter('email ~ {:prefix}', { prefix: MAIL_PREFIX }),
   });
-  // Koppelingen verdwijnen mee met de gebruiker; die van familielid 1 naar
-  // een tijdelijke oudere dus ook.
-  for (const u of tijdelijk) await su.collection(assertHh('hh_users')).delete(u.id);
+  // Koppelingen, incidenten en beoordelingen verdwijnen NIET mee met de
+  // gebruiker (oudere/familielid/melder zijn verplicht, zonder cascade): eerst
+  // die weg, anders weigert PocketBase de gebruiker te verwijderen.
+  for (const u of tijdelijk) {
+    const verwijs = [
+      ['hh_koppelingen', 'oudere = {:id} || familielid = {:id}'],
+      ['hh_incidenten', 'melder = {:id}'],
+      ['hh_beoordelingen', 'van_gebruiker = {:id} || naar_gebruiker = {:id}'],
+    ];
+    for (const [col, f] of verwijs) {
+      const rijen = await su.collection(col).getFullList({ filter: su.filter(f, { id: u.id }) });
+      for (const r of rijen) await su.collection(assertHh(col)).delete(r.id);
+    }
+    await su.collection(assertHh('hh_users')).delete(u.id);
+  }
   if (klussen.length || tijdelijk.length) {
     console.log(`  ↻ ${klussen.length} klus(sen) en ${tijdelijk.length} tijdelijk(e) account(s) verwijderd`);
   }
@@ -155,7 +167,7 @@ async function main() {
 
   await voorwaarden(su);
 
-  const wijk = await su.collection('hh_wijken').getFirstListItem('naam = "Tiel-West"');
+  const wijk = await su.collection('hh_wijken').getFirstListItem('wijk = "Tiel-West"');
   const klustype = await su.collection('hh_klustypes').getFirstListItem('naam = "boodschappen"');
   const wachtwoord = randomBytes(18).toString('base64url');
 

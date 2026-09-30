@@ -33,7 +33,7 @@ import { COLLECTIE } from './30-meldingen-collectie.mjs';
 const PAD = 'ontvanger.hh_koppelingen_via_oudere';
 export const FAMILIE_MEEKIJKEN =
   `(@request.auth.rol = "familie" && ${PAD}.familielid ?= @request.auth.id && ` +
-  `${PAD}.status ?= "actief" && ${PAD}.rechten ?= "meekijken")`;
+  `${PAD}.status ?= "actief" && ${PAD}.rechten ?~ "meekijken")`;
 
 const IK_BEN_ONTVANGER = 'ontvanger = @request.auth.id';
 

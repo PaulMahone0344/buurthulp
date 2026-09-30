@@ -36,6 +36,7 @@ import { fileURLToPath } from 'node:url';
 import { superuserClient, userClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { COLLECTIE, MELDING_INDEXEN, meldingVelden } from './30-meldingen-collectie.mjs';
 import { MELDINGEN_RULES } from './31-meldingen-rules.mjs';
+import { GEWENST as NA_44 } from './44-familie-lees-rules.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ACCOUNTS_FILE = path.resolve(__dirname, '..', 'seed-accounts.local.json');
@@ -138,7 +139,9 @@ async function voorwaarden(su) {
       check(`index: ${gewenst.split(' ON ')[0]}`, idx.includes(gewenst.replace(/\s+/g, ' ')));
     }
     for (const [k, v] of Object.entries(MELDINGEN_RULES)) {
-      check(`${k} zoals 31 hem zet`, (col[k] ?? null) === v, `staat: ${JSON.stringify(col[k] ?? null)}`);
+      // Na script 44 (30 sep) mag familie met meekijken list/view ook.
+      const ok = (col[k] ?? null) === v || (k in NA_44 && col[k] === NA_44[k]);
+      check(`${k} zoals 31 (of 44) hem zet`, ok, `staat: ${JSON.stringify(col[k] ?? null)}`);
     }
   }
   const incidenten = await su.collections.getOne('hh_incidenten');

@@ -13,8 +13,8 @@
 //         && @collection.hh_koppelingen.familielid ?= @request.auth.id)
 //      krijgt er binnen de haakjes bij:
 //        && @collection.hh_koppelingen.status ?= "actief"
-//        && @collection.hh_koppelingen.rechten ?= "meekijken"   (list/view)
-//        && @collection.hh_koppelingen.rechten ?= "plaatsen"    (create/update/delete)
+//        && @collection.hh_koppelingen.rechten ?~ "meekijken"   (list/view)
+//        && @collection.hh_koppelingen.rechten ?~ "plaatsen"    (create/update/delete)
 //   2. De familie-tak van hh_klussen.createRule (plaatsen namens de oudere)
 //      krijgt status actief en recht plaatsen.
 //   3. hh_users (list/view): het familielid ziet de oudere pas als de
@@ -44,8 +44,8 @@ import { fileURLToPath } from 'node:url';
 import { superuserClient, assertHh, APPLY, logMode, fail } from './_lib.mjs';
 
 export const ACTIEF = '@collection.hh_koppelingen.status ?= "actief"';
-export const MAG_MEEKIJKEN = '@collection.hh_koppelingen.rechten ?= "meekijken"';
-export const MAG_PLAATSEN = '@collection.hh_koppelingen.rechten ?= "plaatsen"';
+export const MAG_MEEKIJKEN = '@collection.hh_koppelingen.rechten ?~ "meekijken"';
+export const MAG_PLAATSEN = '@collection.hh_koppelingen.rechten ?~ "plaatsen"';
 
 const RULE_KEYS = ['listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule'];
 const LEES_KEYS = new Set(['listRule', 'viewRule']);
@@ -79,7 +79,7 @@ const USERS_OUDERE_GEWIKKELD =
   '(hh_koppelingen_via_oudere.familielid ?= @request.auth.id && hh_koppelingen_via_oudere.status ?= "actief")';
 const PAD = 'hh_klussen_via_toegewezen_jongere.hulpvrager.hh_koppelingen_via_oudere';
 export const JONGERE_VAN_MIJN_OUDERE =
-  `(${PAD}.familielid ?= @request.auth.id && ${PAD}.status ?= "actief" && ${PAD}.rechten ?= "meekijken")`;
+  `(${PAD}.familielid ?= @request.auth.id && ${PAD}.status ?= "actief" && ${PAD}.rechten ?~ "meekijken")`;
 
 /// Wikkelt de familie-takken in één rule. Geeft { rule, aantal, alGewikkeld }.
 /// Puur: geen server, los te testen.
