@@ -19,6 +19,7 @@ import '../domein/duur.dart';
 import '../domein/wanneer.dart';
 import '../model/nieuwe_klus.dart';
 import '../paden_hulpvrager.dart';
+import '../../familie/provider/hulpvraag_namens.dart';
 import '../provider/concept_controller.dart';
 import '../provider/hulpvraag_plaatser.dart';
 import '../provider/hulpvrager_providers.dart';
@@ -57,6 +58,13 @@ class _HulpVragenBevestigenScreenState
     switch (result) {
       case Ok<GeplaatsteHulpvraag>():
         ref.read(conceptProvider.notifier).wis();
+        // M9 (F2): namens een oudere terug naar F3 van die oudere.
+        final namens = ref.read(actieveNamensProvider);
+        if (namens != null) {
+          ref.read(hulpvraagNamensProvider.notifier).wis();
+          context.go(namens.naPlaatsen);
+          return;
+        }
         // go, geen push: de stapel van de stroom verdwijnt, terug vanaf O6
         // bestaat niet.
         context.go(HhPadenHulpvrager.hulpVragenVerstuurd);

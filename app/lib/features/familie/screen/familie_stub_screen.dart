@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../meldingen/widget/meldingen_bel.dart';
-import '../../rol_landing_scherm.dart';
-import '../../toegang/model/hh_rol.dart';
+import '../paden_familie.dart';
+import 'familie_home_screen.dart';
 
-/// Landing voor de rol familie. Vult zich in latere opdrachten met de
-/// schermen uit hoofdstuk 3 van het app-plan.
+/// Landing voor de rol familie (/familie). Sinds M9 is dat F1; de naam
+/// blijft, zodat de router en de M2-tests ongemoeid blijven (zelfde aanpak
+/// als HulpvragerStubScreen).
 class FamilieStubScreen extends StatelessWidget {
   const FamilieStubScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    var toonLijst = false;
+    try {
+      toonLijst =
+          GoRouterState.of(
+            context,
+          ).uri.queryParameters[HhPadenFamilie.lijstParameter] ==
+          '1';
+    } on Object {
+      // Buiten go_router (losse widgettest): gewoon de landing.
+      toonLijst = false;
+    }
     // M8: het belletje met de ongelezen-teller in de kop.
-    return const Scaffold(
-      body: MeldingenKop(
-        child: RolLandingScherm(
-          rol: HhRol.familie,
-          icoon: Icons.family_restroom,
-        ),
-      ),
+    return Scaffold(
+      body: MeldingenKop(child: FamilieHomeScreen(toonLijst: toonLijst)),
     );
   }
 }

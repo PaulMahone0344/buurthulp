@@ -1,0 +1,102 @@
+STAND M9 — FAMILIE (27 september 2026)
+Afgemaakt in een cloudsessie op branch ronde5/m9, na een eerdere agent die
+stopte na script 40. Er is NIETS naar productie geschreven en vanuit de
+cloud ook niets tegen de server gedraaid (ook geen dry-run): geen toegang,
+geen superuser-gegevens.
+
+
+----------------------------------------------------------------
+0. EERSTE STAP: MERGE MET MAIN
+----------------------------------------------------------------
+De branch stond op f98053c (vóór M10). `git merge origin/main` ging zonder
+conflicten (4219c99). Daarna: flutter analyze schoon, flutter test 715
+groen. Dat was de uitgangsstand.
+
+
+----------------------------------------------------------------
+1. WAT AF IS
+----------------------------------------------------------------
+
+BACKEND
+  scripts/40-familie-velden.mjs    (vorige agent) hh_koppelingen.status +
+                                   terugvullen op actief
+  scripts/41-familie-rules.mjs     NIEUW: wikkelt GERICHT de familie-takken
+                                   (actief + meekijken/plaatsen), hh_users
+                                   met de jongere-stap (OPEN-PUNT 13)
+  pb_hooks/hh_familie_hulp.js      NIEUW: aanvraag, vast bericht, limiet 5
+                                   per dag, standaardrechten
+  pb_hooks/hh_familie.pb.js        NIEUW: POST /api/hh/koppelingen/aanvragen
+                                   en de hooks op hh_koppelingen
+  scripts/42-familiecheck.mjs      NIEUW: dry-run standaard
+  scripts/43-hook-deploy.sh        NIEUW: deployt de twee hookbestanden
+  tests/familie_rules.test.mjs     NIEUW: 9 tests van de wikkel
+  tests/hh_familie_hulp.test.mjs   NIEUW: 10 tests van de aanvraag
+  SCHEMA.txt                       sectie "M9 - ..." onderaan
+  GETEST: node --check op 40, 41, 42 en beide hookbestanden; bash -n op
+  43; node --test backend/tests/*.test.mjs: 19 geslaagd.
+
+APP
+  lib/core/pb/familie_gateway.dart (+ fake)   aanvragen, koppelingen van
+                                              familielid en oudere, Ja,
+                                              Nee/ontkoppelen
+  lib/features/familie/                       model, rechten-domein,
+                                              providers, HulpvraagNamens
+                                              (de naad voor F2), paden,
+                                              routes, F1, aanvragen, F3,
+                                              F3-detail
+  lib/features/hulpvrager/familie_toestemming/  het blok op O12
+  lib/l10n/teksten_familie_nl.dart            alle M9-teksten
+
+  Schermen en paden
+    /familie                                   F1 (met één oudere meteen
+                                               door naar F3; ?lijst=1 niet)
+    /familie/koppelen                          aanvragen
+    /familie/oudere/:id                        F3
+    /familie/oudere/:id/hulpvraag/:klusId      F3-detail (alleen-lezen,
+                                               plus stoppen bij eigen klus)
+    /hulpvrager/hulp-vragen/...                F2 = de M4-stroom namens de
+                                               oudere (niet gekopieerd)
+    /hulpvrager/gegevens                       O12 met het blok "Familie"
+
+  Tests
+    unit   familie_rechten_test (rechten -> wat zichtbaar is, indeling F1,
+           meteen door), pocketbase_familie_gateway_test (nep-server)
+    widget familie_schermen_test: F1, aanvragen, F3 (drie rechten-
+           varianten), F3-detail en het O12-blok in beide dichtheden met
+           semantiek en op 200 procent
+    flow   familie_flow_test: aanvragen (bekend, onbekend, limiet), Ja,
+           Nee, ontkoppelen, plaatsen namens via de M4-stroom, meekijken
+           zonder recht plaatsen verbergt F2, een oudere plaatst gewoon
+           voor zichzelf; familie_router_test: de echte router
+  Bijgewerkt: toegang/schermen_test (test RolLandingScherm nu direct).
+
+  flutter analyze: No issues found.
+  flutter test:    775 geslaagd, 2 overgeslagen (prod-smoketests), 0 rood.
+  (Flutter 3.41.9 / Dart 3.11.5, in de cloud geïnstalleerd.)
+
+
+----------------------------------------------------------------
+2. WAT OPEN STAAT
+----------------------------------------------------------------
+  · UITROLLEN: niets gedraaid. De uitrollijst (00, 40, 43, 41, 42) staat
+    bovenaan app/OPEN-PUNTEN-M9.txt.
+  · SAMENVOEGEN MET M8: het belletje op /familie en het filter "actief" in
+    de noodmelding van M8 (OPEN-PUNTEN-M9 punten 1 en 2).
+  · iOS-simulatorbuild: niet gedraaid (geen Xcode in de container).
+  · Keuzes voor Ibrahim: OPEN-PUNTEN-M9 punten 3, 4, 7, 8 en 10.
+
+
+----------------------------------------------------------------
+3. BRANCH EN GEDEELDE BESTANDEN
+----------------------------------------------------------------
+Branch: ronde5/m9 (gepusht), PR naar main.
+
+Gedeelde bestanden (alleen regels erbij):
+  app/lib/app/router.dart                    1 import + 1 spread, in de
+                                             laatste commit
+  app/test/support/hh_toegang_wikkel.dart    familie-fake
+  app/test/support/hh_hulpvrager_wikkel.dart idem
+  backend/SCHEMA.txt                         sectie onderaan
+Andere bestanden: zie OPEN-PUNTEN-M9 punt 14.
+NIET geraakt: gateway_providers.dart, pubspec.yaml, pubspec.lock,
+design-componenten, scripts 00-14.

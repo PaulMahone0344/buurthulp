@@ -7,10 +7,12 @@ import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_incident_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_familie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klus_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
+import 'package:heitjehulp_app/features/familie/provider/familie_providers.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_gegevens.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_klustype.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart';
@@ -118,6 +120,7 @@ ProviderContainer hulpvragerContainer({
   FakeBeoordelingGateway? beoordelingGateway,
   FakeMeldingenGateway? meldingenGateway,
   FakeIncidentGateway? incidentGateway,
+  FakeFamilieGateway? familieGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -139,6 +142,10 @@ ProviderContainer hulpvragerContainer({
       ),
       incidentGatewayProvider.overrideWithValue(
         incidentGateway ?? FakeIncidentGateway(),
+      ),
+      // M9: het blok "Familie" op O12. Standaard een lege fake.
+      familieGatewayProvider.overrideWithValue(
+        familieGateway ?? FakeFamilieGateway(),
       ),
       klokProvider.overrideWithValue(() => nu ?? testNu),
       keyValueStoreProvider.overrideWithValue(

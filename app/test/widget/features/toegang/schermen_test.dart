@@ -4,7 +4,7 @@ import 'package:heitjehulp_app/core/hh_fout.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_scherm.dart';
 import 'package:heitjehulp_app/features/coordinator/screen/coordinator_stub_screen.dart';
-import 'package:heitjehulp_app/features/familie/screen/familie_stub_screen.dart';
+import 'package:heitjehulp_app/features/rol_landing_scherm.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
@@ -76,7 +76,8 @@ final _gevallen = [
   // hulpvrager); hier de familie-landing als niet-bevestigd voorbeeld.
   _Geval(
     'landing familie (niet bevestigd)',
-    const FamilieStubScreen(),
+    // M9: /familie is nu F1; het algemene landingsscherm blijft getest.
+    const RolLandingScherm(rol: HhRol.familie, icoon: Icons.family_restroom),
     SessieIngelogd(testGebruiker(HhRol.familie, isBevestigd: false)),
   ),
   _Geval(
@@ -86,7 +87,8 @@ final _gevallen = [
   ),
   _Geval(
     'landing familie',
-    const FamilieStubScreen(),
+    // M9: /familie is nu F1; het algemene landingsscherm blijft getest.
+    const RolLandingScherm(rol: HhRol.familie, icoon: Icons.family_restroom),
     SessieIngelogd(testGebruiker(HhRol.familie)),
   ),
   _Geval(
