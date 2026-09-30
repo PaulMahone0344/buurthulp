@@ -8,15 +8,21 @@ import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_incident_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
+import 'package:heitjehulp_app/core/pb/incident_gateway.dart';
 import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
+import 'package:heitjehulp_app/core/pb/meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/coordinator/provider/coordinator_providers.dart';
+import 'package:heitjehulp_app/features/hulpvrager/veiligheid/provider/veiligheid_providers.dart';
+import 'package:heitjehulp_app/features/meldingen/provider/meldingen_providers.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
 import 'package:heitjehulp_app/features/jongere/reputatie/provider/beoordeling_providers.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
@@ -90,6 +96,8 @@ List<dynamic> toegangOverrides({
   UitvoerGateway? uitvoerGateway,
   CoordinatorGateway? coordinatorGateway,
   BeoordelingGateway? beoordelingGateway,
+  MeldingenGateway? meldingenGateway,
+  IncidentGateway? incidentGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -121,6 +129,14 @@ List<dynamic> toegangOverrides({
   // Standaard een lege fake zonder netwerk.
   beoordelingGatewayProvider.overrideWithValue(
     beoordelingGateway ?? FakeBeoordelingGateway(),
+  ),
+  // M8: het belletje en de regel op O1 vragen meteen de meldingen op, en
+  // O11 meldt incidenten. Standaard lege fakes zonder netwerk.
+  meldingenGatewayProvider.overrideWithValue(
+    meldingenGateway ?? FakeMeldingenGateway(),
+  ),
+  incidentGatewayProvider.overrideWithValue(
+    incidentGateway ?? FakeIncidentGateway(),
   ),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),

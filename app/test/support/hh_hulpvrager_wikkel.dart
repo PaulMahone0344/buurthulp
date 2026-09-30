@@ -5,6 +5,8 @@ import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_incident_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klus_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
@@ -13,7 +15,9 @@ import 'package:heitjehulp_app/features/hulpvrager/model/hh_gegevens.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_klustype.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart';
 import 'package:heitjehulp_app/features/jongere/reputatie/provider/beoordeling_providers.dart';
+import 'package:heitjehulp_app/features/hulpvrager/veiligheid/provider/veiligheid_providers.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
+import 'package:heitjehulp_app/features/meldingen/provider/meldingen_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/features/toegang/provider/sessie_providers.dart';
@@ -112,6 +116,8 @@ ProviderContainer hulpvragerContainer({
   bool urlOpenerLukt = true,
   FakeUitvoerGateway? uitvoerGateway,
   FakeBeoordelingGateway? beoordelingGateway,
+  FakeMeldingenGateway? meldingenGateway,
+  FakeIncidentGateway? incidentGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -126,6 +132,13 @@ ProviderContainer hulpvragerContainer({
       // M7: O7 en O8 vragen welke hulpvragen al beoordeeld zijn.
       beoordelingGatewayProvider.overrideWithValue(
         beoordelingGateway ?? FakeBeoordelingGateway(),
+      ),
+      // M8: de regel op O1 en O11. Standaard lege fakes zonder netwerk.
+      meldingenGatewayProvider.overrideWithValue(
+        meldingenGateway ?? FakeMeldingenGateway(),
+      ),
+      incidentGatewayProvider.overrideWithValue(
+        incidentGateway ?? FakeIncidentGateway(),
       ),
       klokProvider.overrideWithValue(() => nu ?? testNu),
       keyValueStoreProvider.overrideWithValue(

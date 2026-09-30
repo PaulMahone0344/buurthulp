@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../meldingen/widget/meldingen_bel.dart';
 import '../../rol_landing_scherm.dart';
 import '../../toegang/model/hh_rol.dart';
 
@@ -10,9 +11,14 @@ class FamilieStubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const RolLandingScherm(
-      rol: HhRol.familie,
-      icoon: Icons.family_restroom,
+    // M8: het belletje met de ongelezen-teller in de kop.
+    return const Scaffold(
+      body: MeldingenKop(
+        child: RolLandingScherm(
+          rol: HhRol.familie,
+          icoon: Icons.family_restroom,
+        ),
+      ),
     );
   }
 }

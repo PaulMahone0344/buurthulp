@@ -14,11 +14,13 @@ import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
 import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
+import '../../../../l10n/teksten_meldingen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
 import '../../../hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
+import '../../../hulpvrager/veiligheid/paden_veiligheid.dart';
 import '../../../toegang/provider/sessie_providers.dart';
 import '../../klussen/domein/wanneer_tekst.dart';
 import '../../klussen/paden_klussen.dart';
@@ -208,6 +210,8 @@ class _Inhoud extends ConsumerWidget {
         false;
     final magAnnuleren = isMijn && magJongereAnnuleren(klus.status);
     final magBellen = isMijn && magBellenBij(klus.status);
+    // M8: probleem melden (O11), ook bij bezig, waar annuleren niet kan.
+    final magMelden = isMijn && isInUitvoering(klus.status);
 
     // scrollbaar: false, zodat de RefreshIndicator bóven de scrollwikkel
     // zit: pull-to-refresh werkt alleen als hij zelf de scroller omvat.
@@ -374,6 +378,17 @@ class _Inhoud extends ConsumerWidget {
                   soort: HhKnopSoort.tekst,
                   onPressed: isBezig ? null : onAnnuleer,
                 ),
+              if (magMelden) ...[
+                SizedBox(height: tussen),
+                HhKnop(
+                  label: TekstenMeldingenNl.j15ProbleemMelden,
+                  semantiekLabel: TekstenMeldingenNl.j15ProbleemMeldenSemantiek,
+                  icoon: Icons.report_problem_outlined,
+                  soort: HhKnopSoort.tekst,
+                  onPressed: () =>
+                      context.push(HhPadenVeiligheid.probleemBij(klus.id)),
+                ),
+              ],
               SizedBox(height: tussen),
               HhKnop(
                 label: TekstenUitvoerenNl.j15Vernieuwen,

@@ -5,6 +5,7 @@ import '../../../../app/paden.dart';
 import '../../../../design/dichtheid_scope.dart';
 import '../../../../design/lijn.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
+import '../../../meldingen/widget/meldingen_bel.dart';
 import '../../../../theme.dart';
 import '../paden_klussen.dart';
 
@@ -165,7 +166,8 @@ class JongereTabScherm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child,
+      // M8: het belletje met de ongelezen-teller in de kop.
+      body: MeldingenKop(child: child),
       bottomNavigationBar: JongereTabbalk(actief: actief),
     );
   }
