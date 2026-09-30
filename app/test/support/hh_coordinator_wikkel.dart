@@ -45,7 +45,8 @@ HhIncident testIncident({
 }) => HhIncident(
   id: id,
   soort: soort,
-  aangemaaktOp: aangemaaktOp ?? coordinatorNu.subtract(const Duration(hours: 1)),
+  aangemaaktOp:
+      aangemaaktOp ?? coordinatorNu.subtract(const Duration(hours: 1)),
   melderId: 'id-melder-$id',
   melderNaam: melderNaam,
   melderTelefoon: melderTelefoon,
@@ -95,8 +96,7 @@ HhCoordinatorKlus testCoordinatorKlus({
 }) => HhCoordinatorKlus(
   id: id,
   status: status,
-  aangemaaktOp:
-      aangemaaktOp ?? coordinatorNu.subtract(const Duration(days: 2)),
+  aangemaaktOp: aangemaaktOp ?? coordinatorNu.subtract(const Duration(days: 2)),
   klustypeNaam: klustypeNaam,
   omschrijving: omschrijving,
   adres: 'Prins Bernhardlaan 12, 4003 AB Tiel',
@@ -185,6 +185,7 @@ ProviderContainer coordinatorContainer({
   SessieState? sessie,
   DateTime? nu,
   bool urlOpenerLukt = true,
+
   /// False: geen vaste sessie, de app herstelt hem zelf uit [opslag]. Dat
   /// is wat de stroomtests nodig hebben, want daar moet de guard lopen.
   bool metVasteSessie = true,

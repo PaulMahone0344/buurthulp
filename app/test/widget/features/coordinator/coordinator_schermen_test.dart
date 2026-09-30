@@ -128,10 +128,7 @@ void main() {
       final tegels = tester.widgetList<IncidentTegel>(
         find.byType(IncidentTegel),
       );
-      expect([for (final t in tegels) t.incident.id], [
-        'i-nood',
-        'i-probleem',
-      ]);
+      expect([for (final t in tegels) t.incident.id], ['i-nood', 'i-probleem']);
     });
 
     testWidgets('de afgehandelde melding staat achter de filter', (
@@ -160,7 +157,10 @@ void main() {
 
       await tikTekst(tester, TekstenCoordinatorNl.soortNood);
 
-      expect(find.text('Gevallen in de gang, kan niet opstaan.'), findsOneWidget);
+      expect(
+        find.text('Gevallen in de gang, kan niet opstaan.'),
+        findsOneWidget,
+      );
       expect(find.text(TekstenCoordinatorNl.c1Afhandelen), findsOneWidget);
     });
   });
@@ -172,7 +172,10 @@ void main() {
       await tikKnop(tester, TekstenCoordinatorNl.c1Afhandelen);
 
       expect(find.text(TekstenCoordinatorNl.c1AfhandelingLeeg), findsOneWidget);
-      expect(fake.alleIncidenten.firstWhere((i) => i.id == 'i-nood').isAfgehandeld, isFalse);
+      expect(
+        fake.alleIncidenten.firstWhere((i) => i.id == 'i-nood').isAfgehandeld,
+        isFalse,
+      );
     });
 
     testWidgets('afhandelen zet de tekst en meldt dat het gelukt is', (
@@ -284,10 +287,7 @@ void main() {
     ) async {
       await _pomp(tester, _gevallen[7]);
 
-      expect(
-        find.text(TekstenCoordinatorNl.c2AndereWijkKort),
-        findsOneWidget,
-      );
+      expect(find.text(TekstenCoordinatorNl.c2AndereWijkKort), findsOneWidget);
     });
 
     testWidgets('het zoekveld filtert de lijst', (tester) async {

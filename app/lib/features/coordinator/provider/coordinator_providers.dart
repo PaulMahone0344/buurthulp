@@ -218,21 +218,18 @@ class KandidaatZoekController extends Notifier<String> {
   void wis() => state = '';
 }
 
-final kandidaatZoekProvider =
-    NotifierProvider<KandidaatZoekController, String>(
-      KandidaatZoekController.new,
-    );
+final kandidaatZoekProvider = NotifierProvider<KandidaatZoekController, String>(
+  KandidaatZoekController.new,
+);
 
 /// De koppellijst voor één klus: gezocht op naam, eigen wijk eerst.
-final kandidatenVoorKlusProvider = Provider.family<
-  AsyncValue<List<HhKandidaat>>,
-  String
->((ref, wijkId) {
-  final zoek = ref.watch(kandidaatZoekProvider);
-  return ref
-      .watch(kandidatenProvider)
-      .whenData((lijst) => kandidatenVoorKlus(lijst, wijkId, zoek));
-});
+final kandidatenVoorKlusProvider =
+    Provider.family<AsyncValue<List<HhKandidaat>>, String>((ref, wijkId) {
+      final zoek = ref.watch(kandidaatZoekProvider);
+      return ref
+          .watch(kandidatenProvider)
+          .whenData((lijst) => kandidatenVoorKlus(lijst, wijkId, zoek));
+    });
 
 /// Koppelen (C2). Na een 200 worden het detail en de lijst ververst; na een
 /// weigering alleen de lijst, zodat het detail met de melding blijft staan.
@@ -262,11 +259,7 @@ Future<KoppelUitkomst> geefKlusVrij(
   return uitkomst;
 }
 
-Future<void> _naAfloop(
-  Ref ref,
-  String klusId,
-  KoppelUitkomst uitkomst,
-) async {
+Future<void> _naAfloop(Ref ref, String klusId, KoppelUitkomst uitkomst) async {
   switch (uitkomst) {
     case KoppelGelukt():
       ref.invalidate(coordinatorKlusProvider(klusId));
@@ -283,10 +276,12 @@ Future<void> _naAfloop(
 
 final koppelProvider =
     Provider<Future<KoppelUitkomst> Function(String, String)>(
-      (ref) => (klusId, jongereId) => koppelKlus(ref, klusId, jongereId),
+      (ref) =>
+          (klusId, jongereId) => koppelKlus(ref, klusId, jongereId),
     );
 
 final vrijgeefProvider =
     Provider<Future<KoppelUitkomst> Function(String, String)>(
-      (ref) => (klusId, reden) => geefKlusVrij(ref, klusId, reden),
+      (ref) =>
+          (klusId, reden) => geefKlusVrij(ref, klusId, reden),
     );

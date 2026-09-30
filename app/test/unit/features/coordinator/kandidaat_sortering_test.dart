@@ -10,11 +10,10 @@ void main() {
       final lijst = sorteerKandidaten(testKandidaten(), wijkWestId);
 
       // Sanne en Yusuf wonen in Tiel-West (op naam), Daan in Passewaaij.
-      expect([for (final k in lijst) k.naam], [
-        'Sanne Bakker',
-        'Yusuf el Amrani',
-        'Daan Verhoeven',
-      ]);
+      expect(
+        [for (final k in lijst) k.naam],
+        ['Sanne Bakker', 'Yusuf el Amrani', 'Daan Verhoeven'],
+      );
     });
 
     test('andere wijk vooraan als de klus in die wijk ligt', () {
@@ -26,11 +25,10 @@ void main() {
     test('zonder wijk op de klus telt alleen de naam', () {
       final lijst = sorteerKandidaten(testKandidaten(), '');
 
-      expect([for (final k in lijst) k.naam], [
-        'Daan Verhoeven',
-        'Sanne Bakker',
-        'Yusuf el Amrani',
-      ]);
+      expect(
+        [for (final k in lijst) k.naam],
+        ['Daan Verhoeven', 'Sanne Bakker', 'Yusuf el Amrani'],
+      );
     });
 
     test('sorteert hoofdletterongevoelig', () {
@@ -74,10 +72,9 @@ void main() {
     final lijst = kandidatenVoorKlus(testKandidaten(), wijkWestId, 'e');
 
     // Alle drie de namen bevatten een "e"; eigen wijk eerst, dan op naam.
-    expect([for (final k in lijst) k.naam], [
-      'Sanne Bakker',
-      'Yusuf el Amrani',
-      'Daan Verhoeven',
-    ]);
+    expect(
+      [for (final k in lijst) k.naam],
+      ['Sanne Bakker', 'Yusuf el Amrani', 'Daan Verhoeven'],
+    );
   });
 }

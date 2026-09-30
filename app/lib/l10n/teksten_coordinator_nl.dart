@@ -107,7 +107,8 @@ abstract final class TekstenCoordinatorNl {
       'Handmatig koppelen mag over de wijkgrens, maar de jongere moet er wel heen kunnen.';
   static const c2AndereWijkKort = 'Andere wijk';
   static const c2BevestigKoppelen = 'Ja, koppelen';
-  static String c2Gekoppeld(String naam) => 'De klus staat nu op naam van $naam.';
+  static String c2Gekoppeld(String naam) =>
+      'De klus staat nu op naam van $naam.';
   static const c2KoppelenMislukt = 'Koppelen lukte niet';
   static const c2KoppelenBezet =
       'Deze klus is niet meer open; iemand anders was eerder.';

@@ -68,10 +68,7 @@ class _CoordinatorKlusDetailScreenState
                   HhDichtheidScope.van(context),
                 ),
               ),
-              HhMeldBalk(
-                soort: HhMeldSoort.waarschuwing,
-                tekst: waarschuwing,
-              ),
+              HhMeldBalk(soort: HhMeldSoort.waarschuwing, tekst: waarschuwing),
             ],
           ],
         ),
@@ -140,9 +137,7 @@ class _CoordinatorKlusDetailScreenState
   Future<void> _geefVrij(HhCoordinatorKlus klus, String reden) async {
     final door = await _bevestig(
       titel: TekstenCoordinatorNl.c2VrijgevenTitel,
-      vraag: TekstenCoordinatorNl.c2VrijgevenVraag(
-        klus.toegewezenJongereNaam,
-      ),
+      vraag: TekstenCoordinatorNl.c2VrijgevenVraag(klus.toegewezenJongereNaam),
       knop: TekstenCoordinatorNl.c2BevestigVrijgeven,
     );
     if (!door || !mounted) return;
@@ -173,8 +168,7 @@ class _CoordinatorKlusDetailScreenState
     KoppelReden.bezet => TekstenCoordinatorNl.c2KoppelenBezet,
     KoppelReden.jongereNietGeschikt =>
       TekstenCoordinatorNl.c2KoppelenNietGoedgekeurd,
-    KoppelReden.nietVrijTeGeven =>
-      TekstenCoordinatorNl.c2VrijgevenNietMogelijk,
+    KoppelReden.nietVrijTeGeven => TekstenCoordinatorNl.c2VrijgevenNietMogelijk,
     KoppelReden.geenToegang => TekstenCoordinatorNl.c2KoppelenGeenToegang,
     KoppelReden.nietGevonden => TekstenCoordinatorNl.c2KoppelenNietGevonden,
     KoppelReden.ongeldigeInvoer => TekstenCoordinatorNl.c2KoppelenGeenJongere,
@@ -202,8 +196,7 @@ class _CoordinatorKlusDetailScreenState
           titel: TekstenCoordinatorNl.c2DetailLadenMislukt,
           uitleg: meldingVanFout(error),
           knopLabel: TekstenNl.opnieuwProberen,
-          onKnop: () =>
-              ref.invalidate(coordinatorKlusProvider(widget.klusId)),
+          onKnop: () => ref.invalidate(coordinatorKlusProvider(widget.klusId)),
         ),
       ),
       _ => HhScherm(
@@ -304,10 +297,7 @@ class _Detail extends StatelessWidget {
           if (klus.toegewezenJongereId.isNotEmpty) ...[
             HhKaart(
               kop: TekstenCoordinatorNl.c2ToegewezenKop,
-              child: Text(
-                klus.toegewezenJongereNaam,
-                style: tekst.bodyLarge,
-              ),
+              child: Text(klus.toegewezenJongereNaam, style: tekst.bodyLarge),
             ),
             SizedBox(height: tussen),
           ],

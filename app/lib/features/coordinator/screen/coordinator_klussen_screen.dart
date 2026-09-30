@@ -119,8 +119,7 @@ class _KlusRij extends StatelessWidget {
     return HhKaart(
       semantiekLabel: '$soort, ${klus.oudereNaam}, $openSinds',
       actie: TextButton(
-        onPressed: () =>
-            context.go(HhPadenCoordinator.klusDetail(klus.id)),
+        onPressed: () => context.go(HhPadenCoordinator.klusDetail(klus.id)),
         child: const Text(TekstenCoordinatorNl.c2Koppelen),
       ),
       kop: soort,
@@ -136,8 +135,10 @@ class _KlusRij extends StatelessWidget {
             style: tekst.bodyMedium,
           ),
           SizedBox(height: klein),
-          Text(wanneerTekst(klus.wanneerVan, klus.wanneerTot, nu),
-              style: tekst.bodyMedium),
+          Text(
+            wanneerTekst(klus.wanneerVan, klus.wanneerTot, nu),
+            style: tekst.bodyMedium,
+          ),
           SizedBox(height: klein),
           Text(openSinds, style: tekst.labelSmall),
         ],

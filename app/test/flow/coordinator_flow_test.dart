@@ -88,10 +88,7 @@ void main() {
       await pompCoordinatorApp(tester, gateway: fake, tril: tril);
 
       final bestaand = fake.alleIncidenten.firstWhere((i) => i.id == 'i-nood');
-      fake.stuurIncident(
-        bestaand,
-        soort: IncidentWijzigingSoort.gewijzigd,
-      );
+      fake.stuurIncident(bestaand, soort: IncidentWijzigingSoort.gewijzigd);
       await tester.pumpAndSettle();
 
       expect(tril.aantal, 0);
@@ -315,9 +312,7 @@ void main() {
       await tikTekst(tester, 'Sanne Bakker');
       await _tikInDialoog(tester, TekstenCoordinatorNl.c2BevestigKoppelen);
 
-      fake.koppelUitkomst = const KoppelGeweigerd(
-        KoppelReden.nietVrijTeGeven,
-      );
+      fake.koppelUitkomst = const KoppelGeweigerd(KoppelReden.nietVrijTeGeven);
       await vulVeld(tester, 0, 'Poging.');
       await tester.pumpAndSettle();
       await tikKnop(tester, TekstenCoordinatorNl.c2Vrijgeven);
@@ -368,10 +363,16 @@ void main() {
         router.go(pad);
         await tester.pumpAndSettle();
 
-        expect(find.byType(CoordinatorIncidentenScreen), findsNothing,
-            reason: pad);
-        expect(find.byType(CoordinatorKlussenScreen), findsNothing,
-            reason: pad);
+        expect(
+          find.byType(CoordinatorIncidentenScreen),
+          findsNothing,
+          reason: pad,
+        );
+        expect(
+          find.byType(CoordinatorKlussenScreen),
+          findsNothing,
+          reason: pad,
+        );
         expect(
           router.state.matchedLocation,
           isNot(startsWith(HhPaden.coordinator)),

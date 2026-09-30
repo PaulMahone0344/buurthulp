@@ -60,10 +60,7 @@ void main() {
       const SessieBezig(),
       const SessieUitgelogd(),
     ]) {
-      expect(
-        coordinatorRedirect(sessie, HhPadenCoordinator.klussen),
-        isNull,
-      );
+      expect(coordinatorRedirect(sessie, HhPadenCoordinator.klussen), isNull);
     }
   });
 
@@ -75,10 +72,7 @@ void main() {
     });
 
     test('de landing zelf hoort bij de bestaande rol-guard', () {
-      expect(
-        HhPadenCoordinator.isCoordinatorPad(HhPaden.coordinator),
-        isFalse,
-      );
+      expect(HhPadenCoordinator.isCoordinatorPad(HhPaden.coordinator), isFalse);
     });
 
     test('herkent geen paden van een andere rol', () {

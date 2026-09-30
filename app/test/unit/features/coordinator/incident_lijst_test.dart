@@ -26,8 +26,18 @@ void main() {
       final a = testIncident(id: 'aaa', aangemaaktOp: moment);
       final b = testIncident(id: 'bbb', aangemaaktOp: moment);
 
-      expect([for (final i in sorteerIncidenten([a, b])) i.id], ['bbb', 'aaa']);
-      expect([for (final i in sorteerIncidenten([b, a])) i.id], ['bbb', 'aaa']);
+      expect(
+        [
+          for (final i in sorteerIncidenten([a, b])) i.id,
+        ],
+        ['bbb', 'aaa'],
+      );
+      expect(
+        [
+          for (final i in sorteerIncidenten([b, a])) i.id,
+        ],
+        ['bbb', 'aaa'],
+      );
     });
   });
 
@@ -66,19 +76,19 @@ void main() {
   });
 
   group('metIncident', () {
-    test('zet een onbekende melding bovenaan zonder de oude lijst te wijzigen', () {
-      final huidige = sorteerIncidenten(testIncidenten());
-      final nieuw = testIncident(
-        id: 'i-nieuw',
-        aangemaaktOp: coordinatorNu,
-      );
+    test(
+      'zet een onbekende melding bovenaan zonder de oude lijst te wijzigen',
+      () {
+        final huidige = sorteerIncidenten(testIncidenten());
+        final nieuw = testIncident(id: 'i-nieuw', aangemaaktOp: coordinatorNu);
 
-      final na = metIncident(huidige, nieuw);
+        final na = metIncident(huidige, nieuw);
 
-      expect(na.first.id, 'i-nieuw');
-      expect(na, hasLength(huidige.length + 1));
-      expect(huidige.any((i) => i.id == 'i-nieuw'), isFalse);
-    });
+        expect(na.first.id, 'i-nieuw');
+        expect(na, hasLength(huidige.length + 1));
+        expect(huidige.any((i) => i.id == 'i-nieuw'), isFalse);
+      },
+    );
 
     test('vervangt een bekende melding in plaats van hem te verdubbelen', () {
       final huidige = sorteerIncidenten(testIncidenten());

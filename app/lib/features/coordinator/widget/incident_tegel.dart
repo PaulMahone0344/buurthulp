@@ -81,10 +81,7 @@ class IncidentTegel extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: klein),
-                Text(
-                  incident.melderNaam,
-                  style: tekst.bodyLarge,
-                ),
+                Text(incident.melderNaam, style: tekst.bodyLarge),
                 SizedBox(height: klein),
                 Text(wanneer, style: tekst.bodyMedium),
                 if (incident.omschrijving.isNotEmpty) ...[

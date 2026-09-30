@@ -36,14 +36,12 @@ int telOpenIncidenten(Iterable<HhIncident> incidenten) {
 /// Verwerkt een melding van de realtime-verbinding in de lijst die de app al
 /// heeft: een onbekend id komt erbij, een bekend id vervangt de oude rij.
 /// Altijd een nieuwe lijst; de oude wordt nooit gewijzigd.
-List<HhIncident> metIncident(
-  List<HhIncident> huidige,
-  HhIncident incident,
-) => sorteerIncidenten([
-  for (final bestaand in huidige)
-    if (bestaand.id != incident.id) bestaand,
-  incident,
-]);
+List<HhIncident> metIncident(List<HhIncident> huidige, HhIncident incident) =>
+    sorteerIncidenten([
+      for (final bestaand in huidige)
+        if (bestaand.id != incident.id) bestaand,
+      incident,
+    ]);
 
 /// Haalt een verwijderde melding uit de lijst.
 List<HhIncident> zonderIncident(List<HhIncident> huidige, String id) => [

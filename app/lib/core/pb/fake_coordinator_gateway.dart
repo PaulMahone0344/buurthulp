@@ -103,11 +103,10 @@ class FakeCoordinatorGateway implements CoordinatorGateway {
     aantalKlusAanvragen++;
     final fout = _neemFout();
     if (fout != null) return Result.err(fout);
-    final open =
-        [
-          for (final k in _klussen.values)
-            if (k.isOpen) k,
-        ]..sort((a, b) => a.aangemaaktOp.compareTo(b.aangemaaktOp));
+    final open = [
+      for (final k in _klussen.values)
+        if (k.isOpen) k,
+    ]..sort((a, b) => a.aangemaaktOp.compareTo(b.aangemaaktOp));
     return Result.ok(open);
   }
 
@@ -141,7 +140,8 @@ class FakeCoordinatorGateway implements CoordinatorGateway {
     if (!klus.isOpen) {
       return const KoppelGeweigerd(
         KoppelReden.bezet,
-        melding: 'Deze klus is niet meer open; hij is al aan iemand toegewezen.',
+        melding:
+            'Deze klus is niet meer open; hij is al aan iemand toegewezen.',
       );
     }
     if (nietGoedgekeurd.contains(jongereId)) {

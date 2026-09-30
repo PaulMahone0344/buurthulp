@@ -135,26 +135,24 @@ class PocketBaseCoordinatorGateway implements CoordinatorGateway {
 
     Future<void> start() async {
       final result = await _gateway.voerUit<UnsubscribeFunc>((client) {
-        return client
-            .collection(hhIncidentenCollectie)
-            .subscribe('*', (e) {
-              final record = e.record;
-              if (record == null) return;
-              final soort = switch (e.action) {
-                'create' => IncidentWijzigingSoort.nieuw,
-                'delete' => IncidentWijzigingSoort.verwijderd,
-                _ => IncidentWijzigingSoort.gewijzigd,
-              };
-              controller.add(
-                IncidentWijziging(
-                  soort,
-                  record.id,
-                  incident: soort == IncidentWijzigingSoort.verwijderd
-                      ? null
-                      : HhIncident.vanRecord(record),
-                ),
-              );
-            }, expand: HhIncident.expand);
+        return client.collection(hhIncidentenCollectie).subscribe('*', (e) {
+          final record = e.record;
+          if (record == null) return;
+          final soort = switch (e.action) {
+            'create' => IncidentWijzigingSoort.nieuw,
+            'delete' => IncidentWijzigingSoort.verwijderd,
+            _ => IncidentWijzigingSoort.gewijzigd,
+          };
+          controller.add(
+            IncidentWijziging(
+              soort,
+              record.id,
+              incident: soort == IncidentWijzigingSoort.verwijderd
+                  ? null
+                  : HhIncident.vanRecord(record),
+            ),
+          );
+        }, expand: HhIncident.expand);
       });
       switch (result) {
         case Ok<UnsubscribeFunc>(:final waarde):

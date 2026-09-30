@@ -12,7 +12,10 @@ void main() {
   });
 
   test('minuten, met enkelvoud', () {
-    expect(openSindsTekst(nu.subtract(const Duration(minutes: 1)), nu), '1 minuut');
+    expect(
+      openSindsTekst(nu.subtract(const Duration(minutes: 1)), nu),
+      '1 minuut',
+    );
     expect(
       openSindsTekst(nu.subtract(const Duration(minutes: 45)), nu),
       '45 minuten',
@@ -26,7 +29,10 @@ void main() {
 
   test('dagen, met enkelvoud', () {
     expect(openSindsTekst(nu.subtract(const Duration(days: 1)), nu), '1 dag');
-    expect(openSindsTekst(nu.subtract(const Duration(days: 12)), nu), '12 dagen');
+    expect(
+      openSindsTekst(nu.subtract(const Duration(days: 12)), nu),
+      '12 dagen',
+    );
   });
 
   test('een tijd in de toekomst geeft zojuist geplaatst', () {

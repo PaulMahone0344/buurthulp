@@ -211,10 +211,7 @@ class _IncidentDetailScreenState extends ConsumerState<IncidentDetailScreen> {
                     ),
                   ),
                 ] else
-                  Text(
-                    TekstenCoordinatorNl.c1GeenKlus,
-                    style: tekst.bodyLarge,
-                  ),
+                  Text(TekstenCoordinatorNl.c1GeenKlus, style: tekst.bodyLarge),
               ],
             ),
           ),

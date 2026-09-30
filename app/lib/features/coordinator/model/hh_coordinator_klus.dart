@@ -101,8 +101,7 @@ class HhCoordinatorKlus {
     oudereWijkId: oudereWijkId,
     oudereWijkNaam: oudereWijkNaam,
     toegewezenJongereId: toegewezenJongereId ?? this.toegewezenJongereId,
-    toegewezenJongereNaam:
-        toegewezenJongereNaam ?? this.toegewezenJongereNaam,
+    toegewezenJongereNaam: toegewezenJongereNaam ?? this.toegewezenJongereNaam,
   );
 
   @override

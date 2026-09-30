@@ -152,9 +152,7 @@ class _KandidaatRij extends StatelessWidget {
                       SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
                       Text('$wijk · $klussen', style: tekst.bodyMedium),
                       if (isAndereWijk) ...[
-                        SizedBox(
-                          height: HhRuimte.voor(HhRuimte.xs, dichtheid),
-                        ),
+                        SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
                         Text(
                           TekstenCoordinatorNl.c2AndereWijkKort,
                           style: tekst.labelSmall!.copyWith(

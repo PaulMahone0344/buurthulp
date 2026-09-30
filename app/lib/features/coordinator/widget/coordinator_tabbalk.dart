@@ -187,9 +187,9 @@ class _Teller extends StatelessWidget {
       child: Text(
         TekstenCoordinatorNl.tabIncidentenTeller(aantal),
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          color: HhKleuren.opPrimair,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall!.copyWith(color: HhKleuren.opPrimair),
       ),
     );
   }
