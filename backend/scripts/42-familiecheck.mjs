@@ -227,6 +227,11 @@ async function main() {
     check('logregels van de klus: dicht', logs.totalItems === 0, `${logs.totalItems}`);
     const jongere = await probeer(() => fam.collection('hh_users').getOne(acc.jongere1.id));
     check('de jongere op de klus: dicht', jongere.status !== 200, `status ${jongere.status}`);
+    // Script 44 (besluit 30 sep): de aanvraag verraadt niet dat het adres bestaat.
+    const eigen = await fam.collection('hh_koppelingen').getFullList();
+    check('het familielid ziet zijn aanvraag niet', !eigen.some((k) => k.id === koppelingA.id));
+    const los = await probeer(() => fam.collection('hh_koppelingen').getOne(koppelingA.id));
+    check('... ook niet los op id', los.status !== 200, `status ${los.status}`);
   }
 
   kop('E. Alleen de oudere beslist');

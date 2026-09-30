@@ -104,6 +104,9 @@ function tekstVoor(soort, rol, ctx) {
       return { titel: "Nieuwe klus in je buurt", tekst: `${klus}${wanneer}.` };
 
     case "toegewezen":
+      if (rol === "jongere") {
+        return { titel: "Je hebt een klus", tekst: `${klus}${wanneer}. De coordinator heeft je gekoppeld.` };
+      }
       if (rol === "familie") {
         return {
           titel: "Er komt iemand helpen",
@@ -189,6 +192,9 @@ function ontvangersVoorWissel(klus, log) {
     case "geaccepteerd":
       voeg(oudere, "hulpvrager", "toegewezen");
       if (geplaatstDoor && geplaatstDoor !== oudere) voeg(geplaatstDoor, "familie", "toegewezen");
+      // Koppelde de coordinator (door is niet de jongere zelf), dan hoort de
+      // jongere het ook. Accepteerde de jongere zelf, dan weet hij het al.
+      if (jongere && door !== jongere) voeg(jongere, "jongere", "toegewezen");
       break;
     case "onderweg":
       voeg(oudere, "hulpvrager", "onderweg");
@@ -383,7 +389,7 @@ function verwerkIncident(env, incident) {
     let koppelingen = [];
     try {
       koppelingen = app.findRecordsByFilter(
-        "hh_koppelingen", "oudere = {:oudere}", "", 0, 0, { oudere: melderId }
+        "hh_koppelingen", "oudere = {:oudere} && status = \"actief\"", "", 0, 0, { oudere: melderId }
       );
     } catch (err) {
       console.log("[hh_meldingen] familie zoeken mislukt:", String(err));

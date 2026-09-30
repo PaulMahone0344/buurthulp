@@ -729,3 +729,16 @@ FAMILIECHECK (scripts/42-familiecheck.mjs, dry-run standaard)
   5 per dag; alles opgeruimd.
   Test zonder server: node --test backend/tests/*.test.mjs (19 tests, o.a.
   de wikkel van 41).
+
+BESLUITEN 30 SEP 2026 (scripts/44-familie-lees-rules.mjs, na 31 en 40,
+vóór 42)
+  hh_meldingen list/view: ontvanger OF familielid met actieve koppeling
+    en recht meekijken op de oudere (ontvanger.hh_koppelingen_via_oudere).
+    Bijwerken blijft alleen de ontvanger.
+  hh_koppelingen list/view: het familielid ziet zijn eigen koppeling pas
+    bij status actief (familielid = auth.id && status = "actief"). Oudere
+    en coordinator zien de aanvraag wel. Zo verraadt een aanvraag niet of
+    een e-mailadres bij een oudere hoort.
+  Hook hh_meldingen_hulp.js: noodmelding alleen aan een ACTIEF familielid;
+    koppelt de coordinator (door != jongere), dan krijgt de jongere ook
+    "toegewezen" ("Je hebt een klus").

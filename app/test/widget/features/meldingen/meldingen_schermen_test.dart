@@ -292,6 +292,44 @@ void main() {
       expect(find.byType(LaatsteMeldingRegel), findsOneWidget);
       expect(find.text('Sanne is onderweg naar u.'), findsOneWidget);
     });
+
+    testWidgets('oudere: alles gelezen, dan geen regel op O1', (tester) async {
+      await tester.pumpWidget(
+        hhMeldingenWikkel(
+          HhPaden.hulpvrager,
+          rol: HhRol.hulpvrager,
+          meldingenGateway: fakeMeldingen([
+            testMelding(ontvanger: oudereId, gelezen: true),
+          ]),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Sanne is onderweg naar u.'), findsNothing);
+    });
+
+    testWidgets('oudere: O1 toont de nieuwste ONGELEZEN, niet de nieuwste', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        hhMeldingenWikkel(
+          HhPaden.hulpvrager,
+          rol: HhRol.hulpvrager,
+          meldingenGateway: fakeMeldingen([
+            testMelding(
+              id: 'm2',
+              ontvanger: oudereId,
+              tekst: 'Nieuwste maar gelezen.',
+              minutenGeleden: 1,
+              gelezen: true,
+            ),
+            testMelding(ontvanger: oudereId, minutenGeleden: 10),
+          ]),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Nieuwste maar gelezen.'), findsNothing);
+      expect(find.text('Sanne is onderweg naar u.'), findsOneWidget);
+    });
   });
 
   group('aanhaakpunten', () {

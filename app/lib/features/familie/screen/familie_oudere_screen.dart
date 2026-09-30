@@ -20,6 +20,9 @@ import '../../hulpvrager/status/domein/hulpvraag_indeling.dart';
 import '../../hulpvrager/status/widget/hulpvraag_tegel.dart';
 import '../../jongere/klussen/model/hh_klus.dart';
 import '../../jongere/provider/screening_providers.dart' show meldingVanFout;
+import '../../meldingen/domein/melding_domein.dart';
+import '../../meldingen/model/hh_melding.dart';
+import '../../toegang/model/hh_rol.dart';
 import '../domein/familie_rechten.dart';
 import '../model/hh_koppeling.dart';
 import '../paden_familie.dart';
@@ -29,8 +32,8 @@ import '../provider/hulpvraag_namens.dart';
 /// F3. Meekijken bij één oudere: met recht plaatsen de knop "Hulp vragen
 /// voor ..." (F2, de M4-stroom namens de oudere); met recht meekijken de
 /// hulpvragen in de drie lijstjes van O8 (tik opent het detail, zoals O7 maar
-/// alleen-lezen). "Meldingen" is een lege plek: M8 bouwt de meldingen
-/// (OPEN-PUNTEN-M9).
+/// alleen-lezen). Met recht meekijken ook de laatste meldingen van de oudere
+/// (alleen lezen: het familielid zet ze niet op gelezen).
 class FamilieOudereScreen extends ConsumerStatefulWidget {
   const FamilieOudereScreen({required this.oudereId, super.key});
 
@@ -126,14 +129,10 @@ class _FamilieOudereScreenState extends ConsumerState<FamilieOudereScreen> {
             )
           else if (koppeling.isActief)
             Text(TekstenFamilieNl.f3GeenMeekijken, style: tekst.bodyLarge),
-          SizedBox(height: tussen),
-          HhKaart(
-            kop: TekstenFamilieNl.f3MeldingenKop,
-            child: Text(
-              TekstenFamilieNl.f3MeldingenLeeg,
-              style: tekst.bodyLarge,
-            ),
-          ),
+          if (zicht.kanMeekijken) ...[
+            SizedBox(height: tussen),
+            _Meldingen(oudereId: widget.oudereId),
+          ],
         ],
       ),
     );
@@ -230,5 +229,51 @@ class _Hulpvragen extends ConsumerWidget {
         ...lijst,
       ],
     );
+  }
+}
+
+/// F3 "Meldingen": de laatste meldingen van de oudere, alleen lezen.
+class _Meldingen extends ConsumerWidget {
+  const _Meldingen({required this.oudereId});
+
+  final String oudereId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stand = ref.watch(meldingenVanOudereProvider(oudereId));
+    final tekst = Theme.of(context).textTheme;
+    final dichtheid = HhDichtheidScope.van(context);
+    final tussen = HhRuimte.voor(HhRuimte.s, dichtheid);
+
+    final Widget inhoud = switch (stand) {
+      AsyncData<List<HhMelding>>(:final value) when value.isEmpty => Text(
+        TekstenFamilieNl.f3MeldingenLeeg,
+        style: tekst.bodyLarge,
+      ),
+      AsyncData<List<HhMelding>>(:final value) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, melding) in value.indexed) ...[
+            if (i > 0) SizedBox(height: tussen),
+            Text(
+              melding.tekst.trim().isNotEmpty
+                  ? melding.tekst
+                  : titelVan(melding, HhRol.hulpvrager),
+              style: tekst.bodyLarge,
+            ),
+          ],
+        ],
+      ),
+      AsyncError<List<HhMelding>>(:final error) => HhLegeStaat(
+        icoon: Icons.cloud_off_outlined,
+        titel: TekstenFamilieNl.f3MeldingenMislukt,
+        uitleg: meldingVanFout(error),
+        knopLabel: TekstenNl.opnieuwProberen,
+        onKnop: () => ref.invalidate(meldingenVanOudereProvider(oudereId)),
+      ),
+      _ => const HhLaadStaat.skelet(regels: 2),
+    };
+
+    return HhKaart(kop: TekstenFamilieNl.f3MeldingenKop, child: inhoud);
   }
 }

@@ -250,6 +250,7 @@ class _HulpvraagBeoordelenScreenState
           SizedBox(height: tussen),
           HhInvoer(
             label: TekstenBeoordelenNl.o9TekstLabel,
+            hulptekst: TekstenBeoordelenNl.o9TekstHulp,
             fouttekst: _tekstFout,
             controller: _tekst,
             isActief: !_isBezig,

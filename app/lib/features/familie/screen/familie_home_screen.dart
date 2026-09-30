@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/paden.dart';
-import '../../../design/components/hh_kaart.dart';
 import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_laad_staat.dart';
 import '../../../design/components/hh_lege_staat.dart';
@@ -22,14 +21,13 @@ import '../paden_familie.dart';
 import '../provider/familie_providers.dart';
 import '../widget/oudere_tegel.dart';
 
-/// F1. De landing van het familielid: de gekoppelde ouderen, de aanvragen
-/// die op toestemming wachten, en "Familielid koppelen". Met precies één
+/// F1. De landing van het familielid: de gekoppelde ouderen en "Familielid
+/// koppelen". Aanvragen die op toestemming wachten staan er NIET (besluit
+/// 30 sep 2026): anders verraadt F1 of een e-mailadres bij een oudere
+/// hoort. De server geeft ze ook niet (script 44). Met precies één
 /// gekoppelde oudere gaat het meteen door naar F3 (behalve als je vanaf F3
-/// terugkomt: ?lijst=1).
-///
-/// LET OP (M8, nog niet in main): M8 zet het meldingen-belletje in een
-/// strook boven deze landing (MeldingenKop). Bij het samenvoegen moet dat
-/// hier terugkomen; zie OPEN-PUNTEN-M9.
+/// terugkomt: ?lijst=1). Het meldingen-belletje (M8) zit eromheen in
+/// FamilieStubScreen.
 class FamilieHomeScreen extends ConsumerStatefulWidget {
   const FamilieHomeScreen({this.toonLijst = false, super.key});
 
@@ -72,7 +70,7 @@ class _FamilieHomeScreenState extends ConsumerState<FamilieHomeScreen> {
       _misschienDoor(lijst);
       final indeling = deelKoppelingenIn(lijst);
       inhoud = [
-        if (indeling.actief.isEmpty && indeling.aangevraagd.isEmpty)
+        if (indeling.actief.isEmpty)
           const HhLegeStaat(
             icoon: Icons.family_restroom,
             titel: TekstenFamilieNl.f1Leeg,
@@ -90,28 +88,6 @@ class _FamilieHomeScreenState extends ConsumerState<FamilieHomeScreen> {
             ),
             SizedBox(height: klein),
           ],
-        ],
-        if (indeling.aangevraagd.isNotEmpty) ...[
-          SizedBox(height: tussen),
-          HhKaart(
-            kop: TekstenFamilieNl.f1AanvragenKop,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final _ in indeling.aangevraagd)
-                  Text(
-                    TekstenFamilieNl.f1AanvraagRegel,
-                    style: tekst.bodyLarge,
-                  ),
-                SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
-                Text(
-                  TekstenFamilieNl.f1AanvraagUitleg,
-                  style: tekst.bodyMedium,
-                ),
-              ],
-            ),
-          ),
         ],
       ];
     } else if (stand.hasError) {

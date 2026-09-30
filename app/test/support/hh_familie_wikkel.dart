@@ -1,3 +1,4 @@
+import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,6 +61,7 @@ Widget hhFamilieWikkel(
   FakeFamilieGateway? familieGateway,
   FakeUitvoerGateway? uitvoerGateway,
   FakeKlusGateway? klusGateway,
+  FakeMeldingenGateway? meldingenGateway,
   HhDichtheid? dichtheid,
   double tekstschaal = 1.0,
 }) {
@@ -84,6 +86,7 @@ Widget hhFamilieWikkel(
     nu: uitvoerNu,
     uitvoerGateway: uitvoerGateway,
     familieGateway: familieGateway,
+    meldingenGateway: meldingenGateway,
   );
   final d = dichtheid ?? rol.dichtheid;
   return UncontrolledProviderScope(

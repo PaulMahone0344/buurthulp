@@ -39,7 +39,9 @@ void main() {
       expect(k.oudereId, oudereId);
 
       await tikKnop(tester, TekstenFamilieNl.aanvraagTerug);
-      expect(find.text(TekstenFamilieNl.f1AanvragenKop), findsOneWidget);
+      // Besluit 30 sep: de aanvraag staat niet op F1 (geen adres-lek).
+      expect(find.text(TekstenFamilieNl.f1AanvragenKop), findsNothing);
+      expect(find.text(TekstenFamilieNl.f1Leeg), findsOneWidget);
       // Nog geen naam: de server geeft de oudere pas bij "Ja" prijs.
       expect(find.text(testOudereNaam), findsNothing);
     });

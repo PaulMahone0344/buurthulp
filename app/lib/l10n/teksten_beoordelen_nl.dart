@@ -77,6 +77,10 @@ abstract final class TekstenBeoordelenNl {
   static const o9SterrenVraagZonderNaam = 'Hoeveel sterren geeft u?';
   static const o9SterrenUitleg = 'Tik op een ster om het te veranderen.';
   static const o9TekstLabel = 'Wilt u nog iets zeggen? (mag leeg blijven)';
+
+  /// Besluit 30 sep 2026: de oudere hoort dat de jongere de tekst leest.
+  /// Zonder cijfer (ouderenregel), dus zonder "500 tekens".
+  static const o9TekstHulp = 'De jongere kan dit lezen.';
   static const o9Versturen = 'Versturen';
   static const o9Opslaan = 'Opslaan';
   static const o9BestaandUitleg =

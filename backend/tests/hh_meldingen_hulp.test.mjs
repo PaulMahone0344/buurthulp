@@ -54,6 +54,13 @@ test('geaccepteerd -> de oudere, en geplaatst_door als dat iemand anders is', ()
   assert.equal(lijst.find((o) => o.ontvanger === 'f1').rol, 'familie');
 });
 
+test('geaccepteerd door de coordinator -> ook de jongere', () => {
+  const lijst = hulp.ontvangersVoorWissel(KLUS, { van: 'open', naar: 'geaccepteerd', door: 'c1' });
+  assert.deepEqual(namen(lijst), ['j1:toegewezen', 'o1:toegewezen']);
+  assert.equal(lijst.find((o) => o.ontvanger === 'j1').rol, 'jongere');
+  assert.equal(hulp.tekstVoor('toegewezen', 'jongere', { klussoort: 'boodschappen' }).titel, 'Je hebt een klus');
+});
+
 test('onderweg -> de oudere; afgerond -> oudere en jongere', () => {
   assert.deepEqual(namen(hulp.ontvangersVoorWissel(KLUS, { van: 'geaccepteerd', naar: 'onderweg', door: 'j1' })), ['o1:onderweg']);
   assert.deepEqual(namen(hulp.ontvangersVoorWissel(KLUS, { van: 'bezig', naar: 'afgerond', door: 'j1' })), ['j1:afgerond', 'o1:afgerond']);

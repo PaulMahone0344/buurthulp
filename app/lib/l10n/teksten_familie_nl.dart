@@ -53,7 +53,8 @@ abstract final class TekstenFamilieNl {
   static const f3TabbladenLabel = 'Hulpvragen';
   static const f3LadenMislukt = 'De hulpvragen konden niet worden geladen.';
   static const f3MeldingenKop = 'Meldingen';
-  static const f3MeldingenLeeg = 'Hier komen straks de laatste meldingen.';
+  static const f3MeldingenLeeg = 'Nog geen meldingen.';
+  static const f3MeldingenMislukt = 'De meldingen laden niet.';
   static const f3AndereOudere = 'Terug naar het overzicht';
 
   // ---- F3 detail (/familie/oudere/:id/hulpvraag/:klusId) ----------------

@@ -6,6 +6,8 @@ import '../../../core/pb/gateway_providers.dart';
 import '../../../core/result.dart';
 import '../../jongere/klussen/model/hh_klus.dart';
 import '../../jongere/uitvoeren/provider/uitvoeren_providers.dart';
+import '../../meldingen/model/hh_melding.dart';
+import '../../meldingen/provider/meldingen_providers.dart';
 import '../../toegang/model/hh_rol.dart';
 import '../../toegang/provider/sessie_providers.dart';
 import '../model/hh_koppeling.dart';
@@ -60,6 +62,21 @@ final hulpvragenVanOudereProvider = FutureProvider.autoDispose
     .family<List<HhKlus>, String>((ref, oudereId) async {
       final gateway = ref.watch(uitvoerGatewayProvider);
       return _uit(ref, () => gateway.hulpvragen(oudereId));
+    });
+
+/// Hoeveel meldingen van de oudere F3 toont.
+const f3MeldingenLimiet = 5;
+
+/// F3: de laatste meldingen van de oudere. Besluit 30 sep 2026: meekijken =
+/// ook de meldingen zien. De rule op hh_meldingen (script 44) geeft ze
+/// alleen bij een actieve koppeling met recht meekijken.
+final meldingenVanOudereProvider = FutureProvider.autoDispose
+    .family<List<HhMelding>, String>((ref, oudereId) async {
+      final gateway = ref.watch(meldingenGatewayProvider);
+      return _uit(
+        ref,
+        () => gateway.meldingen(oudereId, limiet: f3MeldingenLimiet),
+      );
     });
 
 /// Aanvragen; daarna de lijst opnieuw laden (een nieuwe aanvraag staat dan

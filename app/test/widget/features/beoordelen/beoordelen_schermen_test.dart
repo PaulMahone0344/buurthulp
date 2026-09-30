@@ -195,6 +195,17 @@ void main() {
     });
   });
 
+  group('O9 eerlijk tegen de oudere', () {
+    testWidgets('bij het tekstvak: de jongere kan dit lezen, zonder cijfer', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[4]);
+      await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmhoog);
+      expect(find.text(TekstenBeoordelenNl.o9TekstHulp), findsOneWidget);
+      expect(TekstenBeoordelenNl.o9TekstHulp, isNot(contains(RegExp(r'\d'))));
+    });
+  });
+
   group('de sterrenkiezer', () {
     testWidgets('elke ster is een tikvlak zo hoog als een knop, met een '
         'label en een gekozen-staat', (tester) async {

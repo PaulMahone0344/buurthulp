@@ -1,3 +1,6 @@
+import 'package:flutter/widgets.dart';
+import 'package:heitjehulp_app/features/meldingen/model/hh_melding.dart';
+import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/pb/fake_familie_gateway.dart';
@@ -159,14 +162,15 @@ void main() {
   });
 
   group('F1', () {
-    testWidgets('twee ouderen: de lijst, en de aanvraag zonder naam', (
+    testWidgets('twee ouderen: de lijst, de aanvraag staat er niet', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[1]);
       expect(find.text(testOudereNaam), findsOneWidget);
       expect(find.text('Meneer Jansen'), findsOneWidget);
-      expect(find.text(TekstenFamilieNl.f1AanvragenKop), findsOneWidget);
-      expect(find.text(TekstenFamilieNl.f1AanvraagRegel), findsOneWidget);
+      // Besluit 30 sep: F1 verraadt niet of een adres bij een oudere hoort.
+      expect(find.text(TekstenFamilieNl.f1AanvragenKop), findsNothing);
+      expect(find.text(TekstenFamilieNl.f1AanvraagRegel), findsNothing);
     });
 
     testWidgets('precies één oudere: meteen door naar F3', (tester) async {
@@ -195,7 +199,7 @@ void main() {
       expect(find.text(testOudereNaam), findsOneWidget);
     });
 
-    testWidgets('een aanvraag alleen: blijft op F1 (niet actief)', (
+    testWidgets('een aanvraag alleen: blijft op F1, als lege staat', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -207,7 +211,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text(TekstenFamilieNl.f1AanvragenKop), findsOneWidget);
+      expect(find.text(TekstenFamilieNl.f1AanvragenKop), findsNothing);
+      expect(find.text(TekstenFamilieNl.f1Leeg), findsOneWidget);
     });
   });
 
@@ -235,6 +240,44 @@ void main() {
       );
       expect(find.byType(HulpvraagTegel), findsOneWidget); // gepland
       expect(find.text(TekstenFamilieNl.f3MeldingenKop), findsOneWidget);
+    });
+
+    testWidgets('meekijken: de laatste meldingen van de oudere', (
+      tester,
+    ) async {
+      final meldingen = FakeMeldingenGateway(
+        meldingen: [
+          HhMelding(
+            id: 'm-o',
+            ontvangerId: oudereId,
+            soort: HhMeldingSoort.onderweg,
+            tekst: 'Sanne is onderweg naar u.',
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        hhFamilieWikkel(
+          HhPadenFamilie.oudere(oudereId),
+          familieGateway: fakeFamilie(koppelingen: [testKoppeling()]),
+          meldingenGateway: meldingen,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Sanne is onderweg naar u.'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Sanne is onderweg naar u.'), findsOneWidget);
+      // Alleen lezen: het familielid zet niets op gelezen.
+      expect(meldingen.gelezenGezet, isEmpty);
+    });
+
+    testWidgets('alleen plaatsen: geen meldingen van de oudere', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[5]);
+      expect(find.text(TekstenFamilieNl.f3MeldingenKop), findsNothing);
     });
 
     testWidgets('alleen meekijken: geen F2-knop', (tester) async {

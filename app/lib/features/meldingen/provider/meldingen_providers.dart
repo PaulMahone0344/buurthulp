@@ -94,8 +94,12 @@ final ongelezenAantalProvider = Provider<int>(
   (ref) => ongelezenAantal(ref.watch(meldingenProvider).value ?? const []),
 );
 
-/// Voor de regel bovenaan O1: de nieuwste melding, of null.
+/// Voor de regel bovenaan O1: de nieuwste ONGELEZEN melding, of null.
+/// Besluit 30 sep 2026: is alles gelezen, dan staat er niets (rustiger O1).
 final laatsteMeldingProvider = Provider<HhMelding?>((ref) {
   final lijst = ref.watch(meldingenProvider).value ?? const <HhMelding>[];
-  return lijst.isEmpty ? null : lijst.first;
+  for (final melding in lijst) {
+    if (!melding.isGelezen) return melding;
+  }
+  return null;
 });
