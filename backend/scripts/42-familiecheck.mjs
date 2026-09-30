@@ -209,8 +209,12 @@ async function main() {
   const oudereA = await tijdelijkAccount('oudere-a', 'hulpvrager');
   const oudereB = await tijdelijkAccount('oudere-b', 'hulpvrager');
   const familie2 = await tijdelijkAccount('familie-2', 'familie');
+  // Een EIGEN jongere op klus A. Jongere 1 en 2 staan ook op seed-klussen van
+  // oudere 1, en familielid 1 is (seed) actief aan oudere 1 gekoppeld: die
+  // zijn dus terecht altijd zichtbaar en bewijzen hier niets.
+  const jongereA = await tijdelijkAccount('jongere-a', 'jongere');
   const klusA = await klusVoor(oudereA.id, 'klus van oudere A', {
-    toegewezen_jongere: acc.jongere1.id,
+    toegewezen_jongere: jongereA.id,
     status: 'geaccepteerd',
   });
   const klusB = await klusVoor(oudereB.id, 'klus van oudere B');
@@ -237,7 +241,7 @@ async function main() {
     check('hh_users van de oudere: dicht', user.status !== 200, `status ${user.status}`);
     const logs = await fam.collection('hh_klus_status').getList(1, 10, { filter: fam.filter('klus = {:id}', { id: klusA.id }) });
     check('logregels van de klus: dicht', logs.totalItems === 0, `${logs.totalItems}`);
-    const jongere = await probeer(() => fam.collection('hh_users').getOne(acc.jongere1.id));
+    const jongere = await probeer(() => fam.collection('hh_users').getOne(jongereA.id));
     check('de jongere op de klus: dicht', jongere.status !== 200, `status ${jongere.status}`);
     // Script 44 (besluit 30 sep): de aanvraag verraadt niet dat het adres bestaat.
     const eigen = await fam.collection('hh_koppelingen').getFullList();
@@ -305,8 +309,8 @@ async function main() {
 
   kop('H. De jongere op de klus van mijn oudere, en niemand anders');
   {
-    const jongere = await probeer(() => fam.collection('hh_users').getOne(acc.jongere1.id));
-    check('jongere 1 (op de klus van oudere A): zichtbaar', jongere.status === 200, `status ${jongere.status}`);
+    const jongere = await probeer(() => fam.collection('hh_users').getOne(jongereA.id));
+    check('de jongere op de klus van oudere A: zichtbaar', jongere.status === 200, `status ${jongere.status}`);
     for (const [naam, id] of [
       ['jongere 3 (niet op een klus van mijn ouderen)', acc.jongere3.id],
       ['oudere B (niet gekoppeld)', oudereB.id],
@@ -315,7 +319,7 @@ async function main() {
       check(`${naam}: niet zichtbaar`, r.status !== 200, `status ${r.status}`);
     }
     const lijst = await fam.collection('hh_users').getFullList({ filter: 'rol = "jongere"' });
-    const toegestaan = new Set([acc.jongere1.id]);
+    const toegestaan = new Set([jongereA.id]);
     // De seed-koppeling (familielid 1 - oudere 1) geeft ook de jongeren op
     // de klussen van oudere 1; die tellen mee als toegestaan.
     const vanOudere1 = await su.collection('hh_klussen').getFullList({
