@@ -32,6 +32,10 @@
 //    Antwoorden: 200 {klus, status}; 400 {melding, reden:"naar"} zonder of
 //    met een onbekende doelstatus; 401 anoniem; 403 niet de toegewezen
 //    jongere; 404 onbekende klus; 409 {melding, reden:"overgang"}.
+//    M7: bij de stap naar afgerond rekent de route daarna de reputatie
+//    (klussen_aantal en sterren_gemiddeld) van de jongere en de oudere
+//    opnieuw uit met hh_reputatie.js. Mislukt dat, dan staat de klus wel op
+//    afgerond; de volgende beoordeling zet het getal recht.
 //
 // 1c. M6 — POST /api/hh/klussen/{id}/annuleren  body {reden}
 //    reden verplicht, 5 t/m 300 tekens, komt in hh_klus_status.toelichting.
@@ -241,6 +245,7 @@ routerAdd(
     const jongereId = e.auth.id;
 
     let uitkomst = "";
+    let hulpvragerId = "";
     $app.runInTransaction((txApp) => {
       let klus;
       try {
@@ -259,6 +264,7 @@ routerAdd(
         uitkomst = "overgang";
         return;
       }
+      hulpvragerId = String(klus.get("hulpvrager") || "").trim();
 
       klus.set("status", naar);
       txApp.save(klus);
@@ -277,6 +283,18 @@ routerAdd(
     // verliest zijn code en wordt een generieke 500.
     if (uitkomst === "ok") {
       console.log(`[hh_klussen] jongere ${jongereId} zette klus ${klusId} op ${naar}`);
+      // M7: een afgeronde klus telt meteen mee in klussen_aantal, ook als
+      // er (nog) niemand beoordeelt. Na de transactie: de klus staat er dan
+      // al op afgerond, en een fout hier mag de stap nooit terugdraaien.
+      if (naar === "afgerond") {
+        try {
+          const reputatie = require(`${__hooks}/hh_reputatie.js`);
+          reputatie.werkReputatieBij($app, jongereId);
+          reputatie.werkReputatieBij($app, hulpvragerId);
+        } catch (err) {
+          console.log("[hh_klussen] reputatie bijwerken na afgerond mislukt:", String(err));
+        }
+      }
       return e.json(200, { klus: klusId, status: naar });
     }
     if (uitkomst === "nietgevonden") {
@@ -563,12 +581,14 @@ onRecordCreateRequest((e) => {
 }, "hh_klussen");
 
 // --------------------------------------------------------------------------
-// API-update van hh_klussen. Drie dingen, in deze volgorde:
+// API-update van hh_klussen. Vier dingen, in deze volgorde:
 //   1. M6: de achterdeur dicht — status en toegewezen_jongere zijn voor een
 //      niet-coordinator niet meer via een record-update te wijzigen; de ene
 //      uitzondering is concept -> open (de oudere plaatst zijn concept).
 //   2. M5: geocoding bij een adreswijziging.
 //   3. M6: de logregel concept -> open, ná e.next().
+//   4. M7: zet de coordinator (of een superuser) een klus op of van
+//      afgerond, dan de reputatie van de deelnemers opnieuw uitrekenen.
 // Het accepteren en de statusroutes lopen niet langs deze hook (txApp.save is
 // geen API-request), dus daar wordt nooit gegeocodeerd en niet dubbel gelogd.
 // --------------------------------------------------------------------------
@@ -631,6 +651,30 @@ onRecordUpdateRequest((e) => {
     }
   } catch (err) {
     console.log("[hh_klussen] logregel concept -> open mislukt:", String(err));
+  }
+
+  // 4. M7: alleen de coordinator en de superuser komen hier met een andere
+  //    status langs (stap 1 houdt de rest tegen). Op of van afgerond: tel
+  //    opnieuw, voor de jongere van nu én die van vóór de wijziging.
+  try {
+    const nieuweStatus = String(e.record.get("status") || "");
+    if (
+      nieuweStatus !== vorigeStatus &&
+      (nieuweStatus === "afgerond" || vorigeStatus === "afgerond")
+    ) {
+      const reputatie = require(`${__hooks}/hh_reputatie.js`);
+      const jongeren = [
+        String(e.record.get("toegewezen_jongere") || "").trim(),
+        String(e.record.original().get("toegewezen_jongere") || "").trim(),
+      ];
+      if (jongeren[1] === jongeren[0]) jongeren.pop();
+      for (let i = 0; i < jongeren.length; i++) {
+        reputatie.werkReputatieBij($app, jongeren[i]);
+      }
+      reputatie.werkReputatieBij($app, String(e.record.get("hulpvrager") || ""));
+    }
+  } catch (err) {
+    console.log("[hh_klussen] reputatie bijwerken na statuswissel mislukt:", String(err));
   }
 
   // ---- helpers, BINNEN de handler (pool-runtime deelt geen scope) ----

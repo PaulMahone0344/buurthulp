@@ -12,6 +12,7 @@ import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_meld_balk.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
@@ -23,6 +24,8 @@ import '../../klussen/domein/wanneer_tekst.dart';
 import '../../klussen/paden_klussen.dart';
 import '../../klussen/widget/klus_status_pil.dart';
 import '../../provider/screening_providers.dart' show meldingVanFout;
+import '../../reputatie/paden_reputatie.dart';
+import '../../reputatie/provider/beoordeling_providers.dart';
 import '../domein/klus_overgang.dart';
 import '../provider/uitvoeren_providers.dart';
 import '../widget/annuleer_dialoog.dart';
@@ -198,6 +201,11 @@ class _Inhoud extends ConsumerWidget {
     final klein = HhRuimte.voor(HhRuimte.s, dichtheid);
 
     final volgende = volgendeStap(klus.status);
+    // M7: al beoordeeld? Laadt de lijst (nog) niet, dan "Beoordeling geven";
+    // J17 zet het daar zelf recht.
+    final isBeoordeeld =
+        ref.watch(gegevenBeoordelingenProvider).value?.containsKey(klus.id) ??
+        false;
     final magAnnuleren = isMijn && magJongereAnnuleren(klus.status);
     final magBellen = isMijn && magBellenBij(klus.status);
 
@@ -311,11 +319,34 @@ class _Inhoud extends ConsumerWidget {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: tussen),
+                // M7: beoordelen (J17). Nog niet gedaan: de hoofdknop.
+                if (isMijn && !isBeoordeeld) ...[
+                  HhKnop(
+                    label: TekstenBeoordelenNl.j15Beoordelen,
+                    icoon: Icons.star_outline_rounded,
+                    onPressed: () =>
+                        context.push(HhPadenReputatie.beoordelen(klus.id)),
+                  ),
+                  SizedBox(height: tussen),
+                ],
                 HhKnop(
                   label: TekstenUitvoerenNl.j15NaarMijnKlussen,
                   icoon: Icons.assignment_turned_in_outlined,
+                  soort: isMijn && !isBeoordeeld
+                      ? HhKnopSoort.tweedeKeus
+                      : HhKnopSoort.primair,
                   onPressed: () => context.go(HhPadenKlussen.mijnKlussen),
                 ),
+                if (isMijn && isBeoordeeld) ...[
+                  SizedBox(height: tussen),
+                  HhKnop(
+                    label: TekstenBeoordelenNl.j15BeoordelingWijzigen,
+                    icoon: Icons.edit_outlined,
+                    soort: HhKnopSoort.tekst,
+                    onPressed: () =>
+                        context.push(HhPadenReputatie.beoordelen(klus.id)),
+                  ),
+                ],
               ] else if (volgende != null && isMijn) ...[
                 HhKnop(
                   label: labelVoor(volgende),

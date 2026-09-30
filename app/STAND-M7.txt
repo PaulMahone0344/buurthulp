@@ -1,0 +1,174 @@
+STAND M7 — BEOORDELEN EN VERTROUWEN (bijgewerkt 27 september 2026)
+Eerste versie 19 sep (backend af, app-kant open). Deze versie na het
+afmaken in een cloudsessie op branch ronde5/m7. Er is NIETS naar productie
+geschreven en vanuit de cloud ook niets tegen de server gedraaid (ook geen
+dry-run): geen toegang, geen superuser-gegevens.
+
+
+----------------------------------------------------------------
+1. WAT AF IS
+----------------------------------------------------------------
+
+BACKEND
+  backend/scripts/20-reputatie-velden.mjs   (19 sep) twee velden op hh_users
+  backend/scripts/21-reputatie-rules.mjs    (19 sep) slot in create/updateRule
+  backend/pb_hooks/hh_reputatie.js          NIEUW: de rekenregel op één plek
+                                            (gewoon .js, geen hook; elke
+                                            handler haalt hem met require()
+                                            BINNEN de handler op)
+  backend/pb_hooks/hh_beoordelingen.pb.js   gebruikt nu hh_reputatie.js; de
+                                            dubbele helpers zijn weg
+  backend/pb_hooks/hh_klussen.pb.js         klussen_aantal bij afgerond (het
+                                            punt "NODIG IN hh_klussen.pb.js"
+                                            uit de vorige STAND):
+                                            - statusroute: na de transactie,
+                                              bij naar = afgerond, reputatie
+                                              van jongere en oudere opnieuw
+                                            - update-hook: coordinator of
+                                              superuser zet een klus op of van
+                                              afgerond -> idem
+  backend/scripts/22-beoordelingcheck.mjs   + controle C2 (afgerond telt al
+                                            zonder beoordeling), filters met
+                                            {:param}, verwijst naar 23
+  backend/scripts/23-hook-deploy.sh         NIEUW: zet hh_reputatie.js en
+                                            hh_beoordelingen.pb.js op de
+                                            server (10 kent alleen
+                                            hh_klussen.pb.js)
+  backend/SCHEMA.txt                        eigen sectie "M7 - ..." onderaan
+  GETEST: node --check op alle vier de hookbestanden en op 22 groen; bash -n
+  op 23 groen; de rekenregel met een nep-$app in Node (4,25 -> 4,3; telling
+  alleen afgeronde klussen; lege id -> niets).
+
+APP
+  lib/core/pb/beoordeling_gateway.dart      gateway: geef, wijzig,
+                                            gegevenDoor, ontvangen, reputatie;
+                                            400 not_unique -> alGegeven
+  lib/core/pb/fake_beoordeling_gateway.dart speelt de rules en de hook na
+  lib/features/jongere/reputatie/           J17, J19, sterrenkiezer,
+                                            sterrenrij, domein, providers,
+                                            paden, routes
+  lib/features/hulpvrager/beoordelen/       O9, paden, routes
+  lib/l10n/teksten_beoordelen_nl.dart       alle M7-teksten
+
+  Schermen en paden
+    J17 Beoordeling geven   /jongere/klus/:id/beoordelen (onder J13, net als
+                            J15; de screening-guard dekt hem vanzelf)
+    J19 Mijn profiel        tab Profiel (/jongere/profiel); J9 via de knop
+                            "Mijn screening"
+    O9  Hoe ging het?       /hulpvrager/hulpvragen/:id/beoordelen (onder O7)
+
+  Aanhaakpunten
+    J15 eindstaat  "Beoordeling geven" (hoofdknop) of "Beoordeling wijzigen"
+    J14 Historie   "Nog beoordelen" onder een afgeronde klus zonder
+                   beoordeling
+    O7 afgerond    "Hoe ging het?" (dan twee acties: dit en Vernieuwen)
+    O8 Afgerond    "Hoe ging het?" onder een afgeronde hulpvraag die nog
+                   niet beoordeeld is
+
+  Gedrag
+    - Bestaat de eigen beoordeling al, dan staat alles ingevuld en wordt het
+      wijzigen (O9 begint dan meteen bij de sterren).
+    - Dubbel (tweede toestel was eerder): melding ("U heeft al een
+      beoordeling gegeven." op O9, "Je hebt ..." op J17), daarna schakelt het
+      scherm naar wijzigen.
+    - O9: duim omhoog vult 5 sterren voor, omlaag 2; opgeslagen worden
+      alleen sterren en tekst. Sterren heten in woorden (Slecht ... Heel
+      goed), nergens een cijfer, hooguit drie keuzes per stap, altijd terug.
+    - J19 leest sterren_gemiddeld en klussen_aantal van hh_users (door de
+      server berekend) en de vijf nieuwste beoordelingen met tekst; de app
+      rondt alleen af voor de weergave (gespiegeld aan hh_reputatie.js).
+
+  Tests (TDD, eerst rood, dan groen)
+    unit   sterren_test (afronding, duim, invoer), fake_beoordeling_gateway
+           (rules + gemiddelde na 1, 2, 3 en na wijzigen: 5,0 / 4,5 / 4,3 /
+           3,7), pocketbase_beoordeling_gateway (nep-server: body, unieke
+           index, rule, 404, filter met parameter), paden_reputatie (guard)
+    widget beoordelen_schermen_test: J17, J19, O9 in beide dichtheden met
+           semantiek en op 200 procent, O9 max drie keuzes per stap en geen
+           cijfers, sterrenkiezer, aanhaakpunten J14/J15/O7/O8
+    flow   beoordelen_flow_test: geven, dubbel -> melding -> wijzigen, O9
+           van O7 tot bedankt, wijzigen bij de oudere, J19 toont de nieuwe
+           stand na verversen, de echte router kent J17 en O9
+  Bijgewerkt (legden het oude gedrag vast): screening_flow_test en
+  klussen_schermen_test (tab Profiel is J19), uitvoeren_schermen_test en
+  uitvoeren_flow_test (J15 heeft nu een beoordeelknop).
+
+  flutter analyze: No issues found.
+  flutter test:    793 geslaagd, 2 overgeslagen (prod-smoketests), 0 rood.
+  (Flutter 3.41.9 / Dart 3.11.5, in de cloud geïnstalleerd.)
+
+
+----------------------------------------------------------------
+2. WAT OPEN STAAT
+----------------------------------------------------------------
+
+  · UITROLLEN: niets gedraaid. De volledige uitrollijst met verwachte
+    tellingen staat bovenaan app/OPEN-PUNTEN-M7.txt (00, 20, 21, 23, 10,
+    22 --apply).
+  · iOS-simulatorbuild: niet gedraaid (Linux-container, geen Xcode).
+  · Keuzes en losse eindjes: app/OPEN-PUNTEN-M7.txt punten 1-16. De
+    belangrijkste:
+      1  10-hook-deploy.sh kent alleen hh_klussen.pb.js (ook M10 heeft
+         daar last van)
+      2  klussen die vóór de uitrol afgerond waren, tellen pas mee na het
+         volgende event voor die persoon
+      3  het slot op de twee velden geldt ook voor de coordinator
+      7  tekst max 500 staat alleen in de app
+
+
+----------------------------------------------------------------
+3. KEUZES EN ONTDEKKINGEN (uit de eerste STAND, nog steeds geldig)
+----------------------------------------------------------------
+
+  · hh_profielen heeft sterren_gemiddeld en klussen_aantal al sinds M1 en
+    blokkeert ze al; alleen hh_users miste ze. Gemeten op de server (19 sep).
+  · De rules van hh_beoordelingen en de unieke index klus + van_gebruiker
+    staan er al precies zoals M7 nodig heeft; daar verandert niets.
+  · 21 WIKKELT de bestaande rule. Draai 21 na 02, 06 en 13; draai die drie
+    daarna niet meer met --apply.
+  · Request-hooks (onRecordCreateRequest/onRecordUpdateRequest), geen
+    after-success-hooks: de after-success-keten heeft op deze gedeelde
+    server eerder stilgestaan. Een beoordeling die niet via de API ontstaat
+    werkt de reputatie dus niet bij.
+  · Beide deelnemers worden bijgewerkt na een beoordeling, niet alleen
+    naar_gebruiker.
+  · De oudere ziet nergens gemiddelden of aantallen (ouderenregel).
+  · Familie beoordeelt niet namens de oudere (backend OPEN-PUNT 14, M9).
+
+
+----------------------------------------------------------------
+4. BRANCH, COMMITS EN GEDEELDE BESTANDEN
+----------------------------------------------------------------
+
+Branch: ronde5/m7 (gepusht), PR naar main.
+
+Commits na b6f3941 (wip backend, 19 sep):
+  72ddd8e refactor(m7): reputatie-rekenregel naar hh_reputatie.js, eigen deployscript
+  2358b19 feat(m7): klussen_aantal bijwerken bij de stap naar afgerond
+  1d97d06 test(m7): weergave-afronding, duim naar sterren, gateway en fake
+  9a2fb92 feat(m7): beoordeling-gateway met fake, sterren-domein en teksten
+  832ad45 test(m7): J17, J19 en O9 in beide dichtheden, 200 procent en flows
+  9088293 feat(m7): J17 beoordeling geven, J19 mijn reputatie, O9 hoe ging het
+  f5037a9 feat(m7): beoordelen aanhaken in J14, J15, O7, O8 en tab Profiel
+  0798022 test(m7): J17 en O9 op hun paden, screening-guard dekt J17
+  daarna: docs(m7) (dit bestand, OPEN-PUNTEN-M7, SCHEMA), test(m7) voor de
+  router, en als laatste "chore: M7 koppelen".
+
+Gedeelde bestanden die M7 raakte:
+  app/lib/app/router.dart                   2 imports + 2 spreads
+                                            (reputatieRoutes, beoordelenRoutes),
+                                            in de koppel-commit
+  app/lib/features/jongere/klussen/screen/jongere_tab_schermen.dart
+                                            tab Profiel: J9 -> J19 (1 import,
+                                            1 regel, commentaar)
+  app/lib/features/jongere/klussen/screen/mijn_klussen_screen.dart   J14
+  app/lib/features/jongere/uitvoeren/screen/klus_uitvoeren_screen.dart J15
+  app/lib/features/hulpvrager/status/screen/hulpvraag_status_screen.dart O7
+  app/lib/features/hulpvrager/status/screen/hulpvragen_lijst_screen.dart O8
+  app/test/support/hh_toegang_wikkel.dart, hh_hulpvrager_wikkel.dart,
+  hh_klussen_wikkel.dart                    beoordeling-fake als standaard
+                                            override (alleen regels erbij)
+  backend/pb_hooks/hh_klussen.pb.js         zie 1
+  backend/SCHEMA.txt                        alleen een sectie onderaan
+  NIET geraakt: gateway_providers.dart, pubspec.yaml, pubspec.lock,
+  scripts 00-14.
