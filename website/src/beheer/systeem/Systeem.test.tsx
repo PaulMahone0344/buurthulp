@@ -1,0 +1,124 @@
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
+import { FakeBeheerData } from '../data/fakeBeheerData'
+import { COORDINATOR } from '../testdata'
+import { Systeem } from './Systeem'
+
+function opzet(data: FakeBeheerData, filters: Record<string, string>) {
+  const zetFilters = vi.fn()
+  render(<Systeem data={data} filters={filters} zetFilters={zetFilters} />)
+  return zetFilters
+}
+
+describe('D4 systeembeheer', () => {
+  it('zet een wijk uit en slaat postcodes op', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      { wijken: [{ id: 'w1', gemeente: 'Tiel', wijk: 'Tiel-West', postcodes: ['4001'], actief: true }] },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'wijken' })
+
+    await user.click(await screen.findByRole('button', { name: 'Zet Tiel-West uit' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'wijzigWijk', args: ['w1', { actief: false }] })
+    expect(await screen.findByRole('button', { name: 'Zet Tiel-West aan' })).toBeInTheDocument()
+
+    const veld = screen.getByLabelText('Postcodes van Tiel-West')
+    await user.clear(veld)
+    await user.type(veld, '4001, 4002')
+    await user.click(screen.getByRole('button', { name: 'Postcodes opslaan' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'wijzigWijk', args: ['w1', { postcodes: ['4001', '4002'] }] })
+  })
+
+  it('wijzigt richtduur en richtvergoeding van een klustype', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      { klustypes: [{ id: 't1', naam: 'tuin', icoon: 'tuin', richtduur: 60, richtvergoeding: 1500 }] },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'klustypes' })
+
+    const vergoeding = await screen.findByLabelText('Richtvergoeding tuin (euro)')
+    expect(vergoeding).toHaveValue('15,00')
+    await user.clear(vergoeding)
+    await user.type(vergoeding, '17,50')
+    await user.clear(screen.getByLabelText('Richtduur tuin (minuten)'))
+    await user.type(screen.getByLabelText('Richtduur tuin (minuten)'), '90')
+    await user.click(screen.getByRole('button', { name: 'Opslaan' }))
+
+    expect(data.aanroepen).toContainEqual({ methode: 'wijzigKlustype', args: ['t1', { richtduur: 90, richtvergoeding: 1750 }] })
+  })
+
+  it('blokkeert een gebruiker en wijzigt een rol, allebei na bevestigen', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      { gebruikers: [{ id: 'u1', naam: 'Sami', email: 's@x.nl', rol: 'jongere', telefoon: '', geblokkeerd: false }] },
+      COORDINATOR,
+    )
+    const zetFilters = opzet(data, { tab: 'gebruikers' })
+
+    await user.type(screen.getByLabelText('Zoek op naam, e-mail of telefoon'), 'sami')
+    await user.click(screen.getByRole('button', { name: 'Zoeken' }))
+    expect(zetFilters).toHaveBeenCalledWith({ tab: 'gebruikers', zoek: 'sami' })
+
+    await user.click(await screen.findByRole('button', { name: 'Blokkeer Sami' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Blokkeren' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'zetGeblokkeerd', args: ['u1', true] })
+    expect(await screen.findByText('Geblokkeerd')).toBeInTheDocument()
+
+    await user.selectOptions(screen.getByLabelText('Rol van Sami'), 'familie')
+    await user.click(screen.getByRole('button', { name: 'Rol opslaan' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Rol wijzigen' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'wijzigRol', args: ['u1', 'familie'] })
+  })
+
+  it('slaat een instelling op', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData({ instellingen: [{ id: 'i1', sleutel: 'straal_km', waarde: '5' }] }, COORDINATOR)
+    opzet(data, { tab: 'instellingen' })
+
+    expect(await screen.findByLabelText('Standaardstraal (km)')).toHaveValue('5')
+    await user.type(screen.getByLabelText('Commissiepercentage (%)'), '10')
+    await user.click(screen.getByRole('button', { name: 'Commissiepercentage (%) opslaan' }))
+
+    expect(data.aanroepen).toContainEqual({ methode: 'slaInstellingOp', args: ['commissiepercentage', '10'] })
+    expect(await screen.findByRole('status')).toHaveTextContent('opgeslagen')
+  })
+
+  it('toont betalingen; opnieuw aanbieden staat uit tot M16', async () => {
+    const data = new FakeBeheerData(
+      { betalingen: [{ id: 'b1', klusId: 'k1', klusOmschrijving: 'Boodschappen', bedrag: 1250, status: 'mislukt', betaaldOp: '' }] },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'betalingen' })
+
+    expect(await screen.findByText('Mislukt')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Opnieuw aanbieden' })).toBeDisabled()
+  })
+
+  it('filtert het auditlog op actie en persoon uit de URL', async () => {
+    const user = userEvent.setup()
+    const regel = (id: string, doorNaam: string, actie: string) => ({
+      id,
+      gebeurdOp: '2026-09-19T09:00:00.000Z',
+      doorId: id,
+      doorNaam,
+      actie,
+      doelCollectie: 'hh_users',
+      doelId: 'u1',
+      detail: '{"velden":["geblokkeerd"]}',
+    })
+    const data = new FakeBeheerData(
+      { auditlog: [regel('1', 'Coordinator Een', 'wijzigen'), regel('2', 'Coordinator Twee', 'aanmaken')] },
+      COORDINATOR,
+    )
+    const zetFilters = opzet(data, { tab: 'auditlog', actie: 'wijzigen' })
+
+    expect(await screen.findByText(/Coordinator Een · wijzigen/)).toBeInTheDocument()
+    expect(screen.queryByText(/Coordinator Twee/)).not.toBeInTheDocument()
+
+    await user.selectOptions(screen.getByLabelText('Actie'), 'aanmaken')
+    expect(zetFilters).toHaveBeenCalledWith({ tab: 'auditlog', actie: 'aanmaken', persoon: '' })
+  })
+})
