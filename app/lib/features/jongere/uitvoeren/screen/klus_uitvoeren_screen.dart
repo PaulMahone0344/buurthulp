@@ -12,17 +12,22 @@ import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_meld_balk.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
+import '../../../../l10n/teksten_meldingen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
 import '../../../hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
+import '../../../hulpvrager/veiligheid/paden_veiligheid.dart';
 import '../../../toegang/provider/sessie_providers.dart';
 import '../../klussen/domein/wanneer_tekst.dart';
 import '../../klussen/paden_klussen.dart';
 import '../../klussen/widget/klus_status_pil.dart';
 import '../../provider/screening_providers.dart' show meldingVanFout;
+import '../../reputatie/paden_reputatie.dart';
+import '../../reputatie/provider/beoordeling_providers.dart';
 import '../domein/klus_overgang.dart';
 import '../provider/uitvoeren_providers.dart';
 import '../widget/annuleer_dialoog.dart';
@@ -198,8 +203,15 @@ class _Inhoud extends ConsumerWidget {
     final klein = HhRuimte.voor(HhRuimte.s, dichtheid);
 
     final volgende = volgendeStap(klus.status);
+    // M7: al beoordeeld? Laadt de lijst (nog) niet, dan "Beoordeling geven";
+    // J17 zet het daar zelf recht.
+    final isBeoordeeld =
+        ref.watch(gegevenBeoordelingenProvider).value?.containsKey(klus.id) ??
+        false;
     final magAnnuleren = isMijn && magJongereAnnuleren(klus.status);
     final magBellen = isMijn && magBellenBij(klus.status);
+    // M8: probleem melden (O11), ook bij bezig, waar annuleren niet kan.
+    final magMelden = isMijn && isInUitvoering(klus.status);
 
     // scrollbaar: false, zodat de RefreshIndicator bóven de scrollwikkel
     // zit: pull-to-refresh werkt alleen als hij zelf de scroller omvat.
@@ -311,11 +323,34 @@ class _Inhoud extends ConsumerWidget {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: tussen),
+                // M7: beoordelen (J17). Nog niet gedaan: de hoofdknop.
+                if (isMijn && !isBeoordeeld) ...[
+                  HhKnop(
+                    label: TekstenBeoordelenNl.j15Beoordelen,
+                    icoon: Icons.star_outline_rounded,
+                    onPressed: () =>
+                        context.push(HhPadenReputatie.beoordelen(klus.id)),
+                  ),
+                  SizedBox(height: tussen),
+                ],
                 HhKnop(
                   label: TekstenUitvoerenNl.j15NaarMijnKlussen,
                   icoon: Icons.assignment_turned_in_outlined,
+                  soort: isMijn && !isBeoordeeld
+                      ? HhKnopSoort.tweedeKeus
+                      : HhKnopSoort.primair,
                   onPressed: () => context.go(HhPadenKlussen.mijnKlussen),
                 ),
+                if (isMijn && isBeoordeeld) ...[
+                  SizedBox(height: tussen),
+                  HhKnop(
+                    label: TekstenBeoordelenNl.j15BeoordelingWijzigen,
+                    icoon: Icons.edit_outlined,
+                    soort: HhKnopSoort.tekst,
+                    onPressed: () =>
+                        context.push(HhPadenReputatie.beoordelen(klus.id)),
+                  ),
+                ],
               ] else if (volgende != null && isMijn) ...[
                 HhKnop(
                   label: labelVoor(volgende),
@@ -343,6 +378,17 @@ class _Inhoud extends ConsumerWidget {
                   soort: HhKnopSoort.tekst,
                   onPressed: isBezig ? null : onAnnuleer,
                 ),
+              if (magMelden) ...[
+                SizedBox(height: tussen),
+                HhKnop(
+                  label: TekstenMeldingenNl.j15ProbleemMelden,
+                  semantiekLabel: TekstenMeldingenNl.j15ProbleemMeldenSemantiek,
+                  icoon: Icons.report_problem_outlined,
+                  soort: HhKnopSoort.tekst,
+                  onPressed: () =>
+                      context.push(HhPadenVeiligheid.probleemBij(klus.id)),
+                ),
+              ],
               SizedBox(height: tussen),
               HhKnop(
                 label: TekstenUitvoerenNl.j15Vernieuwen,

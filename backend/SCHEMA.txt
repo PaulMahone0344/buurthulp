@@ -474,3 +474,271 @@ STATUSCHECK (scripts/14-statuscheck.mjs, M6)
   L opruimen en nameten.
   Opruim-knop na een app-smoke: --apply --alleen-opruimen.
   Nog niet gedraaid met --apply (M6 leverde alleen de dry-run).
+
+================================================================
+M10 - COORDINATOR IN DE APP (19 sep 2026)
+================================================================
+
+GEEN veld- of rule-wijzigingen. De coordinator mocht al alles lezen en
+schrijven op hh_incidenten, hh_klussen, hh_klus_status, hh_profielen en
+hh_users; dat is met een dry-run op de server nagemeten en volstaat voor
+C1 en C2. M10 voegt alleen een hook toe.
+
+HOOK (backend/pb_hooks/hh_coordinator.pb.js, eigen bestand naast
+hh_klussen.pb.js; deploy met scripts/10-hook-deploy.sh, bewijs met
+scripts/50-koppelcheck.mjs):
+
+  - POST /api/hh/klussen/{id}/koppelen — body { jongere }
+    Handmatig koppelen door de coordinator (C2). In EEN transactie: klus
+    opnieuw laden, eisen status open en toegewezen_jongere leeg, de
+    jongere moet rol jongere hebben en een hh_profielen-record met
+    verificatiestatus goedgekeurd; dan toegewezen_jongere = jongere,
+    status = geaccepteerd, plus een logregel in hh_klus_status (door =
+    coordinator, van = open, naar = geaccepteerd, toelichting
+    "handmatig gekoppeld"). De uitkomst op de klus is EXACT gelijk aan
+    accepteren door de jongere zelf.
+    De WIJK hoeft NIET gelijk te zijn — dat is juist het nut van
+    handmatig koppelen. Het antwoord meldt met andere_wijk of de oudere
+    in een andere wijk woont dan de jongere; de app waarschuwt daarmee
+    vóór het bevestigen, de route weigert er niet op.
+    Antwoorden: 200 {klus, status, toegewezen_jongere, andere_wijk};
+    400 {melding, reden: geenjongere} geen jongere in de body;
+    401 anoniem; 403 {melding, reden: rol} geen coordinator;
+    404 onbekende klus; 409 {melding, reden: bezet | jongeronbekend |
+    geenjongere | nietgoedgekeurd}.
+
+  - POST /api/hh/klussen/{id}/vrijgeven — body { reden }
+    Doorzetten (C2): de coordinator haalt de jongere van een klus die op
+    geaccepteerd of onderweg staat. Klus terug naar status open met een
+    lege toegewezen_jongere, plus een logregel (van = de oude status,
+    naar = open, toelichting "vrijgegeven: <reden>"). Daarna kan hij
+    opnieuw koppelen. Een reden is verplicht (max 200 tekens).
+    Antwoorden: 200 {klus, status: "open", van}; 400 {melding, reden:
+    geenreden}; 401 / 403 / 404 zoals hierboven; 409 {melding, reden:
+    nietvrijtegeven} als de klus niet op geaccepteerd of onderweg staat.
+
+  Beide routes gaan bewust NIET via een record-update: zo kan er nooit
+  een statuswissel zonder logregel bestaan, ook niet naast de
+  update-blokkade die M6 voor niet-coordinatoren zet.
+
+  LET OP hh_klus_status.toelichting komt van M6 (scripts/12-status-
+  velden.mjs). Op 19 sep 2026 bestond het veld nog niet; zolang dat zo
+  is koppelt en vrijgeeft de hook gewoon, maar laat PocketBase de
+  toelichting stil vallen. Rol M6-script 12 dus vóór deze hook uit.
+
+KOPPELCHECK (scripts/50-koppelcheck.mjs, M10)
+  Dry-run standaard (--apply schrijft). Bewijst op de echte server, met
+  de echte seed-accounts: routes bestaan (anoniem 401), rechten (jongere
+  en oudere 403, geen jongere in de body 400, onbekende klus 404),
+  koppelen levert exact dezelfde klusvelden en logregel-vorm als
+  accepteren (k11 gekoppeld naast k02 geaccepteerd, veld voor veld),
+  409 bezet bij een tweede koppeling en bij een klus die al geaccepteerd
+  is, 409 bij een oudere/onbekend id/niet-goedgekeurde jongere (jongere 3
+  gaat tijdelijk op in_behandeling en weer terug), 200 met andere_wijk
+  true over de wijkgrens, vrijgeven vanaf geaccepteerd en vanaf onderweg
+  plus opnieuw koppelen, 400 zonder reden, 409 op een open klus, en een
+  RACE van 20 ronden waarin de coordinator koppelt terwijl jongere 1
+  accepteert (precies één winnaar en één logregel per ronde). Raakt
+  k02/k03/k04/k05/k11 en zet ze aan begin en eind terug; de toelichting-
+  controles worden overgeslagen zolang het veld ontbreekt.
+  Terugzet-knop na een app-smoke: --apply --alleen-terugzetten.
+
+================================================================
+M7 - BEOORDELEN EN VERTROUWEN (19 sep 2026, afgemaakt 27 sep 2026)
+================================================================
+
+VELDEN (scripts/20-reputatie-velden.mjs, additief, alleen hh_users)
+  hh_users krijgt dezelfde twee velden die hh_profielen al sinds M1 heeft:
+    sterren_gemiddeld   getal 0-5, niet verplicht (0 = nog geen
+                        beoordeling), op 1 decimaal
+    klussen_aantal      geheel getal >= 0, niet verplicht
+  Waarom een kopie op hh_users (backend OPEN-PUNT 12, optie a): hh_profielen
+  is alleen leesbaar voor de eigenaar en de coordinator. De oudere (en straks
+  de familie) mag hh_users van zijn toegewezen jongere wel lezen.
+
+RULES (scripts/21-reputatie-rules.mjs, alleen hh_users)
+  createRule en updateRule van hh_users worden GEWIKKELD, niet herschreven:
+    (huidige rule) && @request.body.sterren_gemiddeld:isset = false
+                   && @request.body.klussen_aantal:isset = false
+  Niemand zet de twee velden via de API: niet bij registreren, niet bij
+  eigen gegevens bijwerken, ook de coordinator niet. De hook schrijft ze via
+  $app (dat loopt niet langs de rules); een superuser kan het met de hand.
+  Draai 21 NA 02, 06 en 13; draai die drie daarna niet meer met --apply
+  (dan valt het slot eraf; 21 opnieuw draaien zet het terug).
+  hh_profielen: niets te doen, de twee velden zijn daar al geblokkeerd.
+  hh_beoordelingen: niets te doen. De rules en de unieke index klus +
+  van_gebruiker (sectie 7) dekken M7 al precies.
+
+REKENREGEL (backend/pb_hooks/hh_reputatie.js, gewoon .js, GEEN hook)
+  Voor één persoon:
+    sterren_gemiddeld = gemiddelde van alle hh_beoordelingen met
+                        naar_gebruiker = die persoon, Math.round(x*10)/10
+                        (.5 naar boven); 0 zonder beoordelingen
+    klussen_aantal    = aantal hh_klussen met status afgerond waarin die
+                        persoon toegewezen_jongere of hulpvrager is
+  Geschreven op hh_users EN op het hh_profielen-record van die persoon (als
+  dat bestaat). De app rekent dit nooit zelf uit; hij rondt alleen af voor
+  de weergave, gespiegeld aan deze regel.
+
+WIE ROEPT HEM AAN (altijd binnen de handler met
+require(`${__hooks}/hh_reputatie.js`), fouten houden nooit iets tegen)
+  - hh_beoordelingen.pb.js: onRecordCreateRequest en onRecordUpdateRequest
+    op hh_beoordelingen, ná e.next(), voor naar_gebruiker en van_gebruiker.
+  - hh_klussen.pb.js, statusroute (M6): na de transactie, bij de stap naar
+    afgerond, voor de jongere en de oudere. Zo telt een afgeronde klus mee
+    ook als er (nog) niemand beoordeelt.
+  - hh_klussen.pb.js, onRecordUpdateRequest: zet de coordinator of een
+    superuser een klus op of van afgerond, dan voor de jongere (nu en
+    vóór de wijziging) en de oudere.
+  NIET: een beoordeling die de coordinator verwijdert (geen delete-hook),
+  en records die niet via de API ontstaan. 22-beoordelingcheck zet dat
+  recht.
+
+DEPLOY
+  scripts/23-hook-deploy.sh zet hh_reputatie.js en hh_beoordelingen.pb.js
+  op de server (10-hook-deploy.sh kent alleen hh_klussen.pb.js). Eerst 23,
+  dan 10 (hh_klussen.pb.js heeft hh_reputatie.js nodig).
+
+BEOORDELINGCHECK (scripts/22-beoordelingcheck.mjs, dry-run standaard)
+  Leest zonder --apply: velden op hh_users, sloten in de rules, unieke index,
+  velden op hh_profielen. Met --apply met eigen klussen "[beoordelingcheck]":
+  C niet bij een niet-afgeronde klus, C2 afgerond telt al mee zonder
+  beoordeling, D vreemde/jezelf/namens een ander geweigerd, E een per kant,
+  F gemiddelde en telling na 1, 2, 3 beoordelingen en na een wijziging (op
+  hh_users en hh_profielen), G de velden zelf meesturen geweigerd, H de
+  oudere ziet de twee velden van zijn toegewezen jongere, I opruimen.
+M8 - MELDINGEN EN VEILIGHEID (19 sep 2026, afgemaakt 27 sep 2026)
+================================================================
+
+LAAG 1: meldingen IN de app, via hh_meldingen + realtime. Laag 2 (push naar
+het toestel via Firebase/APNs) is NIET gebouwd; zie app/OPEN-PUNTEN-M8.txt.
+
+hh_meldingen  (8 eigen velden + created/updated; scripts/30-meldingen-collectie.mjs)
+Velden
+  ontvanger   verwijzing naar hh_users, verplicht; verdwijnt mee met de
+              gebruiker
+  soort       keuze, verplicht: nieuwe_klus | toegewezen | onderweg |
+              afgerond | geannuleerd | incident
+  klus        verwijzing naar hh_klussen (mag leeg)
+  incident    verwijzing naar hh_incidenten (mag leeg)
+  titel       tekst, max 200
+  tekst       tekst, max 600
+  sleutel     tekst, max 200 — de idempotentiesleutel, NIET in de prompt:
+              "klusstatus:<id van de logregel>" of "incident:<id>"
+  gelezen_op  datum (leeg = ongelezen)
+Indexen
+  idx_hh_meldingen_ontvanger          (ontvanger)
+  idx_hh_meldingen_uniek   UNIEK      (ontvanger, soort, sleutel)
+Regels (scripts/31-meldingen-rules.mjs; nieuwe eigen collectie, dus
+gezet en niet gewikkeld)
+  Lezen       alleen de ontvanger
+  Bijwerken   alleen de ontvanger, en alleen gelezen_op (elk ander veld in
+              de body maakt de rule onwaar; de hook zet ze ook terug)
+  Aanmaken    niemand via de API (null); de hook schrijft via $app
+  Verwijderen niemand via de API (null); verdwijnt mee met de gebruiker
+
+HOOK (backend/pb_hooks/hh_meldingen.pb.js + hh_meldingen_hulp.js, deploy
+met scripts/33-hook-deploy.sh; 10-hook-deploy.sh kent alleen
+hh_klussen.pb.js)
+  onRecordAfterCreateSuccess op hh_klus_status (elke statuswissel, ook uit
+  de routes van M6 en M10):
+    naar geaccepteerd -> oudere, en geplaatst_door als dat iemand anders is
+    naar onderweg     -> oudere
+    naar afgerond     -> oudere en jongere
+    naar geannuleerd  -> de andere deelnemer (door de coordinator: beide)
+    terug naar open   -> oudere ("we zoeken iemand anders", soort
+                         geannuleerd)
+    naar open         -> goedgekeurde jongeren in de wijk van de oudere,
+                         max 50, niet wie hem net teruggaf (nieuwe_klus)
+  onRecordAfterCreateSuccess op hh_incidenten:
+    elke coordinator; bij soort nood ook het gekoppelde familielid
+    (hh_koppelingen.oudere = melder)
+  onRecordUpdateRequest op hh_meldingen:
+    alles behalve gelezen_op terug naar de opgeslagen waarde (geen
+    superuser)
+  Teksten in gewone taal (oudere "u", jongere "je"), tijden in
+  Nederlandse tijd (CET/CEST zelf uitgerekend; de JSVM heeft geen
+  tijdzonedatabase). e.next() eerst, al het werk daarna in try/catch: een
+  trigger breekt nooit een statuswissel of incident.
+  Test zonder server: node --test backend/tests/*.test.mjs (20 tests).
+
+hh_incidenten en hh_push_tokens: niets gewijzigd. O11 maakt incidenten via
+de bestaande createRule; de app heeft een PushTokenOpslag op
+hh_push_tokens klaarstaan voor laag 2, maar roept hem in laag 1 niet aan.
+
+MELDINGENCHECK (scripts/32-meldingencheck.mjs, dry-run standaard)
+  Zonder --apply: collectie, velden, indexen, rules. Met --apply, met eigen
+  klussen en incidenten "[meldingencheck]": één melding per trigger bij de
+  juiste ontvanger, niets dubbel (ook niet als superuser: unieke index),
+  vreemde leest niets, ontvanger zet alleen gelezen_op, API-create
+  geweigerd (ook coordinator), nood -> elke coordinator (+ familielid),
+  probleem -> alleen coordinatoren met de klus erbij; alles opgeruimd.
+M9 - FAMILIE (19 sep 2026, afgemaakt 27 sep 2026)
+================================================================
+
+VELD (scripts/40-familie-velden.mjs, additief, alleen hh_koppelingen)
+  status   keuze, één: aangevraagd | actief (niet verplicht; de hook en
+           de rules zetten hem). 40 vult elke bestaande koppeling zonder
+           status op "actief" (de seed-koppeling blijft dus werken).
+
+HOOK (backend/pb_hooks/hh_familie.pb.js + hh_familie_hulp.js, deploy met
+scripts/43-hook-deploy.sh; 10-hook-deploy.sh kent alleen hh_klussen.pb.js)
+  POST /api/hh/koppelingen/aanvragen   body {email_oudere}
+    Alleen rol familie. Bestaat er een hulpvrager met dat adres en nog
+    geen koppeling: koppeling status aangevraagd, rechten leeg (via $app;
+    de createRule blijft dicht voor het familielid). Antwoord ALTIJD:
+    200 {melding: "Als dit adres bij ons bekend is, krijgt uw familielid
+    een vraag om toestemming."}. Verder 400 {reden: email}, 401, 403
+    {reden: rol}, 429 {reden: limiet} na 5 aanvragen per familielid per
+    UTC-dag (teller in $app.store(), met de koppelingen van vandaag als
+    ondergrens).
+  onRecordCreateRequest hh_koppelingen: de bestaande weg (oudere of
+    coordinator maakt de koppeling) geeft status actief en, zonder
+    meegestuurde rechten, meekijken + plaatsen.
+  onRecordUpdateRequest hh_koppelingen: naar actief ("Ja") zonder rechten
+    geeft er beide. "Nee" en "Ontkoppelen" zijn een gewone delete.
+
+RULES (scripts/41-familie-rules.mjs, GERICHT GEWIKKELD: alleen de
+familie-takken, de rest van elke rule blijft letterlijk staan)
+  Elke familie-tak (@collection.hh_koppelingen.oudere ?= X &&
+  @collection.hh_koppelingen.familielid ?= @request.auth.id) krijgt erbij:
+    && @collection.hh_koppelingen.status ?= "actief"
+    && @collection.hh_koppelingen.rechten ?= "meekijken"   bij list/view
+    && @collection.hh_koppelingen.rechten ?= "plaatsen"    bij create/update/delete
+  Zo ook de plaats-tak van hh_klussen.createRule (plaatsen).
+  hh_users list/view:
+    - het familielid ziet de oudere pas bij een actieve koppeling;
+    - de oudere ziet het familielid altijd (ook bij een aanvraag);
+    - NIEUW (backend OPEN-PUNT 13): het familielid ziet de toegewezen
+      jongere op een klus van zijn oudere, bij een actieve koppeling met
+      recht meekijken (hh_klussen_via_toegewezen_jongere.hulpvrager.
+      hh_koppelingen_via_oudere...).
+  Collecties met een familie-tak: hh_users, hh_klussen, hh_klus_status,
+  hh_beoordelingen, hh_vertrouwd, hh_betalingen, hh_incidenten.
+  VOLGORDE: 40, dan 43, dan 41. Draai 02, 06 of 13 daarna niet opnieuw met
+  --apply (dan valt de wikkel eraf; 41 opnieuw draaien zet hem terug).
+
+FAMILIECHECK (scripts/42-familiecheck.mjs, dry-run standaard)
+  Zonder --apply: veld, geen lege status, de wikkel in de rules, de route
+  (anoniem 401). Met --apply, met tijdelijke accounts en klussen
+  "[familiecheck]": hetzelfde antwoord voor bekend en onbekend adres;
+  aangevraagd geeft geen toegang (klussen, hh_users, logregels, jongere);
+  alleen de oudere beslist; na Ja toegang; plaatsen alleen met recht
+  plaatsen; de jongere van mijn oudere zichtbaar en niemand anders; geen
+  lek via een ander, actief familielid van een andere oudere; Nee; limiet
+  5 per dag; alles opgeruimd.
+  Test zonder server: node --test backend/tests/*.test.mjs (19 tests, o.a.
+  de wikkel van 41).
+
+BESLUITEN 30 SEP 2026 (scripts/44-familie-lees-rules.mjs, na 31 en 40,
+vóór 42)
+  hh_meldingen list/view: ontvanger OF familielid met actieve koppeling
+    en recht meekijken op de oudere (ontvanger.hh_koppelingen_via_oudere).
+    Bijwerken blijft alleen de ontvanger.
+  hh_koppelingen list/view: het familielid ziet zijn eigen koppeling pas
+    bij status actief (familielid = auth.id && status = "actief"). Oudere
+    en coordinator zien de aanvraag wel. Zo verraadt een aanvraag niet of
+    een e-mailadres bij een oudere hoort.
+  Hook hh_meldingen_hulp.js: noodmelding alleen aan een ACTIEF familielid;
+    koppelt de coordinator (door != jongere), dan krijgt de jongere ook
+    "toegewezen" ("Je hebt een klus").

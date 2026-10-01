@@ -1,0 +1,160 @@
+OPEN PUNTEN M9 — FAMILIE (F1, F2, F3 en het blok "Familie" op O12)
+Geschreven 27 september 2026, bij het afmaken van M9 op branch ronde5/m9
+(cloudsessie, zonder toegang tot de PocketBase-server). Alles hier is bewust
+NIET gebouwd, moet nog gekozen worden, of kon vanuit de cloud niet.
+
+
+================================================================
+UITROLLIJST (NIETS HIERVAN IS GEDRAAID)
+================================================================
+Vanuit de cloud is er niets tegen de server gedraaid, ook geen dry-run.
+Wel: `node --check` op 40, 41, 42, hh_familie.pb.js en hh_familie_hulp.js;
+`bash -n` op 43; en 19 node-tests (node --test backend/tests/*.test.mjs),
+waaronder de rule-wikkel van 41 en de aanvraag met limiet. Allemaal groen.
+
+Vooraf, in backend/:
+  set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  (en backend/seed-accounts.local.json moet er staan, voor stap 5)
+
+  1. node scripts/00-backup.mjs
+       verwacht: schema-export in backups/<datum>.json (alleen-lezen)
+
+  2. node scripts/40-familie-velden.mjs            (dry-run eerst)
+     node scripts/40-familie-velden.mjs --apply
+       verwacht: 1 veld (status) op hh_koppelingen; elke bestaande
+       koppeling (de seed: familielid 1 - oudere 1) op "actief", geen
+       enkele meer leeg. Tweede run: niets te doen.
+
+  3. yes | bash scripts/43-hook-deploy.sh
+       verwacht: in /root/pb_hooks/ precies twee bestanden erbij:
+       hh_familie_hulp.js en hh_familie.pb.js; de route
+       /api/hh/koppelingen/aanvragen zonder auth geeft 401 (niet 404).
+       VÓÓR 41: dan krijgt een koppeling die de oudere zelf maakt meteen
+       status actief.
+
+  4. node scripts/41-familie-rules.mjs             (dry-run: toont het verschil)
+     node scripts/41-familie-rules.mjs --apply
+       verwacht (als de server staat zoals 02/06/13 hem zetten), 15 rules:
+         hh_users list + view                    (oudere pas bij actief;
+                                                  + de jongere-stap)
+         hh_klussen list + view + create + update
+         hh_klus_status list + view
+         hh_beoordelingen list + view
+         hh_vertrouwd list + view
+         hh_betalingen list + view
+         hh_incidenten create
+       Tweede run: overal "al gewikkeld". Staat een verwachte tak er niet,
+       dan raakt 41 die rule niet aan: eerst kijken waarom.
+
+  5. node scripts/42-familiecheck.mjs              (dry-run: leescontroles)
+     node scripts/42-familiecheck.mjs --apply
+       verwacht: alle checks groen, 0 rood, alle tijdelijke accounts en
+       klussen opgeruimd, de seed-koppeling nog actief.
+       Opruim-knop: node scripts/42-familiecheck.mjs --apply --alleen-opruimen
+
+  Rollback: bash scripts/43-hook-deploy.sh --rollback haalt de hook weg.
+  De rules terug: 13-status-rules.mjs --apply zet hh_klussen en
+  hh_klus_status terug zoals M6 ze had; voor de overige collecties is de
+  backup van stap 1 de bron. Het veld status mag blijven staan.
+
+
+================================================================
+OPEN PUNTEN
+================================================================
+
+1. BIJ HET SAMENVOEGEN MET M8: HET BELLETJE MOET TERUG OP /familie
+   M8 (PR #2, nog niet in main) zet het meldingen-belletje in een strook
+   boven de familie-landing: in familie_stub_screen.dart wordt het
+   landingsscherm in MeldingenKop gewikkeld. M9 bouwt die landing opnieuw
+   (FamilieStubScreen bouwt nu FamilieHomeScreen = F1). Dat botst bij het
+   samenvoegen. Oplossing: in FamilieStubScreen.build
+     return Scaffold(body: MeldingenKop(child: FamilieHomeScreen(...)));
+   De kop van F1 heeft daar ruimte voor (rechtsboven is vrij).
+
+2. BIJ HET SAMENVOEGEN MET M8: NOODMELDING ALLEEN AAN EEN ACTIEF FAMILIELID
+   De hook van M8 (hh_meldingen_hulp.js, verwerkIncident) stuurt een
+   noodmelding aan elk familielid in hh_koppelingen, ook bij een aanvraag.
+   Na M9 moet daar "&& status = \"actief\"" (en eventueel meekijken) bij in
+   het filter. Eén regel; hoort bij wie M8 en M9 samenvoegt.
+
+3. F3 "MELDINGEN" IS EEN LEGE PLEK
+   Zoals de prompt vraagt. M8 maakt meldingen per ONTVANGER; het familielid
+   krijgt er zelf alleen bij "geaccepteerd" als het de klus plaatste en bij
+   een noodmelding. De meldingen van de oudere laten zien vraagt een rule op
+   hh_meldingen voor het familielid (actief + meekijken). Keuze nodig.
+
+4. "WACHT OP TOESTEMMING" OP F1 VERRAADT DAT EEN ADRES BESTAAT
+   Het antwoord van de route is altijd hetzelfde, maar na een aanvraag voor
+   een BESTAAND adres staat er op F1 een regel "Uw vraag is verstuurd" (de
+   koppeling bestaat), bij een onbekend adres niet. Wie het e-mailadres al
+   kent, kan zo alsnog zien of iemand klant is (hooguit 5 keer per dag).
+   Opties: (a) aanvragen niet in de lijst tonen; (b) de aanvraag altijd
+   bewaren, ook voor een onbekend adres (vraagt een eigen collectie of een
+   los e-mailveld); (c) accepteren. Nu: (c), met de naam van de oudere
+   verborgen tot "Ja". Keuze voor Ibrahim.
+
+5. DE LIMIET STAAT IN HET GEHEUGEN VAN DE SERVER
+   $app.store() telt de aanvragen per familielid per dag, met het aantal
+   koppelingen van vandaag als ondergrens. Na een herstart van PocketBase
+   tellen alleen die koppelingen: pogingen op ONBEKENDE adressen beginnen
+   weer bij nul. Voor de pilot genoeg; strenger vraagt een eigen collectie
+   hh_aanvragen. 42 (controle K) bewijst de limiet op de server.
+
+6. ZELFDE KOPPELING IN ÉÉN RULE (JOIN)
+   De voorwaarden familielid, status en rechten staan in hetzelfde pad
+   (@collection.hh_koppelingen..., hh_koppelingen_via_oudere...). Volgens de
+   werking van PocketBase gelden ze dan voor dezelfde rij. 42 bewijst dat
+   (controle I: een aanvraag bij oudere B geeft geen toegang, ook al heeft
+   B een ander, actief familielid). Is I rood, dan moet 41 anders.
+
+7. WELK RECHT BIJ WELKE RULE
+   Lezen (list/view) vraagt "meekijken", schrijven (create/update/delete)
+   "plaatsen". Gevolg: een familielid met alleen "meekijken" kan geen
+   probleem melden OP een klus (hh_incidenten.createRule), wel een
+   noodmelding zonder klus. En met alleen "plaatsen" ziet hij de klus die
+   hij net plaatste niet terug (lijsten vragen meekijken). "Ja" geeft altijd
+   beide, dus in de praktijk speelt dit alleen als de coordinator de rechten
+   met de hand beperkt.
+
+8. DE OUDERE KIEST GEEN LOSSE RECHTEN
+   "Ja" = meekijken + plaatsen, zoals de prompt zegt. Alleen meekijken
+   toestaan kan nu alleen de coordinator (of een API-aanroep van de oudere).
+
+9. EEN OUDERE ZONDER EIGEN ACCOUNT
+   De aanvraag zoekt een hh_users met rol hulpvrager op e-mail, en de
+   oudere zegt Ja in de app. Een oudere die alleen via de meldkamer loopt
+   (bron telefoon) kan dat niet; dan maakt de coordinator de koppeling
+   (die wordt meteen actief).
+
+10. HET FAMILIELID KAN EEN AANVRAAG NIET INTREKKEN IN DE APP
+    De deleteRule staat het familielid toe zijn eigen koppeling weg te
+    halen, maar F1 heeft daar geen knop voor (niet in de prompt).
+
+11. F2 EINDIGT OP F3, NIET OP O6
+    Na plaatsen namens de oudere gaat de stroom terug naar F3 van die
+    oudere (daar staat de nieuwe hulpvraag bij "Open"). O6 ("uw hulpvraag is
+    verstuurd", met knoppen naar O1/O8 van de oudere) past niet bij het
+    familielid.
+
+12. F2 ZONDER ADRES VAN DE OUDERE
+    Heeft de oudere geen adres in zijn gegevens, dan verwijst O4 niet naar
+    O12 (dat is het scherm van de oudere zelf) maar toont het lege
+    formulier. Het familielid vult het adres dan zelf in.
+
+13. BEOORDELEN NAMENS DE OUDERE
+    Niet gebouwd (backend OPEN-PUNT 14; M7 laat het ook open).
+
+14. BESTANDEN VAN ANDERE MILESTONES DIE M9 AANRAAKTE (alleen regels erbij
+    of een kleine naad)
+    M4: nieuwe_klus.dart (geplaatstDoorId, bron), hulpvraag_plaatser.dart,
+        hulpvrager_providers.dart (gegevens van de oudere),
+        hulp_vragen_waar_screen.dart, hulp_vragen_bevestigen_screen.dart,
+        mijn_gegevens_screen.dart (het blok)
+    M5: hh_klus.dart (geplaatstDoorId)
+    M2: familie_stub_screen.dart (bouwt F1), en de M2-test die de
+        familie-landing als voorbeeld van RolLandingScherm gebruikte test
+        nu RolLandingScherm zelf.
+
+15. iOS-SIMULATORBUILD NIET GEDRAAID
+    Linux-container zonder Xcode. flutter analyze en flutter test zijn
+    groen (Flutter 3.41.9, Dart 3.11.5).

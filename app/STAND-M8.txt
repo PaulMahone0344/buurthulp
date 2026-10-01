@@ -1,0 +1,114 @@
+STAND M8 — MELDINGEN EN VEILIGHEID (27 september 2026)
+Afgemaakt in een cloudsessie op branch ronde5/m8, na een eerdere agent die
+halverwege stopte (die had alleen scripts 30 en 31). Er is NIETS naar
+productie geschreven en vanuit de cloud ook niets tegen de server gedraaid
+(ook geen dry-run): geen toegang, geen superuser-gegevens.
+
+
+----------------------------------------------------------------
+0. EERSTE STAP: MERGE MET MAIN
+----------------------------------------------------------------
+De branch stond op f98053c (vóór M10). `git merge origin/main` ging zonder
+conflicten (bcdacb0). Daarna: flutter analyze schoon, flutter test 715
+groen. Dat was de uitgangsstand.
+
+
+----------------------------------------------------------------
+1. WAT AF IS
+----------------------------------------------------------------
+
+BACKEND
+  scripts/30-meldingen-collectie.mjs   (vorige agent) hh_meldingen + indexen
+  scripts/31-meldingen-rules.mjs       (vorige agent) rules van hh_meldingen
+  pb_hooks/hh_meldingen_hulp.js        NIEUW: teksten per soort en rol,
+                                       Nederlandse tijd, wie welke melding
+                                       krijgt, idempotent aanmaken
+  pb_hooks/hh_meldingen.pb.js          NIEUW: after-success op
+                                       hh_klus_status en hh_incidenten,
+                                       update-request op hh_meldingen
+  scripts/32-meldingencheck.mjs        NIEUW: dry-run standaard
+  scripts/33-hook-deploy.sh            NIEUW: deployt de twee hookbestanden
+  tests/hh_meldingen_hulp.test.mjs     NIEUW: 20 node-tests
+  SCHEMA.txt                           sectie "M8 - ..." onderaan
+  GETEST: node --check op 30, 31, 32 en beide hookbestanden; bash -n op 33;
+  node --test backend/tests/*.test.mjs: 20 geslaagd.
+
+APP
+  lib/core/pb/meldingen_gateway.dart (+ fake)   lijst, gelezen_op, realtime
+  lib/core/pb/incident_gateway.dart (+ fake)    nood/probleem melden
+  lib/core/pb/push_registratie.dart             PushRegistratie +
+                                                LegePushRegistratie +
+                                                PushTokenOpslag (laag 2)
+  lib/features/meldingen/                       model, domein, providers,
+                                                /meldingen, belletje,
+                                                MeldingenKop, regel op O1
+  lib/features/hulpvrager/veiligheid/           meldkamer_config.dart
+                                                (PLACEHOLDER), O10, O11,
+                                                paden, routes, providers
+  lib/l10n/teksten_meldingen_nl.dart            alle M8-teksten
+
+  Schermen en paden
+    /meldingen               overzicht voor jongere, familie, coordinator
+    /veiligheid/bel-ons      O10
+    /veiligheid/probleem     O11 (?klus=<id> vanaf J15)
+
+  Aanhaakpunten
+    O1   "Bel ons" opent O10; de laatste melding staat als rustige regel
+         bovenaan (geen teller, geen lijst)
+    O10  "Probleem melden" opent O11
+    J15  "Probleem melden" bij geaccepteerd, onderweg en bezig
+    kop  het belletje met teller boven de tabschermen van jongere en
+         coordinator en op de familie-landing
+
+  Tests
+    unit   melding_domein_test (titel per soort en rol, doel per rol,
+           ongelezen, invoegen uit realtime, tijd),
+           pocketbase_meldingen_gateway_test (filter met parameter, alleen
+           gelezen_op, incident-body, push-opslag maken/bijwerken)
+    widget meldingen_schermen_test: overzicht, O10 en elke stap van O11 in
+           beide dichtheden met semantiek en op 200 procent, hooguit drie
+           grote keuzes per stap, belletje, O1, J15
+    flow   meldingen_flow_test: nood melden, probleem met de lopende klus,
+           jongere vanaf J15, geen verbinding, melding via de stroom tot
+           gelezen en J15, regel op O1 tot O7;
+           meldingen_router_test: de echte router kent O10, O11, /meldingen
+  Bijgewerkt: hulpvrager/schermen_test (de O1-beltest zit nu op O10).
+
+  flutter analyze: No issues found.
+  flutter test:    792 geslaagd, 2 overgeslagen (prod-smoketests), 0 rood.
+  (Flutter 3.41.9 / Dart 3.11.5, in de cloud geïnstalleerd.)
+
+
+----------------------------------------------------------------
+2. WAT OPEN STAAT
+----------------------------------------------------------------
+  · UITROLLEN: niets gedraaid. De uitrollijst (00, 30, 31, 33, 32) met
+    verwachte uitkomsten staat bovenaan app/OPEN-PUNTEN-M8.txt.
+  · LAAG 2 (push naar het toestel): niet gebouwd, dus "klaar als: pushtokens
+    worden opgeslagen, meldingen komen aan op toestel" staat nog open.
+    OPEN-PUNTEN-M8 punt 1 zegt wat ervoor nodig is.
+  · iOS-simulatorbuild: niet gedraaid (geen Xcode in de container).
+  · Keuzes voor Ibrahim: OPEN-PUNTEN-M8 punten 2, 5, 6, 8, 10 en 11.
+
+
+----------------------------------------------------------------
+3. BRANCH, COMMITS EN GEDEELDE BESTANDEN
+----------------------------------------------------------------
+Branch: ronde5/m8 (gepusht), PR naar main.
+
+Gedeelde bestanden die M8 raakte (alleen regels erbij, niets verplaatst):
+  app/lib/app/router.dart                   2 imports + 2 spreads, in de
+                                            laatste commit
+  app/test/support/hh_toegang_wikkel.dart   meldingen- en incident-fake
+  app/test/support/hh_hulpvrager_wikkel.dart  idem
+  backend/SCHEMA.txt                        sectie onderaan
+Bestanden van andere milestones, zo klein mogelijk aangepast:
+  hulpvrager_home_screen.dart (M4)  Bel ons -> O10, regel bovenaan; de oude
+                                    eigen belcode is weg (die zit nu in O10)
+  klus_uitvoeren_screen.dart (M6)   knop "Probleem melden"
+  jongere_tabbalk.dart (M5)         body: MeldingenKop(child: child)
+  coordinator_tabbalk.dart (M10)    body: MeldingenKop(child: child)
+  familie_stub_screen.dart          RolLandingScherm in MeldingenKop
+                                    (M9 bouwt deze landing opnieuw)
+NIET geraakt: gateway_providers.dart, pubspec.yaml, pubspec.lock,
+design-componenten, scripts 00-14.

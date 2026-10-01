@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design/components/hh_keuzerij.dart';
+import '../../../../design/components/hh_knop.dart';
 import '../../../../design/components/hh_laad_staat.dart';
 import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../theme.dart';
@@ -15,6 +17,8 @@ import '../../../hulpvrager/provider/hulpvrager_providers.dart'
 import '../../../toegang/model/hh_rol.dart';
 import '../../../toegang/provider/sessie_providers.dart';
 import '../../provider/screening_providers.dart' show meldingVanFout;
+import '../../reputatie/paden_reputatie.dart';
+import '../../reputatie/provider/beoordeling_providers.dart';
 import '../../uitvoeren/domein/klus_overgang.dart';
 import '../../uitvoeren/paden_uitvoeren.dart';
 import '../domein/mijn_klussen_indeling.dart';
@@ -53,6 +57,9 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
 
     final stand = ref.watch(mijnKlussenProvider);
     final nu = ref.watch(klokProvider)();
+    // M7: welke klussen al beoordeeld zijn. Zolang dat niet bekend is, geen
+    // knop "Nog beoordelen" (liever geen knop dan een verkeerde).
+    final gegeven = ref.watch(gegevenBeoordelingenProvider).value;
 
     final inhoud = switch (stand) {
       AsyncData<List<HhKlus>>(:final value) => () {
@@ -91,6 +98,19 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
                     : HhPadenKlussen.klusDetail(klus.id),
               ),
             ),
+            if (_tab == MijnKlussenTab.historie &&
+                klus.status == HhKlusStatus.afgerond &&
+                gegeven != null &&
+                !gegeven.containsKey(klus.id)) ...[
+              SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+              HhKnop(
+                label: TekstenBeoordelenNl.j14NogBeoordelen,
+                icoon: Icons.star_outline_rounded,
+                soort: HhKnopSoort.tweedeKeus,
+                onPressed: () =>
+                    context.push(HhPadenReputatie.beoordelen(klus.id)),
+              ),
+            ],
             SizedBox(height: tussen),
           ],
         ];

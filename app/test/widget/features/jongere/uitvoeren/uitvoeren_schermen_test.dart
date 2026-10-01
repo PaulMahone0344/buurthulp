@@ -9,6 +9,7 @@ import 'package:heitjehulp_app/features/hulpvrager/status/screen/hulpvraag_statu
 import 'package:heitjehulp_app/features/hulpvrager/status/screen/hulpvragen_lijst_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/status/widget/hulpvraag_tegel.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/paden_uitvoeren.dart';
+import 'package:heitjehulp_app/l10n/teksten_beoordelen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_uitvoeren_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -213,8 +214,11 @@ void main() {
         find.widgetWithText(HhKnop, TekstenUitvoerenNl.j15NaarMijnKlussen),
         findsOneWidget,
       );
-      // Beoordelen komt in M7: geen verzonnen knop.
-      expect(find.textContaining('eoordel'), findsNothing);
+      // M7: de weg naar J17.
+      expect(
+        find.widgetWithText(HhKnop, TekstenBeoordelenNl.j15Beoordelen),
+        findsOneWidget,
+      );
     });
 
     testWidgets('een klus die niet kon laden toont de lege staat', (

@@ -1,0 +1,80 @@
+HEITJEHULP — BESLUITEN 30 SEP 2026 (Ibrahim, vragen uit PR #1 #2 #3)
+====================================================================
+
+Gebouwd op branch test/m7-m8-m9 (= main + ronde5/m7 + m8 + m9 gemerged).
+935 flutter-tests + 46 node-tests groen, analyze schoon. Staat op iPhone.
+
+M7
+  1. Dubbel beoordelen: oudere "U heeft al...", jongere "Je hebt al..."  ZO LATEN
+  2. J19: 5 nieuwste MET tekst, zonder naam van de oudere                ZO LATEN
+  3. O9: zin "De jongere kan dit lezen." bij het tekstvak                 GEBOUWD
+
+M8
+  1. Meldkamernummer + tijden Mozaïek: nog niet bekend                    OPEN (vóór pilot)
+  2. Echte push (Firebase + Apple-sleutel): later, na pilot-start         LATER
+  3. O11-keuzeteksten                                                     ZO LATEN
+  4. O11 via O10 (Bel ons), O1 blijft 3 knoppen                           ZO LATEN
+  5. Coordinator koppelt -> jongere krijgt ook melding                    GEBOUWD (hook)
+  6. O1-regel: alleen nieuwste ONGELEZEN                                  GEBOUWD
+  7. Bewaartermijn meldingen: later, met privacybeleid Mozaïek            LATER
+
+M9
+  1. Adres-lek F1: aanvragen niet tonen (app) + niet leesbaar (rule 44)   GEBOUWD
+  2. F3 toont meldingen van de oudere bij meekijken (rule 44 + lijst)     GEBOUWD
+  3. Rechten: lezen = meekijken, schrijven = plaatsen                     ZO LATEN
+  4. "Ja" geeft altijd beide rechten                                      ZO LATEN
+  5. Intrekken-knop F1: vervalt (aanvragen staan niet meer op F1)
+  6. Limiet 5/dag in servergeheugen: goed voor pilot                      ZO LATEN
+  + samenvoeg-punt: noodmelding alleen naar ACTIEVE koppeling             GEBOUWD (hook)
+
+UITROL NAAR PROD (niets gedraaid; auto-mode UIT; wacht op ja Ibrahim)
+In backend/, eerst: set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  0. node scripts/00-backup.mjs
+  M7
+  1. node scripts/20-reputatie-velden.mjs --apply
+  2. node scripts/21-reputatie-rules.mjs --apply
+  3. yes | bash scripts/23-hook-deploy.sh
+  4. yes | bash scripts/10-hook-deploy.sh
+  5. node scripts/22-beoordelingcheck.mjs --apply
+  M8
+  6. node scripts/30-meldingen-collectie.mjs --apply
+  7. node scripts/31-meldingen-rules.mjs --apply
+  8. yes | bash scripts/33-hook-deploy.sh
+  9. node scripts/32-meldingencheck.mjs --apply
+  M9
+ 10. node scripts/40-familie-velden.mjs --apply
+ 11. yes | bash scripts/43-hook-deploy.sh
+ 12. node scripts/41-familie-rules.mjs --apply
+ 13. node scripts/44-familie-lees-rules.mjs --apply      (NIEUW)
+ 14. node scripts/42-familiecheck.mjs --apply
+  Daarna ter controle: 04-rulecheck, 14-statuscheck, 50-koppelcheck.
+  Volgorde per M uit app/OPEN-PUNTEN-M7/M8/M9.txt; die zijn leidend als ze
+  afwijken. 33-hook-deploy.sh deployt de NIEUWE hh_meldingen_hulp.js (met
+  de 30-sep-wijzigingen); dus 33 draaien vanaf deze branch, niet vanaf m8.
+
+DAARNA
+  - test/m7-m8-m9 in main mergen, pushen, PR #1-#3 sluiten.
+  - M14 en M16 (cloud-prompts klaar in app-plan/CLOUD-M14/M16-PROMPT.txt).
+  - Vóór pilot: echt meldkamernummer, seed/test-accounts weg.
+
+UITROL 30 SEP 2026, 23:23-23:45 (NL) — GEDAAN
+  Backup: backend/backups/2026-09-30T21-23-00.json (in worktree
+  ~/flutter-builds/hh-test-m789).
+  Gedraaid: 00, 20, 21, 23, 10, 22 | 30, 31, 40 (vóór 33: nieuwe hook
+  filtert op status), 33, 32 | 43, 41, 44, 45 (NIEUW).
+  Checks: 04 223/0, 07 72/0, 11 27/0, 14 78/0, 22 42/0, 32 38/0, 50 60/0.
+  42-familiecheck NOG NIET GROEN GEDRAAID: daglimiet 5 aanvragen voor
+  familielid 1 (in servergeheugen) op door herhaalde runs -> 429. Opnieuw
+  na herstart PocketBase of morgen.
+
+  GEVONDEN EN GEREPAREERD
+  - 41 zette `@collection.hh_koppelingen.rechten ?= "..."`: op een
+    meerkeuzeveld nooit waar -> familie zag NIETS (04: 8 rood). Script 45
+    zet op prod `?~` (17 plekken); 41 en 44 gebruiken nu zelf `?~`.
+  - 22-beoordelingcheck: rekende vanaf de opgeslagen velden (0) i.p.v.
+    echte data (seed-klus + seed-beoordeling), en testte registreren als
+    superuser. Beide gerepareerd.
+  - 42-familiecheck: zocht wijk op veld `naam` (heet `wijk`); opruimen
+    dacht dat koppelingen/incidenten/beoordelingen meeverdwijnen met de
+    gebruiker (verplicht, geen cascade). Beide gerepareerd.
+  - 32-meldingencheck accepteert nu ook de leesrule van 44.

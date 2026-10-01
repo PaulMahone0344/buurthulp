@@ -1,0 +1,62 @@
+ONDERZOEK MOLLIE PAYMENTS API v2 (voor M16, later)
+Opgehaald 19 sep 2026 door een hulp-agent van M16, alleen uit de
+officiele docs gelezen (docs.mollie.com). Er is GEEN aanroep naar
+api.mollie.com gedaan. Tip: elke docs-pagina bestaat ook als markdown
+(.md erachter); /reference/* bevat de volledige OpenAPI-spec.
+Index: https://docs.mollie.com/llms.txt
+
+1. BETALING MAKEN   POST https://api.mollie.com/v2/payments
+   Header  Authorization: Bearer <sleutel>  (test_... of live_...)
+           Idempotency-Key: <uuid4> (optioneel)
+   Body    JSON. Verplicht: amount {currency:"EUR", value:"15.00"}
+           (value is ALTIJD een tekst met 2 decimalen) en description
+           (max 255 tekens).
+           Verder: redirectUrl, webhookUrl (niet localhost), method
+           "ideal", locale "nl_NL", metadata (tot ca. 1 kB).
+   Goed    201. id begint met tr_. Klant doorsturen naar
+           _links.checkout.href. status begint op "open".
+           metadata komt terug als tekst OF object: defensief lezen.
+   Fout    422 (veld mist / bedrag te hoog), 429, 503 (iDEAL plat).
+
+2. BETALING OPHALEN   GET /v2/payments/{id}
+   status: open | pending | authorized | paid | canceled | expired |
+           failed
+   Ook: amountRefunded, amountRemaining, paidAt, metadata.
+   Terugbetalingen liever via GET /v2/payments/{id}/refunds.
+   404 = onbekend id.
+
+3. WEBHOOK
+   Mollie stuurt POST, application/x-www-form-urlencoded, body alleen
+   id=tr_xxx. GEEN handtekening. Daarom: nooit de body vertrouwen,
+   altijd de betaling ophalen en de status van Mollie nemen.
+   Antwoord altijd 200, ook bij een onbekend id (niets lekken).
+   Binnen 15 seconden antwoorden, anders telt het als mislukt.
+   Herhaling: 10 keer in 26 uur (direct, +1, +2, +4, +8, +16, +29 min,
+   +1 u, +2 u, +22 u).
+   Geen redirect op de webhook-URL (301/302 gooit de body weg).
+   De webhook komt ook bij een terugbetaling en bij een chargeback.
+   Er bestaat ook "Next-gen Webhooks (beta)" met handtekening
+   X-Mollie-Signature: dat is iets ANDERS dan webhookUrl op een
+   betaling. Niet verwarren.
+
+4. TERUGBETALEN   POST /v2/payments/{id}/refunds
+   Verplicht alleen amount. Goed = 201, id begint met re_.
+   status: queued | pending | processing | refunded | failed | canceled
+   409 = twee dezelfde verzoeken kort na elkaar.
+
+5. IDEMPOTENCY
+   Header Idempotency-Key, 1 uur geldig, alleen op POST. Herhaling
+   herken je aan antwoordheader Idempotent-Replayed: true.
+   Zelfde sleutel met andere inhoud = 400; terwijl de eerste nog
+   loopt = 409. Vooral nuttig bij terugbetalen.
+
+6. IDEAL
+   method exact "ideal". Alleen EUR, min 0,01, max 50.000, sessie 15
+   minuten, terugbetalen kan 365 dagen, geen chargebacks.
+   Het veld issuer wordt sinds iDEAL 2 (2025) genegeerd: niet gebruiken.
+   Zonder method toont Mollie zelf een keuzescherm.
+
+NIET GEVONDEN IN DE DOCS
+   - of Content-Type application/json verplicht is (spec zegt alleen
+     JSON; het curl-voorbeeld gebruikt form-velden; stuur JSON)
+   - de vorm van _embedded bij embed=refunds

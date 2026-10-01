@@ -16,6 +16,8 @@ class NieuweKlus {
     required this.wanneerVan,
     required this.wanneerTot,
     required this.bedragen,
+    this.geplaatstDoorId,
+    this.bron = bronApp,
   });
 
   final String hulpvragerId;
@@ -26,15 +28,20 @@ class NieuweKlus {
   final DateTime wanneerTot;
   final HhBedragen bedragen;
 
+  /// M9: een familielid plaatst namens de oudere (F2). Leeg = de oudere zelf.
+  final String? geplaatstDoorId;
+  final String bron;
+
   static const statusOpen = 'open';
   static const statusConcept = 'concept';
   static const bronApp = 'app';
+  static const bronFamilie = 'familie';
 
   /// Het verzoek zoals de server hem verwacht. Datums in UTC (ISO 8601),
   /// bedragen in centen.
   Map<String, dynamic> get alsBody => {
     'hulpvrager': hulpvragerId,
-    'geplaatst_door': hulpvragerId,
+    'geplaatst_door': geplaatstDoorId ?? hulpvragerId,
     'klustype': klustypeId,
     'omschrijving': omschrijving,
     'adres': adres,
@@ -44,7 +51,7 @@ class NieuweKlus {
     'bedrag_bruto': bedragen.bedragBruto,
     'vergoeding_jongere': bedragen.vergoedingJongere,
     'commissie': bedragen.commissie,
-    'bron': bronApp,
+    'bron': bron,
   };
 }
 

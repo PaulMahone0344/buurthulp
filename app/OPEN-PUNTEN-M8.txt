@@ -1,0 +1,169 @@
+OPEN PUNTEN M8 — MELDINGEN EN VEILIGHEID (meldingen-overzicht, O10, O11)
+Geschreven 27 september 2026, bij het afmaken van M8 op branch ronde5/m8
+(cloudsessie, zonder toegang tot de PocketBase-server). Alles hier is bewust
+NIET gebouwd: het stond niet in de prompt, er moet eerst een keuze worden
+gemaakt, of het kon vanuit de cloud niet.
+
+
+================================================================
+UITROLLIJST (NIETS HIERVAN IS GEDRAAID)
+================================================================
+Vanuit de cloud is er niets tegen de server gedraaid, ook geen dry-run.
+Wel: `node --check` op 30, 31, 32, hh_meldingen.pb.js en
+hh_meldingen_hulp.js; `bash -n` op 33; en de 20 node-tests van de
+hook-helper (node --test backend/tests/*.test.mjs), allemaal groen.
+
+Vooraf, in backend/:
+  set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  (en backend/seed-accounts.local.json moet er staan, voor stap 5)
+
+  1. node scripts/00-backup.mjs
+       verwacht: schema-export in backups/<datum>.json (alleen-lezen)
+
+  2. node scripts/30-meldingen-collectie.mjs             (dry-run eerst)
+     node scripts/30-meldingen-collectie.mjs --apply
+       verwacht: hh_meldingen aangemaakt, 10 velden (ontvanger, soort,
+       klus, incident, titel, tekst, sleutel, gelezen_op, created,
+       updated; plus id) en 2 indexen. Tweede run: "Niets te doen".
+
+  3. node scripts/31-meldingen-rules.mjs                 (dry-run: toont het verschil)
+     node scripts/31-meldingen-rules.mjs --apply
+       verwacht: regels bijgewerkt op hh_meldingen (list, view en update;
+       create en delete blijven null). Toont ter controle de createRule van
+       hh_incidenten (niet gewijzigd). Tweede run: "al up-to-date".
+
+  4. yes | bash scripts/33-hook-deploy.sh
+       verwacht: in /root/pb_hooks/ precies twee bestanden erbij:
+       hh_meldingen_hulp.js en hh_meldingen.pb.js; journalctl zonder
+       laadfouten. NA stap 2: zonder collectie mislukt elke trigger (met een
+       logregel; een statuswissel breekt nooit).
+
+  5. node scripts/32-meldingencheck.mjs                  (dry-run: leescontroles)
+     node scripts/32-meldingencheck.mjs --apply
+       verwacht: alle checks groen, 0 rood, alles opgeruimd.
+       Opruim-knop: node scripts/32-meldingencheck.mjs --apply --alleen-opruimen
+
+  Rollback: bash scripts/33-hook-deploy.sh --rollback haalt beide
+  M8-bestanden weg. De collectie hh_meldingen mag blijven staan (niemand
+  kan er via de API iets in zetten).
+
+  App: geen server-actie. De app praat pas met hh_meldingen als de
+  collectie bestaat; daarvoor geeft het belletje gewoon 0 en staat er op O1
+  geen regel (de fout wordt stil opgevangen).
+
+
+================================================================
+OPEN PUNTEN
+================================================================
+
+1. LAAG 2 (PUSH NAAR HET TOESTEL) IS NIET GEBOUWD — "KLAAR ALS" STAAT OPEN
+   Het plan zegt bij M8: "Klaar als: pushtokens worden opgeslagen,
+   meldingen komen aan op toestel". Met laag 1 staan meldingen alleen IN de
+   app (realtime zolang de app open is). Er komt niets aan op een gesloten
+   toestel en er wordt geen token opgeslagen: de app draait met
+   LegePushRegistratie. Wat laag 2 nodig heeft:
+     - een Firebase-project (FCM) en daarin de Apple-sleutel (.p8) voor
+       APNs, plus de push-capability en background modes in het
+       iOS-project;
+     - firebase_core en firebase_messaging in pubspec.yaml, en een
+       implementatie van PushRegistratie (lib/core/pb/push_registratie.dart)
+       die het token vraagt en via PushTokenOpslag in hh_push_tokens zet;
+       uitloggen roept verwijderToken aan; de toestemmingsvraag (iOS) moet
+       een eigen, rustig moment krijgen;
+     - een verzender die met het service-account een RS256-JWT tekent voor
+       FCM HTTP v1. De PocketBase-JSVM kan dat niet zelf; een kleine
+       functie buiten PocketBase (Cloud Function of een eigen dienstje),
+       die de hook bij elke nieuwe hh_meldingen-rij met $http.send
+       aanroept;
+     - kosten en beheer van dat account (Mozaiek).
+   De app is erop voorbereid: laag 2 wisselt alleen pushRegistratieProvider.
+
+2. MELDKAMERNUMMER EN OPENINGSTIJDEN ZIJN PLACEHOLDERS
+   Het meldkamernummer staat op één plek: HhConfig.meldkamerTelefoon
+   (0800-0000000), en MeldkamerConfig.telefoon
+   (lib/features/hulpvrager/veiligheid/meldkamer_config.dart) verwijst
+   daarnaar, zodat G8, J9, O1, O10 en O11 nooit uit elkaar lopen. Het echte
+   nummer en de openingstijden (nu "op werkdagen, van negen tot vijf uur" in
+   teksten_meldingen_nl.dart) moeten van Mozaiek komen.
+
+3. C4 BESTAAT NIET
+   Het plan noemt bij M8 een scherm C4; dat staat niet in hoofdstuk 3. Zoals
+   de prompt zegt: genegeerd. De coordinator ziet incidenten in C1 (M10) en
+   krijgt nu ook een melding met het belletje.
+
+4. EXTRA VELD sleutel OP hh_meldingen
+   De prompt eist "(ontvanger + soort + klus + logregel) nooit dubbel" maar
+   noemt geen veld voor de logregel. Script 30 voegt daarom "sleutel" toe
+   ("klusstatus:<logregel-id>" of "incident:<id>") met een unieke index op
+   (ontvanger, soort, sleutel).
+
+5. O11: "DRIE VASTE KEUZES + ANDERS" TEGENOVER "HOOGUIT DRIE KEUZES"
+   De drie vaste keuzes zijn grote knoppen; "Iets anders" is een kleine
+   tekstknop eronder (zoals de "Anders"-reden bij annuleren in M6). De
+   test telt de grote knoppen (hooguit drie). De drie keuzeteksten heb ik
+   zelf gekozen: "Er kwam niemand", "Er is iets kapot of kwijt", "Ik voelde
+   me niet prettig". Graag bevestigen of vervangen.
+
+6. O11-INGANG VOOR DE OUDERE ZIT OP O10, NIET OP O1 OF O7
+   O1 houdt drie grote knoppen (ouderenregel); "Bel ons" opent O10, en daar
+   staat "Probleem melden" als tweede keus. Op O7 is er tijdens
+   geaccepteerd/onderweg geen ruimte (bellen, stoppen, vernieuwen = al
+   drie). O11 zoekt zelf de klus die bij de oudere nu loopt en stuurt die
+   mee. De jongere komt er via J15 (ook bij bezig).
+
+7. HET BELLETJE ZIT IN EEN STROOK BOVEN HET TABSCHERM
+   HhScherm heeft geen plek voor een actie in de kop; dat gedeelde
+   onderdeel is niet aangepast. MeldingenKop zet een strook met het
+   belletje rechtsboven in JongereTabScherm, CoordinatorTabScherm en de
+   familie-landing. Dat kost een regel hoogte. Bij M11 (ontwerp) kan het
+   belletje beter naast de titel. LET OP M9: die bouwt de familie-landing
+   opnieuw; houd daar MeldingenKop (of het belletje) aan.
+
+8. KOPPELEN DOOR DE COORDINATOR: DE JONGERE HOORT HET NIET
+   Volgens de prompt gaat "naar geaccepteerd" alleen naar de oudere. Als de
+   coordinator een jongere koppelt (M10), krijgt die jongere dus geen
+   melding. Een melding "toegewezen" aan de jongere als door ≠ jongere is
+   één regel in hh_meldingen_hulp.js. Keuze nodig.
+
+9. NIEUWE KLUS: ALLEEN OP WIJK
+   Goedgekeurde jongeren in de wijk van de oudere, max 50. Niet gefilterd op
+   straal, beschikbaarheid of klussoorten. Een klus die weer open gaat
+   (teruggegeven of vrijgegeven) wordt opnieuw aangeboden, behalve aan wie
+   hem teruggaf.
+
+10. DE REGEL OP O1 TOONT ALTIJD DE LAATSTE MELDING
+    Ook als die gelezen of oud is. Alternatief: alleen ongelezen, of alleen
+    van de laatste dagen. Keuze nodig.
+
+11. MELDINGEN BLIJVEN BEWAARD
+    Er is geen opruimen en geen bewaartermijn; de app toont de nieuwste 50.
+    Een termijn (bijvoorbeeld 90 dagen) vraagt een cron-hook.
+
+12. AFTER-SUCCESS-HOOK OP EEN GEDEELDE SERVER
+    De triggers moeten after-success zijn: M6/M10 schrijven de logregels via
+    $app/txApp, en daar komt geen request-hook langs. Zo'n keten stopt als
+    een handler vóór ons geen e.next() aanroept (dat is hier eerder
+    gebeurd). hh_meldingen.pb.js laadt vóór main.pb.js en roept e.next()
+    altijd aan. Bewijs na de uitrol: 32-meldingencheck --apply.
+
+13. TIJDEN IN DE MELDINGTEKST
+    "Yusuf komt dinsdag 15 september om 10:00." De hook rekent de
+    Nederlandse tijd zelf uit (EU-zomertijdregel), want de JSVM heeft geen
+    tijdzonedatabase. Een tijd is geen statistiek; O7 (M6) toont ook
+    tijden. Liever "morgen om 10 uur"? Dat klopt alleen op de dag zelf,
+    daarom een vaste datum.
+
+14. EEN MELDING DIE BINNENKOMT TIJDENS HET EERSTE LADEN
+    Komt er een realtime-melding binnen vóór de lijst geladen is, dan valt
+    hij weg tot de volgende keer laden (pull-to-refresh of opnieuw openen).
+
+15. FAMILIE: TIK OP EEN MELDING DOET NIETS
+    Familie heeft nog geen schermen (M9). De melding wordt wel gelezen.
+
+16. BACKEND-TESTS NIET IN package.json
+    De node-tests staan in backend/tests/ en draaien met
+    node --test backend/tests/*.test.mjs; package.json is niet aangeraakt.
+
+17. iOS-SIMULATORBUILD NIET GEDRAAID
+    Linux-container zonder Xcode. flutter analyze en flutter test zijn
+    groen (Flutter 3.41.9, Dart 3.11.5).

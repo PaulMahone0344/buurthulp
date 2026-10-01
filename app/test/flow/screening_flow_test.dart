@@ -7,6 +7,7 @@ import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_stub_screen
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
+import 'package:heitjehulp_app/features/jongere/reputatie/screen/mijn_reputatie_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/screening_beschikbaarheid_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/screening_foto_screen.dart';
@@ -17,6 +18,7 @@ import 'package:heitjehulp_app/features/jongere/screen/screening_profiel_screen.
 import 'package:heitjehulp_app/features/jongere/screen/screening_vog_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/screening_werkgebied_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
+import 'package:heitjehulp_app/l10n/teksten_beoordelen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
@@ -131,7 +133,10 @@ void main() {
       expect(find.byType(JongereStubScreen), findsOneWidget);
       expect(find.text(TekstenKlussenNl.j11Titel), findsOneWidget);
 
+      // M7: de tab Profiel is J19; J9 zit onder "Mijn screening".
       await tikTekst(tester, TekstenKlussenNl.tabProfiel);
+      expect(find.byType(MijnReputatieScreen), findsOneWidget);
+      await tikKnop(tester, TekstenBeoordelenNl.j19Screening);
       expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
       expect(find.text(TekstenJongereNl.statusGoedgekeurd), findsWidgets);
 
