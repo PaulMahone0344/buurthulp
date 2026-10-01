@@ -39,6 +39,8 @@ export type Klus = {
   hulpvragerId: string
   hulpvragerNaam: string
   hulpvragerTelefoon: string
+  /** Wijk van de oudere; voor het sorteren bij handmatig koppelen. */
+  hulpvragerWijkNaam?: string
   jongereId: string
   jongereNaam: string
   klustypeId: string
@@ -167,4 +169,16 @@ export type NieuweKlus = {
   omschrijving: string
   adres: string
   wanneerVan: string
+  wanneerTot: string
 }
+
+/** Het besluit van de coordinator over een jongere (D2). */
+export type Screeningbesluit = {
+  verificatiestatus: 'goedgekeurd' | 'afgewezen'
+  notitie: string
+  vogStatus: Screeningstatus | ''
+  vogGeldigTot: string
+  ibanGeverifieerd: boolean
+}
+
+export type Auditactie = 'aanmaken' | 'wijzigen' | 'verwijderen'
