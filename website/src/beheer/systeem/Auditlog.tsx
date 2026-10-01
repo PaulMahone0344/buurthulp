@@ -1,0 +1,71 @@
+// M14 — het auditlog (D4): wie deed welke beheerhandeling. De regels schrijft
+// alleen de hook hh_beheer.pb.js; lezen kan alleen de coordinator.
+
+import { useCallback, useState } from 'react'
+import type { BeheerData } from '../data/beheerData'
+import { filterAuditlog, type Auditfilter } from '../data/filters'
+import { toonMoment } from '../data/tijd'
+import type { Auditregel } from '../data/types'
+import { Foutmelding } from '../gedeeld/Meldbalk'
+import { useLaden } from '../gedeeld/useLaden'
+
+const GEEN: Auditregel[] = []
+const ACTIES = [
+  { id: '', label: 'Alle acties' },
+  { id: 'aanmaken', label: 'Aanmaken' },
+  { id: 'wijzigen', label: 'Wijzigen' },
+  { id: 'verwijderen', label: 'Verwijderen' },
+]
+
+type Props = { data: BeheerData; actie: string; persoon: string; zetFilter: (filter: Auditfilter) => void }
+
+export function Auditlog({ data, actie, persoon, zetFilter }: Props) {
+  const laad = useCallback(() => data.auditlog(), [data])
+  const regels = useLaden(laad, GEEN)
+  const [persoonInvoer, setPersoonInvoer] = useState(persoon)
+  const zichtbaar = filterAuditlog(regels.waarde, { actie, persoon })
+
+  return (
+    <>
+      <h2>Auditlog</h2>
+      <div className="beheer-formulier beheer-formulier--rij">
+        <label className="field">
+          <span>Actie</span>
+          <select value={actie} onChange={(e) => zetFilter({ actie: e.target.value, persoon })}>
+            {ACTIES.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          <span>Persoon</span>
+          <input
+            value={persoonInvoer}
+            onChange={(e) => setPersoonInvoer(e.target.value)}
+            onBlur={() => zetFilter({ actie, persoon: persoonInvoer.trim() })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') zetFilter({ actie, persoon: persoonInvoer.trim() })
+            }}
+          />
+        </label>
+      </div>
+      <Foutmelding melding={regels.fout} />
+      <div className="activity-list" aria-label="Auditregels">
+        {zichtbaar.map((r) => (
+          <article key={r.id}>
+            <strong>
+              {r.doorNaam || 'Onbekend'} · {r.actie} · {r.doelCollectie}
+            </strong>
+            <span>
+              {toonMoment(r.gebeurdOp)} · {r.doelId}
+              {r.detail ? ` · ${r.detail}` : ''}
+            </span>
+          </article>
+        ))}
+        {regels.geladen && zichtbaar.length === 0 ? <p className="empty-note">Geen regels.</p> : null}
+      </div>
+    </>
+  )
+}

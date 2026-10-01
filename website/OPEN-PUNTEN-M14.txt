@@ -1,0 +1,117 @@
+OPEN PUNTEN M14 — BEHEERPANEEL OP HET WEB (HeitjeHulp)
+Branch ronde5/m14. Afgemaakt 1 okt 2026 (cloud-sessie, zonder servertoegang).
+
+================================================================
+UITROLLIJST (niets gedraaid; alles in backend/, op een Mac met de .env)
+================================================================
+  set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  0. node scripts/00-backup.mjs
+  1. node scripts/60-beheer-velden.mjs                 dry-run: 6 wijzigingen
+     node scripts/60-beheer-velden.mjs --apply         (4 velden, 2 collecties)
+  2. node scripts/61-beheer-rules.mjs                  dry-run: 11 regels
+     node scripts/61-beheer-rules.mjs --apply          (7 op de nieuwe collecties,
+                                                        4 gewikkeld op hh_users/hh_profielen)
+  3. yes | bash scripts/63-hook-deploy.sh              hh_beheer_hulp.js + hh_beheer.pb.js
+                                                        (lijst vóór/na: alleen deze twee erbij)
+     yes | bash scripts/64-hook-deploy.sh              hh_klussen.pb.js + hh_coordinator.pb.js
+                                                        (bestaande hooks bijwerken, met backup
+                                                        op de server; annuleren door de
+                                                        coordinator + koppelen weigert bij
+                                                        verlopen VOG)
+  4. node scripts/62-beheercheck.mjs                   dry-run: ±22 groen, 0 rood
+     node scripts/62-beheercheck.mjs --apply           verwacht ±120 groen, 0 rood (+2 VOG, +2 intake)
+     Bij een afbreking: node scripts/62-beheercheck.mjs --apply --alleen-opruimen
+  5. Ter controle daarna: 04-rulecheck (223), 14-statuscheck (85; was 78,
+     +7 voor annuleren door de coordinator),
+     50-koppelcheck (60), 07-screeningcheck (72), 32-meldingencheck (38).
+  6. Website: VITE_POCKETBASE_URL=https://api.qawayahbase.com bij de build
+     (npm run build in website/), dan de nieuwe dist/ uitrollen. Het paneel
+     staat op <site>/#/beheer.
+  Rollback hook: bash scripts/63-hook-deploy.sh --rollback en
+  bash scripts/64-hook-deploy.sh --rollback (zet de backup terug). De velden en
+  collecties zijn additief en mogen blijven staan.
+
+  VOLGORDE-LET-OP: draai 02, 06, 13 of 21 na stap 2 niet meer met --apply
+  (dan valt het M14-slot van hh_users/hh_profielen eraf; 61 opnieuw draaien
+  zet hem terug).
+
+================================================================
+NODIG IN hh_klussen.pb.js  — GEDAAN 1 okt (lokaal, na de cloud-PR)
+================================================================
+Gebouwd: de coordinator telt in de route als de oudere (open, geaccepteerd,
+onderweg -> geannuleerd; bij bezig 409). 14-statuscheck sectie H heeft 7
+nieuwe checks. Oorspronkelijke vondst:
+1. ANNULEREN DOOR DE COORDINATOR. De route POST /api/hh/klussen/{id}/annuleren
+   (M6) laat alleen de oudere, geplaatst_door en de toegewezen jongere toe.
+   Een coordinator krijgt 403 {reden:"geendeelnemer"}, BEHALVE bij een klus
+   die hij zelf telefonisch plaatste (dan is hij geplaatst_door). Het paneel
+   bouwt tegen de route en toont de melding van de server. Voorstel: in de
+   route "isCoordinator" (rol coordinator) toelaten bij open, geaccepteerd en
+   onderweg, met als uitkomst geannuleerd en dezelfde logregel (door = de
+   coordinator, toelichting = de reden). De M8-hook stuurt dan al beide
+   deelnemers een melding.
+
+================================================================
+OPEN PUNTEN
+================================================================
+1. BESLOTEN 2 okt (Ibrahim): voor de pilot blijft het zo. De coordinator
+   regelt alles voor deze ouderen; bij een echtpaar één keer het nummer.
+   Oorspronkelijk: E-mail bij een telefonische oudere. PocketBase eist een e-mail op hh_users.
+   Zonder e-mail maakt het paneel <cijfers van het telefoonnummer>@
+   telefonisch.heitjehulp.invalid. Gevolg: twee ouderen met hetzelfde nummer
+   kunnen niet allebei zonder e-mail; de tweede krijgt een foutmelding van de
+   server. Het wachtwoord is willekeurig en wordt nergens getoond: zo'n oudere
+   kan (nog) niet zelf inloggen. Beslissen: blijft dat zo, of komt er later
+   een "uitnodiging om zelf in te loggen"?
+2. BESLOTEN 2 okt (Ibrahim): vinkje "Intake gehad" + datum op het
+   screeningscherm; veld hh_profielen.intake_op (60), alleen de coordinator
+   zet het (61). Geen afspraakfunctie.
+   Oorspronkelijk: Intakegesprek [L]. Staat in D2 maar is niet gebouwd (geen veld, geen
+   scherm). Te beslissen: alleen een vinkje + datum op hh_profielen, of een
+   afspraak-functie.
+3. Instellingen (commissiepercentage, straal_km, annuleertermijn_uren) worden
+   alleen opgeslagen. Er hangt nog geen gedrag aan: de app rekent nog met
+   commissie 0 (M4 OPEN-PUNT 17), gebruikt haar eigen straal en kent geen
+   annuleertermijn.
+4. Betalingen: "Opnieuw aanbieden" staat uit tot M16 (Mollie). Het paneel
+   toont hh_betalingen alleen.
+5. Blokkeren en realtime. Een geblokkeerde gebruiker kan niet meer inloggen,
+   zijn token werkt niet meer op hh-collecties, hh-routes en het opzetten van
+   realtime. Een realtime-verbinding die al openstond, blijft open tot de app
+   hem sluit (PocketBase kan een lopende SSE-verbinding niet per gebruiker
+   afkappen). Bestanden (/api/files/...) gaan niet via het hh_-pad en vallen
+   er ook buiten; de foto's zijn PROTECTED en vragen een bestandstoken, dat
+   een geblokkeerde gebruiker niet meer krijgt.
+6. Auditlog en rechtstreekse handelingen. De hook logt alleen handelingen van
+   een coordinator via de API. Wat de superuser in het PocketBase-dashboard
+   doet, en wat hooks via $app doen (reputatie, meldingen), staat er niet in.
+   Afwijking van de prompt: request-hooks i.p.v. onRecordAfter*Success, omdat
+   die laatste in PB 0.25 geen auth (geen "door") kennen.
+7. BESLOTEN 2 okt (Ibrahim): blijft leesbaar voor de pilot; onder het
+   notitieveld staat "De jongere kan deze notitie lezen. Schrijf hem zakelijk."
+   Oorspronkelijk: Screening-notitie leesbaar voor de jongere. De rules laten de eigenaar zijn
+   eigen hh_profielen lezen, dus ook screening_notitie. Schrijf de notitie
+   daarom zakelijk. Echt afschermen = de notitie naar een eigen collectie.
+8. Hoeveelheid. Klussen en incidenten worden in hun geheel geladen
+   (getFullList), het auditlog de laatste 500 regels. Prima voor de pilot;
+   bij duizenden klussen een periode-filter toevoegen.
+9. BESLOTEN 2 okt (Ibrahim): geen knop op de site; Ibrahim geeft de link
+   zelf aan Mozaïek.
+   Oorspronkelijk: Vindbaarheid. Het paneel staat op #/beheer; er is (bewust) geen knop op de
+   publieke site. De demo-login (LoginPanel/AdminDashboard met demoData) is
+   ongewijzigd. Wil Ibrahim een link "Beheer" in de voettekst?
+10. Klokken. "Vandaag gepland" en "afgewezen deze maand" rekenen in
+    Nederlandse tijd (Europe/Amsterdam via Intl), los van de tijdzone van de
+    computer in de meldkamer.
+11. BESLOTEN 2 okt (Ibrahim): verlopen VOG = niet koppelen. Paneel laat
+    zo'n jongere weg; de koppelroute (hh_coordinator) geeft 409
+    "vogverlopen". Leeg vog_geldig_tot telt als niet verlopen. Accepteren
+    door de jongere zelf (M5) kijkt nog niet naar de VOG-datum — apart punt.
+    Oorspronkelijk: Koppelkandidaten: goedgekeurde jongeren die niet geblokkeerd zijn. Een
+    jongere met een verlopen VOG staat er nog tussen (geen regel voor
+    "verlopen = niet koppelen"). Beslissen.
+12. 62-beheercheck is nooit tegen de server gedraaid (geen toegang in deze
+    sessie). Het incident en de open klus in de check laten de M8-hook
+    meldingen maken voor ECHTE coordinatoren en seed-jongeren in Tiel-West;
+    die verwijdert de check aan het eind weer, maar ze kunnen tijdens de run
+    kort in de app verschijnen.

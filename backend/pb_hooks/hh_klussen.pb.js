@@ -311,6 +311,8 @@ routerAdd(
 // --------------------------------------------------------------------------
 // M6 — POST /api/hh/klussen/{id}/annuleren   body {reden}
 // De oudere annuleert de klus; de jongere geeft hem terug aan de buurt.
+// M14: een coordinator (meldkamer) annuleert net als de oudere, ook bij een
+// klus die de oudere zelf in de app zette.
 // --------------------------------------------------------------------------
 routerAdd(
   "POST",
@@ -346,6 +348,7 @@ routerAdd(
     }
 
     const authId = e.auth.id;
+    const isCoordinator = String(e.auth.get("rol") || "") === "coordinator";
 
     let uitkomst = "";
     let nieuweStatus = "";
@@ -360,8 +363,9 @@ routerAdd(
       const hulpvrager = String(klus.get("hulpvrager") || "").trim();
       const geplaatstDoor = String(klus.get("geplaatst_door") || "").trim();
       const toegewezen = String(klus.get("toegewezen_jongere") || "").trim();
-      const isOudere = authId === hulpvrager || authId === geplaatstDoor;
-      const isJongere = toegewezen !== "" && authId === toegewezen;
+      // De coordinator annuleert namens de oudere: zelfde regels, zelfde uitkomst.
+      const isOudere = authId === hulpvrager || authId === geplaatstDoor || isCoordinator;
+      const isJongere = !isOudere && toegewezen !== "" && authId === toegewezen;
       if (!isOudere && !isJongere) {
         uitkomst = "geendeelnemer";
         return;

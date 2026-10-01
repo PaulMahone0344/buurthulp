@@ -1,0 +1,55 @@
+STAND M14 — BEHEERPANEEL (1 okt 2026)
+Branch ronde5/m14 (eerst origin/main erin gemerged, geen conflicten).
+Het werk zelf staat in website/ en backend/; app/ is niet aangeraakt.
+
+AF
+  Website (website/src/beheer/, op <site>/#/beheer)
+  - Inloggen met een echt hh_users-account; alleen rol coordinator komt erin.
+    Elke andere rol: nette weigering en meteen uitgelogd. Geblokkeerd: de
+    melding van de server.
+  - D1 Meldkamer: vijf tegels (open | zonder match > 2 uur | vandaag gepland |
+    nu bezig | incidenten open), hulpvragentabel met filters nieuw / gematcht
+    / in uitvoering / afgerond (in de URL), incidenten nieuwste bovenaan met
+    afhandelen, realtime verversen (hh_klussen + hh_incidenten).
+    Acties: telefonische aanmelding (oudere zoeken of aanmaken, dan klus met
+    bron telefoon, status open, bedragen uit de richtvergoeding, commissie 0),
+    handmatig koppelen (M10-route, jongeren uit de wijk eerst, waarschuwing bij
+    een andere wijk), vrijgeven (M10-route), annuleren (M6-route).
+  - D2 Screening: tegels (wachtend | VOG loopt | afgewezen deze maand),
+    wachtrij (oudste eerst), lijst "VOG verloopt" (binnen 60 dagen of
+    verlopen), per jongere documentfoto en selfie naast elkaar (bestandstoken),
+    VOG, IBAN, over mij; goedkeuren/afkeuren met verplichte notitie, VOG-status,
+    VOG geldig tot en IBAN gecontroleerd.
+  - D4 Systeembeheer: wijken aan/uit + postcodes + nieuwe wijk; klustypes
+    (richtduur, richtvergoeding) + nieuw; gebruikers zoeken, rol wijzigen,
+    blokkeren/deblokkeren (met bevestigen); instellingen (commissiepercentage,
+    straal, annuleertermijn; alleen opslaan); betalingen (alleen lezen,
+    "opnieuw aanbieden" uit tot M16); auditlog met filter op actie en persoon.
+  - Data-laag achter één interface (BeheerData) met PocketBase-versie en een
+    nep-versie voor de tests. Navigatie en filters in de hash, geen
+    router-pakket. Ontwerptaal van AdminDashboard (tegelgrid, rijen,
+    statuspillen) hergebruikt; demo (AdminDashboard + demoData) ongewijzigd.
+  Backend
+  - 60-beheer-velden.mjs: hh_profielen.screening_notitie + vog_geldig_tot,
+    hh_users.geblokkeerd, collecties hh_instellingen en hh_auditlog.
+  - 61-beheer-rules.mjs: rules van de twee nieuwe collecties; slot op
+    hh_users/hh_profielen gewikkeld (alleen coordinator zet de nieuwe velden).
+  - hh_beheer.pb.js + hh_beheer_hulp.js: geblokkeerd = niet inloggen en geen
+    hh-aanroep meer; auditregel per create/update/delete door een coordinator
+    op de zes beheercollecties.
+  - 62-beheercheck.mjs (dry-run standaard; --apply met eigen tijdelijke
+    accounts, ruimt alles op) en 63-hook-deploy.sh.
+  - SCHEMA.txt: sectie "M14" onderaan toegevoegd.
+
+TESTS (1 okt 2026)
+  website: npm run lint schoon, npm run test:run 14 bestanden / 91 tests
+           groen, npm run build groen
+  backend: node --test backend/tests/*.test.mjs 60 groen (46 oud + 14 nieuw);
+           node --check op hook, hulpbestand en scripts 60-62; bash -n op 63
+  app:     flutter analyze schoon, flutter test groen (935, ongewijzigd)
+  NIET gedraaid: 60/61/62 tegen de server (geen toegang, ook geen dry-run).
+
+OPEN
+  Zie website/OPEN-PUNTEN-M14.txt: uitrollijst, NODIG IN hh_klussen.pb.js
+  (coordinator mag annuleren) en 12 open punten (o.a. telefonisch e-mailadres,
+  intakegesprek, instellingen zonder gedrag, realtime na blokkeren).
