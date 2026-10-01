@@ -112,6 +112,7 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     vogStatus: tekst(r.vog_status) as Profiel['vogStatus'],
     vogGeldigTot: naarIso(r.vog_geldig_tot).slice(0, 10),
     vogAangevraagdOp: naarIso(r.vog_aangevraagd_op),
+    intakeOp: naarIso(r.intake_op).slice(0, 10),
     ibanGeverifieerd: r.iban_geverifieerd === true,
     iban: tekst(r.iban),
     overMij: tekst(r.over_mij),

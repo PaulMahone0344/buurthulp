@@ -16,7 +16,8 @@
 //    eerdere milestones letterlijk staan en mag alleen de coordinator de
 //    nieuwe velden zetten:
 //      hh_users.createRule/updateRule      geblokkeerd
-//      hh_profielen.createRule/updateRule  screening_notitie, vog_geldig_tot
+//      hh_profielen.createRule/updateRule  screening_notitie, vog_geldig_tot,
+//                                          intake_op
 //    Idempotent: staat het slot er al, dan gebeurt er niets. null blijft
 //    null; een lege rule ("" = publiek) wordt geweigerd.
 //
@@ -56,7 +57,7 @@ export const NIEUWE_RULES = {
 /// Welke velden op welke bestaande collectie alleen de coordinator zet.
 export const SLOT_VELDEN = {
   hh_users: ['geblokkeerd'],
-  hh_profielen: ['screening_notitie', 'vog_geldig_tot'],
+  hh_profielen: ['screening_notitie', 'vog_geldig_tot', 'intake_op'],
 };
 const SLOT_RULES = ['createRule', 'updateRule'];
 

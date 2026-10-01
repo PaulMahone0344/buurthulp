@@ -24,5 +24,6 @@ export function besluitBody(besluit: Screeningbesluit) {
     vog_status: besluit.vogStatus,
     vog_geldig_tot: besluit.vogGeldigTot ? `${besluit.vogGeldigTot.slice(0, 10)} 12:00:00.000Z` : '',
     iban_geverifieerd: besluit.ibanGeverifieerd,
+    intake_op: besluit.intakeOp ? `${besluit.intakeOp.slice(0, 10)} 12:00:00.000Z` : '',
   }
 }

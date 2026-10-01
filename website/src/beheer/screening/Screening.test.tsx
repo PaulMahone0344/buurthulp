@@ -69,6 +69,9 @@ describe('D2 screening', () => {
     await user.selectOptions(within(detail).getByLabelText('VOG-status'), 'goedgekeurd')
     await user.type(within(detail).getByLabelText('VOG geldig tot'), '2027-09-01')
     await user.click(within(detail).getByLabelText('IBAN gecontroleerd'))
+    expect(within(detail).queryByLabelText('Intake op')).not.toBeInTheDocument()
+    await user.click(within(detail).getByLabelText('Intake gehad'))
+    expect(within(detail).getByLabelText('Intake op')).toHaveValue('2026-09-19')
     expect(within(detail).getByLabelText('Notitie (verplicht)')).toHaveAccessibleDescription(
       'De jongere kan deze notitie lezen. Schrijf hem zakelijk.',
     )
@@ -86,9 +89,19 @@ describe('D2 screening', () => {
           vog_status: 'goedgekeurd',
           vog_geldig_tot: '2027-09-01 12:00:00.000Z',
           iban_geverifieerd: true,
+          intake_op: '2026-09-19 12:00:00.000Z',
         },
       ],
     })
+  })
+
+  it('toont een eerdere intake als aangevinkt met de datum', async () => {
+    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', intakeOp: '2026-09-15' })] }, COORDINATOR)
+    opzet(data, { jongere: 'p1' })
+
+    const detail = await screen.findByRole('region', { name: 'Screening van Sami' })
+    expect(within(detail).getByLabelText('Intake gehad')).toBeChecked()
+    expect(within(detail).getByLabelText('Intake op')).toHaveValue('2026-09-15')
   })
 
   it('keurt af met notitie', async () => {

@@ -7,6 +7,9 @@
 //                                      coordinator schrijft, zie 61)
 //                 + vog_geldig_tot     datum (D2: signaal "VOG verloopt
 //                                      binnen 60 dagen"; alleen coordinator)
+//                 + intake_op          datum (D2: intakegesprek gehad op;
+//                                      leeg = nog niet; alleen coordinator.
+//                                      Besluit Ibrahim 2 okt)
 //   hh_users      + geblokkeerd        ja/nee (D4: account blokkeren; de hook
 //                                      hh_beheer.pb.js weigert dan inloggen en
 //                                      elke hh-aanroep; alleen coordinator)
@@ -41,6 +44,7 @@ export const EXTRA_VELDEN = {
   hh_profielen: [
     { name: 'screening_notitie', type: 'text', max: 1000 },
     { name: 'vog_geldig_tot', type: 'date' },
+    { name: 'intake_op', type: 'date' },
   ],
   hh_users: [{ name: 'geblokkeerd', type: 'bool' }],
 };

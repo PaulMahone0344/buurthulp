@@ -29,10 +29,14 @@ test('null blijft null, leeg wordt geweigerd', () => {
   assert.throws(() => metSlot('', ['geblokkeerd']));
 });
 
-test('profiel: beide nieuwe velden achter het slot', () => {
-  assert.deepEqual(SLOT_VELDEN.hh_profielen, ['screening_notitie', 'vog_geldig_tot']);
+test('profiel: alle drie nieuwe velden achter het slot', () => {
+  assert.deepEqual(SLOT_VELDEN.hh_profielen, ['screening_notitie', 'vog_geldig_tot', 'intake_op']);
   const s = slot(SLOT_VELDEN.hh_profielen);
-  assert.ok(s.includes('@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false'));
+  assert.ok(
+    s.includes(
+      '@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false && @request.body.intake_op:isset = false'
+    )
+  );
 });
 
 test('nieuwe collecties: alleen coordinator, auditlog niet te schrijven via de API', () => {

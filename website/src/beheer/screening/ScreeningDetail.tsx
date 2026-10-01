@@ -7,7 +7,7 @@ import { useState } from 'react'
 import type { BeheerData } from '../data/beheerData'
 import { controleerBesluit } from '../data/screening'
 import { vogSignaal } from '../data/tegels'
-import { toonDatum, toonMoment } from '../data/tijd'
+import { nlDag, toonDatum, toonMoment } from '../data/tijd'
 import type { Profiel, Screeningbesluit, Screeningstatus } from '../data/types'
 import { Foutmelding, Gelukt } from '../gedeeld/Meldbalk'
 import { SCREENING_LABEL } from '../teksten'
@@ -35,6 +35,7 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
   const [vogStatus, setVogStatus] = useState<Screeningstatus | ''>(profiel.vogStatus)
   const [vogGeldigTot, setVogGeldigTot] = useState(profiel.vogGeldigTot)
   const [ibanGeverifieerd, setIbanGeverifieerd] = useState(profiel.ibanGeverifieerd)
+  const [intakeOp, setIntakeOp] = useState(profiel.intakeOp)
   const [notitie, setNotitie] = useState('')
   const [fout, setFout] = useState('')
   const [gelukt, setGelukt] = useState('')
@@ -42,7 +43,7 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
   const signaal = vogSignaal(profiel.vogGeldigTot, nu())
 
   async function besluit(verificatiestatus: Screeningbesluit['verificatiestatus']) {
-    const b: Screeningbesluit = { verificatiestatus, notitie, vogStatus, vogGeldigTot, ibanGeverifieerd }
+    const b: Screeningbesluit = { verificatiestatus, notitie, vogStatus, vogGeldigTot, ibanGeverifieerd, intakeOp }
     const probleem = controleerBesluit(b)
     setGelukt('')
     if (probleem) return setFout(probleem)
@@ -116,6 +117,21 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
           <input type="checkbox" checked={ibanGeverifieerd} onChange={(e) => setIbanGeverifieerd(e.target.checked)} />
           IBAN gecontroleerd
         </label>
+        {/* Besluit 2 okt: vinkje + datum; aanvinken vult vandaag in. */}
+        <label className="beheer-vinkje">
+          <input
+            type="checkbox"
+            checked={intakeOp !== ''}
+            onChange={(e) => setIntakeOp(e.target.checked ? nlDag(nu()) : '')}
+          />
+          Intake gehad
+        </label>
+        {intakeOp !== '' ? (
+          <label className="field">
+            <span>Intake op</span>
+            <input type="date" value={intakeOp} onChange={(e) => setIntakeOp(e.target.value)} />
+          </label>
+        ) : null}
         <label className="field">
           <span>Notitie (verplicht)</span>
           <textarea

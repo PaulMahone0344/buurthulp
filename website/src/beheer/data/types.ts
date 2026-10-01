@@ -72,6 +72,8 @@ export type Profiel = {
   vogStatus: Screeningstatus | ''
   vogGeldigTot: string
   vogAangevraagdOp: string
+  /** Dag van het intakegesprek "JJJJ-MM-DD"; leeg = nog geen intake. */
+  intakeOp: string
   ibanGeverifieerd: boolean
   iban: string
   overMij: string
@@ -179,6 +181,8 @@ export type Screeningbesluit = {
   vogStatus: Screeningstatus | ''
   vogGeldigTot: string
   ibanGeverifieerd: boolean
+  /** "JJJJ-MM-DD" of leeg (nog geen intake). */
+  intakeOp: string
 }
 
 export type Auditactie = 'aanmaken' | 'wijzigen' | 'verwijderen'

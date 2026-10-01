@@ -752,6 +752,7 @@ paneel verbergt niets "voor de zekerheid".
 VELDEN (scripts/60-beheer-velden.mjs, additief)
   hh_profielen  screening_notitie  tekst, max 1000 (notitie bij goedkeuren/afkeuren)
                 vog_geldig_tot     datum (signaal "VOG verloopt binnen 60 dagen")
+                intake_op          datum (intakegesprek gehad op; leeg = nog niet)
   hh_users      geblokkeerd        ja/nee
 
 hh_instellingen  NIEUW (2 velden + created/updated)
@@ -776,7 +777,7 @@ RULES (scripts/61-beheer-rules.mjs)
   Nieuwe collecties: gezet zoals hierboven.
   Bestaande: GEWIKKELD (de rule op de server blijft letterlijk staan):
     hh_users.createRule/updateRule      (huidig) && ((coordinator) || (@request.body.geblokkeerd:isset = false))
-    hh_profielen.createRule/updateRule  (huidig) && ((coordinator) || (screening_notitie en vog_geldig_tot niet in de body))
+    hh_profielen.createRule/updateRule  (huidig) && ((coordinator) || (screening_notitie, vog_geldig_tot en intake_op niet in de body))
   Draai 02, 06, 13 of 21 daarna niet meer met --apply zonder 61 opnieuw.
 
 HOOK (backend/pb_hooks/hh_beheer.pb.js + hh_beheer_hulp.js, deploy met

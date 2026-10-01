@@ -54,6 +54,7 @@ function profiel(overschrijf: Partial<Profiel>): Profiel {
     vogStatus: 'nieuw',
     vogGeldigTot: '',
     vogAangevraagdOp: '',
+    intakeOp: '',
     ibanGeverifieerd: false,
     iban: '',
     overMij: '',

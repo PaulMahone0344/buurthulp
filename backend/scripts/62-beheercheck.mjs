@@ -316,6 +316,8 @@ async function main() {
   check('jongere zet zijn eigen screening_notitie niet', eigenNotitie.status >= 400, `status ${eigenNotitie.status}`);
   const eigenVog = await probeer(() => familie.client.collection('hh_profielen').update(profielFamilie.id, { vog_geldig_tot: '2030-01-01 12:00:00.000Z' }));
   check('eigenaar zet vog_geldig_tot niet', eigenVog.status >= 400, `status ${eigenVog.status}`);
+  const eigenIntake = await probeer(() => jongere.client.collection('hh_profielen').update(profielJongere.id, { intake_op: '2026-10-01 12:00:00.000Z' }));
+  check('jongere zet zijn eigen intake_op niet', eigenIntake.status >= 400, `status ${eigenIntake.status}`);
   const eigenOverMij = await probeer(() => familie.client.collection('hh_profielen').update(profielFamilie.id, { over_mij: `${MERK} gewoon` }));
   check('eigenaar mag de rest van zijn profiel nog wel wijzigen', eigenOverMij.status === 200, `status ${eigenOverMij.status}`);
 
@@ -368,6 +370,7 @@ async function main() {
   await coord.client.collection('hh_profielen').update(profielJongere.id, {
     screening_notitie: `${MERK} goedgekeurd`,
     vog_geldig_tot: '2027-09-01 12:00:00.000Z',
+    intake_op: '2026-10-01 12:00:00.000Z',
   });
   check('hh_profielen wijzigen (screening): één regel', (await regel('wijzigen', 'hh_profielen', profielJongere.id)).length === 1);
   const inst = (await su.collection('hh_instellingen').getFirstListItem(su.filter('sleutel = {:s}', { s: INSTELLING }))).id;

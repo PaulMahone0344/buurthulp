@@ -56,6 +56,7 @@ export function profiel(o: Partial<Profiel>): Profiel {
     vogStatus: 'in_behandeling',
     vogGeldigTot: '',
     vogAangevraagdOp: '2026-09-10T10:00:00.000Z',
+    intakeOp: '',
     ibanGeverifieerd: false,
     iban: 'NL91ABNA0417164300',
     overMij: 'Ik help graag.',

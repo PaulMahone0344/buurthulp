@@ -6,8 +6,8 @@ UITROLLIJST (niets gedraaid; alles in backend/, op een Mac met de .env)
 ================================================================
   set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
   0. node scripts/00-backup.mjs
-  1. node scripts/60-beheer-velden.mjs                 dry-run: 5 wijzigingen
-     node scripts/60-beheer-velden.mjs --apply         (3 velden, 2 collecties)
+  1. node scripts/60-beheer-velden.mjs                 dry-run: 6 wijzigingen
+     node scripts/60-beheer-velden.mjs --apply         (4 velden, 2 collecties)
   2. node scripts/61-beheer-rules.mjs                  dry-run: 11 regels
      node scripts/61-beheer-rules.mjs --apply          (7 op de nieuwe collecties,
                                                         4 gewikkeld op hh_users/hh_profielen)
@@ -18,8 +18,8 @@ UITROLLIJST (niets gedraaid; alles in backend/, op een Mac met de .env)
                                                         op de server; annuleren door de
                                                         coordinator + koppelen weigert bij
                                                         verlopen VOG)
-  4. node scripts/62-beheercheck.mjs                   dry-run: 21 groen, 0 rood
-     node scripts/62-beheercheck.mjs --apply           verwacht ±117 groen, 0 rood (+2 VOG)
+  4. node scripts/62-beheercheck.mjs                   dry-run: ±22 groen, 0 rood
+     node scripts/62-beheercheck.mjs --apply           verwacht ±120 groen, 0 rood (+2 VOG, +2 intake)
      Bij een afbreking: node scripts/62-beheercheck.mjs --apply --alleen-opruimen
   5. Ter controle daarna: 04-rulecheck (223), 14-statuscheck (85; was 78,
      +7 voor annuleren door de coordinator),
@@ -63,7 +63,10 @@ OPEN PUNTEN
    server. Het wachtwoord is willekeurig en wordt nergens getoond: zo'n oudere
    kan (nog) niet zelf inloggen. Beslissen: blijft dat zo, of komt er later
    een "uitnodiging om zelf in te loggen"?
-2. Intakegesprek [L]. Staat in D2 maar is niet gebouwd (geen veld, geen
+2. BESLOTEN 2 okt (Ibrahim): vinkje "Intake gehad" + datum op het
+   screeningscherm; veld hh_profielen.intake_op (60), alleen de coordinator
+   zet het (61). Geen afspraakfunctie.
+   Oorspronkelijk: Intakegesprek [L]. Staat in D2 maar is niet gebouwd (geen veld, geen
    scherm). Te beslissen: alleen een vinkje + datum op hh_profielen, of een
    afspraak-functie.
 3. Instellingen (commissiepercentage, straal_km, annuleertermijn_uren) worden
