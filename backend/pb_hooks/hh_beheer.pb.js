@@ -4,7 +4,8 @@
 //
 // 1. GEBLOKKEERD = BUITEN (hh_users.geblokkeerd, script 60)
 //    a. onRecordAuthWithPasswordRequest op hh_users: een geblokkeerde
-//       gebruiker krijgt 400 met "Dit account is geblokkeerd. ...".
+//       gebruiker met het juiste wachtwoord krijgt 400 met "Dit account is
+//       geblokkeerd. ..." (een fout wachtwoord geeft de gewone 400).
 //    b. routerUse: elke aanroep met een geldig token van een geblokkeerde
 //       hh_users-gebruiker op /api/hh/*, /api/collections/hh_* (ook
 //       auth-refresh) of /api/realtime krijgt 403 met dezelfde melding. Zo
@@ -44,7 +45,13 @@ onRecordAuthWithPasswordRequest((e) => {
   const hulp = require(`${__hooks}/hh_beheer_hulp.js`);
   let geblokkeerd = false;
   try {
-    geblokkeerd = !!(e.record && e.record.getBool("geblokkeerd"));
+    // Alleen bij het juiste wachtwoord: anders verraadt de melding dat het
+    // account bestaat. Bij een fout wachtwoord doet PocketBase zijn gewone 400.
+    geblokkeerd = !!(
+      e.record &&
+      e.record.getBool("geblokkeerd") &&
+      e.record.validatePassword(String(e.password || ""))
+    );
   } catch (err) {
     console.log("[hh_beheer] blokkade nakijken bij inloggen mislukt:", String(err));
   }
