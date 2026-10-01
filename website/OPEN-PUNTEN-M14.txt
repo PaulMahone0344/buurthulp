@@ -92,7 +92,9 @@ OPEN PUNTEN
 8. Hoeveelheid. Klussen en incidenten worden in hun geheel geladen
    (getFullList), het auditlog de laatste 500 regels. Prima voor de pilot;
    bij duizenden klussen een periode-filter toevoegen.
-9. Vindbaarheid. Het paneel staat op #/beheer; er is (bewust) geen knop op de
+9. BESLOTEN 2 okt (Ibrahim): geen knop op de site; Ibrahim geeft de link
+   zelf aan Mozaïek.
+   Oorspronkelijk: Vindbaarheid. Het paneel staat op #/beheer; er is (bewust) geen knop op de
    publieke site. De demo-login (LoginPanel/AdminDashboard met demoData) is
    ongewijzigd. Wil Ibrahim een link "Beheer" in de voettekst?
 10. Klokken. "Vandaag gepland" en "afgewezen deze maand" rekenen in
