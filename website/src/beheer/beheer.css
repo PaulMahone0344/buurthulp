@@ -5,6 +5,10 @@
 :root {
   --beheer-fout-tekst: #842b24;
   --beheer-fout-vulling: #fff0eb;
+  --beheer-wacht-rand: #e9a23b;
+  --beheer-kaart-schaduw: 0 1px 2px rgba(20, 37, 34, 0.04), 0 8px 24px rgba(20, 37, 34, 0.06);
+  --beheer-kaart-schaduw-hover: 0 2px 4px rgba(20, 37, 34, 0.05), 0 14px 32px rgba(20, 37, 34, 0.09);
+  --beheer-duur: 160ms;
 }
 
 .admin-stat-grid--vijf {
@@ -178,6 +182,113 @@
 
 .beheer-gegevens dd {
   margin: 0;
+}
+
+/* Hulpvragen als kaarten: eigen vlak, lucht ertussen, acties onderaan. */
+.klus-kaarten {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.klus-kaart {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: var(--beheer-kaart-schaduw);
+  transition:
+    transform var(--beheer-duur) ease-out,
+    box-shadow var(--beheer-duur) ease-out;
+}
+
+.klus-kaart:hover,
+.klus-kaart:focus-within {
+  transform: translateY(-2px);
+  box-shadow: var(--beheer-kaart-schaduw-hover);
+}
+
+.klus-kaart--wacht {
+  border-left-color: var(--beheer-wacht-rand);
+}
+
+.klus-kaart__kop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.klus-kaart__kop h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.3;
+}
+
+.klus-kaart__kop .status-pill {
+  flex-shrink: 0;
+}
+
+.klus-kaart__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.klus-kaart__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.klus-kaart__tekst {
+  display: -webkit-box;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--page);
+  color: var(--ink);
+  font-size: 0.94rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.klus-kaart__voet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.klus-kaart__voet .beheer-signaal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .klus-kaart {
+    transition: none;
+  }
+
+  .klus-kaart:hover,
+  .klus-kaart:focus-within {
+    transform: none;
+  }
 }
 
 @media (max-width: 900px) {
