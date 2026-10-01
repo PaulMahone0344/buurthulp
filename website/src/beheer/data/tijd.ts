@@ -72,3 +72,36 @@ export function toonBedrag(centen: number): string {
     (Number(centen) || 0) / 100,
   )
 }
+
+/**
+ * Een datum ("JJJJ-MM-DD") en tijd ("UU:MM") in Nederlandse tijd als ISO 8601
+ * in UTC. De meldkamer vult Nederlandse tijden in, de server bewaart UTC.
+ */
+export function nlTijdNaarIso(datum: string, tijd: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datum) || !/^\d{2}:\d{2}$/.test(tijd)) return ''
+  const [j, m, d] = datum.split('-').map(Number)
+  const [u, min] = tijd.split(':').map(Number)
+  const gewenst = Date.UTC(j, m - 1, d, u, min)
+  // Twee rondes: de verschuiving (1 of 2 uur) hangt af van het moment zelf.
+  let gok = gewenst
+  for (let i = 0; i < 2; i++) {
+    gok = gewenst - (alsNlKlok(gok) - gok)
+  }
+  return new Date(gok).toISOString()
+}
+
+const NL_DELEN = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/Amsterdam',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+})
+
+/** Het moment `ms` zoals de Nederlandse klok het toont, als UTC-getal. */
+function alsNlKlok(ms: number): number {
+  const delen = Object.fromEntries(NL_DELEN.formatToParts(new Date(ms)).map((p) => [p.type, p.value]))
+  return Date.UTC(+delen.year, +delen.month - 1, +delen.day, +delen.hour, +delen.minute)
+}
