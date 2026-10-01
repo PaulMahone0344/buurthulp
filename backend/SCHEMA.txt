@@ -742,3 +742,66 @@ vóór 42)
   Hook hh_meldingen_hulp.js: noodmelding alleen aan een ACTIEF familielid;
     koppelt de coordinator (door != jongere), dan krijgt de jongere ook
     "toegewezen" ("Je hebt een klus").
+M14 - BEHEERPANEEL OP HET WEB (19 sep 2026, afgemaakt 1 okt 2026)
+================================================================
+
+De website (website/, #/beheer) praat rechtstreeks met de hh_-collecties
+als ingelogde hh_users-coordinator. De rechten zitten in de API-rules; het
+paneel verbergt niets "voor de zekerheid".
+
+VELDEN (scripts/60-beheer-velden.mjs, additief)
+  hh_profielen  screening_notitie  tekst, max 1000 (notitie bij goedkeuren/afkeuren)
+                vog_geldig_tot     datum (signaal "VOG verloopt binnen 60 dagen")
+  hh_users      geblokkeerd        ja/nee
+
+hh_instellingen  NIEUW (2 velden + created/updated)
+  sleutel   tekst, verplicht, max 100; index idx_hh_instellingen_sleutel UNIEK
+  waarde    json
+  Sleutels uit het paneel: commissiepercentage, straal_km, annuleertermijn_uren.
+  Alleen opgeslagen; er hangt nog geen gedrag aan.
+  Regels: alles alleen coordinator.
+
+hh_auditlog  NIEUW (5 velden + created/updated)
+  door            verwijzing naar hh_users (niet verplicht, geen cascade)
+  actie           keuze, verplicht: aanmaken | wijzigen | verwijderen
+  doel_collectie  tekst, verplicht
+  doel_id         tekst
+  detail          json: {velden, waarden} of {velden, van, naar}; geheime
+                  velden (wachtwoord, iban, document_foto, selfie) alleen bij naam
+  Indexen: door; created.
+  Regels: lezen alleen coordinator; aanmaken/bijwerken/verwijderen niemand
+  (null); de hook schrijft via $app.
+
+RULES (scripts/61-beheer-rules.mjs)
+  Nieuwe collecties: gezet zoals hierboven.
+  Bestaande: GEWIKKELD (de rule op de server blijft letterlijk staan):
+    hh_users.createRule/updateRule      (huidig) && ((coordinator) || (@request.body.geblokkeerd:isset = false))
+    hh_profielen.createRule/updateRule  (huidig) && ((coordinator) || (screening_notitie en vog_geldig_tot niet in de body))
+  Draai 02, 06, 13 of 21 daarna niet meer met --apply zonder 61 opnieuw.
+
+HOOK (backend/pb_hooks/hh_beheer.pb.js + hh_beheer_hulp.js, deploy met
+scripts/63-hook-deploy.sh; 10-hook-deploy.sh kent alleen hh_klussen.pb.js)
+  - onRecordAuthWithPasswordRequest hh_users: geblokkeerd -> 400 "Dit account
+    is geblokkeerd. Neem contact op met de meldkamer."
+  - routerUse: een geldig token van een geblokkeerde hh_users-gebruiker op
+    /api/hh/*, /api/collections/hh_* (ook auth-refresh) of /api/realtime
+    -> 403 met dezelfde melding. Andere paden en andere projecten: ongemoeid.
+    Fail-open bij een fout in het nakijken.
+  - onRecordCreate/Update/DeleteRequest op hh_wijken, hh_klustypes, hh_users,
+    hh_profielen, hh_instellingen, hh_incidenten: na e.next(), alleen als de
+    aanvrager een coordinator is, een regel in hh_auditlog (in try/catch;
+    breekt de handeling nooit). Request-hooks i.p.v. after-success: die
+    laatste kennen in PB 0.25 geen auth.
+  Test zonder server: node --test backend/tests/*.test.mjs.
+
+GEBRUIKTE ROUTES (niets nieuws): koppelen/vrijgeven (M10, hh_coordinator.pb.js),
+annuleren (M6, hh_klussen.pb.js; laat de coordinator alleen toe bij een klus die
+hij zelf plaatste, zie website/OPEN-PUNTEN-M14.txt).
+
+BEHEERCHECK (scripts/62-beheercheck.mjs, dry-run standaard)
+  Zonder --apply: velden, collecties, rules, slot, anoniem ziet niets. Met
+  --apply, met eigen tijdelijke accounts per rol en records "[beheercheck]":
+  keuze 2 (andere rollen en anoniem krijgen niets, ook op de nieuwe
+  collecties en routes), nieuwe velden alleen coordinator, blokkeren (inloggen,
+  oud token, verversen, deblokkeren), een auditregel per beheerhandeling,
+  telefonische klus doorloopt accepteren -> afgerond, alles opgeruimd.
