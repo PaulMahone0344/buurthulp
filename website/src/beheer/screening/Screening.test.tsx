@@ -69,6 +69,9 @@ describe('D2 screening', () => {
     await user.selectOptions(within(detail).getByLabelText('VOG-status'), 'goedgekeurd')
     await user.type(within(detail).getByLabelText('VOG geldig tot'), '2027-09-01')
     await user.click(within(detail).getByLabelText('IBAN gecontroleerd'))
+    expect(within(detail).getByLabelText('Notitie (verplicht)')).toHaveAccessibleDescription(
+      'De jongere kan deze notitie lezen. Schrijf hem zakelijk.',
+    )
     await user.type(within(detail).getByLabelText('Notitie (verplicht)'), 'Alles klopt.')
     await user.click(within(detail).getByRole('button', { name: 'Goedkeuren' }))
 

@@ -84,7 +84,9 @@ OPEN PUNTEN
    doet, en wat hooks via $app doen (reputatie, meldingen), staat er niet in.
    Afwijking van de prompt: request-hooks i.p.v. onRecordAfter*Success, omdat
    die laatste in PB 0.25 geen auth (geen "door") kennen.
-7. Screening-notitie leesbaar voor de jongere. De rules laten de eigenaar zijn
+7. BESLOTEN 2 okt (Ibrahim): blijft leesbaar voor de pilot; onder het
+   notitieveld staat "De jongere kan deze notitie lezen. Schrijf hem zakelijk."
+   Oorspronkelijk: Screening-notitie leesbaar voor de jongere. De rules laten de eigenaar zijn
    eigen hh_profielen lezen, dus ook screening_notitie. Schrijf de notitie
    daarom zakelijk. Echt afschermen = de notitie naar een eigen collectie.
 8. Hoeveelheid. Klussen en incidenten worden in hun geheel geladen

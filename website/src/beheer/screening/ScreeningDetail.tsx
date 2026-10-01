@@ -118,8 +118,18 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
         </label>
         <label className="field">
           <span>Notitie (verplicht)</span>
-          <textarea rows={3} maxLength={1000} value={notitie} onChange={(e) => setNotitie(e.target.value)} />
+          <textarea
+            rows={3}
+            maxLength={1000}
+            value={notitie}
+            aria-describedby="screening-notitie-uitleg"
+            onChange={(e) => setNotitie(e.target.value)}
+          />
         </label>
+        {/* Besluit 2 okt: de jongere leest zijn eigen profiel, dus ook deze notitie. */}
+        <small id="screening-notitie-uitleg" className="admin-muted">
+          De jongere kan deze notitie lezen. Schrijf hem zakelijk.
+        </small>
       </div>
       <Foutmelding melding={fout} />
       <Gelukt melding={gelukt} />
