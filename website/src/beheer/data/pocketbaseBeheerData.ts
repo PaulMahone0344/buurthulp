@@ -7,6 +7,7 @@
 
 import PocketBase, { ClientResponseError, type RecordModel } from 'pocketbase'
 import { BeheerFout, type BeheerData, type Inlogresultaat } from './beheerData'
+import { isVogVerlopen } from './filters'
 import { besluitBody } from './screening'
 import { nieuweOudereBody, telefonischeKlusBody, willekeurigWachtwoord } from './telefonisch'
 import { naarIso } from './tijd'
@@ -331,6 +332,8 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
         })
         return profielen
           .filter((p) => uitgebreid(p as Uitgebreid, 'gebruiker')?.geblokkeerd !== true)
+          // Besluit 2 okt: verlopen VOG = niet koppelen (de server weigert het ook).
+          .filter((p) => !isVogVerlopen(tekst(p.vog_geldig_tot), new Date()))
           .map((p): Koppelkandidaat => {
             const gebruiker = uitgebreid(p as Uitgebreid, 'gebruiker')
             const wijk = gebruiker ? uitgebreid(gebruiker, 'wijk') : undefined

@@ -415,6 +415,14 @@ async function main() {
     commissie: 0,
     bron: 'telefoon',
   });
+  // Besluit 2 okt: een jongere met een verlopen VOG kan niet gekoppeld worden.
+  await su.collection('hh_profielen').update(profielJongere.id, { vog_geldig_tot: '2020-01-01 12:00:00.000Z' });
+  const vogWeg = await route(coord.client, `/api/hh/klussen/${telKlus.id}/koppelen`, { jongere: jongere.id });
+  check('koppelen bij verlopen VOG -> 409 vogverlopen', vogWeg.status === 409 && vogWeg.body?.reden === 'vogverlopen', `status ${vogWeg.status} ${JSON.stringify(vogWeg.body)}`);
+  const nogOpen = await su.collection('hh_klussen').getOne(telKlus.id);
+  check('  de klus staat nog open, zonder jongere', nogOpen.status === 'open' && !nogOpen.toegewezen_jongere, `${nogOpen.status} / "${nogOpen.toegewezen_jongere}"`);
+  await su.collection('hh_profielen').update(profielJongere.id, { vog_geldig_tot: '2027-09-01 12:00:00.000Z' });
+
   const ziet = await jongere.client.collection('hh_klussen').getList(1, 1, { filter: `id = "${telKlus.id}"` });
   check('de goedgekeurde jongere in de wijk ziet de klus', ziet.totalItems === 1);
   const acc = await route(jongere.client, `/api/hh/klussen/${telKlus.id}/accepteren`, {});

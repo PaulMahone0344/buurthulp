@@ -13,10 +13,13 @@ UITROLLIJST (niets gedraaid; alles in backend/, op een Mac met de .env)
                                                         4 gewikkeld op hh_users/hh_profielen)
   3. yes | bash scripts/63-hook-deploy.sh              hh_beheer_hulp.js + hh_beheer.pb.js
                                                         (lijst vóór/na: alleen deze twee erbij)
-     yes | bash scripts/10-hook-deploy.sh              hh_klussen.pb.js (annuleren door de
-                                                        coordinator, zie hieronder)
+     yes | bash scripts/64-hook-deploy.sh              hh_klussen.pb.js + hh_coordinator.pb.js
+                                                        (bestaande hooks bijwerken, met backup
+                                                        op de server; annuleren door de
+                                                        coordinator + koppelen weigert bij
+                                                        verlopen VOG)
   4. node scripts/62-beheercheck.mjs                   dry-run: 21 groen, 0 rood
-     node scripts/62-beheercheck.mjs --apply           verwacht ±115 groen, 0 rood
+     node scripts/62-beheercheck.mjs --apply           verwacht ±117 groen, 0 rood (+2 VOG)
      Bij een afbreking: node scripts/62-beheercheck.mjs --apply --alleen-opruimen
   5. Ter controle daarna: 04-rulecheck (223), 14-statuscheck (85; was 78,
      +7 voor annuleren door de coordinator),
@@ -24,7 +27,8 @@ UITROLLIJST (niets gedraaid; alles in backend/, op een Mac met de .env)
   6. Website: VITE_POCKETBASE_URL=https://api.qawayahbase.com bij de build
      (npm run build in website/), dan de nieuwe dist/ uitrollen. Het paneel
      staat op <site>/#/beheer.
-  Rollback hook: bash scripts/63-hook-deploy.sh --rollback. De velden en
+  Rollback hook: bash scripts/63-hook-deploy.sh --rollback en
+  bash scripts/64-hook-deploy.sh --rollback (zet de backup terug). De velden en
   collecties zijn additief en mogen blijven staan.
 
   VOLGORDE-LET-OP: draai 02, 06, 13 of 21 na stap 2 niet meer met --apply
@@ -90,7 +94,11 @@ OPEN PUNTEN
 10. Klokken. "Vandaag gepland" en "afgewezen deze maand" rekenen in
     Nederlandse tijd (Europe/Amsterdam via Intl), los van de tijdzone van de
     computer in de meldkamer.
-11. Koppelkandidaten: goedgekeurde jongeren die niet geblokkeerd zijn. Een
+11. BESLOTEN 2 okt (Ibrahim): verlopen VOG = niet koppelen. Paneel laat
+    zo'n jongere weg; de koppelroute (hh_coordinator) geeft 409
+    "vogverlopen". Leeg vog_geldig_tot telt als niet verlopen. Accepteren
+    door de jongere zelf (M5) kijkt nog niet naar de VOG-datum — apart punt.
+    Oorspronkelijk: Koppelkandidaten: goedgekeurde jongeren die niet geblokkeerd zijn. Een
     jongere met een verlopen VOG staat er nog tussen (geen regel voor
     "verlopen = niet koppelen"). Beslissen.
 12. 62-beheercheck is nooit tegen de server gedraaid (geen toegang in deze

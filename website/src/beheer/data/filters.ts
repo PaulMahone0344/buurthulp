@@ -50,6 +50,16 @@ export function filterIncidenten(incidenten: Incident[], filter: Incidentfilter)
   return incidenten.filter((i) => (i.afhandeling.trim() === '') === open)
 }
 
+/**
+ * Verlopen = de geldig-tot-datum ligt vóór vandaag (UTC, zoals de server).
+ * De dag zelf telt nog mee. Geen datum = niet verlopen.
+ */
+export function isVogVerlopen(vogGeldigTot: string, nu: Date): boolean {
+  const geldigTot = vogGeldigTot.slice(0, 10)
+  if (!geldigTot) return false
+  return geldigTot < nu.toISOString().slice(0, 10)
+}
+
 /** Jongeren uit de wijk van de oudere eerst, daarbinnen op naam. */
 export function sorteerKoppelkandidaten(kandidaten: Koppelkandidaat[], wijkNaam: string): Koppelkandidaat[] {
   return [...kandidaten].sort((a, b) => {

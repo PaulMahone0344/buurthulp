@@ -4,6 +4,7 @@ import {
   filterIncidenten,
   filterKlussen,
   hulpvraagGroep,
+  isVogVerlopen,
   sorteerIncidenten,
   sorteerKoppelkandidaten,
 } from './filters'
@@ -172,5 +173,26 @@ describe('filterAuditlog', () => {
 
   it('geeft alles terug zonder filter', () => {
     expect(filterAuditlog(regels, { actie: '', persoon: '' })).toHaveLength(2)
+  })
+})
+
+describe('isVogVerlopen', () => {
+  const nu = new Date('2026-10-02T09:00:00.000Z')
+
+  it('is niet verlopen zonder datum', () => {
+    expect(isVogVerlopen('', nu)).toBe(false)
+  })
+
+  it('is niet verlopen op de laatste geldige dag zelf', () => {
+    expect(isVogVerlopen('2026-10-02', nu)).toBe(false)
+  })
+
+  it('is verlopen vanaf de dag erna', () => {
+    expect(isVogVerlopen('2026-10-01', nu)).toBe(true)
+  })
+
+  it('leest ook de PocketBase-notatie met tijd', () => {
+    expect(isVogVerlopen('2026-09-30 12:00:00.000Z', nu)).toBe(true)
+    expect(isVogVerlopen('2027-09-01 12:00:00.000Z', nu)).toBe(false)
   })
 })

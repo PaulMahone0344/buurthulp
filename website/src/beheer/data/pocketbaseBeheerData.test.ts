@@ -135,6 +135,39 @@ describe('routes', () => {
   })
 })
 
+describe('koppelkandidaten', () => {
+  it('laat geblokkeerde jongeren en jongeren met een verlopen VOG weg', async () => {
+    const profiel = (id: string, naam: string, vog: string, geblokkeerd = false) => ({
+      id: `p-${id}`,
+      collectionName: 'hh_profielen',
+      gebruiker: id,
+      vog_geldig_tot: vog,
+      klussen_aantal: 0,
+      expand: { gebruiker: { id, naam, geblokkeerd, expand: { wijk: { wijk: 'Tiel-West' } } } },
+    })
+    nepServer({
+      status: 200,
+      body: {
+        page: 1,
+        perPage: 1000,
+        totalItems: 4,
+        totalPages: 1,
+        items: [
+          profiel('j1', 'Geldig', '2099-01-01 12:00:00.000Z'),
+          profiel('j2', 'Zonder datum', ''),
+          profiel('j3', 'Verlopen', '2020-01-01 12:00:00.000Z'),
+          profiel('j4', 'Geblokkeerd', '2099-01-01 12:00:00.000Z', true),
+        ],
+      },
+    })
+    const data = maakPocketbaseBeheerData(new PocketBase('http://pb.test'))
+
+    const kandidaten = await data.koppelkandidaten()
+
+    expect(kandidaten.map((k) => k.naam)).toEqual(['Geldig', 'Zonder datum'])
+  })
+})
+
 describe('omzetten', () => {
   it('zet een klus met uitgebreide relaties om', () => {
     const klus = naarKlus({
