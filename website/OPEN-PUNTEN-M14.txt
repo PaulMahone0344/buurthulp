@@ -13,10 +13,13 @@ UITROLLIJST (niets gedraaid; alles in backend/, op een Mac met de .env)
                                                         4 gewikkeld op hh_users/hh_profielen)
   3. yes | bash scripts/63-hook-deploy.sh              hh_beheer_hulp.js + hh_beheer.pb.js
                                                         (lijst vóór/na: alleen deze twee erbij)
+     yes | bash scripts/10-hook-deploy.sh              hh_klussen.pb.js (annuleren door de
+                                                        coordinator, zie hieronder)
   4. node scripts/62-beheercheck.mjs                   dry-run: 21 groen, 0 rood
      node scripts/62-beheercheck.mjs --apply           verwacht ±115 groen, 0 rood
      Bij een afbreking: node scripts/62-beheercheck.mjs --apply --alleen-opruimen
-  5. Ter controle daarna: 04-rulecheck (223), 14-statuscheck (78),
+  5. Ter controle daarna: 04-rulecheck (223), 14-statuscheck (85; was 78,
+     +7 voor annuleren door de coordinator),
      50-koppelcheck (60), 07-screeningcheck (72), 32-meldingencheck (38).
   6. Website: VITE_POCKETBASE_URL=https://api.qawayahbase.com bij de build
      (npm run build in website/), dan de nieuwe dist/ uitrollen. Het paneel
@@ -29,8 +32,11 @@ UITROLLIJST (niets gedraaid; alles in backend/, op een Mac met de .env)
   zet hem terug).
 
 ================================================================
-NODIG IN hh_klussen.pb.js
+NODIG IN hh_klussen.pb.js  — GEDAAN 1 okt (lokaal, na de cloud-PR)
 ================================================================
+Gebouwd: de coordinator telt in de route als de oudere (open, geaccepteerd,
+onderweg -> geannuleerd; bij bezig 409). 14-statuscheck sectie H heeft 7
+nieuwe checks. Oorspronkelijke vondst:
 1. ANNULEREN DOOR DE COORDINATOR. De route POST /api/hh/klussen/{id}/annuleren
    (M6) laat alleen de oudere, geplaatst_door en de toegewezen jongere toe.
    Een coordinator krijgt 403 {reden:"geendeelnemer"}, BEHALVE bij een klus
