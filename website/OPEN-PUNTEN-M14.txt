@@ -54,7 +54,9 @@ nieuwe checks. Oorspronkelijke vondst:
 ================================================================
 OPEN PUNTEN
 ================================================================
-1. E-mail bij een telefonische oudere. PocketBase eist een e-mail op hh_users.
+1. BESLOTEN 2 okt (Ibrahim): voor de pilot blijft het zo. De coordinator
+   regelt alles voor deze ouderen; bij een echtpaar één keer het nummer.
+   Oorspronkelijk: E-mail bij een telefonische oudere. PocketBase eist een e-mail op hh_users.
    Zonder e-mail maakt het paneel <cijfers van het telefoonnummer>@
    telefonisch.heitjehulp.invalid. Gevolg: twee ouderen met hetzelfde nummer
    kunnen niet allebei zonder e-mail; de tweede krijgt een foutmelding van de
