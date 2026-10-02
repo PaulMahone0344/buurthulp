@@ -1172,6 +1172,7 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .lp-split,
   .lp-results,
   .lp-proef,
   .lp-faq,
