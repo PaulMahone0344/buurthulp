@@ -331,6 +331,14 @@ void main() {
       expect(find.byType(HhKnop).evaluate().length, lessThanOrEqualTo(2));
     });
 
+    testWidgets('de statuszin noemt de oudere, niet "u"', (tester) async {
+      await _pomp(tester, _gevallen[6]);
+      expect(find.text('Sanne komt Mevrouw de Vries helpen.'), findsOneWidget);
+      expect(find.text(TekstenFamilieNl.f3Helper), findsWidgets);
+      expect(find.textContaining('komt u'), findsNothing);
+      expect(find.text('Uw helper'), findsNothing);
+    });
+
     testWidgets('klus van de oudere zelf: geen "stoppen"', (tester) async {
       await tester.pumpWidget(
         hhFamilieWikkel(

@@ -64,6 +64,21 @@ abstract final class TekstenFamilieNl {
   static const f3AnnulerenSemantiek = 'Stop deze hulpvraag';
   static const f3Geannuleerd = 'De hulpvraag is gestopt.';
 
+  // Statuszin op F3-detail en in de lijsten: de oudere wordt geholpen,
+  // niet het familielid. Daarom de naam van de oudere, nooit "u" (M12).
+  static const f3Helper = 'Helper';
+  static const f3OudereZonderNaam = 'uw familielid';
+  static String f3Aangenomen(String jongere, String oudere) =>
+      '$jongere komt $oudere helpen.';
+  static String f3Onderweg(String jongere, String oudere) =>
+      '$jongere is onderweg naar $oudere.';
+  static String f3Bezig(String jongere, String oudere) =>
+      '$jongere is bij $oudere aan het werk.';
+  static String f3GeenJongere(String oudere) =>
+      'We zoeken iemand voor $oudere.';
+  static String f3Probleem(String oudere) =>
+      'Er is iets misgegaan. Wij nemen contact op met $oudere.';
+
   // ---- O12 bij de oudere: blok "Familie" -------------------------------
   static const o12Kop = 'Familie';
   static const o12Niemand = 'Er kijkt nog niemand van uw familie mee.';
