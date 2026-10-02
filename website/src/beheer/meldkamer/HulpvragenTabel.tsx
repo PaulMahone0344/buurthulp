@@ -4,7 +4,7 @@
 // routes van M10, annuleren via de route van M6.
 
 import { useState } from 'react'
-import { ClipboardList } from 'lucide-react'
+import { CalendarClock, ClipboardList, Clock, UserRound, Wrench } from 'lucide-react'
 import type { BeheerData } from '../data/beheerData'
 import { filterKlussen, HULPVRAAGFILTERS, type Hulpvraagfilter } from '../data/filters'
 import { isZonderMatch } from '../data/tegels'
@@ -61,45 +61,74 @@ export function HulpvragenTabel({ data, klussen, filter, zetFilter, nu, opGewijz
           </button>
         ))}
       </div>
-      <div className="request-table" role="table" aria-label="Hulpvragen">
-        {zichtbaar.map((klus) => (
-          <div className="request-row request-row--beheer" role="row" key={klus.id} aria-label={`Hulpvraag van ${klus.hulpvragerNaam}`}>
-            <div role="cell">
-              <strong>
-                {klus.hulpvragerNaam || 'Onbekende oudere'}
-                {klus.bron === 'telefoon' ? <em className="beheer-label"> telefonisch</em> : null}
-              </strong>
-              <span>
-                {klus.klustypeNaam || 'Klus'} · {toonMoment(klus.wanneerVan) || 'geen tijd'}
-                {klus.jongereNaam ? ` · ${klus.jongereNaam}` : ''}
-              </span>
-              {klus.omschrijving ? <span>{klus.omschrijving}</span> : null}
-              {isZonderMatch(klus, nu()) ? <span className="beheer-signaal">Langer dan 2 uur zonder match</span> : null}
-            </div>
-            <span role="cell">
-              <KlusPil status={klus.status} />
-            </span>
-            <div role="cell" className="beheer-acties">
-              {KAN_KOPPELEN(klus) ? (
-                <button className="mini-btn" type="button" onClick={() => setActie({ soort: 'koppelen', klus })}>
-                  Koppelen
-                </button>
-              ) : null}
-              {KAN_VRIJGEVEN(klus) ? (
-                <button className="mini-btn" type="button" onClick={() => setActie({ soort: 'vrijgeven', klus })}>
-                  Vrijgeven
-                </button>
-              ) : null}
-              {KAN_ANNULEREN(klus) ? (
-                <button className="mini-btn mini-btn--ghost" type="button" onClick={() => setActie({ soort: 'annuleren', klus })}>
-                  Annuleren
-                </button>
-              ) : null}
-            </div>
-          </div>
-        ))}
-        {zichtbaar.length === 0 ? <p className="empty-note">Geen hulpvragen in dit filter.</p> : null}
-      </div>
+      <ul className="klus-kaarten" aria-label="Hulpvragen">
+        {zichtbaar.map((klus) => {
+          const zonderMatch = isZonderMatch(klus, nu())
+          return (
+            <li key={klus.id}>
+              <article
+                className={`klus-kaart${zonderMatch ? ' klus-kaart--wacht' : ''}`}
+                aria-label={`Hulpvraag van ${klus.hulpvragerNaam}`}
+              >
+                <header className="klus-kaart__kop">
+                  <h3>
+                    {klus.hulpvragerNaam || 'Onbekende oudere'}
+                    {klus.bron === 'telefoon' ? <em className="beheer-label"> telefonisch</em> : null}
+                  </h3>
+                  <KlusPil status={klus.status} />
+                </header>
+                <p className="klus-kaart__meta">
+                  <span>
+                    <Wrench size={15} aria-hidden="true" /> {klus.klustypeNaam || 'Klus'}
+                  </span>
+                  <span>
+                    <CalendarClock size={15} aria-hidden="true" /> {toonMoment(klus.wanneerVan) || 'geen tijd'}
+                  </span>
+                  {klus.jongereNaam ? (
+                    <span>
+                      <UserRound size={15} aria-hidden="true" /> {klus.jongereNaam}
+                    </span>
+                  ) : null}
+                </p>
+                {klus.omschrijving ? <p className="klus-kaart__tekst">{klus.omschrijving}</p> : null}
+                {zonderMatch || KAN_KOPPELEN(klus) || KAN_VRIJGEVEN(klus) || KAN_ANNULEREN(klus) ? (
+                  <footer className="klus-kaart__voet">
+                    {zonderMatch ? (
+                      <span className="beheer-signaal">
+                        <Clock size={15} aria-hidden="true" /> Langer dan 2 uur zonder match
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <div className="beheer-acties">
+                      {KAN_KOPPELEN(klus) ? (
+                        <button className="mini-btn" type="button" onClick={() => setActie({ soort: 'koppelen', klus })}>
+                          Koppelen
+                        </button>
+                      ) : null}
+                      {KAN_VRIJGEVEN(klus) ? (
+                        <button className="mini-btn" type="button" onClick={() => setActie({ soort: 'vrijgeven', klus })}>
+                          Vrijgeven
+                        </button>
+                      ) : null}
+                      {KAN_ANNULEREN(klus) ? (
+                        <button
+                          className="mini-btn mini-btn--ghost"
+                          type="button"
+                          onClick={() => setActie({ soort: 'annuleren', klus })}
+                        >
+                          Annuleren
+                        </button>
+                      ) : null}
+                    </div>
+                  </footer>
+                ) : null}
+              </article>
+            </li>
+          )
+        })}
+      </ul>
+      {zichtbaar.length === 0 ? <p className="empty-note">Geen hulpvragen in dit filter.</p> : null}
 
       {actie?.soort === 'koppelen' ? (
         <KoppelVenster data={data} klus={actie.klus} opSluit={() => setActie(null)} opGekoppeld={klaar} />

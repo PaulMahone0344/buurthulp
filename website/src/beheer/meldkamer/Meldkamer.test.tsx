@@ -27,7 +27,7 @@ describe('D1 meldkamer', () => {
     )
     opzet(data)
 
-    await screen.findAllByRole('row')
+    await screen.findAllByRole('article')
     expect(screen.getByRole('article', { name: 'Open hulpvragen' })).toHaveTextContent('2')
     expect(screen.getByRole('article', { name: 'Zonder match langer dan 2 uur' })).toHaveTextContent('1')
     expect(screen.getByRole('article', { name: 'Vandaag gepland' })).toHaveTextContent('3')
@@ -43,8 +43,8 @@ describe('D1 meldkamer', () => {
     )
     const zetFilters = opzet(data, { filter: 'in_uitvoering' })
 
-    expect(await screen.findByRole('row', { name: 'Hulpvraag van De Vries' })).toBeInTheDocument()
-    expect(screen.queryByRole('row', { name: 'Hulpvraag van Jansen' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('article', { name: 'Hulpvraag van De Vries' })).toBeInTheDocument()
+    expect(screen.queryByRole('article', { name: 'Hulpvraag van Jansen' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: /Nieuw/ }))
     expect(zetFilters).toHaveBeenCalledWith({ filter: 'nieuw' })
@@ -59,7 +59,7 @@ describe('D1 meldkamer', () => {
     data.stand.klussen.push(klus({ id: 'nieuw', hulpvragerNaam: 'Bakker' }))
     await act(async () => data.meldWijziging())
 
-    expect(await screen.findByRole('row', { name: 'Hulpvraag van Bakker' })).toBeInTheDocument()
+    expect(await screen.findByRole('article', { name: 'Hulpvraag van Bakker' })).toBeInTheDocument()
   })
 
   it('koppelt handmatig met een waarschuwing voor een andere wijk', async () => {
@@ -86,7 +86,7 @@ describe('D1 meldkamer', () => {
     await user.click(within(venster).getByRole('button', { name: 'Koppelen' }))
 
     expect(data.aanroepen).toContainEqual({ methode: 'koppelen', args: ['k1', 'j2'] })
-    expect(await screen.findByRole('row', { name: 'Hulpvraag van Mevrouw Jansen' })).toHaveTextContent('Aangenomen')
+    expect(await screen.findByRole('article', { name: 'Hulpvraag van Mevrouw Jansen' })).toHaveTextContent('Aangenomen')
   })
 
   it('annuleert met een verplichte reden en toont een weigering van de server', async () => {
@@ -187,7 +187,7 @@ describe('telefonische aanmelding', () => {
       wanneer_van: '2026-09-20T08:00:00.000Z',
       wanneer_tot: '2026-09-20T09:00:00.000Z',
     })
-    expect(await screen.findByRole('row', { name: 'Hulpvraag van Mevrouw Bakker' })).toHaveTextContent('telefonisch')
+    expect(await screen.findByRole('article', { name: 'Hulpvraag van Mevrouw Bakker' })).toHaveTextContent('telefonisch')
   })
 
   it('kiest een bestaande oudere', async () => {

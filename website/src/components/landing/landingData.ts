@@ -1,6 +1,7 @@
-// Inhoud van de HeitjeHulp-landingspagina, afgeleid van het gemeentelijke
-// pilotvoorstel (v2). Eén bron voor alle teksten zodat de pagina-opbouw
-// in LandingPage.tsx zuiver presentatie blijft.
+// Inhoud van de HeitjeHulp-voorpagina. Bron: pilotvoorstel v5 (kleine start,
+// geen subsidie) en wat er in de app echt gebouwd is (M0-M10, M14).
+// Bewust NIET publiek: bedragen, tarieven, begroting, verdienmodel, namen van
+// partners en concurrenten. Zie App.test.tsx, die dat bewaakt.
 
 export interface NavLink {
   href: string
@@ -12,13 +13,7 @@ export interface Stat {
   label: string
 }
 
-export interface ProcessStep {
-  icon: string
-  title: string
-  text: string
-}
-
-export interface SafetyItem {
+export interface IconItem {
   icon: string
   title: string
   text: string
@@ -33,116 +28,171 @@ export interface Kader {
   title: string
   intro: string
   points: string[]
-  footnote?: string
 }
 
-export interface BudgetPost {
-  label: string
-  detail: string
-  amount: string
-}
-
-export interface DeliveryItem {
-  title: string
-  text: string
-}
-
-export interface CompetitorItem {
-  name: string
-  text: string
-}
-
-export interface Differentiator {
+export interface Rol {
   icon: string
-  title: string
-  text: string
-}
-
-export interface FeatureGroup {
-  audience: string
-  icon: string
+  rol: string
+  kop: string
   items: { title: string; text: string }[]
 }
 
+export interface Fase {
+  label: string
+  title: string
+  text: string
+}
+
+export interface Vraag {
+  vraag: string
+  antwoord: string
+}
+
 export const navLinks: NavLink[] = [
-  { href: '#oplossing', label: 'Oplossing' },
   { href: '#werkwijze', label: 'Werkwijze' },
+  { href: '#voor-wie', label: 'Voor wie' },
   { href: '#veiligheid', label: 'Veiligheid' },
   { href: '#kaders', label: 'Vooraf geregeld' },
-  { href: '#begroting', label: 'Begroting' },
-  { href: '#functies', label: 'Functies' },
-  { href: '#pilot', label: 'Pilot' },
+  { href: '#proef', label: 'De proef' },
+  { href: '#vragen', label: 'Vragen' },
 ]
 
 export const heroPoints: string[] = [
-  'Gescreende jongeren met VOG',
-  'Telefonisch aanmeldpunt voor niet-digitale ouderen',
-  'Juridisch, verzekerd en AVG-proof vooraf dichtgetimmerd',
+  'Jongeren van 16 t/m 20, volledig gescreend met VOG',
+  'Aanmelden via app, website of telefoon',
+  'Familie kan meekijken, de oudere houdt de regie',
 ]
 
 export const problemText: string[] = [
-  'Steeds meer ouderen wonen langer zelfstandig thuis, terwijl de kring die hen helpt kleiner wordt. Juist de kleine dingen blijven liggen — een zware boodschappentas, een lamp die te hoog hangt, een digitaal formulier, een tuin die dichtgroeit. Te klein voor een zorgindicatie, te veel om steeds aan familie te vragen.',
-  'Tegelijk staan veel jongeren langs de zijlijn. Ze willen iets betekenen, werkervaring opdoen en bijverdienen, maar vinden moeilijk een ingang. HeitjeHulp verbindt die behoefte en die energie — veilig, lokaal en meetbaar.',
-]
-
-export const pilotStats: Stat[] = [
-  { value: '100', label: 'deelnemende ouderen' },
-  { value: '50', label: 'gescreende jongeren' },
-  { value: '500', label: 'hulpvragen als doel' },
-  { value: '6', label: 'maanden looptijd' },
+  'Steeds meer ouderen wonen zelfstandig thuis, terwijl de kring die hen bij kleine dingen helpt kleiner wordt. Kinderen wonen verder weg, buren kennen elkaar minder en de druk op mantelzorgers en wijkteams loopt op. Juist de kleine dingen blijven liggen: te klein voor een indicatie, maar het verschil tussen zelfredzaam zijn en vastlopen.',
+  'Tegelijk staan jongeren die iets willen betekenen voor hun buurt langs de zijlijn. Het vrijwilligersbestand vergrijst; jongeren zitten er nauwelijks in. HeitjeHulp verbindt die twee — veilig, lokaal en herleidbaar.',
 ]
 
 export const helpTypes: string[] = [
   'Boodschappen en kleine praktische hulp',
-  'Digitale hulp met telefoon, tablet of computer',
-  'Kleine klusjes in en rondom het huis',
-  'Gezelschap en begeleiding',
+  'Hulp met telefoon, tablet of computer',
+  'Kleine klusjes in en om het huis',
+  'Tuin of balkon bijhouden, afval wegbrengen',
+  'Begeleiding naar een afspraak',
 ]
 
-export const processSteps: ProcessStep[] = [
+export const verhaal = {
+  tekst:
+    'Mevrouw Jansen (81) belt het aanmeldpunt: de lamp in haar keuken is kapot en ze durft de trap niet meer op. De hulpvraag wordt genoteerd en ze krijgt een bevestiging. Youssef (16), gescreend en uit dezelfde straat, ziet de klus in de app en komt na school langs. Hij vervangt de lamp, neemt de tijd voor een praatje en rondt de klus af. De volgende keer vraagt mevrouw Jansen gewoon weer naar Youssef.',
+  bijschrift: 'Een voorbeeld van hoe een klus verloopt',
+}
+
+export const processSteps: IconItem[] = [
   {
     icon: 'PhoneCall',
     title: 'Aanmelden',
-    text: 'De oudere meldt een hulpvraag aan via de app, de website of het telefonisch aanmeldpunt — ook via familie, mantelzorger of wijkteam.',
+    text: 'De oudere meldt een hulpvraag aan via de app, de website of telefonisch — of een familielid, mantelzorger of het wijkteam doet het namens haar.',
   },
   {
     icon: 'MapPin',
-    title: 'Matchen',
-    text: 'Een gescreende jongere uit dezelfde wijk ziet de hulpvraag en pakt hem op. Koppeling op wijkniveau, geen vreemde van ver weg.',
+    title: 'Oppakken',
+    text: 'Een gescreende jongere uit dezelfde wijk ziet de klus en neemt hem aan. De oudere ziet vooraf wie er komt.',
   },
   {
     icon: 'HandHeart',
     title: 'Uitvoeren',
-    text: 'De jongere voert de klus uit tegen een eerlijke vergoeding. Elke klus is geregistreerd, verzekerd en herleidbaar.',
+    text: 'De jongere laat weten dat hij onderweg is, doet de klus en rondt hem af. Elke stap wordt vastgelegd.',
   },
   {
     icon: 'Star',
     title: 'Beoordelen',
-    text: 'Oudere en jongere beoordelen elkaar. Bij een goede klik komt dezelfde vertrouwde helper terug.',
+    text: 'Oudere en jongere beoordelen elkaar. Bij een goede ervaring vraagt de oudere dezelfde jongere opnieuw.',
   },
 ]
 
-export const safetyItems: SafetyItem[] = [
+export const welDoen: string[] = [
+  'Boodschappen doen',
+  'Kleine klusjes in en om het huis',
+  'Hulp met telefoon, tablet of computer',
+  'Begeleiding naar een afspraak',
+  'Tuin of balkon bijhouden, afval wegbrengen',
+  'Een praatje bij elke klus',
+]
+
+export const nietDoen: string[] = [
+  'Persoonlijke verzorging of medische handelingen',
+  'Structurele huishoudelijke hulp',
+  'Geld- of administratiebeheer',
+  'Alles wat onder een Wmo-indicatie of zorgaanbod valt',
+  'Georganiseerd gezelschap — daarvoor verwijzen we naar welzijn',
+]
+
+export const rollen: Rol[] = [
+  {
+    icon: 'Heart',
+    rol: 'Ouderen',
+    kop: 'Hulp vragen zonder gedoe',
+    items: [
+      { title: 'Groot en rustig', text: 'Grote knoppen, grote letters en weinig stappen. Geen cijfers of drukte op het scherm.' },
+      { title: 'Zien wie er komt', text: 'Vooraf weten welke jongere komt, en een melding als hij onderweg is.' },
+      { title: 'Zonder smartphone', text: 'Telefonisch aanmelden kan altijd; de meldkamer zet de hulpvraag in het systeem.' },
+    ],
+  },
+  {
+    icon: 'Users',
+    rol: 'Familie',
+    kop: 'Meekijken op afstand',
+    items: [
+      { title: 'Met toestemming', text: 'De oudere bepaalt wie meekijkt en wat die mag zien; toestemming intrekken kan altijd.' },
+      { title: 'Namens aanmelden', text: 'Een familielid kan een hulpvraag plaatsen voor de oudere.' },
+      { title: 'Op de hoogte', text: 'Meldingen bij de belangrijke momenten van een klus.' },
+    ],
+  },
+  {
+    icon: 'GraduationCap',
+    rol: 'Jongeren',
+    kop: 'Iets betekenen in je eigen buurt',
+    items: [
+      { title: 'Klussen in de buurt', text: 'Een kaart met open hulpvragen dichtbij; aannemen met één knop.' },
+      { title: 'Stap voor stap', text: 'Onderweg, bezig, klaar — de app begeleidt elke klus en legt hem vast.' },
+      { title: 'Altijd een achtervang', text: 'Een vaste knop om iets te melden dat niet klopt, en een vertrouwenspersoon.' },
+    ],
+  },
+  {
+    icon: 'ClipboardCheck',
+    rol: 'Coördinator',
+    kop: 'De meldkamer houdt overzicht',
+    items: [
+      { title: 'Alle hulpvragen', text: 'Zien welke klus te lang wacht, zelf koppelen, vrijgeven of annuleren.' },
+      { title: 'Screening', text: 'Document, selfie, VOG en intake van elke jongere beoordelen, altijd met een notitie.' },
+      { title: 'Meldingen opvolgen', text: 'Incidenten en signalen komen direct binnen en worden afgehandeld en vastgelegd.' },
+    ],
+  },
+]
+
+export const safetyItems: IconItem[] = [
   {
     icon: 'IdCard',
     title: 'Identiteit & selfie',
-    text: 'Controle op een geldig identiteitsbewijs met eenmalige selfie-verificatie — geen biometrisch profiel.',
-  },
-  {
-    icon: 'Phone',
-    title: 'Telefoon & bank',
-    text: 'Verificatie van telefoonnummer en bankrekening voordat een jongere actief wordt.',
+    text: 'Controle van een geldig identiteitsbewijs en een eenmalige selfie, handmatig beoordeeld. Geen gezichtsherkenning.',
   },
   {
     icon: 'FileCheck2',
     title: 'Geldige VOG',
-    text: 'Verklaring Omtrent het Gedrag verplicht voor iedereen die bij ouderen thuiskomt.',
+    text: 'Verplicht voor elke jongere. Verloopt de VOG, dan kan de jongere niet meer gekoppeld worden.',
   },
   {
     icon: 'Users',
-    title: 'Intake & reviews',
-    text: 'Persoonlijk intakegesprek, wederzijdse beoordeling per klus en een heldere meld- en klachtenprocedure.',
+    title: 'Persoonlijke intake',
+    text: 'Een kennismakingsgesprek met gedragsregels en uitleg over wat je doet als je iets ziet dat niet klopt.',
   },
+  {
+    icon: 'ShieldCheck',
+    title: 'Meldknop & opvolging',
+    text: 'Jongeren melden zorgen via een vaste knop. Wij beoordelen en schakelen waar nodig het wijkteam in.',
+  },
+]
+
+export const gedragsregels: string[] = [
+  'Nooit contant geld aannemen',
+  'Alleen komen op de afgesproken tijd',
+  'Alleen de afgesproken klus doen',
+  'Alles melden wat afwijkt',
 ]
 
 export const kaders: Kader[] = [
@@ -150,166 +200,137 @@ export const kaders: Kader[] = [
     key: 'juridisch',
     icon: 'Scale',
     tab: 'Juridische vorm',
-    title: 'Onbelaste vrijwilligersvergoeding, met harde drempelbewaking',
+    title: 'Vrijwilligers van een stichting zonder winstoogmerk',
     intro:
-      'De juridische status van de jongeren is bewust het eerste wat is dichtgetimmerd. Tijdens de pilot werkt HeitjeHulp uitsluitend met de onbelaste vrijwilligersvergoeding — de eenvoudigste en fiscaal meest robuuste vorm.',
+      'De jongeren zijn vrijwilliger van Stichting HeitjeHulp. Zij krijgen een bescheiden vrijwilligersvergoeding binnen de wettelijke norm — aantoonbaar geen loon.',
     points: [
-      'Maxima 2026: € 220 per maand, € 2.200 per jaar, € 3,40 per uur (onder 21 jaar). Het platform bewaakt deze grenzen automatisch.',
-      'Geen dienstverband en geen ZZP-constructie — dus geen schijnzelfstandigheid en geen werkgeversrol of fiscaal risico voor de gemeente.',
-      'Minimumleeftijd 16 jaar; de Arbeidstijdenwet wordt vrijwillig als kader voor de inroostering aangehouden.',
-      'De vergoeding wordt expliciet als onkostenvergoeding vormgegeven, niet als loon per klus; waar gewenst vraagt HeitjeHulp de Belastingdienst om vooroverleg.',
+      'Geen dienstverband, geen zzp-constructie en geen werkgeversrol voor de gemeente.',
+      'Het platform bewaakt de wettelijke maxima van de vrijwilligersvergoeding automatisch.',
+      'Elke jongere tekent een deelnemersafspraak; bij minderjarigen tekenen de ouders mee.',
+      'Bescherming van minderjarigen: geen inzet laat op de avond, school gaat altijd voor.',
     ],
-    footnote:
-      'Bedragen op basis van de meest actuele bekendmakingen; definitieve 2026-tarieven worden vóór de start bij de Belastingdienst geverifieerd.',
   },
   {
     key: 'vog',
     icon: 'FileCheck2',
     tab: 'VOG & screening',
-    title: 'Volledig gescreend vóór de eerste hulpvraag',
-    intro:
-      'Geen enkele jongere wordt actief gezet voordat de complete screening is doorlopen. De VOG-fase wordt volledig vóór de operationele start gepland, met buffer voor de doorlooptijd.',
+    title: 'Volledig gescreend vóór de eerste klus',
+    intro: 'Geen enkele jongere wordt actief voordat de hele screening is doorlopen.',
     points: [
-      'VOG digitaal € 33,85 per aanvraag (50 × € 33,85 = € 1.692,50), verwerkt in de begroting. Balieroute € 41,35 als bovengrens.',
-      'Doorlooptijd 1 tot 4 weken; HeitjeHulp plant met de bovengrens, zodat de pilot vanaf dag één met gescreende jongeren start.',
-      'Via een reeds toegelaten welzijns- of vrijwilligerspartner kan de Regeling Gratis VOG de kosten tot vrijwel nul terugbrengen.',
-      'Naast de VOG: identiteits-, selfie-, telefoon- en bankrekeningverificatie plus een persoonlijk intakegesprek.',
+      'Identiteitsbewijs (BSN afgeschermd) en selfie, handmatig beoordeeld.',
+      'Een geldige Verklaring Omtrent het Gedrag, aangevraagd door de stichting.',
+      'Een persoonlijk intakegesprek met gedragsregels en instructie over signaleren.',
+      'Bij twijfel wordt een match beëindigd, zonder discussie.',
     ],
   },
   {
     key: 'verzekering',
     icon: 'ShieldCheck',
     tab: 'Verzekering',
-    title: 'Platformbrede dekking, vooraf geregeld',
+    title: 'Schade nooit op het bordje van de jongere',
     intro:
-      'Hulp aan huis kan misgaan — dat is het grootste reële risico. Daarom regelt HeitjeHulp zelf een sluitende, platformbrede dekking voor elke geregistreerde klus, vergelijkbaar met hoe Charly Cares dit met verzekeraar Aon opzette.',
+      'Klussen tellen alleen als ze via het platform zijn vastgelegd. Zo is elke klus herleidbaar en valt hij onder de verzekering die vóór de start geregeld wordt.',
     points: [
-      'Bedrijfsaansprakelijkheid (AVB): zaak- en letselschade bij de oudere thuis wordt via de polis van HeitjeHulp afgewikkeld, niet via de jongere persoonlijk.',
-      'Collectieve ongevallenverzekering voor de jongere, met een 24/7 medische assistentielijn bij een incident.',
-      'Rechtsbijstand bij geschillen, zodat niemand met juridische kosten blijft zitten.',
-      'De gemeente draagt geen aansprakelijkheid en hoeft haar eigen vrijwilligersverzekering hier niet voor in te zetten.',
+      'Uitgangspunt is de gemeentelijke vrijwilligersverzekering; anders sluit de stichting zelf een polis af.',
+      'Schade wordt gemeld bij de stichting, nooit bij de jongere persoonlijk.',
+      'Klussen buiten het platform om vallen er niet onder — dat staat in de gedragsregels.',
     ],
   },
   {
     key: 'avg',
     icon: 'Lock',
-    tab: 'Privacy (AVG)',
-    title: 'Privacy by design voor een kwetsbare doelgroep',
-    intro:
-      'HeitjeHulp verwerkt gegevens van twee groepen die de wetgever als kwetsbaar aanmerkt. Privacy is geen sluitstuk maar een ontwerpprincipe: dataminimalisatie en privacy by design en by default.',
+    tab: 'Privacy',
+    title: 'Zo min mogelijk gegevens',
+    intro: 'HeitjeHulp werkt met twee kwetsbare groepen. Privacy is daarom een ontwerpkeuze, geen sluitstuk.',
     points: [
-      'Alleen strikt noodzakelijke gegevens; geen profilering, geen geautomatiseerde besluiten, geen verkoop aan derden.',
-      'Opslag binnen de EER, versleuteld in transit en at rest, toegang op basis van least privilege met logging.',
-      'Verwerkersovereenkomst conform het VNG-model én een DPIA worden vóór de start opgeleverd en met de gemeente gedeeld.',
-      'Korte bewaartermijnen en eenvoudig uit te oefenen rechten — ook telefonisch of via een familielid.',
+      'Van ouderen: naam, adres, telefoon en de hulpvraag in neutrale woorden — geen medische redenen.',
+      'Geen BSN, geen biometrie, geen gezondheidsgegevens.',
+      'Servers binnen de EER, versleuteld; alleen wie het nodig heeft, kan erbij.',
+      'Rapportages bevatten alleen totalen, nooit gegevens die naar een persoon te herleiden zijn.',
     ],
   },
 ]
 
-export const budgetTotal = '€ 5.602,50'
-export const budgetPerMonth = '€ 934'
-export const budgetToFinance = '€ 4.102,50'
-
-export const budgetPosts: BudgetPost[] = [
-  { label: 'VOG-screening', detail: '50 × € 33,85 (mogelijk € 0 via Gratis VOG)', amount: '€ 1.692,50' },
-  { label: 'Verzekering', detail: 'aansprakelijkheid + ongevallen, 6 mnd', amount: '€ 1.500' },
-  { label: 'Communicatiemateriaal', detail: 'flyers, wijkbrieven, materiaal wijkteams/scholen', amount: '€ 1.500' },
-  { label: 'Onvoorzien (±10%)', detail: 'marge voor extra VOG’s, toegankelijkheid, kleine bijstellingen', amount: '€ 510' },
-  { label: 'Overige verificatie', detail: 'identiteit, selfie, telefoon, bank — ca. € 8 p.p.', amount: '€ 400' },
-  { label: 'Platform & coördinatie', detail: 'matching, planning, screening-flow en rapportage — geautomatiseerd, kosteloos', amount: '€ 0' },
-  { label: 'Telefonisch aanmeldpunt', detail: 'opzet en bemensing — kosteloos door de initiatiefnemer', amount: '€ 0' },
+export const proefStats: Stat[] = [
+  { value: '5', label: 'ouderen' },
+  { value: '5', label: 'jongeren' },
+  { value: '1', label: 'wijk' },
+  { value: '8', label: 'weken' },
 ]
 
-export const budgetHonesty: string[] = [
-  'De coördinatie loopt grotendeels via het platform: matching, planning, screening-workflow, drempelbewaking, reviews, meldingen-triage en de rapportage aan de gemeente gebeuren geautomatiseerd. De menselijke begeleiding — intakegesprekken, incident-opvolging en contact met ouderen en families — verzorgen de initiatiefnemer en een klein team van 2 à 3 vrijwilligers, tijdens de pilot kosteloos. Daardoor vervalt de dure coördinatorpost en daalt de begroting naar € 5.602,50, zonder in te leveren op de menselijke maat.',
-  'De hulpvrager betaalt de kluskosten: van een bruto klusbedrag (voorbeeld € 20) gaat € 17 als forfaitaire onkostenvergoeding naar de jongere en houdt HeitjeHulp € 3 commissie. Bij 500 klussen is dat circa € 1.500, dat in mindering komt op de gevraagde bijdrage.',
-  'Na aftrek van die commissie resteert een te financieren bedrag van circa € 4.102,50 over 6 maanden. Met gratis VOG via een welzijnspartner (− € 1.692,50) en de VNG Vrijwilligersverzekering (− ± € 1.500) kan de gevraagde gemeentebijdrage richting nul gaan.',
-]
-
-export const heitjehulpDelivers: DeliveryItem[] = [
-  { title: 'Platform & aanmeldpunt — gratis', text: 'App, website, backend én het telefonisch aanmeldpunt worden kosteloos door de initiatiefnemer verzorgd; deze posten staan op € 0 in de begroting.' },
-  { title: 'Geautomatiseerde coördinatie', text: 'Matching, planning, screening-flow, drempelbewaking, reviews en rapportage lopen via het platform — geen betaalde coördinator nodig.' },
-  { title: 'Menselijke begeleiding door vrijwilligers', text: 'De initiatiefnemer en 2 à 3 vrijwilligers doen intake, incident-opvolging en contact met ouderen en families — onbetaald tijdens de pilot.' },
-  { title: 'Veiligheid, privacy & rapportage', text: 'Compleet screenings- en veiligheidsprotocol, AVG-kader en een eindrapportage met onderbouwd opschalingsadvies.' },
-]
-
-export const municipalityDelivers: DeliveryItem[] = [
-  { title: 'Cofinanciering', text: `Na aftrek van eigen inkomsten resteert een te financieren bedrag van circa ${budgetToFinance} over 6 maanden; verdeling stellen we samen vast.` },
-  { title: 'Toegang & introductie', text: 'Verbinding met wijkteams, jongerenwerk, scholen en welzijnsorganisaties, plus een pilotwijk.' },
-  { title: 'Communicatie', text: 'Ondersteuning richting ouderen en mantelzorgers via gemeentekanalen, wijkbladen en buurtnetwerken.' },
-]
-
-export const competitors: CompetitorItem[] = [
-  { name: 'BUUV', text: 'Buurtmarktplaats voor wederkerige, onbetaalde burenhulp tussen bewoners.' },
-  { name: 'WeHelpen', text: 'Landelijk platform voor informele hulp en mantelzorg, met een credits-systeem.' },
-  { name: 'Vrijwilligerscentrales', text: 'Lokale bemiddeling, maar met een overwegend vergrijzend vrijwilligersbestand.' },
-  { name: 'Helpling / Charly Cares', text: 'Betaalde, gescreende platforms — maar gericht op één dienst en een digitaal publiek.' },
-]
-
-export const differentiators: Differentiator[] = [
-  { icon: 'BadgeCheck', title: 'Gescreende jongeren met VOG', text: 'Complete screening gekoppeld aan een brede waaier van kleine hulpvragen — het vertrouwensniveau dat hulp aan huis vraagt.' },
-  { icon: 'Banknote', title: 'Betaald werk voor jongeren', text: 'Een betrouwbare vergoeding verbreedt de groep naar een leeftijd die in het vrijwilligersbestand juist ontbreekt.' },
-  { icon: 'PhoneCall', title: 'Telefonisch aanmeldpunt', text: 'Bereikt de niet-digitale ouderen die bij puur digitale platforms buiten beeld blijven.' },
-  { icon: 'GraduationCap', title: 'Jongerenparticipatie als doel', text: 'Eén pilot dient twee beleidsterreinen: ouderenhulp én werkervaring voor jongeren.' },
-  { icon: 'MapPin', title: 'Eigen wijk, vast gezicht', text: 'Koppeling op wijkniveau met herhaalde inzet van dezelfde jongere versterkt vertrouwen en verbinding.' },
-]
-
-export const featureGuardrail =
-  'Gamificatie kan averechts werken als beloningen aan snelheid of aantallen hangen — jongeren gaan dan optimaliseren op volume, ten koste van kwetsbare ouderen. Daarom geldt voor álle functies één onwrikbaar principe: beloningen hangen aan kwaliteit, niet aan kwantiteit. De beoordeling van de oudere weegt structureel zwaarder dan het aantal klussen.'
-
-export const featureGroups: FeatureGroup[] = [
+export const fases: Fase[] = [
   {
-    audience: 'Voor jongeren',
-    icon: 'Trophy',
-    items: [
-      { title: 'Punten & niveaus', text: 'Van Buurthelper naar Wijkheld naar Buurtlegende — doorgroeien lukt alleen met aanhoudend hoge beoordelingen.' },
-      { title: 'Badges & reeksen', text: 'Erkenning voor terugkerende ouderen, uitstekende reviews en betrouwbare, regelmatige inzet.' },
-      { title: 'Bonus voor lastige klussen', text: 'Klussen die anders blijven liggen leveren extra punten op — en lossen zo het matchingprobleem op.' },
-      { title: 'Verzilverbare punten', text: 'In te wisselen voor een cadeaubon, lokaal tegoed of een donatie aan een goed doel.' },
-      { title: 'Werkervaringscertificaat', text: 'Een door de gemeente erkend certificaat voor het cv, gekoppeld aan kwaliteit en betrouwbaarheid.' },
-    ],
+    label: 'Stap 1',
+    title: 'Proef',
+    text: 'Vijf ouderen en vijf jongeren in één wijk, acht weken. Bewijzen dat aanmelden, oppakken, uitvoeren en beoordelen in de praktijk werken — ook voor een oudere zonder smartphone.',
   },
   {
-    audience: 'Voor ouderen',
-    icon: 'Heart',
-    items: [
-      { title: 'Vaste favoriete helper', text: 'Na een goede ervaring dezelfde jongere instellen, zodat vertrouwen en bekendheid groeien.' },
-      { title: 'Toegankelijkheidsmodus', text: 'Grote knoppen, groot lettertype en eenvoudige stappen — het telefoonnummer blijft altijd alternatief.' },
-      { title: 'Gezelschap als categorie', text: 'Een praatje krijgt een eigen, gelijkwaardige plek; precies de kern van eenzaamheidsbestrijding.' },
-      { title: 'Bevestiging voor familie', text: 'Met toestemming een korte bevestiging en foto na afloop, voor gemoedsrust bij familie op afstand.' },
-    ],
+    label: 'Stap 2',
+    title: 'Uitbreiding',
+    text: 'Alleen als de proef slaagt, groeien we voorzichtig door. Wat "geslaagd" betekent, spreken we vooraf af.',
   },
   {
-    audience: 'Voor wijk & gemeente',
-    icon: 'LineChart',
-    items: [
-      { title: 'Live wijk-impactdashboard', text: 'Actueel, geaggregeerd beeld van hulpvragen en verbinding — geschikt voor verantwoording en beleid.' },
-      { title: 'Team-uitdagingen met scholen', text: 'Klassen zetten zich als team in voor de wijk, met doelen die op kwaliteit sturen.' },
-      { title: 'Seizoensacties', text: 'Thema-acties zoals tuin winterklaar maken of extra aandacht rond de feestdagen.' },
-      { title: 'Verhalenmuur', text: 'Positieve ervaringen van ouderen en jongeren maken de menselijke waarde zichtbaar.' },
-    ],
+    label: 'Stap 3',
+    title: 'Structureel',
+    text: 'Pas daarna bespreken we samen met partners of en hoe HeitjeHulp blijvend in de wijk past.',
+  },
+]
+
+export const aanvullend: IconItem[] = [
+  {
+    icon: 'HandHeart',
+    title: 'Aanvullend, niet vervangend',
+    text: 'We pakken de kleine hulpvragen op die nu blijven liggen. Wat bij welzijn, zorg of de Wmo hoort, laten we daar.',
+  },
+  {
+    icon: 'GraduationCap',
+    title: 'Een nieuwe groep vrijwilligers',
+    text: 'Jongeren van 16 t/m 20 zijn in het bestaande vrijwilligersbestand vrijwel afwezig. Wij vergroten de vijver.',
+  },
+  {
+    icon: 'MapPin',
+    title: 'Eigen wijk, vast gezicht',
+    text: 'Hulp uit de eigen buurt, en bij een goede klik steeds dezelfde jongere. Dat bouwt vertrouwen.',
   },
 ]
 
 export const results: string[] = [
-  'Aantal uitgevoerde hulpvragen (doel: 500) en het type hulp',
-  'Aantal actief deelnemende ouderen en jongeren',
-  'Tevredenheid van ouderen en jongeren via wederzijdse beoordelingen',
-  'Aandeel ouderen dat terugkeert naar dezelfde, vertrouwde helper',
-  'Doorlooptijd tussen aanmelding en uitvoering van een hulpvraag',
-  'Bereik via het telefonisch aanmeldpunt onder niet-digitale ouderen',
-  'Aantal en type incidenten, en hoe deze zijn afgehandeld',
-  'Indicatoren rond eenzaamheid en sociale verbinding (begin- en eindmeting)',
-  'Jongerenparticipatie: opgedane werkervaring en behaalde certificaten',
+  'Aantal en soort uitgevoerde hulpvragen',
+  'Actieve ouderen en jongeren',
+  'Hoeveel aanmeldingen telefonisch of namens de oudere binnenkwamen',
+  'Tevredenheid van ouderen en jongeren',
+  'Incidenten en hoe ze zijn opgevolgd',
 ]
 
-export const nextSteps: string[] = [
-  'Een oriënterend gesprek met de betrokken beleidsmedewerker(s).',
-  'Samen de pilotwijk, de cofinancieringsverdeling en een contactpersoon vaststellen.',
-  'Afspraken sluiten: pilotovereenkomst, verwerkersovereenkomst en DPIA vóór de start.',
-  'Voorbereiding: werving en screening van jongeren, inrichting aanmeldpunt en communicatie.',
-  'Start van de pilot, met vaste evaluatiemomenten en een eindrapportage met opschalingsadvies.',
+export const vragen: Vraag[] = [
+  {
+    vraag: 'Wie zijn de jongeren?',
+    antwoord:
+      'Jongeren van 16 t/m 20 jaar uit de eigen wijk. Ze zijn vrijwilliger van Stichting HeitjeHulp, hebben een geldige VOG en een intakegesprek gehad, en worden begeleid door iemand met jarenlange ervaring in het jongerenwerk.',
+  },
+  {
+    vraag: 'Mijn moeder heeft geen smartphone. Kan zij meedoen?',
+    antwoord:
+      'Ja. Aanmelden kan telefonisch, en een familielid, mantelzorger of het wijkteam kan ook namens haar een hulpvraag plaatsen. Zij krijgt altijd een bevestiging.',
+  },
+  {
+    vraag: 'Kan ik als familielid meekijken?',
+    antwoord:
+      'Ja, als de oudere daar toestemming voor geeft. Zij bepaalt wat u mag zien en kan de toestemming altijd weer intrekken.',
+  },
+  {
+    vraag: 'Wat als er iets misgaat?',
+    antwoord:
+      'Jongeren melden alles wat afwijkt via een vaste knop in de app. De meldkamer volgt elke melding op en schakelt waar nodig het wijkteam in. Schade wordt bij de stichting gemeld, nooit bij de jongere persoonlijk.',
+  },
+  {
+    vraag: 'Wat kost het?',
+    antwoord:
+      'De oudere betaalt een kleine bijdrage per klus. Daarvan krijgt de jongere een vrijwilligersvergoeding binnen de wettelijke norm. Het precieze tarief hoort u bij de aanmelding; HeitjeHulp maakt geen winst.',
+  },
+  {
+    vraag: 'Is HeitjeHulp al te gebruiken?',
+    antwoord:
+      'De app is gebouwd en een eerste kleine proef is in voorbereiding. Wilt u meedoen als oudere, jongere of partnerorganisatie? Neem contact met ons op.',
+  },
 ]
-
-export const visionText =
-  'HeitjeHulp wil uitgroeien tot een vertrouwd platform dat in elke wijk gescreende jongeren en kwetsbare ouderen veilig verbindt — waar een oudere weet dat er altijd een bekend, betrouwbaar gezicht langskomt, en een jongere ervaart wat het betekent om iets voor een ander en de eigen buurt te doen.'
