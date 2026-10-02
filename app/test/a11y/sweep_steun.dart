@@ -104,6 +104,11 @@ Future<List<String>> bekijk(
     fouten.add(bron == null ? regel : '$regel  [$bron]');
   };
 
+  // Richtlijnen (labels, tikvlak, contrast) één keer per scherm: op 390
+  // breed bij normale tekst. Dat is waar de app het vaakst gebruikt wordt.
+  final richtlijnen = breedte == 390 && tekstschaal == 1.0;
+  final semantiek = richtlijnen ? tester.ensureSemantics() : null;
+
   tester.view.physicalSize = Size(breedte, hoogte);
   tester.view.devicePixelRatio = 1.0;
   tester.platformDispatcher.textScaleFactorTestValue = tekstschaal;
@@ -120,6 +125,21 @@ Future<List<String>> bekijk(
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
+    if (richtlijnen) {
+      for (final regel in [
+        labeledTapTargetGuideline,
+        androidTapTargetGuideline,
+        textContrastGuideline,
+      ]) {
+        final uitkomst = await regel.evaluate(tester);
+        if (!uitkomst.passed) {
+          for (final r in (uitkomst.reason ?? '').split('\n\n')) {
+            final kort = r.trim().split('\n').first;
+            if (kort.isNotEmpty) fouten.add('richtlijn: $kort');
+          }
+        }
+      }
+    }
     if (_log) {
       final teksten = tester
           .widgetList<Text>(find.byType(Text))
@@ -134,6 +154,7 @@ Future<List<String>> bekijk(
     FlutterError.onError = vorige;
     await tester.pumpWidget(const SizedBox());
     container.dispose();
+    semantiek?.dispose();
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
     tester.platformDispatcher.clearTextScaleFactorTestValue();
