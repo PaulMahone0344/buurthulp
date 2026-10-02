@@ -142,9 +142,13 @@ class HhTerugKnop extends StatelessWidget {
                     color: schema.primary,
                   ),
                   SizedBox(width: HhRuimte.voor(HhRuimte.s, dichtheid)),
-                  Text(
-                    TekstenNl.terug,
-                    style: stijl.copyWith(color: schema.primary),
+                  // Flexible: bij 200% tekst op 320 breed past pijl + woord
+                  // niet meer op één regel (M12).
+                  Flexible(
+                    child: Text(
+                      TekstenNl.terug,
+                      style: stijl.copyWith(color: schema.primary),
+                    ),
                   ),
                 ],
               ),
