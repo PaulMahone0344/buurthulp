@@ -45,6 +45,7 @@ final schermenPerRol = <HhRol?, List<String>>{
     HhPadenJongere.vog,
     HhPadenJongere.overMij,
     HhPadenJongere.binnen,
+    HhPadenOuder.ouder, // B3
     HhPadenKlussen.mijnKlussen,
     HhPadenKlussen.profiel,
     HhPadenKlussen.instellingen,

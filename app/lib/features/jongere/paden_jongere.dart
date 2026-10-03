@@ -14,3 +14,10 @@ abstract final class HhPadenJongere {
   /// Elk pad onder /jongere/screening.
   static bool isScreeningPad(String locatie) => locatie.startsWith(screening);
 }
+
+/// B3: de stap "Ouder" (helper onder 18): mail met code naar de ouder,
+/// opnieuw sturen, adres wijzigen. Onder /jongere/screening, zodat de guard
+/// andere rollen er net zo weghoudt.
+abstract final class HhPadenOuder {
+  static const ouder = '${HhPadenJongere.screening}/ouder';
+}

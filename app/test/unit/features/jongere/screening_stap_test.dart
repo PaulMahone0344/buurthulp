@@ -3,6 +3,7 @@ import 'package:heitjehulp_app/features/jongere/datum_invoer.dart';
 import 'package:heitjehulp_app/features/jongere/domein/helper_wacht.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_profiel.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
+import 'package:heitjehulp_app/features/jongere/ouder/model/hh_ouder_stand.dart';
 import 'package:heitjehulp_app/features/jongere/model/screening_stap.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -15,8 +16,10 @@ void main() {
     HhProfiel profiel = leeg,
     DateTime? geboren,
     DateTime? toestemming,
+    HhOuderStand? ouder,
   }) => ScreeningGegevens(
     profiel: profiel,
+    ouder: ouder,
     account: HhAccountGegevens(
       geboortedatum: geboren,
       ouderToestemmingOp: toestemming,
@@ -160,13 +163,61 @@ void main() {
       expect(HelperWacht.afgewezen.isAanmelden, isTrue);
     });
 
-    test('in behandeling gaat voor alles', () {
+    test('in behandeling: nagekeken (18+, of onder 18 met toestemming)', () {
+      final bezig = met(HhScreeningStatus.inBehandeling);
+      expect(
+        helperWacht(helper(profiel: bezig, geboren: oud), vandaag),
+        HelperWacht.nagekeken,
+      );
+      expect(
+        helperWacht(
+          helper(
+            profiel: bezig,
+            geboren: jong,
+            toestemming: DateTime.utc(2026),
+          ),
+          vandaag,
+        ),
+        HelperWacht.nagekeken,
+      );
+    });
+
+    test('B3: onder 18 komt de ouder eerst, ook tijdens het nakijken', () {
       expect(
         helperWacht(
           helper(profiel: met(HhScreeningStatus.inBehandeling), geboren: jong),
           vandaag,
         ),
-        HelperWacht.nagekeken,
+        HelperWacht.ouder,
+      );
+    });
+
+    test('B3: ingetrokken door de ouder is een eigen melding', () {
+      const ingetrokken = HhOuderStand(status: HhOuderStatus.ingetrokken);
+      for (final status in [
+        HhScreeningStatus.inBehandeling,
+        HhScreeningStatus.goedgekeurd,
+      ]) {
+        expect(
+          helperWacht(
+            helper(profiel: met(status), geboren: jong, ouder: ingetrokken),
+            vandaag,
+          ),
+          HelperWacht.ouderIngetrokken,
+        );
+      }
+      // Een oude stand telt niet meer zodra de toestemming er weer is.
+      expect(
+        helperWacht(
+          helper(
+            profiel: met(HhScreeningStatus.goedgekeurd),
+            geboren: jong,
+            toestemming: DateTime.utc(2026),
+            ouder: ingetrokken,
+          ),
+          vandaag,
+        ),
+        HelperWacht.klaar,
       );
     });
 
@@ -238,6 +289,7 @@ void main() {
         HelperWacht.adresOnbekend,
         HelperWacht.nagekeken,
         HelperWacht.ouder,
+        HelperWacht.ouderIngetrokken,
         HelperWacht.vog,
       ]);
     });
