@@ -1,0 +1,83 @@
+HEITJEHULP B2 - AANMELDEN EN GOEDKEUREN: OPEN PUNTEN (3 okt 2026)
+Branch b2/aanmelden, worktree ~/flutter-builds/hh-b2. Backend NIET op prod
+(proefrit: backend/proefrit-b2.txt).
+
+KEUZES DIE IK MAAKTE
+  - IBAN niet bij aanmelden en ook geen losse stap: het IBAN-scherm is weg
+    (simpelste). Komt terug bij de eerste uitbetaling (B7/B8).
+  - Werkgebied (besluit Ibrahim 3 okt): Tiel en alles binnen 20 km. De
+    server geocodeert de postcode bij aanmelden (Nominatim, zoals M5,
+    1 verzoek per seconde) en geeft binnen de straal de wijk "Tiel en
+    omstreken" (regio). Middelpunt en straal staan als constante in
+    hh_aanmelden_hulp.js (WERKGEBIEDEN); een tweede stad = een regel erbij.
+  - Alleen de postcode, niet het huisnummer: vrije tekst met huisnummer
+    geeft bij Nominatim voor NL geen resultaat; het postcode-punt is voor
+    20 km ruim precies genoeg.
+  - Geen datamigratie: Tiel-West en Passewaaij blijven geldig. Een
+    regio-wijk past bij elke wijk in dezelfde gemeente (rule + accepteren);
+    de twee oude wijken blijven onderling apart (oud gedrag).
+  - Geocoding mislukt (geen internet, geen resultaat): aanmelden gaat
+    door, geen wijk, werkgebied_status = onbekend. De app zegt "We konden
+    je adres nog niet vinden. De meldkamer kijkt ernaar."; het paneel toont
+    bij Gebruikers de pil "Adres niet gevonden". Buiten 20 km: "HeitjeHulp
+    is nog niet in jouw buurt. We laten het je weten zodra we er zijn."
+  - Bewoner zonder wijk: geen knop Hulp vragen (app). De server weigert de
+    klus niet, maar niemand ziet hem (de lijst-rule eist een wijk). Zo
+    blijven bestaande bewoners zonder wijk ongemoeid.
+  - Lijst-rule kan niet rekenen met leeftijd: lijst = "ouder gaf
+    toestemming OF VOG gezien"; accepteren checkt precies (onder 18 ouder,
+    18+ VOG). Geboortedatum kan de helper na aanmelden niet meer wijzigen.
+  - Gele balk "Regel je VOG" in plaats van "Upload je VOG": er is geen
+    upload (B1: alleen de datum vog_gezien_op). Knop "Over je VOG" opent de
+    uitleg met de Justis-link.
+  - Versturen kan zodra de ID-foto er staat; VOG en Over mij hoeven niet.
+  - Geen foto's van mensen meer: geen profielfoto-stap, bewoner ziet bij
+    zijn helper een icoon, de voornaam en "ID gecontroleerd".
+  - Server stuurt een bewoner bij een helper alleen voornaam +
+    id_gecontroleerd (onRecordEnrich); geboortedatum, adres en
+    ouder-gegevens zitten niet meer in het antwoord.
+  - Familie-rol: registreren toont "kies eerst op het welkomscherm" (de rol
+    staat sinds B0 niet in de keuze; opruimen in B3).
+  - Vinkje voorwaarden + privacy wijst naar een placeholder
+    (HhConfig.voorwaardenUrl = heitjehulp.nl/voorwaarden).
+  - Seed-helpers: script 84 zet "VOG gezien op" (besluit: JA), in de
+    uitrollijst na 80.
+
+VÓÓR LIVEGANG
+  - Voorwaarden en privacyverklaring schrijven en op heitjehulp.nl/voorwaarden
+    zetten (de link in de app is nu een placeholder).
+
+OPEN (niet in B2)
+  - Ouder-toestemming zet nu alleen de meldkamer/superuser
+    (ouder_toestemming_op); het paneel krijgt er bewust geen veld voor
+    (besluit: wachten op B3, de code-flow). Tot dan wacht elke helper onder
+    18 op Start.
+  - Na het wijzigen van de postcode in Mijn gegevens ziet de bewoner het
+    nieuwe werkgebied pas na opnieuw inloggen (de sessie ververst niet).
+  - Koppelen door de meldkamer meldt andere_wijk nog op wijk-id (een
+    regio-helper bij een Tiel-West-klus geeft een waarschuwing). B11.
+  - Koppelen door de meldkamer (hh_coordinator.pb.js) kijkt nog niet naar
+    ouder-toestemming/VOG gezien; alleen accepteren door de helper. B11.
+  - Velden selfie, intake_op, vog_status, straal_km, beschikbaarheid,
+    klustypes, telefoon staan nog op de server (data blijft); opruimen met
+    een apart script na akkoord.
+  - Filteren op geboortedatum door een bewoner kan in theorie nog (enrich
+    verbergt alleen het antwoord). Netter: een view-collectie (B11).
+  - Oude checks 07, 11 en 65 passen niet meer bij B2.
+  - iDIN niet gebouwd (K2), zie OPEN-PUNTEN.txt punt 89.
+
+BEANTWOORD DOOR IBRAHIM (3 okt)
+  1. Seed-helpers VOG gezien op: JA -> script 84 in de uitrollijst.
+  2. "Regel je VOG": blijft.
+  3. Paneelveld ouder-toestemming: wachten, komt in B3.
+  4. Werkgebied: Tiel + 20 km via geocoding -> gebouwd (zie keuzes).
+  5. Voorwaarden-link: placeholder blijft, vóór livegang regelen.
+
+VRAGEN VOOR IBRAHIM
+  1. Tiel-West en Passewaaij: mogen die later (na B2) ook "regio" worden, zodat alle helpers in Tiel alle klussen zien? Nu blijven ze onderling apart.
+  2. 20 km rond Tiel raakt ook Culemborg, Geldermalsen, Zaltbommel en Wijk bij Duurstede: is dat de bedoeling?
+
+BESLUITEN IBRAHIM (3 okt, na aanvulling werkgebied)
+- Straal blijft 20 km rond Tiel; Culemborg, Geldermalsen, Zaltbommel en Wijk bij Duurstede horen erbij.
+- Tiel-West en Passewaaij gaan ook onder "Tiel en omstreken" (regio) vallen, zodat iedereen in Tiel
+  alle klussen ziet. NIET in de B2-uitrol; doen in B3 of later (raakt alleen testaccounts).

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/hh_fout.dart';
 import '../../../core/pb/gateway_providers.dart';
 import '../../../core/result.dart';
+import '../domein/aanmelding.dart';
 import '../model/hh_gebruiker.dart';
 import '../model/hh_rol.dart';
 import '../model/sessie_state.dart';
@@ -53,23 +54,9 @@ class SessieController extends Notifier<SessieState> {
     }
   }
 
-  Future<Result<void>> registreren({
-    required String naam,
-    required String email,
-    required String wachtwoord,
-    required HhRol rol,
-    String? telefoon,
-  }) {
+  Future<Result<void>> registreren(HhAanmelding aanmelding) {
     return _authenticeer(
-      () => ref
-          .read(authGatewayProvider)
-          .registreren(
-            naam: naam,
-            email: email,
-            wachtwoord: wachtwoord,
-            rol: rol,
-            telefoon: telefoon,
-          ),
+      () => ref.read(authGatewayProvider).registreren(aanmelding),
     );
   }
 

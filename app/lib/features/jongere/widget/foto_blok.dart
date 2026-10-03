@@ -15,10 +15,9 @@ class FotoBlok extends StatelessWidget {
   const FotoBlok({
     required this.heeftFoto,
     required this.onCamera,
-    this.onGalerij,
+    required this.onGalerij,
     this.voorbeeld,
     this.isBezig = false,
-    this.cameraLabel,
     this.icoon = Icons.photo_camera_outlined,
     super.key,
   });
@@ -31,7 +30,6 @@ class FotoBlok extends StatelessWidget {
   /// De bytes van de foto die net gekozen is, om te tonen.
   final Uint8List? voorbeeld;
   final bool isBezig;
-  final String? cameraLabel;
   final IconData icoon;
 
   /// Verhouding van het voorbeeldvlak: liggend, zodat het op een smal
@@ -93,21 +91,19 @@ class FotoBlok extends StatelessWidget {
         ),
         SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
         HhKnop(
-          label: cameraLabel ?? TekstenJongereNl.fotoMaken,
+          label: TekstenJongereNl.fotoMaken,
           icoon: Icons.photo_camera_outlined,
           soort: heeftFoto ? HhKnopSoort.tweedeKeus : HhKnopSoort.primair,
           isBezig: isBezig,
           onPressed: onCamera,
         ),
-        if (onGalerij != null) ...[
-          SizedBox(height: tussen),
-          HhKnop(
-            label: TekstenJongereNl.fotoKiezen,
-            icoon: Icons.photo_library_outlined,
-            soort: HhKnopSoort.tweedeKeus,
-            onPressed: isBezig ? null : onGalerij,
-          ),
-        ],
+        SizedBox(height: tussen),
+        HhKnop(
+          label: TekstenJongereNl.fotoKiezen,
+          icoon: Icons.photo_library_outlined,
+          soort: HhKnopSoort.tweedeKeus,
+          onPressed: isBezig ? null : onGalerij,
+        ),
         if (heeftFoto && bytes == null) ...[
           SizedBox(height: tussen),
           ExcludeSemantics(

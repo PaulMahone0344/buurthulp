@@ -17,8 +17,11 @@ import 'package:heitjehulp_app/features/hulpvrager/widget/hulpvraag_samenvatting
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_home_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_gegevens_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/veiligheid/screen/bel_ons_screen.dart';
+import 'package:heitjehulp_app/features/toegang/domein/werkgebied.dart';
+import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
+import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_meldingen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
@@ -623,6 +626,75 @@ void main() {
         findsOneWidget,
       );
       expect(klusGateway.laatsteGegevensBody, isNull);
+    });
+  });
+
+  group('B2: werkgebied', () {
+    Future<void> pompHome(WidgetTester tester, HhGebruiker gebruiker) async {
+      await tester.pumpWidget(
+        hhHulpvragerWikkel(
+          const HulpvragerHomeScreen(),
+          klusGateway: fakeKlusGateway(),
+          sessie: SessieIngelogd(gebruiker),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('met wijk: de knop Hulp vragen', (tester) async {
+      await pompHome(tester, testGebruiker(HhRol.hulpvrager));
+
+      expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.nietInBuurt), findsNothing);
+    });
+
+    testWidgets('buiten het werkgebied: melding en geen knop', (tester) async {
+      await pompHome(
+        tester,
+        testGebruiker(
+          HhRol.hulpvrager,
+          wijkId: '',
+        ).copyWith(werkgebiedStatus: HhWerkgebiedStatus.buiten),
+      );
+
+      expect(find.text(TekstenAanmeldenNl.nietInBuurt), findsOneWidget);
+      expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('adres niet gevonden: de meldkamer kijkt ernaar', (
+      tester,
+    ) async {
+      await pompHome(
+        tester,
+        testGebruiker(
+          HhRol.hulpvrager,
+          wijkId: '',
+        ).copyWith(werkgebiedStatus: HhWerkgebiedStatus.onbekend),
+      );
+
+      expect(find.text(TekstenAanmeldenNl.adresOnbekend), findsOneWidget);
+      expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsNothing);
+    });
+
+    testWidgets('hulp vragen zonder wijk plaatst niets', (tester) async {
+      final klusGateway = fakeKlusGateway();
+      await tester.pumpWidget(
+        hhHulpvragerWikkel(
+          const HulpVragenScreen(),
+          klusGateway: klusGateway,
+          sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager, wijkId: '')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final knop = find.byType(HhKnop).last;
+      await tester.ensureVisible(knop);
+      await tester.tap(knop);
+      await tester.pumpAndSettle();
+
+      expect(find.text(TekstenAanmeldenNl.nietInBuurt), findsOneWidget);
+      expect(klusGateway.aangemaakteKlussen, isEmpty);
     });
   });
 }

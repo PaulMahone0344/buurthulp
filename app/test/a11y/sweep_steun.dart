@@ -62,6 +62,7 @@ Future<List<String>> bekijk(
   required double breedte,
   required double tekstschaal,
   SweepData data = const SweepData(),
+  HhRol? gekozenRol,
 }) async {
   if (_log) {
     // ignore: avoid_print
@@ -79,7 +80,7 @@ Future<List<String>> bekijk(
         sessie: rol == null
             ? const SessieUitgelogd()
             : SessieIngelogd(testGebruiker(rol)),
-        gekozenRol: rol ?? HhRol.hulpvrager,
+        gekozenRol: gekozenRol ?? rol ?? HhRol.hulpvrager,
         klussenGateway: data.klussen?.call(),
         uitvoerGateway: data.uitvoer?.call(),
         beoordelingGateway: data.beoordeling?.call(),
@@ -169,6 +170,7 @@ Future<List<String>> sweep(
   required HhRol? rol,
   required List<String> paden,
   SweepData data = const SweepData(),
+  HhRol? gekozenRol,
 }) async {
   final bevindingen = <String>[];
   for (final pad in paden) {
@@ -181,6 +183,7 @@ Future<List<String>> sweep(
           breedte: breedte,
           tekstschaal: schaal,
           data: data,
+          gekozenRol: gekozenRol,
         );
         for (final f in fouten.toSet()) {
           bevindingen.add(

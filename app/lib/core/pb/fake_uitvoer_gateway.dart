@@ -158,7 +158,7 @@ class FakeUitvoerGateway implements UitvoerGateway {
             status: naar,
             toegewezenJongereId: '',
             jongereNaam: '',
-            jongereFotoUrl: '',
+            isJongereIdGecontroleerd: false,
           );
     _log(klus, klus.status, naar, toelichting: reden.trim());
     zendUit(nieuw);

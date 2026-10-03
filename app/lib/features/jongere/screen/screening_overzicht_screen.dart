@@ -10,20 +10,25 @@ import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_meld_balk.dart';
 import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
+import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_jongere_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
 import '../../toegang/screen/hulp_screen.dart' show urlOpenerProvider;
+import '../../hulpvrager/provider/hulpvrager_providers.dart' show klokProvider;
+import '../../toegang/widget/aanmeld_stappen.dart';
 import '../model/hh_screening_status.dart';
 import '../model/screening_stap.dart';
+import '../paden_jongere.dart';
 import '../provider/screening_providers.dart';
 import '../widget/hh_screening_pil.dart';
 import '../widget/screening_lader.dart';
 
-/// J9. Per stap af of open, verificatiestatus en vog_status als pil, en de
-/// knop "Ter controle aanbieden" (nieuw -> in_behandeling) die pas actief
-/// is als J1-J8 af zijn. Daarna een wachttekst; bij afgewezen een beltekst;
-/// bij goedgekeurd de weg naar de klussen.
+/// J9 "Je aanmelding" (B2). Na het aanmeldformulier: de stappen "Jij -
+/// Ouder - Klaar", de status als pil, per stap af of open (ID-foto, VOG bij
+/// 18+, over mij) en de knop "Aanmelding versturen" (nieuw ->
+/// in_behandeling), actief zodra de ID-foto er staat. Daarna "Aanmelding
+/// binnen" (H6b). Bij afgewezen een beltekst; anders de weg naar Start.
 class ScreeningOverzichtScreen extends ConsumerStatefulWidget {
   const ScreeningOverzichtScreen({super.key});
 
@@ -58,6 +63,7 @@ class _ScreeningOverzichtScreenState
           _melding = fout.melding;
       }
     });
+    if (result is Ok<void>) context.go(HhPadenJongere.binnen);
   }
 
   Future<void> _bel() async {
@@ -87,6 +93,8 @@ class _ScreeningOverzichtScreenState
       builder: (context, gegevens) {
         final status = gegevens.verificatiestatus;
         final isGoedgekeurd = status == HhScreeningStatus.goedgekeurd;
+        final nu = ref.watch(klokProvider)();
+        final stappen = ScreeningStap.voor(gegevens, nu);
         return HhScherm(
           titel: TekstenJongereNl.j9Titel,
           toonTerug: isGoedgekeurd,
@@ -94,6 +102,11 @@ class _ScreeningOverzichtScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              AanmeldStappen(
+                huidig: AanmeldStap.jij,
+                metOuder: gegevens.isMinderjarigOp(nu) ?? false,
+              ),
+              SizedBox(height: tussen),
               HhKaart(
                 kop: TekstenJongereNl.j9StatusKop,
                 child: Column(
@@ -103,15 +116,12 @@ class _ScreeningOverzichtScreenState
                       label: TekstenJongereNl.j9VerificatieLabel,
                       status: status,
                     ),
-                    SizedBox(height: klein),
-                    _StatusRij(
-                      label: TekstenJongereNl.j9VogLabel,
-                      status: gegevens.vogStatus,
-                    ),
                     SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
                     Text(switch (status) {
                       HhScreeningStatus.nieuw =>
-                        TekstenJongereNl.j9IndienenHulp,
+                        stappen.contains(ScreeningStap.vog)
+                            ? TekstenAanmeldenNl.overzichtUitlegVog
+                            : TekstenAanmeldenNl.overzichtUitleg,
                       HhScreeningStatus.inBehandeling =>
                         TekstenJongereNl.j9WachtTekst,
                       HhScreeningStatus.goedgekeurd =>
@@ -130,14 +140,16 @@ class _ScreeningOverzichtScreenState
                         onPressed: _bel,
                       ),
                     ],
-                    if (isGoedgekeurd) ...[
+                    if (isGoedgekeurd ||
+                        status == HhScreeningStatus.inBehandeling) ...[
                       SizedBox(height: tussen),
                       HhKnop(
-                        label: TekstenJongereNl.j9NaarKlussen,
+                        label: TekstenAanmeldenNl.naarStart,
                         icoon: Icons.arrow_forward,
                         onPressed: () => context.go(HhPaden.jongere),
                       ),
-                    ] else ...[
+                    ],
+                    if (!isGoedgekeurd) ...[
                       SizedBox(height: klein),
                       HhKnop(
                         label: TekstenJongereNl.j9Vernieuwen,
@@ -163,9 +175,8 @@ class _ScreeningOverzichtScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final stap in ScreeningStap.values) ...[
-                      if (stap != ScreeningStap.values.first)
-                        SizedBox(height: klein),
+                    for (final stap in stappen) ...[
+                      if (stap != stappen.first) SizedBox(height: klein),
                       _StapKnop(
                         stap: stap,
                         isAf: stap.isAf(gegevens),
@@ -179,8 +190,13 @@ class _ScreeningOverzichtScreenState
               ),
               if (status == HhScreeningStatus.nieuw) ...[
                 SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+                Text(
+                  TekstenAanmeldenNl.overzichtVersturenHulp,
+                  style: tekst.bodyMedium,
+                ),
+                SizedBox(height: klein),
                 HhKnop(
-                  label: TekstenJongereNl.j9Indienen,
+                  label: TekstenAanmeldenNl.overzichtVersturen,
                   icoon: Icons.send_outlined,
                   isBezig: _isBezig,
                   onPressed: kanTerControleAanbieden(gegevens)
@@ -233,7 +249,7 @@ class _StapKnop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = '${stap.nummer}. ${stap.titel}';
+    final label = stap.titel;
     final staat = isAf ? TekstenJongereNl.stapAf : TekstenJongereNl.stapOpen;
     return HhKnop(
       label: label,

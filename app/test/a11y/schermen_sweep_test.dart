@@ -42,14 +42,10 @@ final schermenPerRol = <HhRol?, List<String>>{
   HhRol.jongere: [
     HhPaden.jongere,
     HhPadenJongere.overzicht,
-    HhPadenJongere.profiel,
     HhPadenJongere.identiteit,
-    HhPadenJongere.selfie,
     HhPadenJongere.vog,
-    HhPadenJongere.iban,
-    HhPadenJongere.werkgebied,
-    HhPadenJongere.beschikbaarheid,
-    HhPadenJongere.klussoorten,
+    HhPadenJongere.overMij,
+    HhPadenJongere.binnen,
     HhPadenKlussen.mijnKlussen,
     HhPadenKlussen.profiel,
     HhPadenKlussen.instellingen,
@@ -76,6 +72,22 @@ void main() {
       for (final MapEntry(key: rol, value: paden) in schermenPerRol.entries)
         ...await sweep(tester, rol: rol, paden: paden),
     ];
+    for (final b in bevindingen) {
+      // ignore: avoid_print
+      print(b);
+    }
+    expect(bevindingen, isEmpty, reason: '${bevindingen.length} layoutfouten');
+  });
+
+  testWidgets('B2: aanmelden als helper past ook (uitgelogd, rol helper)', (
+    tester,
+  ) async {
+    final bevindingen = await sweep(
+      tester,
+      rol: null,
+      gekozenRol: HhRol.jongere,
+      paden: const [HhPaden.registreren],
+    );
     for (final b in bevindingen) {
       // ignore: avoid_print
       print(b);

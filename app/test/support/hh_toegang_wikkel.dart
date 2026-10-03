@@ -42,12 +42,20 @@ import 'package:heitjehulp_app/theme.dart';
 const testWachtwoord = 'testwachtwoord';
 
 /// Een nep-account per rol, met een vast token zodat herstel te testen is.
-HhGebruiker testGebruiker(HhRol rol, {bool isBevestigd = true}) => HhGebruiker(
+/// Bewoner en helper wonen standaard in het werkgebied (B2: wijk gezet).
+HhGebruiker testGebruiker(
+  HhRol rol, {
+  bool isBevestigd = true,
+  String? wijkId,
+}) => HhGebruiker(
   id: 'id-${rol.code}',
   naam: 'Test ${rol.naam}',
   email: 'test-${rol.code}@voorbeeld.nl',
   rol: rol,
   isBevestigd: isBevestigd,
+  wijkId:
+      wijkId ??
+      (rol == HhRol.hulpvrager || rol == HhRol.jongere ? 'wijk-west' : ''),
 );
 
 String testToken(HhRol rol) => 'token-${rol.code}';

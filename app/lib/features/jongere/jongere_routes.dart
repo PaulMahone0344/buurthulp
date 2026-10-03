@@ -1,52 +1,34 @@
 import 'package:go_router/go_router.dart';
 
 import 'paden_jongere.dart';
-import 'screen/screening_beschikbaarheid_screen.dart';
+import 'screen/aanmelding_binnen_screen.dart';
 import 'screen/screening_foto_screen.dart';
-import 'screen/screening_iban_screen.dart';
-import 'screen/screening_klussoorten_screen.dart';
+import 'screen/screening_over_mij_screen.dart';
 import 'screen/screening_overzicht_screen.dart';
-import 'screen/screening_profiel_screen.dart';
 import 'screen/screening_vog_screen.dart';
-import 'screen/screening_werkgebied_screen.dart';
 
-/// Routes van de jongere (M3: screening J1-J9). De landing /jongere staat
-/// in router.dart; deze lijst wordt daar met een spread toegevoegd.
+/// Routes van het aanmelden van de helper (B2: ID-foto, VOG, over mij, het
+/// overzicht en "Aanmelding binnen"). De landing /jongere staat in
+/// router.dart; deze lijst wordt daar met een spread toegevoegd.
 List<RouteBase> jongereRoutes() => [
-  GoRoute(
-    path: HhPadenJongere.profiel,
-    builder: (context, state) => const ScreeningProfielScreen(),
-  ),
   GoRoute(
     path: HhPadenJongere.identiteit,
     builder: (context, state) => const ScreeningIdentiteitScreen(),
-  ),
-  GoRoute(
-    path: HhPadenJongere.selfie,
-    builder: (context, state) => const ScreeningSelfieScreen(),
   ),
   GoRoute(
     path: HhPadenJongere.vog,
     builder: (context, state) => const ScreeningVogScreen(),
   ),
   GoRoute(
-    path: HhPadenJongere.iban,
-    builder: (context, state) => const ScreeningIbanScreen(),
-  ),
-  GoRoute(
-    path: HhPadenJongere.werkgebied,
-    builder: (context, state) => const ScreeningWerkgebiedScreen(),
-  ),
-  GoRoute(
-    path: HhPadenJongere.beschikbaarheid,
-    builder: (context, state) => const ScreeningBeschikbaarheidScreen(),
-  ),
-  GoRoute(
-    path: HhPadenJongere.klussoorten,
-    builder: (context, state) => const ScreeningKlussoortenScreen(),
+    path: HhPadenJongere.overMij,
+    builder: (context, state) => const ScreeningOverMijScreen(),
   ),
   GoRoute(
     path: HhPadenJongere.overzicht,
     builder: (context, state) => const ScreeningOverzichtScreen(),
+  ),
+  GoRoute(
+    path: HhPadenJongere.binnen,
+    builder: (context, state) => const AanmeldingBinnenScreen(),
   ),
 ];

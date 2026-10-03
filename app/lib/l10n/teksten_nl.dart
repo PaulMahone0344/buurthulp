@@ -50,18 +50,15 @@ abstract final class TekstenNl {
 
   // G4 Registreren
   static const registrerenTitel = 'Account maken';
-  static const registrerenAlsUitleg = 'Je maakt een account als';
   static const registrerenKnop = 'Account maken';
   static const registrerenOnbekendeRol =
       'Kies eerst wat bij je past op het welkomscherm.';
 
   // Velden
   static const veldNaam = 'Je naam';
-  static const veldNaamHulp = 'Zo noemen we je in de app.';
   static const veldEmail = 'E-mailadres';
   static const veldEmailHulp = 'Hiermee log je in.';
   static const veldTelefoon = 'Telefoonnummer';
-  static const veldTelefoonHulp = 'Niet verplicht. Handig voor de meldkamer.';
   static const veldWachtwoord = 'Wachtwoord';
   static const veldWachtwoordHulp = 'Minstens 8 tekens.';
 

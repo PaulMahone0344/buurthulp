@@ -7,6 +7,10 @@ abstract final class HhConfig {
   /// Placeholder tot de meldkamer een echt nummer heeft (app-plan, G8).
   static const meldkamerTelefoon = '0800-0000000';
 
+  /// PLACEHOLDER (B2): de pagina met voorwaarden en privacyverklaring
+  /// bestaat nog niet; de link bij aanmelden wijst hierheen.
+  static const voorwaardenUrl = 'https://heitjehulp.nl/voorwaarden';
+
   /// Minimale wachtwoordlengte, gelijk aan de PocketBase-standaard.
   static const wachtwoordMinLengte = 8;
 }

@@ -34,7 +34,7 @@ class HhKlus {
     this.oudereWijkId = '',
     this.oudereContactNaam = '',
     this.jongereNaam = '',
-    this.jongereFotoUrl = '',
+    this.isJongereIdGecontroleerd = false,
     this.geplaatstDoorId = '',
   });
 
@@ -62,11 +62,16 @@ class HhKlus {
   /// (dat loopt via de belroute).
   final String oudereContactNaam;
 
-  /// M6: naam en foto van de toegewezen jongere, uit de expand van
-  /// toegewezen_jongere. De oudere ziet die op O7 zodra er een jongere is;
-  /// leeg betekent "nog niemand" of "niet meegevraagd".
+  /// M6: naam van de toegewezen helper, uit de expand van
+  /// toegewezen_jongere. De bewoner ziet die op O7 zodra er een helper is;
+  /// leeg betekent "nog niemand" of "niet meegevraagd". Sinds B2 stuurt de
+  /// server een bewoner alleen de voornaam (hh_aanmelden.pb.js) en toont de
+  /// app geen foto van de helper (geen beelden van mensen).
   final String jongereNaam;
-  final String jongereFotoUrl;
+
+  /// B2: het vinkje "ID gecontroleerd" (extra veld id_gecontroleerd dat de
+  /// server bij een helper meestuurt). Nooit het document zelf.
+  final bool isJongereIdGecontroleerd;
 
   /// M9: wie de klus plaatste (de oudere zelf, of een familielid namens
   /// hem). F3 laat alleen bij eigen geplaatste klussen "stoppen" zien.
@@ -113,7 +118,6 @@ class HhKlus {
     final lon = record.getDoubleValue('lon');
     final heeftPunt = lat != 0 || lon != 0;
     final foto = oudere?.getStringValue('foto') ?? '';
-    final jongereFoto = jongere?.getStringValue('foto') ?? '';
     return HhKlus(
       id: record.id,
       hulpvragerId: record.getStringValue('hulpvrager'),
@@ -141,10 +145,8 @@ class HhKlus {
       oudereWijkId: oudere?.getStringValue('wijk') ?? '',
       oudereContactNaam: oudere?.getStringValue('contact_naam') ?? '',
       jongereNaam: jongere?.getStringValue('naam') ?? '',
-      jongereFotoUrl:
-          jongere != null && jongereFoto.isNotEmpty && fotoUrl != null
-          ? fotoUrl(jongere, jongereFoto)
-          : '',
+      isJongereIdGecontroleerd:
+          jongere?.getBoolValue('id_gecontroleerd') ?? false,
       geplaatstDoorId: record.getStringValue('geplaatst_door'),
     );
   }
@@ -165,7 +167,7 @@ class HhKlus {
     String? oudereFotoUrl,
     String? adres,
     String? jongereNaam,
-    String? jongereFotoUrl,
+    bool? isJongereIdGecontroleerd,
     String? geplaatstDoorId,
   }) {
     return HhKlus(
@@ -189,7 +191,8 @@ class HhKlus {
       oudereWijkId: oudereWijkId,
       oudereContactNaam: oudereContactNaam,
       jongereNaam: jongereNaam ?? this.jongereNaam,
-      jongereFotoUrl: jongereFotoUrl ?? this.jongereFotoUrl,
+      isJongereIdGecontroleerd:
+          isJongereIdGecontroleerd ?? this.isJongereIdGecontroleerd,
       geplaatstDoorId: geplaatstDoorId ?? this.geplaatstDoorId,
     );
   }
@@ -202,6 +205,7 @@ class HhKlus {
       other.toegewezenJongereId == toegewezenJongereId &&
       other.oudereNaam == oudereNaam &&
       other.jongereNaam == jongereNaam &&
+      other.isJongereIdGecontroleerd == isJongereIdGecontroleerd &&
       other.adres == adres &&
       other.wanneerVan == wanneerVan;
 
@@ -212,6 +216,7 @@ class HhKlus {
     toegewezenJongereId,
     oudereNaam,
     jongereNaam,
+    isJongereIdGecontroleerd,
     adres,
     wanneerVan,
   );

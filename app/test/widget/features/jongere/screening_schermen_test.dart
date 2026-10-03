@@ -4,10 +4,14 @@ import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_scherm.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/widget/jongere_tabbalk.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
-import 'package:heitjehulp_app/features/jongere/klussen/widget/jongere_tabbalk.dart';
+import 'package:heitjehulp_app/features/jongere/widget/helper_wacht_start.dart';
 import 'package:heitjehulp_app/features/jongere/widget/hh_screening_pil.dart';
+import 'package:heitjehulp_app/features/toegang/domein/werkgebied.dart';
+import 'package:heitjehulp_app/features/toegang/widget/aanmeld_stappen.dart';
+import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -15,7 +19,7 @@ import 'package:heitjehulp_app/theme.dart';
 import '../../../support/hh_jongere_wikkel.dart';
 import '../../../support/hh_wikkel.dart';
 
-/// Elk J-scherm en de landing, in de staat die het scherm nodig heeft.
+/// Elk aanmeldscherm van de helper en Start, in de staat die het nodig heeft.
 class _Geval {
   const _Geval(this.naam, this.pad, this.fake);
 
@@ -24,90 +28,110 @@ class _Geval {
   final FakeProfielGateway Function() fake;
 }
 
-final _gevallen = [
-  const _Geval('J1 profiel leeg', HhPadenJongere.profiel, fakeNieuweJongere),
-  const _Geval(
-    'J1 profiel gevuld',
-    HhPadenJongere.profiel,
-    fakeJongereKlaarOmInTeDienen,
-  ),
-  const _Geval(
-    'J2 identiteit leeg',
+final _gevallen = <String, _Geval>{
+  'id leeg': const _Geval(
+    'ID-foto leeg',
     HhPadenJongere.identiteit,
     fakeNieuweJongere,
   ),
-  const _Geval(
-    'J2 identiteit gevuld',
+  'id gevuld': const _Geval(
+    'ID-foto gevuld',
     HhPadenJongere.identiteit,
     fakeJongereKlaarOmInTeDienen,
   ),
-  const _Geval('J3 selfie leeg', HhPadenJongere.selfie, fakeNieuweJongere),
-  const _Geval('J4 vog leeg', HhPadenJongere.vog, fakeNieuweJongere),
-  const _Geval(
-    'J4 vog aangevraagd',
+  'id gecontroleerd': _Geval(
+    'ID gecontroleerd',
+    HhPadenJongere.identiteit,
+    () => fakeJongereMetStatus(HhScreeningStatus.goedgekeurd),
+  ),
+  'vog leeg': const _Geval('VOG leeg', HhPadenJongere.vog, fakeNieuweJongere),
+  'vog gezien': _Geval(
+    'VOG gezien',
     HhPadenJongere.vog,
+    () => fakeJongereMetStatus(HhScreeningStatus.goedgekeurd),
+  ),
+  'over mij': const _Geval(
+    'Over mij',
+    HhPadenJongere.overMij,
     fakeJongereKlaarOmInTeDienen,
   ),
-  const _Geval('J5 iban leeg', HhPadenJongere.iban, fakeNieuweJongere),
-  const _Geval(
-    'J5 iban gevuld',
-    HhPadenJongere.iban,
-    fakeJongereKlaarOmInTeDienen,
-  ),
-  const _Geval('J6 werkgebied', HhPadenJongere.werkgebied, fakeNieuweJongere),
-  const _Geval(
-    'J7 beschikbaarheid',
-    HhPadenJongere.beschikbaarheid,
-    fakeNieuweJongere,
-  ),
-  const _Geval('J8 klussoorten', HhPadenJongere.klussoorten, fakeNieuweJongere),
-  const _Geval(
-    'J9 overzicht leeg',
+  'j9 leeg': const _Geval(
+    'J9 leeg (18+)',
     HhPadenJongere.overzicht,
     fakeNieuweJongere,
   ),
-  const _Geval(
-    'J9 overzicht klaar om in te dienen',
+  'j9 leeg jong': _Geval(
+    'J9 leeg (onder 18)',
+    HhPadenJongere.overzicht,
+    () => fakeNieuweJongere(isMinderjarig: true),
+  ),
+  'j9 klaar': const _Geval(
+    'J9 klaar om te versturen',
     HhPadenJongere.overzicht,
     fakeJongereKlaarOmInTeDienen,
   ),
-  _Geval(
-    'J9 overzicht in behandeling',
+  'j9 behandeling': _Geval(
+    'J9 in behandeling',
     HhPadenJongere.overzicht,
     () => fakeJongereMetStatus(HhScreeningStatus.inBehandeling),
   ),
-  _Geval(
-    'J9 overzicht afgewezen',
+  'j9 afgewezen': _Geval(
+    'J9 afgewezen',
     HhPadenJongere.overzicht,
     () => fakeJongereMetStatus(HhScreeningStatus.afgewezen),
   ),
-  _Geval(
-    'J9 overzicht goedgekeurd',
-    HhPadenJongere.overzicht,
-    () => fakeJongereMetStatus(HhScreeningStatus.goedgekeurd),
+  'binnen': const _Geval(
+    'Aanmelding binnen',
+    HhPadenJongere.binnen,
+    fakeJongereKlaarOmInTeDienen,
   ),
-  _Geval(
-    'landing jongere goedgekeurd',
+  'start klaar': _Geval(
+    'Start: alles rond',
     HhPaden.jongere,
     () => fakeJongereMetStatus(HhScreeningStatus.goedgekeurd),
   ),
-  _Geval(
-    'landing jongere laadfout',
+  'start nagekeken': _Geval(
+    'Start: nagekeken',
+    HhPaden.jongere,
+    () => fakeJongereMetStatus(HhScreeningStatus.inBehandeling),
+  ),
+  'start ouder': _Geval(
+    'Start: wacht op ouder',
+    HhPaden.jongere,
+    () => fakeJongereGoedgekeurdWachtend(isMinderjarig: true),
+  ),
+  'start vog': const _Geval(
+    'Start: wacht op VOG',
+    HhPaden.jongere,
+    fakeJongereGoedgekeurdWachtend,
+  ),
+  'start buiten': _Geval(
+    'Start: buiten het werkgebied',
+    HhPaden.jongere,
+    () => fakeJongereBuitenGebied(),
+  ),
+  'start adres onbekend': _Geval(
+    'Start: adres niet gevonden',
+    HhPaden.jongere,
+    () => fakeJongereBuitenGebied(werkgebied: HhWerkgebiedStatus.onbekend),
+  ),
+  'start laadfout': _Geval(
+    'Start: laadfout',
     HhPaden.jongere,
     () => fakeNieuweJongere()..isOffline = true,
   ),
-];
+};
 
 Future<void> _pomp(
   WidgetTester tester,
-  _Geval geval, {
-  required HhDichtheid dichtheid,
+  String sleutel, {
+  HhDichtheid dichtheid = HhDichtheid.normaal,
   double tekstschaal = 1.0,
 }) async {
   await tester.pumpWidget(
     hhJongereWikkel(
-      geval.pad,
-      profielGateway: geval.fake(),
+      _gevallen[sleutel]!.pad,
+      profielGateway: _gevallen[sleutel]!.fake(),
       dichtheid: dichtheid,
       tekstschaal: tekstschaal,
     ),
@@ -115,14 +139,16 @@ Future<void> _pomp(
   await tester.pumpAndSettle();
 }
 
+Finder _knop(String label) => find.widgetWithText(HhKnop, label);
+
 void main() {
-  for (final geval in _gevallen) {
+  for (final MapEntry(key: sleutel, value: geval) in _gevallen.entries) {
     group(geval.naam, () {
       for (final dichtheid in HhDichtheid.values) {
         testWidgets('rendert in dichtheid $dichtheid met semantiek', (
           tester,
         ) async {
-          await _pomp(tester, geval, dichtheid: dichtheid);
+          await _pomp(tester, sleutel, dichtheid: dichtheid);
 
           expect(tester.takeException(), isNull);
           expect(find.byType(Scaffold), findsWidgets);
@@ -139,7 +165,7 @@ void main() {
 
         await _pomp(
           tester,
-          geval,
+          sleutel,
           dichtheid: HhDichtheid.groot,
           tekstschaal: hhMaxTekstschaal,
         );
@@ -149,121 +175,158 @@ void main() {
     });
   }
 
-  group('inhoud', () {
-    testWidgets(
-      'J9 leeg: acht open stappen, knop indienen uit, geen terugknop',
-      (tester) async {
-        await _pomp(tester, _gevallen[12], dichtheid: HhDichtheid.normaal);
-
-        final indienen = find.widgetWithText(
-          HhKnop,
-          TekstenJongereNl.j9Indienen,
-        );
-        expect(indienen, findsOneWidget);
-        expect(tester.widget<HhKnop>(indienen).isActief, isFalse);
-        expect(find.byType(HhTerugKnop), findsNothing);
-        expect(find.text(TekstenJongereNl.j9IndienenHulp), findsOneWidget);
-        expect(find.byIcon(Icons.radio_button_unchecked), findsNWidgets(8));
-        expect(find.byType(HhScreeningPil), findsNWidgets(2));
-      },
-    );
-
-    testWidgets('J9 klaar: acht afgevinkte stappen, knop indienen aan', (
+  group('inhoud J9', () {
+    testWidgets('18+ leeg: ID, VOG en over mij open, versturen uit', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[13], dichtheid: HhDichtheid.normaal);
+      await _pomp(tester, 'j9 leeg');
 
-      final indienen = find.widgetWithText(HhKnop, TekstenJongereNl.j9Indienen);
-      expect(tester.widget<HhKnop>(indienen).isActief, isTrue);
-      expect(find.byIcon(Icons.check_circle), findsNWidgets(8));
+      expect(find.text(TekstenAanmeldenNl.overzichtUitlegVog), findsOneWidget);
+      for (final titel in [
+        TekstenJongereNl.j2Titel,
+        TekstenJongereNl.j4Titel,
+        TekstenAanmeldenNl.overMijNietVerplicht,
+      ]) {
+        expect(_knop(titel), findsOneWidget, reason: titel);
+      }
+      expect(find.byIcon(Icons.radio_button_unchecked), findsNWidgets(3));
+      final versturen = _knop(TekstenAanmeldenNl.overzichtVersturen);
+      expect(tester.widget<HhKnop>(versturen).isActief, isFalse);
+      expect(find.byType(HhTerugKnop), findsNothing);
+      expect(find.byType(HhScreeningPil), findsOneWidget);
     });
 
-    testWidgets('J9 in behandeling: wachttekst, geen knop indienen', (
+    testWidgets('onder 18: geen VOG-stap, wel de stap Ouder in het balkje', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[14], dichtheid: HhDichtheid.normaal);
+      await _pomp(tester, 'j9 leeg jong');
+
+      expect(_knop(TekstenJongereNl.j4Titel), findsNothing);
+      expect(find.text(TekstenAanmeldenNl.overzichtUitleg), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
+    });
+
+    testWidgets('18+: geen stap Ouder in het balkje', (tester) async {
+      await _pomp(tester, 'j9 leeg');
+
+      expect(find.byType(AanmeldStappen), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.stapOuder), findsNothing);
+      expect(find.text(TekstenAanmeldenNl.stapJij), findsOneWidget);
+    });
+
+    testWidgets('met ID-foto: versturen aan (VOG en over mij hoeven niet)', (
+      tester,
+    ) async {
+      await _pomp(tester, 'j9 klaar');
+
+      final versturen = _knop(TekstenAanmeldenNl.overzichtVersturen);
+      expect(tester.widget<HhKnop>(versturen).isActief, isTrue);
+    });
+
+    testWidgets('in behandeling: wachttekst, Naar de start, niet versturen', (
+      tester,
+    ) async {
+      await _pomp(tester, 'j9 behandeling');
 
       expect(find.text(TekstenJongereNl.j9WachtTekst), findsOneWidget);
-      expect(
-        find.widgetWithText(HhKnop, TekstenJongereNl.j9Indienen),
-        findsNothing,
-      );
-      expect(find.text(TekstenJongereNl.statusInBehandeling), findsOneWidget);
+      expect(_knop(TekstenAanmeldenNl.naarStart), findsOneWidget);
+      expect(_knop(TekstenAanmeldenNl.overzichtVersturen), findsNothing);
     });
 
-    testWidgets('J9 afgewezen: tekst en Bel ons', (tester) async {
-      await _pomp(tester, _gevallen[15], dichtheid: HhDichtheid.normaal);
+    testWidgets('afgewezen: tekst en Bel ons', (tester) async {
+      await _pomp(tester, 'j9 afgewezen');
 
       expect(find.text(TekstenJongereNl.j9AfgewezenTekst), findsOneWidget);
-      expect(
-        find.widgetWithText(HhKnop, TekstenJongereNl.j9BelOns),
-        findsOneWidget,
-      );
+      expect(_knop(TekstenJongereNl.j9BelOns), findsOneWidget);
     });
+  });
 
-    testWidgets('J9 goedgekeurd: Naar klussen en een terugknop', (
+  group('inhoud stappen', () {
+    testWidgets('ID: BSN afdekken, tip KopieID, camera en galerij', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[16], dichtheid: HhDichtheid.normaal);
+      await _pomp(tester, 'id leeg');
 
-      expect(find.text(TekstenJongereNl.j9GoedgekeurdTekst), findsOneWidget);
-      expect(
-        find.widgetWithText(HhKnop, TekstenJongereNl.j9NaarKlussen),
-        findsOneWidget,
-      );
-      expect(find.byType(HhTerugKnop), findsOneWidget);
+      expect(find.text(TekstenJongereNl.j2NietZichtbaar), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.idTipKopieId), findsOneWidget);
+      expect(_knop(TekstenJongereNl.fotoMaken), findsOneWidget);
+      expect(_knop(TekstenJongereNl.fotoKiezen), findsOneWidget);
     });
 
-    testWidgets('landing (M5: J11) toont de klussen en de tabbalk', (
+    testWidgets('ID gecontroleerd: geen upload meer, wel de uitleg', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[17], dichtheid: HhDichtheid.normaal);
+      await _pomp(tester, 'id gecontroleerd');
+
+      expect(find.text(TekstenAanmeldenNl.idNaGoedkeuring), findsOneWidget);
+      expect(_knop(TekstenJongereNl.fotoMaken), findsNothing);
+      expect(_knop(TekstenJongereNl.fotoKiezen), findsNothing);
+    });
+
+    testWidgets('VOG: uitleg Justis en meldkamer, nog niet gezien', (
+      tester,
+    ) async {
+      await _pomp(tester, 'vog leeg');
+
+      expect(find.text(TekstenAanmeldenNl.vogUitleg), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.vogNogNietGezien), findsOneWidget);
+      expect(_knop(TekstenJongereNl.j4Aanvragen), findsOneWidget);
+      expect(_knop(TekstenJongereNl.j4HebAangevraagd), findsOneWidget);
+    });
+
+    testWidgets('VOG gezien: datum, geen knoppen meer', (tester) async {
+      await _pomp(tester, 'vog gezien');
+
+      expect(
+        find.text(TekstenAanmeldenNl.vogGezienOp('20-09-2026')),
+        findsOneWidget,
+      );
+      expect(_knop(TekstenJongereNl.j4Aanvragen), findsNothing);
+    });
+
+    testWidgets('Aanmelding binnen: stap Klaar en Naar de start', (
+      tester,
+    ) async {
+      await _pomp(tester, 'binnen');
+
+      expect(find.text(TekstenAanmeldenNl.binnenKop), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.binnenUitleg), findsOneWidget);
+      expect(_knop(TekstenAanmeldenNl.naarStart), findsOneWidget);
+    });
+  });
+
+  group('Start van de helper (gele balk)', () {
+    testWidgets('alles rond: klussen en de tabbalk, geen balk', (tester) async {
+      await _pomp(tester, 'start klaar');
 
       expect(find.text(TekstenKlussenNl.j11Titel), findsOneWidget);
       expect(find.byType(JongereTabbalk), findsOneWidget);
-      expect(find.text(TekstenKlussenNl.tabProfiel), findsOneWidget);
+      expect(find.byType(WachtBalk), findsNothing);
     });
 
-    testWidgets('J3 heeft alleen een cameraknop, geen galerij', (tester) async {
-      await _pomp(tester, _gevallen[4], dichtheid: HhDichtheid.normaal);
+    for (final (sleutel, kop) in [
+      ('start buiten', TekstenAanmeldenNl.nietInBuurtKop),
+      ('start adres onbekend', TekstenAanmeldenNl.adresOnbekendKop),
+      ('start nagekeken', TekstenAanmeldenNl.wachtNagekeken),
+      ('start ouder', TekstenAanmeldenNl.wachtOuder),
+      ('start vog', TekstenAanmeldenNl.wachtVog),
+    ]) {
+      testWidgets('$sleutel: balk "$kop" en geen klussen', (tester) async {
+        await _pomp(tester, sleutel);
 
-      expect(
-        find.widgetWithText(HhKnop, TekstenJongereNl.j3Knop),
-        findsOneWidget,
-      );
-      expect(
-        find.widgetWithText(HhKnop, TekstenJongereNl.fotoKiezen),
-        findsNothing,
-      );
-    });
+        expect(find.byType(WachtBalk), findsOneWidget);
+        expect(find.text(kop), findsOneWidget);
+        expect(find.text(TekstenAanmeldenNl.wachtGeenKlussen), findsOneWidget);
+        expect(find.byType(JongereTabbalk), findsOneWidget);
+        expect(find.text(TekstenKlussenNl.weergaveLijst), findsNothing);
+      });
+    }
 
-    testWidgets('J2 legt uit wat wel en niet zichtbaar mag zijn', (
-      tester,
-    ) async {
-      await _pomp(tester, _gevallen[2], dichtheid: HhDichtheid.normaal);
+    testWidgets('wacht op VOG: knop naar de uitleg', (tester) async {
+      await _pomp(tester, 'start vog');
 
-      expect(find.text(TekstenJongereNl.j2WelZichtbaar), findsOneWidget);
-      expect(find.text(TekstenJongereNl.j2NietZichtbaar), findsOneWidget);
-      expect(
-        find.widgetWithText(HhKnop, TekstenJongereNl.fotoKiezen),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('J7 toont zeven dagen met drie dagdelen', (tester) async {
-      await _pomp(tester, _gevallen[10], dichtheid: HhDichtheid.normaal);
-
-      expect(find.text(TekstenJongereNl.dagMa), findsOneWidget);
-      expect(find.text(TekstenJongereNl.dagZo), findsOneWidget);
-      expect(find.text(TekstenJongereNl.dagdeelOchtend), findsNWidgets(7));
-    });
-
-    testWidgets('J8 toont de zes klussoorten uit de fake', (tester) async {
-      await _pomp(tester, _gevallen[11], dichtheid: HhDichtheid.normaal);
-
-      for (final type in FakeProfielGateway.standaardKlustypes) {
-        expect(find.text(type.naam), findsOneWidget, reason: type.naam);
-      }
+      await tikKnop(tester, TekstenAanmeldenNl.wachtVogKnop);
+      expect(find.text(TekstenAanmeldenNl.vogUitleg), findsOneWidget);
     });
   });
 }

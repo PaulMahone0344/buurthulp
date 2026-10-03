@@ -54,14 +54,13 @@ function profiel(overschrijf: Partial<Profiel>): Profiel {
     vogStatus: 'nieuw',
     vogGeldigTot: '',
     vogAangevraagdOp: '',
-    intakeOp: '',
+    vogGezienOp: '',
     ibanGeverifieerd: false,
     iban: '',
     overMij: '',
     screeningNotitie: '',
     bijgewerktOp: '2026-09-19T10:00:00.000Z',
     documentFotoUrl: '',
-    selfieUrl: '',
     ...overschrijf,
   }
 }

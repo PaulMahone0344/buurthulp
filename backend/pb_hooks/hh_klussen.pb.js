@@ -18,11 +18,15 @@
 //    Antwoorden:
 //      200 { klus, status: "geaccepteerd", toegewezen_jongere }
 //      401 anoniem ($apis.requireAuth)
-//      403 geen jongere, niet goedgekeurd, geen wijk ingesteld, of
-//          { melding, reden: "vogverlopen" } (vog_geldig_tot vóór vandaag)
+//      403 geen jongere, niet goedgekeurd, geen wijk ingesteld, of (B2)
+//          { melding, reden } met reden "geboortedatum" (onbekend),
+//          "ouder" (onder 18 zonder ouder_toestemming_op), "vog" (18+
+//          zonder vog_gezien_op) of "vogverlopen" (vog_geldig_tot vóór
+//          vandaag, oude data). Rekenwerk: hh_aanmelden_hulp.js.
 //      404 klus bestaat niet
 //      409 { melding, reden: "bezet" | "wijk" } — al aangenomen, niet meer
-//          open, of de oudere woont in een andere wijk
+//          open, of de oudere woont in een andere wijk (B2: een regio-wijk
+//          als "Tiel en omstreken" past bij elke wijk in dezelfde gemeente)
 //
 // 1b. M6 — POST /api/hh/klussen/{id}/status  body {naar}
 //    De statusmachine, alleen voor de TOEGEWEZEN jongere:
@@ -106,10 +110,9 @@ routerAdd(
     const MELDING_GEEN_JONGERE = "Alleen een helper kan een klus aannemen.";
     const MELDING_NIET_GOEDGEKEURD =
       "Je aanmelding is nog niet goedgekeurd. Je kunt nog geen klussen aannemen.";
-    const MELDING_GEEN_WIJK = "Stel eerst je werkgebied in.";
+    const MELDING_GEEN_WIJK =
+      "HeitjeHulp is nog niet in jouw buurt. We laten het je weten zodra we er zijn.";
     const MELDING_NIET_GEVONDEN = "Deze klus bestaat niet meer.";
-    const MELDING_VOG_VERLOPEN =
-      "Je VOG is verlopen. Vraag de coördinator naar een nieuwe VOG; tot die tijd kun je geen klussen aannemen.";
 
     const klusId = String(e.request.pathValue("id") || "").trim();
     if (!klusId) {
@@ -129,8 +132,12 @@ routerAdd(
     if (!isGoedgekeurd(jongereId)) {
       return e.json(403, { melding: MELDING_NIET_GOEDGEKEURD, reden: "nietgoedgekeurd" });
     }
-    if (isVogVerlopen(jongereId)) {
-      return e.json(403, { melding: MELDING_VOG_VERLOPEN, reden: "vogverlopen" });
+    // B2: onder 18 eerst ouder-toestemming, vanaf 18 eerst VOG gezien
+    // (vog_gezien_op); een verlopen vog_geldig_tot (oude data) blijft
+    // geweigerd. Zie hh_aanmelden_hulp.js klusBlokkade.
+    const blokkade = klusBlokkadeVan(e.auth, jongereId);
+    if (blokkade) {
+      return e.json(403, { melding: blokkade.melding, reden: blokkade.reden });
     }
 
     // --- De toewijzing: alles in één transactie ----------------------------
@@ -156,7 +163,9 @@ routerAdd(
         uitkomst = "bezet";
         return;
       }
-      if (String(oudere.get("wijk") || "").trim() !== wijk) {
+      // B2: zelfde wijk, of een regio-wijk ("Tiel en omstreken") in dezelfde
+      // gemeente (hh_aanmelden_hulp.js wijkenPassen).
+      if (!wijkenPassenVoor(txApp, String(oudere.get("wijk") || "").trim(), wijk)) {
         uitkomst = "wijk";
         return;
       }
@@ -206,9 +215,26 @@ routerAdd(
       return rijen.length > 0;
     }
 
-    /// Zelfde regel als hh_coordinator (M14): verlopen = vog_geldig_tot ligt
-    /// vóór vandaag (UTC); de dag zelf telt nog mee. Leeg veld = niet verlopen.
-    function isVogVerlopen(gebruikerId) {
+    /// B2: { id, gemeente, regio } van twee wijk-ids, en of ze passen.
+    function wijkenPassenVoor(app, oudereWijkId, helperWijkId) {
+      const hulp = require(`${__hooks}/hh_aanmelden_hulp.js`);
+      const lees = (id) => {
+        if (!id) return null;
+        try {
+          const w = app.findRecordById("hh_wijken", id);
+          return { id: w.id, gemeente: String(w.get("gemeente") || ""), regio: w.getBool("regio") };
+        } catch (_) {
+          return null;
+        }
+      };
+      return hulp.wijkenPassen(lees(oudereWijkId), lees(helperWijkId));
+    }
+
+    /// B2: waarom mag deze goedgekeurde helper nog niet? null = mag.
+    /// Leest de geboortedatum en ouder_toestemming_op van het account en
+    /// vog_gezien_op/vog_geldig_tot van het profiel (UTC-datum van vandaag).
+    function klusBlokkadeVan(auth, gebruikerId) {
+      const hulp = require(`${__hooks}/hh_aanmelden_hulp.js`);
       const rijen = $app.findRecordsByFilter(
         "hh_profielen",
         "gebruiker = {:gebruiker}",
@@ -217,16 +243,14 @@ routerAdd(
         0,
         { gebruiker: gebruikerId }
       );
-      if (rijen.length === 0) return false;
-      const geldigTot = String(rijen[0].get("vog_geldig_tot") || "").slice(0, 10);
-      if (!geldigTot) return false;
-      const nu = new Date();
-      const vandaag = new Date(
-        Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), nu.getUTCDate())
-      )
-        .toISOString()
-        .slice(0, 10);
-      return geldigTot < vandaag;
+      const profiel = rijen.length ? rijen[0] : null;
+      return hulp.klusBlokkade({
+        geboortedatum: String(auth.get("geboortedatum") || ""),
+        ouderToestemmingOp: String(auth.get("ouder_toestemming_op") || ""),
+        vogGezienOp: profiel ? String(profiel.get("vog_gezien_op") || "") : "",
+        vogGeldigTot: profiel ? String(profiel.get("vog_geldig_tot") || "") : "",
+        vandaag: new Date().toISOString().slice(0, 10),
+      });
     }
   },
   $apis.requireAuth("hh_users")

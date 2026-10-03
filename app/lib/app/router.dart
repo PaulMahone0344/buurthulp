@@ -9,6 +9,8 @@ import '../features/familie/familie_routes.dart';
 import '../features/familie/screen/familie_stub_screen.dart';
 import '../features/hulpvrager/beoordelen/beoordelen_routes.dart';
 import '../features/hulpvrager/hulpvrager_routes.dart';
+import '../features/hulpvrager/provider/hulpvrager_providers.dart'
+    show klokProvider;
 import '../features/hulpvrager/screen/hulpvrager_stub_screen.dart';
 import '../features/hulpvrager/status/status_routes.dart';
 import '../features/hulpvrager/veiligheid/veiligheid_routes.dart';
@@ -88,11 +90,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           ref.read(sessieControllerProvider),
           state.matchedLocation,
         ) ??
-        // M3: jongere zonder goedgekeurd profiel gaat van /jongere naar J9.
+        // M3/B2: helper die nog niet verstuurde of is afgewezen gaat naar J9.
         screeningRedirect(
           ref.read(sessieControllerProvider),
           ref.read(screeningControllerProvider),
           state.matchedLocation,
+          klok: ref.read(klokProvider),
         ) ??
         // M10: alleen de coordinator komt op de paden onder /coordinator.
         coordinatorRedirect(

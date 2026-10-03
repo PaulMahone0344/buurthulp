@@ -881,3 +881,136 @@ B1CHECK (scripts/72-b1check.mjs, dry-run standaard)
 UITROLLEN (volgorde)
   00-backup.mjs -> 70 --apply -> 71 --apply -> 73-hook-deploy.sh ->
   72-b1check.mjs --apply
+
+================================================================
+B2 - AANMELDEN EN GOEDKEUREN ZONDER SCREENING (3 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b2.txt)
+================================================================
+
+Keuzes (prompt B2): K1 rolcodes blijven (hulpvrager/jongere/coordinator);
+K2 geen iDIN; K3 ouder-code is B3, B2 bewaart alleen ouder_email of
+ouder_telefoon; K4 geen werkgebied-stap. Besluit Ibrahim 3 okt: het
+WERKGEBIED is Tiel en alle dorpen binnen 20 km; de server bepaalt het bij
+aanmelden uit de postcode. Velden opruimen (selfie, intake_op, telefoon,
+vog_status, straal_km, beschikbaarheid, klustypes) gebeurt NIET in B2: de
+app schrijft ze niet meer, de data blijft staan (geen datamigratie).
+
+VELDEN EN RIJ (scripts/81-b2-werkgebied.mjs, additief, idempotent)
+  hh_wijken  regio              ja/nee. Ja = de wijk dekt de regio rond de
+                                gemeente en past bij elke wijk in dezelfde
+                                gemeente. Bestaande wijken: leeg = nee.
+  hh_users   werkgebied_status  keuze binnen | buiten | onbekend (alleen
+                                server/coordinator). onbekend = geocoding
+                                mislukt: de markering voor de meldkamer
+                                (paneel: pil "Adres niet gevonden"). Leeg =
+                                nooit bepaald (bestaande accounts).
+  hh_wijken  rij "Tiel / Tiel en omstreken", actief, regio, postcodes [].
+  Tiel-West en Passewaaij blijven staan en geldig.
+
+RULES (scripts/80-b2-rules.mjs, GEWIKKELD of GERICHT zoals 61/71/41)
+  hh_profielen.updateRule  (huidig) && ((coordinator) ||
+      (verificatiestatus != "goedgekeurd" ||
+       @request.body.document_foto:isset = false))
+    = B1-gat 1: na goedkeuring geen nieuwe ID-foto (ook niet met
+      "document_foto+"; bewezen in 82). over_mij enz. mag nog wel.
+  hh_klussen.listRule/viewRule, in de helper-tak:
+    a. direct achter @collection.hh_profielen.verificatiestatus ?=
+       "goedgekeurd":
+         && (@request.auth.ouder_toestemming_op != "" ||
+             @collection.hh_profielen.vog_gezien_op ?!= "")
+       Een rule kan niet met datums rekenen; de LIJST eist "ouder gaf
+       toestemming OF VOG gezien", de accepteer-hook checkt precies op
+       leeftijd. Beide velden zet alleen coordinator/server (slot 71).
+    b. hulpvrager.wijk = @request.auth.wijk  wordt
+         (hulpvrager.wijk = @request.auth.wijk ||
+          (hulpvrager.wijk.gemeente = @request.auth.wijk.gemeente &&
+           (hulpvrager.wijk.regio = true || @request.auth.wijk.regio = true)))
+       Een regio-wijk past bij elke wijk in dezelfde gemeente; Tiel-West en
+       Passewaaij blijven onderling apart (oud gedrag, 04/50 kloppen nog).
+       Geen datamigratie.
+    Eigen (toegewezen) klussen blijven zichtbaar (andere tak).
+  hh_users.createRule  (huidig) && ((coordinator) ||
+      (@request.body.wijk:isset = false &&
+       @request.body.werkgebied_status:isset = false))
+  hh_users.updateRule  idem, plus @request.body.geboortedatum:isset = false
+    De wijk volgt uit de postcode (server); de leeftijd bepaalt wat een
+    helper mag. Alleen bij registreren zet de eigenaar zijn geboortedatum.
+  VOLGORDE: na B1 en na 81. Draai 02, 06, 13, 21, 61 of 71 daarna niet
+  meer met --apply zonder 80 opnieuw.
+
+HOOKS (deploy met scripts/83-hook-deploy.sh; 2 nieuwe bestanden)
+  hh_aanmelden_hulp.js (NIEUW, geen hook): leeftijd, isTeJong (< 10),
+    klusBlokkade, WERKGEBIEDEN (middelpunt Tiel 51.8865/5.4300, straal
+    20 km; een tweede stad = een regel erbij), afstandKm, bepaalWerkgebied
+    (Nominatim, nep-baar), wijkIdVoor, wijkenPassen, voornaam,
+    VERBORGEN_VOOR_ANDEREN. Getest zonder server (geen echte verzoeken).
+  hh_aanmelden.pb.js (NIEUW):
+    - onRecordCreateRequest/UpdateRequest hh_users: helper (rol jongere)
+      jonger dan 10 -> 400 "Je moet minstens 10 jaar zijn om helper te
+      worden." (ook superuser en coordinator).
+    - Werkgebied: komt er een postcode mee (aanmaken, of een andere bij
+      bijwerken), dan vraagt de server Nominatim gestructureerd op postcode
+      (countrycodes=nl&postalcode=..., User-Agent "HeitjeHulp/0.1
+      (info@heitjehulp.nl)", timeout 5 s, hooguit 1 verzoek per seconde via
+      $app.store()). Huisnummer niet: vrije tekst met huisnummer geeft voor
+      NL geen resultaat, het postcode-punt is voor 20 km precies genoeg.
+        binnen 20 km -> wijk = "Tiel en omstreken", status binnen
+        verder weg   -> wijk leeg, status buiten (bijwerken: wijk gewist)
+        mislukt      -> aanmelden gaat door, wijk leeg (bijwerken: blijft),
+                        status onbekend = markering voor de meldkamer
+        binnen, maar de regio-wijk bestaat niet (81 niet gedraaid) ->
+                        status onbekend
+      Een coordinator die zelf een wijk meestuurt wint. Zonder postcode
+      (seed, telefonische bewoner) gebeurt er niets.
+      HH_NOMINATIM_URL (omgeving) alleen voor een lokale proef; op prod leeg.
+    - onRecordUpdate hh_profielen (MODEL-hook, elke opslag: API,
+      superuser, script, $app): verificatiestatus -> goedgekeurd wist
+      document_foto en zet id_gecontroleerd_op = nu (B1-gat 2).
+    - onRecordEnrich hh_users, alleen rol jongere: extra veld
+      id_gecontroleerd (ja/nee = id_gecontroleerd_op op het profiel). Voor
+      een kijker die niet de helper zelf, geen coordinator en geen
+      superuser is: geboortedatum, adres, huisnummer, postcode, plaats,
+      telefoon, contact_*, ouder_*, werkgebied_status en email weg, naam =
+      voornaam. Zonder ingelogde kijker (registreren/inloggen = de
+      eigenaar) blijft alles.
+  hh_beheer.pb.js punt 3: zet bij goedkeuren door een coordinator alleen
+    nog id_gecontroleerd_door (het wissen zit nu in de model-hook).
+  hh_klussen.pb.js accepteren: wijk-check via wijkenPassen (zoals de
+    rule), daarna de B2-blokkade (403 { melding, reden }):
+      geboortedatum  geen geboortedatum
+      ouder          onder 18 zonder ouder_toestemming_op
+      vog            18+ zonder vog_gezien_op
+      vogverlopen    vog_geldig_tot vóór vandaag (oude data, blijft)
+    Melding zonder wijk: "HeitjeHulp is nog niet in jouw buurt. We laten
+    het je weten zodra we er zijn."
+  NIET aangepast: koppelen door de coordinator (hh_coordinator.pb.js)
+  kijkt alleen naar vog_geldig_tot en meldt andere_wijk nog op wijk-id
+  (zie app/OPEN-PUNTEN-B2.txt).
+
+SEED (scripts/84-seed-vog.mjs, dry-run standaard; besluit Ibrahim: JA)
+  Zet vog_gezien_op = nu op de profielen van jongere1-3 uit
+  seed-accounts.local.json (alle drie 18+), alleen als het leeg is en de
+  rol op de server jongere is. Anders zien zij na B2 geen klussen en zijn
+  04/50 rood.
+
+B2CHECK (scripts/82-b2check.mjs, dry-run standaard)
+  Met --apply, met eigen tijdelijke accounts "b2check-...@heitjehulp.
+  invalid" en eigen klussen: < 10 geweigerd (anoniem en superuser), 10 mag;
+  werkgebied (8 echte Nominatim-verzoeken, 1 per seconde): Tiel en Ochten
+  -> "Tiel en omstreken", Amsterdam -> buiten, 9999 ZZ -> onbekend;
+  zelf wijk/werkgebied_status meesturen geweigerd; verhuizen (buiten wist,
+  onbekend niet); geboortedatum vast voor de eigenaar; per helper wie de
+  open klus ziet en accepteert (< 18 met/zonder toestemming, 18+ met/zonder
+  VOG); regio-wijk naast Tiel-West/Passewaaij (over en weer zien en
+  accepteren, oude wijken onderling apart); ID opnieuw uploaden na
+  goedkeuring geweigerd; superuser-goedkeuring wist het document (bestand
+  404); wat een bewoner van zijn helper ziet; alles opgeruimd.
+  Lokaal bewezen tegen PocketBase 0.25.9 met het prod-schema en een
+  nep-Nominatim: 80 groen; 1 verzoek per seconde en User-Agent gemeten.
+  62-beheercheck geeft zijn tijdelijke helper een geboortedatum en
+  vog_gezien_op (anders weigert B2 hem terecht).
+  Test zonder server: node --test backend/tests/*.test.mjs.
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 81 --apply -> 80 --apply -> 84 --apply ->
+  83-hook-deploy.sh -> 82 --apply -> 72, 62, 04, 50

@@ -1,5 +1,6 @@
+import '../../features/toegang/domein/aanmelding.dart';
+import '../../features/toegang/domein/werkgebied.dart';
 import '../../features/toegang/model/hh_gebruiker.dart';
-import '../../features/toegang/model/hh_rol.dart';
 import '../hh_fout.dart';
 import '../result.dart';
 import 'auth_gateway.dart';
@@ -58,19 +59,14 @@ class FakeAuthGateway implements AuthGateway {
   }
 
   @override
-  Future<Result<HhGebruiker>> registreren({
-    required String naam,
-    required String email,
-    required String wachtwoord,
-    required HhRol rol,
-    String? telefoon,
-  }) async {
+  Future<Result<HhGebruiker>> registreren(HhAanmelding aanmelding) async {
+    final email = aanmelding.email;
     laatsteRegistratieBody = {
-      'naam': naam,
+      ...aanmelding.velden,
+      'naam': aanmelding.naam,
       'email': email,
-      'rol': rol.code,
+      'rol': aanmelding.rol.code,
       'taal': HhTaal.nl.code,
-      if (telefoon != null && telefoon.isNotEmpty) 'telefoon': telefoon,
     };
     final fout = _neemFout();
     if (fout != null) return Result.err(fout);
@@ -79,20 +75,31 @@ class FakeAuthGateway implements AuthGateway {
     }
     final gebruiker = HhGebruiker(
       id: 'fake-${_accounts.length + 1}',
-      naam: naam,
+      naam: aanmelding.naam,
       email: email,
-      rol: rol,
-      telefoon: telefoon,
+      rol: aanmelding.rol,
+      // Zoals de server (B2): een postcode in de buurt van Tiel (40xx) geeft
+      // de regio-wijk, al het andere ligt buiten het werkgebied.
+      wijkId: _isBijTiel(aanmelding) ? fakeRegioWijk : '',
+      werkgebiedStatus: _isBijTiel(aanmelding)
+          ? HhWerkgebiedStatus.binnen
+          : HhWerkgebiedStatus.buiten,
     );
     final account = FakeAccount(
       gebruiker: gebruiker,
-      wachtwoord: wachtwoord,
+      wachtwoord: aanmelding.wachtwoord,
       token: 'token-${gebruiker.id}',
     );
     _accounts[email] = account;
     aantalVerificatieAanvragen++;
     return _logIn(account);
   }
+
+  /// Id van de wijk "Tiel en omstreken" in de fakes.
+  static const fakeRegioWijk = 'wijk-regio';
+
+  static bool _isBijTiel(HhAanmelding aanmelding) =>
+      '${aanmelding.velden['postcode'] ?? ''}'.startsWith('40');
 
   @override
   Future<Result<HhGebruiker>> inloggen({

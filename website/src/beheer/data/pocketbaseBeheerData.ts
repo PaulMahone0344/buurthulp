@@ -101,7 +101,6 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
   const gebruiker = uitgebreid(r, 'gebruiker')
   const wijk = gebruiker ? uitgebreid(gebruiker, 'wijk') : undefined
   const document = tekst(r.document_foto)
-  const selfie = tekst(r.selfie)
   return {
     id: r.id,
     gebruikerId: tekst(r.gebruiker),
@@ -112,14 +111,13 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     vogStatus: tekst(r.vog_status) as Profiel['vogStatus'],
     vogGeldigTot: naarIso(r.vog_geldig_tot).slice(0, 10),
     vogAangevraagdOp: naarIso(r.vog_aangevraagd_op),
-    intakeOp: naarIso(r.intake_op).slice(0, 10),
+    vogGezienOp: naarIso(r.vog_gezien_op).slice(0, 10),
     ibanGeverifieerd: r.iban_geverifieerd === true,
     iban: tekst(r.iban),
     overMij: tekst(r.over_mij),
     screeningNotitie: tekst(r.screening_notitie),
     bijgewerktOp: naarIso(r.updated),
     documentFotoUrl: document ? bestandUrl(document) : '',
-    selfieUrl: selfie ? bestandUrl(selfie) : '',
   }
 }
 
@@ -164,6 +162,7 @@ export function naarGebruiker(r: RecordModel): Gebruiker {
     rol: tekst(r.rol) as Gebruiker['rol'],
     telefoon: tekst(r.telefoon),
     geblokkeerd: r.geblokkeerd === true,
+    werkgebiedStatus: tekst(r.werkgebied_status) as Gebruiker['werkgebiedStatus'],
   }
 }
 
@@ -379,7 +378,7 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
           sort: '-updated',
           expand: 'gebruiker,gebruiker.wijk',
         })
-        // document_foto en selfie zijn PROTECTED: zonder bestandstoken 404.
+        // document_foto is PROTECTED: zonder bestandstoken 404.
         const token = records.length ? await pb.files.getToken() : ''
         return records.map((r) => naarProfiel(r, (bestand) => pb.files.getURL(r, bestand, { token })))
       }),

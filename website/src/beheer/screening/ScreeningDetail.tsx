@@ -1,13 +1,14 @@
-// M14 — één jongere beoordelen (D2). Documentfoto en selfie naast elkaar
-// (PROTECTED bestanden: de url draagt een bestandstoken), VOG, IBAN, over mij.
-// Goedkeuren en afkeuren alleen met een notitie (hh_profielen.screening_notitie).
-// Het intakegesprek staat (nog) niet in het paneel: zie OPEN-PUNTEN-M14.
+// M14 — één helper beoordelen (D2). Documentfoto (PROTECTED: de url draagt een
+// bestandstoken), VOG, IBAN, over mij. Goedkeuren en afkeuren alleen met een
+// notitie (hh_profielen.screening_notitie). B2: selfie en intake zijn weg; er
+// is een datumveld "VOG gezien op" (hh_profielen.vog_gezien_op, helper 18+).
+// De rest van de meldkamer-ombouw is B11.
 
 import { useState } from 'react'
 import type { BeheerData } from '../data/beheerData'
 import { controleerBesluit } from '../data/screening'
 import { vogSignaal } from '../data/tegels'
-import { nlDag, toonDatum, toonMoment } from '../data/tijd'
+import { toonDatum, toonMoment } from '../data/tijd'
 import type { Profiel, Screeningbesluit, Screeningstatus } from '../data/types'
 import { Foutmelding, Gelukt } from '../gedeeld/Meldbalk'
 import { SCREENING_LABEL } from '../teksten'
@@ -35,7 +36,7 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
   const [vogStatus, setVogStatus] = useState<Screeningstatus | ''>(profiel.vogStatus)
   const [vogGeldigTot, setVogGeldigTot] = useState(profiel.vogGeldigTot)
   const [ibanGeverifieerd, setIbanGeverifieerd] = useState(profiel.ibanGeverifieerd)
-  const [intakeOp, setIntakeOp] = useState(profiel.intakeOp)
+  const [vogGezienOp, setVogGezienOp] = useState(profiel.vogGezienOp)
   const [notitie, setNotitie] = useState('')
   const [fout, setFout] = useState('')
   const [gelukt, setGelukt] = useState('')
@@ -43,7 +44,7 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
   const signaal = vogSignaal(profiel.vogGeldigTot, nu())
 
   async function besluit(verificatiestatus: Screeningbesluit['verificatiestatus']) {
-    const b: Screeningbesluit = { verificatiestatus, notitie, vogStatus, vogGeldigTot, ibanGeverifieerd, intakeOp }
+    const b: Screeningbesluit = { verificatiestatus, notitie, vogStatus, vogGeldigTot, ibanGeverifieerd, vogGezienOp }
     const probleem = controleerBesluit(b)
     setGelukt('')
     if (probleem) return setFout(probleem)
@@ -74,7 +75,6 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
       </p>
       <div className="beheer-fotos">
         <Foto url={profiel.documentFotoUrl} titel="Identiteitsbewijs" />
-        <Foto url={profiel.selfieUrl} titel="Selfie" />
       </div>
       <dl className="beheer-gegevens">
         <dt>VOG</dt>
@@ -117,21 +117,11 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
           <input type="checkbox" checked={ibanGeverifieerd} onChange={(e) => setIbanGeverifieerd(e.target.checked)} />
           IBAN gecontroleerd
         </label>
-        {/* Besluit 2 okt: vinkje + datum; aanvinken vult vandaag in. */}
-        <label className="beheer-vinkje">
-          <input
-            type="checkbox"
-            checked={intakeOp !== ''}
-            onChange={(e) => setIntakeOp(e.target.checked ? nlDag(nu()) : '')}
-          />
-          Intake gehad
+        {/* B2: helper 18+ kan pas klussen aannemen als dit gevuld is. */}
+        <label className="field">
+          <span>VOG gezien op</span>
+          <input type="date" value={vogGezienOp} onChange={(e) => setVogGezienOp(e.target.value)} />
         </label>
-        {intakeOp !== '' ? (
-          <label className="field">
-            <span>Intake op</span>
-            <input type="date" value={intakeOp} onChange={(e) => setIntakeOp(e.target.value)} />
-          </label>
-        ) : null}
         <label className="field">
           <span>Notitie (verplicht)</span>
           <textarea

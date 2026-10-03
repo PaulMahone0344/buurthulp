@@ -6,9 +6,12 @@ import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_meld_balk.dart';
 import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
+import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../../jongere/widget/helper_wacht_start.dart' show WachtBalk;
+import '../../toegang/domein/werkgebied.dart';
 import '../../toegang/model/hh_rol.dart';
 import '../../meldingen/widget/laatste_melding_regel.dart';
 import '../../toegang/provider/sessie_providers.dart';
@@ -67,12 +70,24 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
             SizedBox(height: tussen),
             const LaatsteMeldingRegel(),
             SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
-            HhKnop(
-              label: TekstenHulpvragerNl.homeHulpVragen,
-              semantiekLabel: TekstenHulpvragerNl.homeHulpVragenSemantiek,
-              icoon: Icons.add_circle_outline,
-              onPressed: _hulpVragen,
-            ),
+            // B2: buiten het werkgebied (of adres niet gevonden) geen klus.
+            if (gebruiker.magKlusPlaatsen)
+              HhKnop(
+                label: TekstenHulpvragerNl.homeHulpVragen,
+                semantiekLabel: TekstenHulpvragerNl.homeHulpVragenSemantiek,
+                icoon: Icons.add_circle_outline,
+                onPressed: _hulpVragen,
+              )
+            else
+              WachtBalk(
+                kop: gebruiker.werkgebiedStatus == HhWerkgebiedStatus.onbekend
+                    ? TekstenAanmeldenNl.adresOnbekendKop
+                    : TekstenAanmeldenNl.nietInBuurtKop,
+                uitleg: werkgebiedMelding(
+                  gebruiker.wijkId,
+                  gebruiker.werkgebiedStatus,
+                )!,
+              ),
           ],
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/app/router.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
+import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/coordinator/screen/coordinator_stub_screen.dart';
@@ -15,6 +16,8 @@ import 'package:heitjehulp_app/features/toegang/screen/inloggen_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/registreren_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/splash_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/welkom_screen.dart';
+import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -40,8 +43,19 @@ Future<void> _tik(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _vul(WidgetTester tester, int index, String tekst) =>
-    tester.enterText(find.byType(TextField).at(index), tekst);
+Future<void> _vul(WidgetTester tester, int index, String tekst) async {
+  final veld = find.byType(TextField).at(index);
+  await tester.ensureVisible(veld);
+  await tester.enterText(veld, tekst);
+}
+
+Future<void> _vinkAkkoord(WidgetTester tester) async {
+  final vinkje = find.byType(Checkbox);
+  await tester.ensureVisible(vinkje);
+  await tester.pumpAndSettle();
+  await tester.tap(vinkje);
+  await tester.pumpAndSettle();
+}
 
 void main() {
   testWidgets('zonder token: splash gaat naar welkom', (tester) async {
@@ -53,7 +67,7 @@ void main() {
   });
 
   testWidgets(
-    'registreren als hulpvrager: G2 -> G4 -> G5 -> /hulpvrager, letters normaal',
+    'registreren als bewoner: G2 -> G4 -> G5 -> /hulpvrager, letters normaal',
     (tester) async {
       final gateway = fakeMetAlleRollen();
       await pompApp(tester, gateway: gateway);
@@ -62,15 +76,29 @@ void main() {
       expect(find.byType(RegistrerenScreen), findsOneWidget);
       // Sinds 3 okt geen verschil per rol: grote letters is een schakelaar.
       expect(_dichtheid(tester), HhDichtheid.normaal);
+      expect(find.text(TekstenAanmeldenNl.adresUitleg), findsOneWidget);
 
       await _vul(tester, 0, 'Mevrouw Jansen');
       await _vul(tester, 1, 'jansen@voorbeeld.nl');
-      await _vul(tester, 3, 'wachtwoord1');
+      await _vul(tester, 2, 'Dorpsstraat');
+      await _vul(tester, 3, '12a');
+      await _vul(tester, 4, '4003ab');
+      await _vul(tester, 5, 'Tiel');
+      await _vul(tester, 6, 'wachtwoord1');
+      await _vinkAkkoord(tester);
       await _tik(tester, TekstenNl.registrerenKnop);
 
       expect(find.byType(BevestigEmailScreen), findsOneWidget);
-      expect(gateway.laatsteRegistratieBody?['rol'], 'hulpvrager');
-      expect(gateway.laatsteRegistratieBody?['taal'], 'nl');
+      expect(gateway.laatsteRegistratieBody, {
+        'adres': 'Dorpsstraat 12a',
+        'huisnummer': '12a',
+        'postcode': '4003 AB',
+        'plaats': 'Tiel',
+        'naam': 'Mevrouw Jansen',
+        'email': 'jansen@voorbeeld.nl',
+        'rol': 'hulpvrager',
+        'taal': 'nl',
+      });
 
       await _tik(tester, TekstenNl.verder);
 
@@ -82,6 +110,185 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'bewoner buiten het werkgebied: aanmelden lukt, maar geen klus plaatsen',
+    (tester) async {
+      final gateway = fakeMetAlleRollen();
+      await pompApp(tester, gateway: gateway);
+      await _tik(tester, TekstenNl.keuzeZoekHulp);
+
+      await _vul(tester, 0, 'Meneer Amsterdam');
+      await _vul(tester, 1, 'adam@voorbeeld.nl');
+      await _vul(tester, 2, 'Damstraat');
+      await _vul(tester, 3, '1');
+      await _vul(tester, 4, '1012 AB');
+      await _vul(tester, 5, 'Amsterdam');
+      await _vul(tester, 6, 'wachtwoord1');
+      await _vinkAkkoord(tester);
+      await _tik(tester, TekstenNl.registrerenKnop);
+      expect(find.byType(BevestigEmailScreen), findsOneWidget);
+      await _tik(tester, TekstenNl.verder);
+
+      expect(find.byType(HulpvragerStubScreen), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.nietInBuurt), findsOneWidget);
+      expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'bewoner: lege velden en geen vinkje geven fouten, geen verzoek',
+    (tester) async {
+      final gateway = fakeMetAlleRollen();
+      await pompApp(tester, gateway: gateway);
+      await _tik(tester, TekstenNl.keuzeZoekHulp);
+
+      await _tik(tester, TekstenNl.registrerenKnop);
+
+      for (final fout in [
+        TekstenNl.validatieNaamVerplicht,
+        TekstenNl.validatieEmailVerplicht,
+        TekstenAanmeldenNl.validatieStraatVerplicht,
+        TekstenAanmeldenNl.validatieHuisnummerVerplicht,
+        TekstenAanmeldenNl.validatiePostcodeVerplicht,
+        TekstenAanmeldenNl.validatiePlaatsVerplicht,
+        TekstenNl.validatieWachtwoordTeKort,
+        TekstenAanmeldenNl.validatieAkkoord,
+      ]) {
+        expect(find.text(fout), findsOneWidget, reason: fout);
+      }
+      expect(gateway.laatsteRegistratieBody, isNull);
+      expect(find.byType(RegistrerenScreen), findsOneWidget);
+    },
+  );
+
+  group('registreren als helper', () {
+    Future<void> naarHelper(
+      WidgetTester tester,
+      FakeAuthGateway gateway,
+    ) async {
+      await pompApp(tester, gateway: gateway);
+      await _tik(tester, TekstenNl.keuzeWilHelpen);
+      expect(find.byType(RegistrerenScreen), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.stapJij), findsOneWidget);
+    }
+
+    Future<void> vulBasis(WidgetTester tester, String geboortedatum) async {
+      await _vul(tester, 0, 'Daan');
+      await _vul(tester, 1, geboortedatum);
+      await tester.pump();
+      await _vul(tester, 2, 'daan@voorbeeld.nl');
+      await _vul(tester, 3, '4003 AB');
+      await _vul(tester, 4, '7');
+    }
+
+    testWidgets('18+: geen ouderveld, stuurt geboortedatum en postcode mee', (
+      tester,
+    ) async {
+      final gateway = fakeMetAlleRollen();
+      await naarHelper(tester, gateway);
+
+      await vulBasis(tester, '01-01-1990');
+      expect(
+        find.textContaining(TekstenAanmeldenNl.veldOuder, findRichText: true),
+        findsNothing,
+      );
+      expect(find.text(TekstenAanmeldenNl.stapOuder), findsNothing);
+      await _vul(tester, 5, 'wachtwoord1');
+      await _vinkAkkoord(tester);
+      await _tik(tester, TekstenNl.registrerenKnop);
+
+      expect(find.byType(BevestigEmailScreen), findsOneWidget);
+      expect(gateway.laatsteRegistratieBody, {
+        'geboortedatum': '1990-01-01T00:00:00.000Z',
+        'postcode': '4003 AB',
+        'huisnummer': '7',
+        'naam': 'Daan',
+        'email': 'daan@voorbeeld.nl',
+        'rol': 'jongere',
+        'taal': 'nl',
+      });
+    });
+
+    testWidgets('onder 18: ouderveld verplicht, herkent een 06-nummer', (
+      tester,
+    ) async {
+      final gateway = fakeMetAlleRollen();
+      await naarHelper(tester, gateway);
+
+      await vulBasis(tester, '01-01-2012');
+      expect(
+        find.textContaining(TekstenAanmeldenNl.veldOuder, findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
+      await _vul(tester, 6, 'wachtwoord1');
+      await _vinkAkkoord(tester);
+      await _tik(tester, TekstenNl.registrerenKnop);
+
+      expect(
+        find.text(TekstenAanmeldenNl.validatieOuderVerplicht),
+        findsOneWidget,
+      );
+      expect(gateway.laatsteRegistratieBody, isNull);
+
+      await _vul(tester, 5, 'mama');
+      await _tik(tester, TekstenNl.registrerenKnop);
+      expect(
+        find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
+        findsOneWidget,
+      );
+      expect(gateway.laatsteRegistratieBody, isNull);
+
+      await _vul(tester, 5, '06 12 34 56 78');
+      await _tik(tester, TekstenNl.registrerenKnop);
+      expect(find.byType(BevestigEmailScreen), findsOneWidget);
+      expect(gateway.laatsteRegistratieBody?['ouder_telefoon'], '0612345678');
+      expect(
+        gateway.laatsteRegistratieBody?.containsKey('ouder_email'),
+        isFalse,
+      );
+    });
+
+    testWidgets('onder de 10: geweigerd met uitleg, geen verzoek', (
+      tester,
+    ) async {
+      final gateway = fakeMetAlleRollen();
+      await naarHelper(tester, gateway);
+
+      await vulBasis(tester, '01-01-2020');
+      await _vul(tester, 5, 'wachtwoord1');
+      await _vinkAkkoord(tester);
+      await _tik(tester, TekstenNl.registrerenKnop);
+
+      expect(find.text(TekstenAanmeldenNl.validatieTeJong), findsOneWidget);
+      expect(gateway.laatsteRegistratieBody, isNull);
+      expect(find.byType(RegistrerenScreen), findsOneWidget);
+    });
+
+    testWidgets('lege velden en een rare postcode geven fouten', (
+      tester,
+    ) async {
+      final gateway = fakeMetAlleRollen();
+      await naarHelper(tester, gateway);
+
+      await _vul(tester, 3, '400');
+      await _tik(tester, TekstenNl.registrerenKnop);
+
+      for (final fout in [
+        TekstenAanmeldenNl.validatieVoornaamVerplicht,
+        TekstenAanmeldenNl.validatieGeboortedatumVerplicht,
+        TekstenNl.validatieEmailVerplicht,
+        TekstenAanmeldenNl.validatiePostcodeOngeldig,
+        TekstenAanmeldenNl.validatieHuisnummerVerplicht,
+        TekstenNl.validatieWachtwoordTeKort,
+        TekstenAanmeldenNl.validatieAkkoord,
+      ]) {
+        expect(find.text(fout), findsOneWidget, reason: fout);
+      }
+      expect(gateway.laatsteRegistratieBody, isNull);
+    });
+  });
 
   for (final rol in HhRol.values) {
     testWidgets('inloggen als ${rol.code} landt op ${rol.pad}', (tester) async {

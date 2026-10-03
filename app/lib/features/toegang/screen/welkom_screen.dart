@@ -6,6 +6,7 @@ import '../../../app/paden.dart';
 import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
+import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
 import '../model/hh_rol.dart';
@@ -31,7 +32,6 @@ class WelkomScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dichtheid = HhDichtheidScope.van(context);
     final tekst = Theme.of(context).textTheme;
-    final tussen = HhRuimte.voor(HhRuimte.m, dichtheid);
 
     return HhScherm(
       titel: TekstenNl.welkomTitel,
@@ -47,12 +47,22 @@ class WelkomScreen extends ConsumerWidget {
             maat: HhDichtheid.groot,
             onPressed: () => _kies(context, ref, HhRol.hulpvrager),
           ),
-          SizedBox(height: tussen),
+          SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
+          Text(
+            TekstenAanmeldenNl.welkomZoekHulpUitleg,
+            style: tekst.bodyMedium,
+          ),
+          SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
           HhKnop(
             label: TekstenNl.keuzeWilHelpen,
             icoon: Icons.volunteer_activism_outlined,
             maat: HhDichtheid.groot,
             onPressed: () => _kies(context, ref, HhRol.jongere),
+          ),
+          SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
+          Text(
+            TekstenAanmeldenNl.welkomWilHelpenUitleg,
+            style: tekst.bodyMedium,
           ),
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           const Divider(),

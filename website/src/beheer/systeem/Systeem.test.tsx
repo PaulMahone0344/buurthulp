@@ -50,10 +50,28 @@ describe('D4 systeembeheer', () => {
     expect(data.aanroepen).toContainEqual({ methode: 'wijzigKlustype', args: ['t1', { richtduur: 90, richtvergoeding: 1750 }] })
   })
 
+  it('B2: toont de werkgebied-markering van de server', async () => {
+    const data = new FakeBeheerData(
+      {
+        gebruikers: [
+          { id: 'u1', naam: 'Ver', email: 'v@x.nl', rol: 'hulpvrager', telefoon: '', geblokkeerd: false, werkgebiedStatus: 'buiten' },
+          { id: 'u2', naam: 'Zoek', email: 'z@x.nl', rol: 'jongere', telefoon: '', geblokkeerd: false, werkgebiedStatus: 'onbekend' },
+          { id: 'u3', naam: 'Hier', email: 'h@x.nl', rol: 'jongere', telefoon: '', geblokkeerd: false, werkgebiedStatus: 'binnen' },
+        ],
+      },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'gebruikers' })
+
+    expect(within(await screen.findByLabelText('Gebruiker Ver')).getByText('Buiten werkgebied')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Gebruiker Zoek')).getByText('Adres niet gevonden')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Gebruiker Hier')).queryByText(/werkgebied|niet gevonden/)).not.toBeInTheDocument()
+  })
+
   it('blokkeert een gebruiker en wijzigt een rol, allebei na bevestigen', async () => {
     const user = userEvent.setup()
     const data = new FakeBeheerData(
-      { gebruikers: [{ id: 'u1', naam: 'Sami', email: 's@x.nl', rol: 'jongere', telefoon: '', geblokkeerd: false }] },
+      { gebruikers: [{ id: 'u1', naam: 'Sami', email: 's@x.nl', rol: 'jongere', telefoon: '', geblokkeerd: false, werkgebiedStatus: 'binnen' }] },
       COORDINATOR,
     )
     const zetFilters = opzet(data, { tab: 'gebruikers' })
