@@ -5,6 +5,8 @@ import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_chat_gateway.dart';
+import 'package:heitjehulp_app/features/chat/provider/chat_providers.dart';
 import 'package:heitjehulp_app/core/pb/fake_incident_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_familie_gateway.dart';
@@ -121,6 +123,7 @@ ProviderContainer hulpvragerContainer({
   FakeMeldingenGateway? meldingenGateway,
   FakeIncidentGateway? incidentGateway,
   FakeFamilieGateway? familieGateway,
+  FakeChatGateway? chatGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -147,6 +150,8 @@ ProviderContainer hulpvragerContainer({
       familieGatewayProvider.overrideWithValue(
         familieGateway ?? FakeFamilieGateway(),
       ),
+      // B6: de Chat-knop op O7. Standaard een lege fake.
+      chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
       klokProvider.overrideWithValue(() => nu ?? testNu),
       keyValueStoreProvider.overrideWithValue(
         opslag ?? GeheugenKeyValueStore(),

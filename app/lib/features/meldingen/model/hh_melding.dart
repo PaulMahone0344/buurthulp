@@ -12,6 +12,9 @@ enum HhMeldingSoort {
   geannuleerd('geannuleerd'),
   incident('incident'),
 
+  /// B6: een nieuw chatbericht (hook hh_chat.pb.js).
+  bericht('bericht'),
+
   /// Een waarde die de app (nog) niet kent: de melding blijft zichtbaar.
   onbekend('');
 

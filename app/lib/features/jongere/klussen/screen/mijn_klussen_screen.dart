@@ -9,9 +9,12 @@ import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
 import '../../../../l10n/teksten_beoordelen_nl.dart';
+import '../../../../l10n/teksten_chat_nl.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../theme.dart';
+import '../../../chat/domein/chat_regels.dart';
+import '../../../chat/widget/chat_knop.dart';
 import '../../../hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
 import '../../../toegang/model/hh_rol.dart';
@@ -98,6 +101,15 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
                     : HhPadenKlussen.klusDetail(klus.id),
               ),
             ),
+            // B6: de chat met de bewoner, met de ongelezen-teller.
+            if (heeftChat(klus)) ...[
+              SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+              ChatKnop(
+                klusId: klus.id,
+                naam: chatVoornaam(klus.oudereNaam),
+                label: TekstenChatNl.chat,
+              ),
+            ],
             if (_tab == MijnKlussenTab.historie &&
                 klus.status == HhKlusStatus.afgerond &&
                 gegeven != null &&
