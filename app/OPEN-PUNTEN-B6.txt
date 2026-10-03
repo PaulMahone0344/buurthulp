@@ -1,0 +1,52 @@
+HEITJEHULP B6 - CHAT IN DE APP: OPEN PUNTEN (4 okt 2026)
+Branch b6/chat, worktree ~/flutter-builds/hh-b6. Backend NIET op prod
+(proefrit: backend/proefrit-b6.txt).
+
+KEUZES DIE IK MAAKTE
+  - Chat dicht 72 uur (3 dagen) na afgerond of geannuleerd, zoals de
+    prompt (het plan noemde 7 dagen). Eén constante: CHAT_DICHT_NA_UREN in
+    hh_chat_hulp.js; de app spiegelt hem (chatDichtNa) maar de server
+    beslist. Daarna alleen lezen: invoer weg, "Deze chat is gesloten."
+  - Coordinator leest ALLEEN mee als er een incident op die klus is
+    (voorstel prompt). Zonder melding geen inzage. Schrijven doet hij nooit.
+  - Eén gesprek per helper: bericht.helper = de helper op het moment van
+    schrijven. Geeft een helper de klus terug, dan leest hij niets meer en
+    de nieuwe helper ziet het oude gesprek niet. De bewoner ziet alleen het
+    gesprek met zijn huidige helper.
+  - Het filter vervangt nummers, mail en links door "•••" en bewaart het
+    origineel NIET. De markering "gefilterd" ziet iedereen (de app zegt
+    "Nummer, mail of link verborgen"); "contactverzoek" (whatsapp, snap,
+    insta, je nummer ...) ziet alleen de meldkamer. Uitgeschreven nummers
+    ("nul zes ...") vangt het filter niet; die worden wel vaak gemarkeerd.
+  - Melding bij een nieuw bericht: hooguit één per 10 minuten per chat,
+    zonder de inhoud ("Nieuw bericht van Daan"). Tik opent de chat.
+  - Snelknoppen: helper "Ik ben onderweg / Ik ben er / Klaar", bewoner
+    "Prima! / Ik ben thuis / Bel even aan". Gewoon bericht (soort snel),
+    nooit een statuswissel.
+  - O7 (bewoner, ouderenregel hooguit drie knoppen): zodra er een helper is
+    neemt "Chat met Sanne" de plaats van "Vernieuwen" in. Pull-to-refresh
+    en realtime blijven; zonder helper staat Vernieuwen er gewoon.
+  - "Open de chat" staat op J13 zodra de helper de klus aanneemt (daar krijgt
+    de klus een helper). De echte match-sheet is B5.
+  - Realtime: valt de verbinding weg, dan ververst het scherm bij terugkomen
+    in de app (klus, gesprek en teller).
+  - Grote tekst (200%): kop wordt twee rijen (terug + vlag boven de naam).
+  - afzender heeft GEEN cascade (zoals hulpvrager op een klus): berichten
+    blijven als bewijs; een account met berichten kan niet zomaar weg.
+
+NIET GEBOUWD (bewust)
+  - Push naar het toestel (laag 2, M8).
+  - Meldkamer-inzage in het beheerpaneel (B11); de rule staat klaar.
+  - Ouder leest mee (besluit: nee).
+
+VRAGEN VOOR IBRAHIM (max 5)
+  1. Coordinator-inzage alleen bij een incident op de klus: goed? En moet
+     die inzage blijven als het incident is afgehandeld (nu: ja, zolang het
+     incident bestaat)?
+  2. 3 dagen (prompt) of 7 dagen (plan) na afloop open? Nu 3.
+  3. Origineel bij een gefilterd bericht bewaren voor de meldkamer (bewijs
+     bij misbruik) of niet (privacy, nu: niet)?
+  4. O7: mag de chat-knop "Vernieuwen" vervangen om binnen drie knoppen te
+     blijven?
+  5. Account verwijderen (AVG) terwijl er berichten zijn: berichten wissen,
+     anonimiseren of bewaren? Nu blokkeert de relatie het verwijderen.

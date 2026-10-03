@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/beoordeling_gateway.dart';
+import 'package:heitjehulp_app/core/pb/chat_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_chat_gateway.dart';
+import 'package:heitjehulp_app/features/chat/provider/chat_providers.dart';
 import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
@@ -117,6 +120,7 @@ List<dynamic> toegangOverrides({
   MeldingenGateway? meldingenGateway,
   IncidentGateway? incidentGateway,
   OuderGateway? ouderGateway,
+  ChatGateway? chatGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -163,6 +167,9 @@ List<dynamic> toegangOverrides({
   ouderGatewayProvider.overrideWithValue(
     ouderGateway ?? FakeOuderGateway(stand: standaardOuderStand),
   ),
+  // B6: de Chat-knoppen (J13, J14, O7) tellen meteen de ongelezen
+  // berichten. Standaard een lege fake zonder netwerk.
+  chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
   if (gekozenRol != null)

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/chat/chat_routes.dart';
 import '../features/coordinator/coordinator_guard.dart';
 import '../features/coordinator/coordinator_routes.dart';
 import '../features/coordinator/screen/coordinator_stub_screen.dart';
@@ -158,6 +159,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ...beoordelenRoutes(),
       ...meldingenRoutes(),
       ...veiligheidRoutes(),
+      // B6: de chat per klus (bewoner en helper).
+      ...chatRoutes(),
       // Alleen in debug-builds; een release kent dit pad niet.
       if (kDebugMode)
         GoRoute(

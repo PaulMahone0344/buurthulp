@@ -1,0 +1,120 @@
+HeitjeHulp B6 — proefrit (DRY-RUN tegen prod, niets geschreven) 2026-10-03T22:36:54Z
+Branch b6/chat (worktree ~/flutter-builds/hh-b6). NOG NIET OP PROD.
+
+WAT VERANDERT ER OP PROD (na JA)
+  Collectie (110, additief): NIEUW hh_berichten (klus, afzender, helper,
+    tekst, soort, gelezen_op, gefilterd, contactverzoek) + 2 indexen.
+  Keuze (110, additief): hh_meldingen.soort krijgt "bericht" erbij.
+  Rules (111): alleen hh_berichten (nieuw). Geen andere collectie geraakt.
+  Hooks (113): NIEUW hh_chat.pb.js + hh_chat_hulp.js. Geen bestaand
+    hook-bestand aangepast (hh_klussen.pb.js blijft van B4).
+  Geen datamigratie, niets verwijderd. Details: SCHEMA.txt sectie B6.
+
+LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie; schema = export van de 16
+hh_-collecties van prod van vannacht, alleen gelezen; hooks uit deze branch)
+  110 dry-run -> --apply -> nogmaals: "niets te doen" (idempotent)
+  111 --apply; PocketBase accepteert alle rules (ook @collection.hh_incidenten)
+  112 --apply (met --experimental-eventsource): 84 groen, 0 rood, twee keer
+    achter elkaar; opruimen laat niets achter. Een afgelopen "[seed"-klus met
+    een logregel van 20 sep (via sqlite teruggezet) gaf 403 voor bewoner en
+    helper; er werd niets geschreven.
+  Bestaande checks met de B6-hooks erbij: 72-b1check 54 groen,
+    62-beheercheck 118 groen (lokaal met wijken + klustypes).
+  App-gateway (PocketBaseChatGateway) tegen dezelfde lokale server
+    (test/smoke/b6_lokaal_smoke_test.dart): realtime binnen < 1 s, filter
+    ("Bel me op •••"), teller per klus, gelezen zetten, derde ziet niets.
+  04, 32 en 50 NIET lokaal (die hebben de volledige seed-data nodig).
+
+=== DRY-RUNS TEGEN PROD (alleen lezen) ===
+
+=== node scripts/110-b6-berichten.mjs
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+  + ZOU aanmaken: hh_berichten (base, 10 velden)
+      klus (relation)
+      afzender (relation)
+      helper (relation)
+      tekst (text)
+      soort (select: tekst | snel)
+      gelezen_op (date)
+      gefilterd (bool)
+      contactverzoek (bool)
+      created (autodate)
+      updated (autodate)
+      index: CREATE INDEX idx_hh_berichten_klus ON hh_berichten (klus, created)
+      index: CREATE INDEX idx_hh_berichten_helper ON hh_berichten (helper)
+  + ZOU keuze toevoegen: hh_meldingen.soort "bericht"
+      was:    nieuwe_klus | toegewezen | onderweg | afgerond | geannuleerd | incident
+      wordt:  nieuwe_klus | toegewezen | onderweg | afgerond | geannuleerd | incident | bericht
+
+DRY-RUN: 2 wijziging(en). Draai met --apply.
+
+=== node scripts/111-b6-rules.mjs
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+! hh_berichten bestaat nog niet — eerst 110-b6-berichten.mjs --apply. (dry-run toont de gewenste rules)
+    listRule: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (klus.hulpvrager = @request.auth.id || (helper = @request.auth.id && klus.toegewezen_jongere = @request.auth.id) || (@request.auth.rol = \"coordinator\" && @collection.hh_incidenten.klus ?= klus))"
+    viewRule: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (klus.hulpvrager = @request.auth.id || (helper = @request.auth.id && klus.toegewezen_jongere = @request.auth.id) || (@request.auth.rol = \"coordinator\" && @collection.hh_incidenten.klus ?= klus))"
+    createRule: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && @request.body.afzender = @request.auth.id && (klus.hulpvrager = @request.auth.id || klus.toegewezen_jongere = @request.auth.id) && klus.toegewezen_jongere != \"\" && (klus.status = \"geaccepteerd\" || klus.status = \"onderweg\" || klus.status = \"bezig\" || klus.status = \"probleem\" || klus.status = \"afgerond\" || klus.status = \"geannuleerd\") && @request.body.helper:isset = false && @request.body.gelezen_op:isset = false && @request.body.gefilterd:isset = false && @request.body.contactverzoek:isset = false"
+    updateRule: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (klus.hulpvrager = @request.auth.id || (helper = @request.auth.id && klus.toegewezen_jongere = @request.auth.id)) && afzender != @request.auth.id && @request.body.klus:isset = false && @request.body.afzender:isset = false && @request.body.helper:isset = false && @request.body.tekst:isset = false && @request.body.soort:isset = false && @request.body.gefilterd:isset = false && @request.body.contactverzoek:isset = false"
+    deleteRule: null
+
+Dry-run klaar. Niets geschreven.
+
+=== node scripts/112-b6check.mjs
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+DRY-RUN: er wordt NIETS geschreven.
+
+B. Voorwaarden op de server (alleen lezen)
+  ✗ hh_berichten bestaat — draai 110 --apply
+  ✗ hh_meldingen.soort kent "bericht" — draai 110 --apply
+
+Afgelopen seed-klus van > 72 uur voor sectie I: 7aql34djq1yc8n6 (afgerond)
+
+Wat --apply ZOU doen:
+  · tijdelijke accounts maken (b6check-...@heitjehulp.invalid): coordinator, 2 bewoners, 3 helpers;
+  · eigen klussen "[b6check]" (geaccepteerd, open, afgerond) en berichten daarin; één incident (meldt de coordinatoren kort, wordt opgeruimd);
+  · per rol nameten wie leest en schrijft, filter, meldingen, open/dicht, wissel van helper, realtime;
+  · de oude seed-klus: een bericht proberen als bewoner en helper (impersonate) — moet 403 geven, niets geschreven;
+  · alles opruimen en nameten.
+
+0 groen, 2 rood (leescontroles).
+Rood is verwacht zolang 110 en 111 nog niet uitgerold zijn.
+
+
+LET OP VOOR DE UITROL
+  1. 112 --apply maakt één incident op een eigen [b6check]-klus: elke
+     coordinator (ook Ibrahim) krijgt even een melding "Probleem gemeld"; die
+     wordt aan het eind opgeruimd. Liever niet tijdens een dienst draaien.
+  2. 112 sectie I gebruikt seed-klus 7aql34djq1yc8n6 (afgerond, > 72 uur)
+     via superuser-impersonate van de seed-bewoner en seed-helper: alleen een
+     verzoek dat moet MISLUKKEN; er wordt niets op die klus geschreven (de
+     check meet het na en ruimt anders op).
+  3. 112 met node --experimental-eventsource (realtime-sectie K); zonder die
+     vlag wordt K overgeslagen en de rest draait gewoon.
+  4. 113 heeft ssh -n (de les van B1). Beide bestanden zijn NIEUW, dus stap
+     2b toont geen diff. Toch auto-mode uit en de lijst voor/na nalezen.
+  5. Eerst backend, dan de app. Een oude app ziet een melding "bericht" als
+     gewone melding (titel van de server) en opent bij tikken de klus.
+  6. B3/B4 raken niets hiervan. Komt er in B4 een nieuwe klusstatus bij, dan
+     staat de chat daarin DICHT tot hij aan 111 (STATUS_SCHRIJVEN) en
+     hh_chat_hulp.js (STATUS_LOOPT) wordt toegevoegd.
+
+UITROLLIJST (vanuit backend/, .env laden: set -a; . /Users/h/Desktop/qawayhabase/.env; set +a)
+  1. node scripts/00-backup.mjs
+  2. node scripts/110-b6-berichten.mjs            (dry-run, lees na)
+     node scripts/110-b6-berichten.mjs --apply
+  3. node scripts/111-b6-rules.mjs                (dry-run, lees na)
+     node scripts/111-b6-rules.mjs --apply
+  4. ./scripts/113-hook-deploy.sh                 (lijst nalezen, dan y)
+  5. node --experimental-eventsource scripts/112-b6check.mjs --apply
+                                                  (verwacht: 84 groen, 0 rood)
+  6. Ter controle: node scripts/72-b1check.mjs --apply (54 groen)
+                   node scripts/62-beheercheck.mjs --apply (alles groen)
+  7. App daarna uitrollen (EAS-build; OTA alleen bij gelijke runtimeVersion).
+  ROLLBACK: ./scripts/113-hook-deploy.sh --rollback (haalt de 2 nieuwe
+  bestanden weg). hh_berichten en de soort "bericht" mogen blijven staan
+  (additief); wil je de chat dicht zonder hook: de rules van hh_berichten op
+  null zetten (alleen superuser). De collectie VERWIJDEREN = berichten weg:
+  alleen op woord van Ibrahim.
