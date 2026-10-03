@@ -31,6 +31,7 @@ import { randomBytes } from 'node:crypto';
 import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { B1_VELDNAMEN } from './70-b1-velden.mjs';
 import { B1_SLOT_VELDEN, slot } from './71-b1-rules.mjs';
+import { TIEL } from './_adressen.mjs';
 
 const MAIL_PREFIX = 'b1check-';
 const MAIL_DOMEIN = '@heitjehulp.invalid';
@@ -188,19 +189,23 @@ async function main() {
       taal: 'nl',
       ouder_email: 'ouder@heitjehulp.invalid',
       ouder_telefoon: '0612345678',
-      huisnummer: '12a',
+      // ADRES (4 okt): een helper meldt zich alleen aan met een bestaand
+      // adres (PDOK): postcode + huisnummer van Kerkstraat 1, 4001 MA Tiel.
+      postcode: TIEL.postcode,
+      huisnummer: TIEL.huisnummer,
     }));
   if (reg) {
     const terug = await su.collection('hh_users').getOne(reg.id);
-    check('waarden staan zoals gestuurd', terug.ouder_email === 'ouder@heitjehulp.invalid' && terug.ouder_telefoon === '0612345678' && terug.huisnummer === '12a');
+    check('waarden staan zoals gestuurd', terug.ouder_email === 'ouder@heitjehulp.invalid' && terug.ouder_telefoon === '0612345678' && terug.huisnummer === TIEL.huisnummer);
   }
-  const bijgewerkt = await mag('helper werkt ouder_email/ouder_telefoon/huisnummer bij', () =>
+  // ADRES: een huisnummer los wijzigen zonder geldig adres kan niet meer
+  // (122 bewijst dat); hier alleen de ouder-velden.
+  const bijgewerkt = await mag('helper werkt ouder_email/ouder_telefoon bij', () =>
     helper.client.collection('hh_users').update(helper.id, {
       ouder_email: 'ouder2@heitjehulp.invalid',
       ouder_telefoon: '0687654321',
-      huisnummer: '7',
     }));
-  check('bijgewerkte waarden staan', bijgewerkt?.huisnummer === '7' && bijgewerkt?.ouder_email === 'ouder2@heitjehulp.invalid');
+  check('bijgewerkte waarden staan', bijgewerkt?.ouder_telefoon === '0687654321' && bijgewerkt?.ouder_email === 'ouder2@heitjehulp.invalid');
 
   kop('D. Server-velden: eigenaar NIET, coordinator wel');
   await magNiet('registreren met ouder_toestemming_op geweigerd', () =>
@@ -211,6 +216,9 @@ async function main() {
       rol: 'jongere',
       naam: `${MERK} reg`,
       ouder_toestemming_op: nu,
+      // ADRES: met een bestaand adres, zodat de RULE weigert.
+      postcode: TIEL.postcode,
+      huisnummer: TIEL.huisnummer,
     }));
   await magNiet('registreren met ouder_iban_ok geweigerd', () =>
     anon.collection('hh_users').create({
@@ -220,13 +228,16 @@ async function main() {
       rol: 'jongere',
       naam: `${MERK} reg`,
       ouder_iban_ok: true,
+      // ADRES: met een bestaand adres, zodat de RULE weigert.
+      postcode: TIEL.postcode,
+      huisnummer: TIEL.huisnummer,
     }));
   await magNiet('helper zet eigen ouder_toestemming_op', () =>
     helper.client.collection('hh_users').update(helper.id, { ouder_toestemming_op: nu }));
   await magNiet('helper zet eigen ouder_iban_ok', () =>
     helper.client.collection('hh_users').update(helper.id, { ouder_iban_ok: true }));
   await magNiet('helper zet ouder_iban_ok samen met een vrij veld', () =>
-    helper.client.collection('hh_users').update(helper.id, { huisnummer: '8', ouder_iban_ok: true }));
+    helper.client.collection('hh_users').update(helper.id, { ouder_telefoon: '0611111111', ouder_iban_ok: true }));
 
   // helper2 heeft nog geen profiel: aanmaken met een server-veld moet falen.
   for (const veld of B1_SLOT_VELDEN.hh_profielen) {

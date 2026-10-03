@@ -28,6 +28,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { RULESET } from './02-rules.mjs';
+import { TIEL, invoer } from './_adressen.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ACCOUNTS_FILE = path.resolve(__dirname, '..', 'seed-accounts.local.json');
@@ -164,8 +165,10 @@ async function main() {
         anon.collection('hh_users').create({ email: ANON_EMAIL, password: 'Rulecheck-2026!x', passwordConfirm: 'Rulecheck-2026!x', rol: 'coordinator', naam: `${MERK} anon` }));
       await magNiet('hh_users: anonieme registratie zonder rol geweigerd', () =>
         anon.collection('hh_users').create({ email: ANON_EMAIL, password: 'Rulecheck-2026!x', passwordConfirm: 'Rulecheck-2026!x', naam: `${MERK} anon` }));
+      // ADRES (4 okt): een bewoner meldt zich alleen aan met een bestaand
+      // adres (PDOK); daarom met Kerkstraat 1, 4001 MA Tiel.
       const reg = await mag('hh_users: anonieme zelfregistratie als hulpvrager mag (bewust: registreren)', () =>
-        anon.collection('hh_users').create({ email: ANON_EMAIL, password: 'Rulecheck-2026!x', passwordConfirm: 'Rulecheck-2026!x', rol: 'hulpvrager', naam: `${MERK} anon`, taal: 'nl' }));
+        anon.collection('hh_users').create({ email: ANON_EMAIL, password: 'Rulecheck-2026!x', passwordConfirm: 'Rulecheck-2026!x', rol: 'hulpvrager', naam: `${MERK} anon`, taal: 'nl', ...invoer(TIEL) }));
       if (reg) opruimen.push(['hh_users', reg.id]);
     } else {
       await magNiet(`${coll}: anonieme create geweigerd`, () => anon.collection(coll).create({ naam: MERK, omschrijving: MERK }));

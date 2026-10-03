@@ -35,6 +35,7 @@ import { randomBytes } from 'node:crypto';
 import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { EXTRA_VELDEN } from './60-beheer-velden.mjs';
 import { NIEUWE_RULES, SLOT_VELDEN, slot } from './61-beheer-rules.mjs';
+import { TIEL, invoer } from './_adressen.mjs';
 
 const MERK = '[beheercheck]';
 const MAIL_PREFIX = 'beheercheck-';
@@ -312,6 +313,8 @@ async function main() {
       rol: 'jongere',
       naam: `${MERK} registratie`,
       geblokkeerd: false,
+      // ADRES: met een bestaand adres, zodat de RULE weigert (niet de adres-check).
+      ...invoer(TIEL),
     }),
   );
   check('registreren met geblokkeerd in de body geweigerd', registratie.status >= 400, `status ${registratie.status}`);
@@ -399,6 +402,9 @@ async function main() {
     telefoon,
     adres: 'Prins Bernhardlaan 12',
     plaats: 'Tiel',
+    // ADRES (4 okt): zonder postcode + huisnummer alleen als uitzondering van
+    // de meldkamer (markering "handmatig", geen PDOK).
+    adres_bron: 'handmatig',
     wijk: wijk.id,
     taal: 'nl',
   });

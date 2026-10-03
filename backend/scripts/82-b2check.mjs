@@ -8,7 +8,7 @@
 //      in de rules, werkgebied_status en de wijk "Tiel en omstreken" (81)
 //      bestaan, Tiel-West en Passewaaij staan er nog
 //   C. registreren: helper < 10 geweigerd (anoniem en superuser), 10 jaar
-//      mag; postcode -> wijk (onbekende postcode -> geen wijk); de eigenaar
+//      mag; adres -> wijk (ADRES: een adres dat niet bestaat -> geweigerd); de eigenaar
 //      wijzigt zijn geboortedatum niet meer, de coordinator wel; een andere
 //      postcode -> andere wijk
 //   D. klussen: < 18 zonder ouder-toestemming ziet geen open klus en kan niet
@@ -34,6 +34,7 @@ import { randomBytes } from 'node:crypto';
 import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { B2_WIJZIGINGEN, ID_SLOT, GEBOORTEDATUM_SLOT, KLUS_VOORWAARDE, WERKGEBIED_SLOT, WIJK_RUIM } from './80-b2-rules.mjs';
 import { REGIO_WIJK } from './81-b2-werkgebied.mjs';
+import { TIEL, OCHTEN, AMSTERDAM, NIET_BESTAAND, invoer } from './_adressen.mjs';
 
 const MAIL_PREFIX = 'b2check-';
 const MAIL_DOMEIN = '@heitjehulp.invalid';
@@ -165,7 +166,7 @@ async function main() {
     await voorwaarden(su);
     console.log('\nWat --apply ZOU doen:');
     console.log(`  · tijdelijke accounts maken (${MAIL_PREFIX}...${MAIL_DOMEIN}): coordinator, 3 bewoners, 8 helpers, 5 registraties;`);
-    console.log('  · 8 Nominatim-verzoeken (1 per seconde) voor de werkgebied-checks;');
+    console.log('  · ADRES: 3 PDOK-verzoeken (Tiel, Ochten, Amsterdam; 10 min onthouden) + 1 Nominatim-verzoek (superuser met alleen een postcode);');
     console.log('  · vijf eigen open klussen (ook in Tiel-West en Passewaaij); per helper nameten wie ze ziet en wie mag accepteren;');
     console.log('  · een testfoto als ID uploaden, goedkeuren (coordinator en superuser), opnieuw uploaden geweigerd;');
     console.log('  · bekijken wat een bewoner van zijn helper ziet;');
@@ -217,34 +218,36 @@ async function main() {
     });
 
   // ---------------------------------------------------------------- C
-  // Elke postcode hieronder kost één Nominatim-verzoek (hooguit 1 per
-  // seconde): 4003 AB = Tiel, 4051 AB = Ochten (~9 km), 1012 AB = Amsterdam
-  // (buiten 20 km), 9999 ZZ = bestaat niet (geen resultaat = onbekend).
-  kop('C. Registreren: leeftijd, werkgebied uit de postcode, geboortedatum vast');
+  // ADRES (4 okt): aanmelden en verhuizen gaan via PDOK (postcode +
+  // huisnummer moeten bestaan); het werkgebied komt uit het PDOK-punt.
+  // Echte adressen (scripts/_adressen.mjs): Kerkstraat 1 Tiel, Kerkstraat 2
+  // Ochten (~9 km), Dam 1 Amsterdam (buiten 20 km). Een adres dat niet
+  // bestaat wordt nu GEWEIGERD (vroeger: aanmelden + status onbekend; dat
+  // gebeurt nu alleen nog als PDOK onbereikbaar is, zie 122 sectie H).
+  kop('C. Registreren: leeftijd, werkgebied uit het adres, geboortedatum vast');
   const teJong = await magNiet('helper van 9 registreert NIET', () =>
-    registreer('negen', { rol: 'jongere', geboortedatum: geboren(10, 1), huisnummer: '1' }), [400]);
+    registreer('negen', { rol: 'jongere', geboortedatum: geboren(10, 1), ...invoer(TIEL) }), [400]);
   check('  melding noemt 10 jaar', /10 jaar/.test(teJong?.response?.message ?? ''), teJong?.response?.message);
   await magNiet('ook de superuser maakt geen helper van 9', () =>
     su.collection(assertHh('hh_users')).create({
       email: nieuwMail('negen-su'), password: wachtwoord, passwordConfirm: wachtwoord,
       rol: 'jongere', naam: `${MERK} negen-su`, taal: 'nl', geboortedatum: geboren(9),
     }), [400]);
-  const tien = await mag('helper van precies 10 registreert (Tiel, 4003 AB)', () =>
-    registreer('tien', { rol: 'jongere', geboortedatum: geboren(10), postcode: '4003 AB', huisnummer: '12a', ouder_email: 'ouder@heitjehulp.invalid' }));
+  const tien = await mag('helper van precies 10 registreert (Tiel, Kerkstraat 1)', () =>
+    registreer('tien', { rol: 'jongere', geboortedatum: geboren(10), ...invoer(TIEL), ouder_email: 'ouder@heitjehulp.invalid' }));
   check('  binnen 20 km -> wijk "Tiel en omstreken", status binnen', tien?.wijk === regio.id && tien?.werkgebied_status === 'binnen', `wijk="${tien?.wijk}" status="${tien?.werkgebied_status}"`);
-  const dorp = await mag('bewoner registreert in Ochten (4051 AB)', () =>
-    registreer('ochten', { rol: 'hulpvrager', adres: 'Dorpsstraat 1', huisnummer: '1', postcode: '4051 AB', plaats: 'Ochten' }));
+  const dorp = await mag('bewoner registreert in Ochten (Kerkstraat 2, 4051 AB)', () =>
+    registreer('ochten', { rol: 'hulpvrager', adres: 'Dorpsstraat 1', plaats: 'Ochten', ...invoer(OCHTEN) }));
   check('  dorp binnen 20 km -> ook "Tiel en omstreken"', dorp?.wijk === regio.id && dorp?.werkgebied_status === 'binnen', `wijk="${dorp?.wijk}"`);
-  const ver = await mag('bewoner registreert in Amsterdam (1012 AB)', () =>
-    registreer('amsterdam', { rol: 'hulpvrager', adres: 'Damstraat 1', huisnummer: '1', postcode: '1012 AB', plaats: 'Amsterdam' }));
+  const ver = await mag('bewoner registreert in Amsterdam (Dam 1, 1012 JS)', () =>
+    registreer('amsterdam', { rol: 'hulpvrager', adres: 'Damstraat 1', plaats: 'Amsterdam', ...invoer(AMSTERDAM) }));
   check('  buiten 20 km -> geen wijk, status buiten', ver && !ver.wijk && ver.werkgebied_status === 'buiten', `wijk="${ver?.wijk}" status="${ver?.werkgebied_status}"`);
-  const raar = await mag('helper registreert met een postcode die niet bestaat (9999 ZZ)', () =>
-    registreer('onbekend', { rol: 'jongere', geboortedatum: geboren(20), postcode: '9999 ZZ', huisnummer: '1' }));
-  check('  geen resultaat -> aanmelden lukt, geen wijk, status onbekend', raar && !raar.wijk && raar.werkgebied_status === 'onbekend', `status="${raar?.werkgebied_status}"`);
+  await magNiet('ADRES: helper met een adres dat niet bestaat wordt geweigerd', () =>
+    registreer('onbekend', { rol: 'jongere', geboortedatum: geboren(20), ...invoer(NIET_BESTAAND) }), [400]);
   await magNiet('registreren met zelfgekozen wijk wordt geweigerd', () =>
-    registreer('zelfwijk', { rol: 'jongere', geboortedatum: geboren(20), wijk: regio.id }));
+    registreer('zelfwijk', { rol: 'jongere', geboortedatum: geboren(20), wijk: regio.id, ...invoer(TIEL) }));
   await magNiet('registreren met zelfgekozen werkgebied_status wordt geweigerd', () =>
-    registreer('zelfstatus', { rol: 'jongere', geboortedatum: geboren(20), werkgebied_status: 'binnen' }));
+    registreer('zelfstatus', { rol: 'jongere', geboortedatum: geboren(20), werkgebied_status: 'binnen', ...invoer(TIEL) }));
 
   const eigen = await account('eigenaar', 'jongere', { geboortedatum: geboren(15), postcode: '4003 AB' });
   check('superuser-aanmaak met postcode krijgt ook de regio-wijk', eigen.record.wijk === regio.id, `wijk="${eigen.record.wijk}"`);
@@ -257,15 +260,16 @@ async function main() {
     coord.client.collection('hh_users').update(eigen.id, { geboortedatum: geboren(16) }));
   await magNiet('ook de coordinator maakt geen helper van 9', () =>
     coord.client.collection('hh_users').update(eigen.id, { geboortedatum: geboren(9) }), [400]);
-  const weg = await mag('eigenaar verhuist naar Amsterdam (1012 AB)', () =>
-    eigen.client.collection('hh_users').update(eigen.id, { postcode: '1012 AB' }));
+  const weg = await mag('eigenaar verhuist naar Amsterdam (Dam 1)', () =>
+    eigen.client.collection('hh_users').update(eigen.id, invoer(AMSTERDAM)));
   check('  wijk gewist, status buiten', weg && !weg.wijk && weg.werkgebied_status === 'buiten', `wijk="${weg?.wijk}"`);
-  const terug = await mag('eigenaar verhuist terug naar Tiel (4003 AB)', () =>
-    eigen.client.collection('hh_users').update(eigen.id, { postcode: '4003 AB' }));
+  const terug = await mag('eigenaar verhuist terug naar Tiel (Kerkstraat 1)', () =>
+    eigen.client.collection('hh_users').update(eigen.id, invoer(TIEL)));
   check('  weer "Tiel en omstreken"', terug?.wijk === regio.id && terug?.werkgebied_status === 'binnen');
-  const kwijt = await mag('eigenaar zet een postcode die niet bestaat (9999 ZZ)', () =>
-    eigen.client.collection('hh_users').update(eigen.id, { postcode: '9999 ZZ' }));
-  check('  onbekend: de wijk blijft staan, status onbekend', kwijt?.wijk === regio.id && kwijt?.werkgebied_status === 'onbekend', `wijk="${kwijt?.wijk}"`);
+  await magNiet('ADRES: eigenaar verhuist naar een adres dat niet bestaat: geweigerd', () =>
+    eigen.client.collection('hh_users').update(eigen.id, invoer(NIET_BESTAAND)), [400]);
+  const kwijt = await su.collection('hh_users').getOne(eigen.id);
+  check('  er verandert niets: wijk en status blijven', kwijt?.wijk === regio.id && kwijt?.werkgebied_status === 'binnen', `wijk="${kwijt?.wijk}"`);
 
   // ---------------------------------------------------------------- D
   kop('D. Klussen zien en accepteren');
