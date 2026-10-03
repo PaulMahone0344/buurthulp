@@ -53,6 +53,9 @@ export function Gebruikers({ data, zoek, zetZoek }: { data: BeheerData; zoek: st
                   {g.telefoon ? ` · ${g.telefoon}` : ''}
                 </span>
                 {g.geblokkeerd ? <Pil toon="fout">Geblokkeerd</Pil> : null}
+                {/* B2: markering van de server (geen wijk). B11 maakt hier een wachtrij van. */}
+                {g.werkgebiedStatus === 'onbekend' ? <Pil toon="fout">Adres niet gevonden</Pil> : null}
+                {g.werkgebiedStatus === 'buiten' ? <Pil toon="stop">Buiten werkgebied</Pil> : null}
               </div>
               <label className="field">
                 <span>Rol van {g.naam}</span>

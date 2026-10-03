@@ -106,7 +106,11 @@ export type Gebruiker = {
   rol: Rol | ''
   telefoon: string
   geblokkeerd: boolean
+  /** B2: hh_users.werkgebied_status; onbekend = de server vond het adres niet. */
+  werkgebiedStatus: Werkgebiedstatus
 }
+
+export type Werkgebiedstatus = '' | 'binnen' | 'buiten' | 'onbekend'
 
 export type Instelling = {
   id: string

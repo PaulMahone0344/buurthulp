@@ -162,6 +162,7 @@ export function naarGebruiker(r: RecordModel): Gebruiker {
     rol: tekst(r.rol) as Gebruiker['rol'],
     telefoon: tekst(r.telefoon),
     geblokkeerd: r.geblokkeerd === true,
+    werkgebiedStatus: tekst(r.werkgebied_status) as Gebruiker['werkgebiedStatus'],
   }
 }
 
