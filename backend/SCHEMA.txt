@@ -1014,3 +1014,148 @@ B2CHECK (scripts/82-b2check.mjs, dry-run standaard)
 UITROLLEN (volgorde)
   00-backup.mjs -> 81 --apply -> 80 --apply -> 84 --apply ->
   83-hook-deploy.sh -> 82 --apply -> 72, 62, 04, 50
+
+================================================================
+B4 - KLUS PLAATSEN: CATEGORIEËN, FOTO, TIJD, LEEFTIJD, KEUREN (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b4.txt)
+================================================================
+
+Besluiten Ibrahim 3 okt (onderzoek buitenland) punt 5-9. Grenzen zijn een
+VOORSTEL; de exacte NL-regels volgen van de jurist. Alle grenzen staan als
+constanten in pb_hooks/hh_klusplaatsen_hulp.js (en gespiegeld in de app:
+lib/features/hulpvrager/domein/tijdregel.dart, alleen om te waarschuwen).
+
+VELDEN (scripts/100-b4-velden.mjs, additief, idempotent)
+  hh_klussen
+    foto                   1-3 afbeeldingen (jpeg/png/heic/heif), max 5 MB,
+                           PROTECTED. Ophalen alleen met een bestandstoken
+                           van iemand die de klus mag ZIEN (viewRule): de
+                           bewoner, de coordinator, de toegewezen helper, en
+                           helpers die de GOEDGEKEURDE klus in hun lijst zien
+                           (wijk, goedgekeurd, oud genoeg). Keuze: die laatste
+                           groep ziet de foto ook, want daar beslissen ze mee
+                           (mockup HKlusBekijken). Een te jonge helper krijgt
+                           404, ook met zijn eigen token (bewezen in 102).
+    nee_lijst_akkoord      ja/nee: "Mijn klus valt hier niet onder"
+    klus_goedgekeurd_op    datum   ┐
+    klus_goedgekeurd_door  -> hh_users, 1, geen cascade │ alleen coordinator
+    klus_afgekeurd_op      datum   │ (slot 101) en de keur-route
+    klus_afkeur_reden      tekst, max 300 ┘
+    controle_markering     keuze, meerdere: telefoon | email | link | neelijst
+                           (voorfilter van de hook; blokkeert niets)
+    min_leeftijd           geheel getal: max(categorie, 18 door de tijdregel)
+    geboren_uiterlijk      datum: de NEDERLANDSE klusdag min min_leeftijd jaar,
+                           23:59:59.999Z (zonder begintijd: vandaag)
+  hh_klustypes
+    min_leeftijd           geheel getal (10 / 13 / 16)
+    actief                 ja/nee (nieuw veld: de 6 oude types staan op nee)
+    volgorde               geheel getal (volgorde van de tegels)
+  Rijen hh_klustypes: de 13 categorieën (actief, richtduur 60,
+  richtvergoeding 0: prijzen komen in B7):
+     10: Boodschappen, Dieren, Kleine klusjes, Helpende hand, Rondom huis
+     13: Tuin, Opruimen, Auto & fiets, Computer, Creatief, Hulp & kennis, Overig
+     16: Schoonmaak
+  De 6 oude types (boodschappen, tuin, klusje in huis, telefoon/tablet-hulp,
+  wandelen/gezelschap, vervoer) blijven staan, niet-actief, en krijgen ALLEEN
+  een min_leeftijd (10, 13, 16, 13, 10, 18). Geen klus wordt omgezet.
+
+TIJDREGEL (punt 7) — alleen 18+ als de klus (NL-wandklok, zomer/winter zelf
+  uitgerekend; de server draait UTC):
+    vóór 07:00 begint, OF na 19:00 eindigt (ook over middernacht), OF zonder
+    eindtijd na 17:00 begint, OF langer dan 2 uur duurt.
+  Precies 07:00, precies 19:00, precies 17:00 zonder eind en precies 2 uur
+  mogen nog voor iedereen. "10-14 evt 18:00" is NIET gebouwd (open punt).
+
+RULES (scripts/101-b4-rules.mjs)
+  hh_klussen.listRule/viewRule, GERICHT in de helper-tak, direct achter de
+  B2-voorwaarde (ouder_toestemming_op of vog_gezien_op):
+    && klus_goedgekeurd_op != "" && geboren_uiterlijk != ""
+    && @request.auth.geboortedatum != "" && @request.auth.geboortedatum <= geboren_uiterlijk
+  Een rule kan geen leeftijd uitrekenen; daarom zet de hook per klus de
+  uiterste geboortedatum en vergelijkt de rule alleen datums. De leeftijd
+  telt op de KLUSDAG (wie overmorgen 13 wordt, ziet een tuinklus van
+  overmorgen; bewust: zo oud is hij als hij het werk doet). De bewoner zelf,
+  de toegewezen helper en de familie: andere takken, ongewijzigd.
+  hh_klussen.createRule/updateRule GEWIKKELD:
+    (huidig) && ((coordinator) || (klus_goedgekeurd_op, klus_goedgekeurd_door,
+    klus_afgekeurd_op, klus_afkeur_reden, controle_markering, min_leeftijd en
+    geboren_uiterlijk niet in de body))
+  VOLGORDE: na 100 en 103. Draai 02, 06, 13, 41 of 80 daarna niet meer met
+  --apply zonder 101 opnieuw.
+
+HOOKS (deploy met scripts/103-hook-deploy.sh, alleen deze 3 bestanden)
+  hh_klusplaatsen_hulp.js (NIEUW, geen hook): KLUS_CATEGORIEEN,
+    OUDE_KLUSTYPES_MIN_LEEFTIJD, nlTijd, isAlleen18Plus, minLeeftijdVoorKlus,
+    geborenUiterlijk, isOudGenoeg, voorfilter, controleerNieuweKlus,
+    afkeurTekst, magNieuweKlusMelding. Getest zonder server.
+  hh_klusplaatsen.pb.js (NIEUW; laadt alfabetisch vóór hh_klussen.pb.js en
+  roept e.next() aan, zodat geocoding en de eerste logregel gewoon volgen):
+    - API-create hh_klussen: min_leeftijd, geboren_uiterlijk en
+      controle_markering door de server. Bewoner/familielid met status open:
+      omschrijving 5-300, foto, wanneer_van (niet voorbij, 5 min speling),
+      wanneer_tot (optioneel) na wanneer_van, nee_lijst_akkoord = ja; anders
+      400 met Nederlandse melding ("Voeg een foto van de klus toe. Zie je
+      geen fotoknop? Werk de app dan bij."). Begint ONGEKEURD.
+      Een concept (status concept) hoeft nog niet compleet; concept -> open
+      blijft (M6) en is daarna ongekeurd tot de meldkamer keurt.
+      Coordinator of superuser (TELEFONISCHE INGANG, punt 9; seed): geen
+      eisen, geen foto nodig, en meteen goedgekeurd (_door = coordinator).
+    - API-update hh_klussen: categorie of tijd anders -> leeftijd opnieuw;
+      omschrijving anders -> markering opnieuw. Wijzigt een bewoner/
+      familielid de INHOUD (omschrijving, foto, categorie, tijden, adres) van
+      een goedgekeurde klus, dan vervalt de goedkeuring (opnieuw nakijken).
+    - POST /api/hh/klussen/{id}/keuren  body {besluit, reden}
+      Alleen coordinator; alleen een open klus zonder helper.
+        goedkeuren: klus_goedgekeurd_op/_door, leeftijd opnieuw, logregel
+                    open -> open "goedgekeurd door de meldkamer". Die
+                    logregel laat hh_meldingen de helpers in de wijk een
+                    "nieuwe klus" sturen (gefilterd, zie hieronder).
+        afkeuren:   reden 5-300, klus_afgekeurd_op/_reden, status
+                    geannuleerd, logregel open -> geannuleerd "afgekeurd door
+                    de meldkamer: <reden>".
+      Antwoorden: 200 {klus, besluit, status}; 400 {reden: besluit|reden};
+      401; 403 {reden: rol}; 404; 409 {reden: status|algoedgekeurd}.
+      Geen nieuwe status in de 8-statusmachine: "wordt nagekeken" = open met
+      lege klus_goedgekeurd_op; afgekeurd = geannuleerd met klus_afgekeurd_op.
+    - onRecordCreate (model) hh_meldingen:
+        "nieuwe_klus" wordt NIET opgeslagen (geen e.next()) als de klus nog
+        niet gekeurd is of de ontvanger te jong is (zelfde grens als de
+        rule). hh_meldingen_hulp.js blijft ongemoeid; de teller in de
+        logregel "[hh_meldingen] N melding(en)" telt de overgeslagen mee.
+        "geannuleerd" aan de bewoner van een AFGEKEURDE klus: titel "Je klus
+        is afgekeurd", tekst met de reden.
+  hh_klussen.pb.js accepteren (BIJ): na wijk-check
+      409 {reden: "nietgekeurd"} "Deze klus wordt nog nagekeken door de
+          meldkamer."
+      403 {reden: "leeftijd"} "Deze klus is pas vanaf N jaar." — de route
+          rekent de grens zelf opnieuw uit (categorie + tijden), vertrouwt
+          de opgeslagen velden niet.
+  NIET aangepast: koppelen door de coordinator (hh_coordinator.pb.js) kijkt
+  niet naar leeftijd of keuring (open punt; de coordinator beslist zelf).
+
+SEED (scripts/104-b4-seed-keuren.mjs, dry-run standaard)
+  Alleen klussen met "[seed k" in de omschrijving: klus_goedgekeurd_op = nu
+  en min_leeftijd/geboren_uiterlijk zoals de hook. Andere open klussen van
+  vóór B4 (op prod 2 test-klussen) blijven ongekeurd: die staan in het
+  paneel bij "Klussen na te kijken". Zonder 104 worden 04 en 50 rood.
+
+B4CHECK (scripts/102-b4check.mjs, dry-run standaard)
+  Met --apply, eigen tijdelijke accounts "b4check-...@heitjehulp.invalid"
+  (coordinator, 2 bewoners, helpers van 11, 14, 17 en 25) en ±12 eigen
+  klussen met een testfoto, allemaal met lat/lon (geen Nominatim):
+  plaatsen (foto/omschrijving/vinkje/tijd verplicht, servervelden niet zelf
+  te zetten), ongekeurd onzichtbaar en niet te accepteren en geen melding,
+  alleen coordinator keurt, na goedkeuren ziet 14/25 de tuinklus en 11 niet
+  (ook niet los, accepteren 403 leeftijd), meldingen alleen aan wie oud
+  genoeg is, foto alleen met token van wie hem mag zien, de tijdregel (6
+  gevallen), opnieuw nakijken na een wijziging door de bewoner, afkeuren met
+  één melding met de reden, telefonische ingang zonder foto meteen
+  goedgekeurd; alles opgeruimd.
+  Lokaal bewezen tegen PocketBase 0.25.9 met het prod-schema: 124 groen.
+  Test zonder server: node --test backend/tests/*.test.mjs (122 tests).
+  04-rulecheck aangepast: plaatsen door oudere/familie met foto, vinkje en
+  begintijd; na de wijzigingstests k02/k11 terug op hun goedkeuring.
+
+UITROLLEN (volgorde; zie proefrit-b4.txt)
+  00-backup.mjs -> 100 --apply -> 103-hook-deploy.sh -> 101 --apply ->
+  104 --apply -> 102 --apply -> 82, 72, 62, 04, 50
