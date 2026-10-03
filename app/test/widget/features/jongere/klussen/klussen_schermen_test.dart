@@ -313,6 +313,35 @@ void main() {
   });
 
   group('J13 klusdetail', () {
+    testWidgets('vergoeding 0: "Vergoeding volgt" in de lijst', (tester) async {
+      await _pomp(
+        tester,
+        _Geval(
+          'J11 vergoeding 0',
+          HhPaden.jongere,
+          () => fakeKlussen(open: [testKlus(id: 'k-nul', vergoedingCenten: 0)]),
+        ),
+      );
+      expect(find.text(TekstenKlussenNl.vergoedingVolgt), findsOneWidget);
+      expect(find.textContaining('€ 0,00'), findsNothing);
+    });
+
+    testWidgets('vergoeding 0: "Vergoeding volgt" in het klusdetail', (
+      tester,
+    ) async {
+      await _pomp(
+        tester,
+        _Geval(
+          'J13 vergoeding 0',
+          HhPadenKlussen.klusDetail('k-nul'),
+          () => fakeKlussen(open: [testKlus(id: 'k-nul', vergoedingCenten: 0)]),
+        ),
+      );
+      expect(find.byType(KlusDetailScreen), findsOneWidget);
+      expect(find.text(TekstenKlussenNl.vergoedingVolgt), findsOneWidget);
+      expect(find.textContaining('€ 0,00'), findsNothing);
+    });
+
     testWidgets('B4: de foto van de bewoner staat bij de klus', (tester) async {
       await _pomp(
         tester,

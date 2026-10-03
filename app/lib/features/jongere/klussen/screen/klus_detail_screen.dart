@@ -282,9 +282,7 @@ class _Detail extends StatelessWidget {
           HhKaart(
             kop: TekstenKlussenNl.j13VergoedingKop,
             child: Text(
-              TekstenKlussenNl.vergoeding(
-                euroTekst(klus.vergoedingJongereCenten),
-              ),
+              vergoedingVoorHelper(klus.vergoedingJongereCenten),
               style: tekst.bodyLarge,
             ),
           ),
