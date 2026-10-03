@@ -4,26 +4,18 @@
 // Verder, foutmeldingen) blijven in teksten_nl.dart.
 
 abstract final class TekstenHulpvragerNl {
-  // Stappen
-  static const stappenTotaal = 4;
-  static const stapWat = 'Wat heeft u nodig';
-  static const stapWanneer = 'Wanneer';
-  static const stapWaar = 'Waar';
-  static const stapBevestigen = 'Bevestigen';
-
   // O1 Home
   static const homeHulpVragen = 'Hulp vragen';
   static const homeHulpVragenSemantiek =
       'Hulp vragen, begin een nieuwe hulpvraag';
-  static const homeMijnHulpvragen = 'Mijn hulpvragen';
-  static const homeMijnHulpvragenSemantiek = 'Bekijk mijn hulpvragen';
-  static const homeBelOns = 'Bel ons';
-  static String homeBelOnsSemantiek(String nummer) =>
-      'Bel ons, de meldkamer, $nummer';
   static const homeInstellingen = 'Instellingen';
-  static const homeInstellingenSemantiek = 'Open instellingen';
   static const homeMijnGegevens = 'Mijn gegevens';
-  static const homeMijnGegevensSemantiek = 'Bekijk en wijzig mijn gegevens';
+
+  // Hulp vragen op één pagina (3 okt, indeling naar BuurtHeld).
+  static const paginaTitel = 'Hulp vragen';
+  static const paginaKiesWat = 'Kies eerst wat u nodig heeft.';
+  static const paginaKiesWanneer = 'Kies nog een dag en een deel van de dag.';
+  static const paginaVulWaarIn = 'Vul uw adres helemaal in.';
 
   // Tabbalk van de oudere (3 okt, indeling naar BuurtHeld).
   static const tabStart = 'Start';
@@ -104,7 +96,6 @@ abstract final class TekstenHulpvragerNl {
   static const validatiePlaats = 'Vul uw plaats in.';
 
   // O5 Bevestigen
-  static const bevestigenTitel = 'Klopt dit?';
   static const bevestigenKaart = 'Uw hulpvraag';
   static const overzichtWat = 'Wat';
   static const overzichtWanneer = 'Wanneer';

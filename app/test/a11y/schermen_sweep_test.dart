@@ -31,9 +31,6 @@ final schermenPerRol = <HhRol?, List<String>>{
   HhRol.hulpvrager: [
     HhPaden.hulpvrager,
     HhPadenHulpvrager.hulpVragenWat,
-    HhPadenHulpvrager.hulpVragenWanneer,
-    HhPadenHulpvrager.hulpVragenWaar,
-    HhPadenHulpvrager.hulpVragenBevestigen,
     HhPadenHulpvrager.hulpVragenVerstuurd,
     HhPadenHulpvrager.gegevens,
     HhPadenStatus.hulpvragen,

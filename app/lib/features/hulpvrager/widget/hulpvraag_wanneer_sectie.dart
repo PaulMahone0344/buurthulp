@@ -1,41 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../app/navigatie.dart';
 import '../../../design/components/hh_keuzerij.dart';
 import '../../../design/components/hh_knop.dart';
-import '../../../design/components/hh_meld_balk.dart';
 import '../../../design/components/hh_scherm.dart';
-import '../../../design/components/hh_stapbalk.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
-import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
 import '../domein/wanneer.dart';
 import '../model/hulpvraag_concept.dart';
-import '../paden_hulpvrager.dart';
 import '../provider/concept_controller.dart';
 import '../provider/hulpvrager_providers.dart';
 
-/// O3, stap 2 van 4: wanneer. Eerst de dag (vandaag, morgen, kies een dag),
-/// dan het dagdeel (ochtend, middag, avond). "Kies een dag" opent een eigen
+/// Deel "Wanneer" van de hulpvraag-pagina (was O3). Eerst de dag (vandaag,
+/// morgen, kies een dag), dan het dagdeel. "Kies een dag" opent een eigen
 /// grote dagkiezer met de komende twee weken; geen Material-datumkiezer,
 /// die is Engels en heeft kleine raakvlakken.
-class HulpVragenWanneerScreen extends ConsumerStatefulWidget {
-  const HulpVragenWanneerScreen({super.key});
+class HulpvraagWanneerSectie extends ConsumerWidget {
+  const HulpvraagWanneerSectie({super.key});
 
   /// Hoever vooruit de dagkiezer reikt (vandaag meegerekend).
   static const dagenVooruit = 14;
-
-  @override
-  ConsumerState<HulpVragenWanneerScreen> createState() =>
-      _HulpVragenWanneerScreenState();
-}
-
-class _HulpVragenWanneerScreenState
-    extends ConsumerState<HulpVragenWanneerScreen> {
-  String? _melding;
 
   static const _dagKeuzes = [
     HhKeuze(
@@ -79,8 +64,11 @@ class _HulpVragenWanneerScreenState
     ),
   ];
 
-  Future<void> _kiesDagKeuze(HhDagKeuze keuze) async {
-    setState(() => _melding = null);
+  Future<void> _kiesDagKeuze(
+    BuildContext context,
+    WidgetRef ref,
+    HhDagKeuze keuze,
+  ) async {
     final controller = ref.read(conceptProvider.notifier);
     if (keuze != HhDagKeuze.andereDag) {
       controller.kiesDagKeuze(keuze);
@@ -89,33 +77,14 @@ class _HulpVragenWanneerScreenState
     final nu = ref.read(klokProvider)();
     final dag = await showDialog<DateTime>(
       context: context,
-      builder: (context) => _DagKiezer(
-        dagen: komendeDagen(nu, HulpVragenWanneerScreen.dagenVooruit),
-      ),
+      builder: (context) => _DagKiezer(dagen: komendeDagen(nu, dagenVooruit)),
     );
     if (dag == null) return;
     controller.kiesDag(dag);
   }
 
-  void _kiesDagdeel(HhDagdeel dagdeel) {
-    setState(() => _melding = null);
-    ref.read(conceptProvider.notifier).kiesDagdeel(dagdeel);
-  }
-
-  void _verder() {
-    final concept = ref.read(conceptProvider);
-    final dag = concept.dag;
-    final dagdeel = concept.dagdeel;
-    if (dag == null || dagdeel == null) return;
-    if (isVoorbij(dag, dagdeel, ref.read(klokProvider)())) {
-      setState(() => _melding = TekstenHulpvragerNl.wanneerVoorbij);
-      return;
-    }
-    context.push(HhPadenHulpvrager.hulpVragenWaar);
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final concept = ref.watch(conceptProvider);
     final nu = ref.watch(klokProvider)();
     final dichtheid = HhDichtheidScope.van(context);
@@ -124,54 +93,35 @@ class _HulpVragenWanneerScreenState
     final klein = HhRuimte.voor(HhRuimte.s, dichtheid);
     final dag = concept.dag;
 
-    return HhScherm(
-      titel: TekstenHulpvragerNl.wanneerTitel,
-      onTerug: () => terugOf(context, HhPadenHulpvrager.hulpVragenWat),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const HhStapbalk(
-            stap: 2,
-            totaal: TekstenHulpvragerNl.stappenTotaal,
-            titel: TekstenHulpvragerNl.stapWanneer,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HhKeuzerij<HhDagKeuze>(
+          semantiekLabel: TekstenHulpvragerNl.wanneerDagKeuzerij,
+          keuzes: _dagKeuzes,
+          geselecteerd: {?concept.dagKeuze},
+          onGewijzigd: (keuze) => _kiesDagKeuze(context, ref, keuze.first),
+        ),
+        if (dag != null) ...[
+          SizedBox(height: klein),
+          Text(
+            TekstenHulpvragerNl.dagGekozen(dagTekst(dag, nu)),
+            style: tekst.bodyLarge!.copyWith(fontWeight: FontWeight.w600),
           ),
           SizedBox(height: tussen),
-          HhKeuzerij<HhDagKeuze>(
-            semantiekLabel: TekstenHulpvragerNl.wanneerDagKeuzerij,
-            keuzes: _dagKeuzes,
-            geselecteerd: {if (concept.dagKeuze != null) concept.dagKeuze!},
-            onGewijzigd: (keuze) => _kiesDagKeuze(keuze.first),
+          Text(TekstenHulpvragerNl.wanneerDagdeel, style: tekst.titleLarge),
+          SizedBox(height: klein),
+          HhKeuzerij<HhDagdeel>(
+            semantiekLabel: TekstenHulpvragerNl.wanneerDagdeelKeuzerij,
+            keuzes: _dagdeelKeuzes,
+            geselecteerd: {?concept.dagdeel},
+            onGewijzigd: (keuze) =>
+                ref.read(conceptProvider.notifier).kiesDagdeel(keuze.first),
           ),
-          if (dag != null) ...[
-            SizedBox(height: klein),
-            Text(
-              TekstenHulpvragerNl.dagGekozen(dagTekst(dag, nu)),
-              style: tekst.bodyLarge!.copyWith(fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: tussen),
-            Text(TekstenHulpvragerNl.wanneerDagdeel, style: tekst.titleLarge),
-            SizedBox(height: klein),
-            HhKeuzerij<HhDagdeel>(
-              semantiekLabel: TekstenHulpvragerNl.wanneerDagdeelKeuzerij,
-              keuzes: _dagdeelKeuzes,
-              geselecteerd: {if (concept.dagdeel != null) concept.dagdeel!},
-              onGewijzigd: (keuze) => _kiesDagdeel(keuze.first),
-            ),
-            SizedBox(height: klein),
-            Text(TekstenHulpvragerNl.dagdeelUitleg, style: tekst.bodyMedium),
-          ],
-          if (_melding != null) ...[
-            SizedBox(height: tussen),
-            HhMeldBalk(soort: HhMeldSoort.waarschuwing, tekst: _melding!),
-          ],
-          SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
-          HhKnop(
-            label: TekstenNl.verder,
-            icoon: Icons.arrow_forward,
-            onPressed: concept.heeftWanneer ? _verder : null,
-          ),
+          SizedBox(height: klein),
+          Text(TekstenHulpvragerNl.dagdeelUitleg, style: tekst.bodyMedium),
         ],
-      ),
+      ],
     );
   }
 }
@@ -185,8 +135,7 @@ class _DagKiezer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dichtheid = HhDichtheidScope.van(context);
-    final klein = HhRuimte.voor(HhRuimte.s, dichtheid);
+    final klein = HhRuimte.voor(HhRuimte.s, HhDichtheidScope.van(context));
 
     return Dialog.fullscreen(
       child: HhScherm(

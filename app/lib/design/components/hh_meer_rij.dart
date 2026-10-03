@@ -54,7 +54,7 @@ class HhMeerRij extends StatelessWidget {
                       children: [
                         Text(
                           titel,
-                          style: tekst.titleMedium?.copyWith(
+                          style: tekst.bodyLarge?.copyWith(
                             color: HhKleuren.primair,
                             fontWeight: FontWeight.w700,
                           ),

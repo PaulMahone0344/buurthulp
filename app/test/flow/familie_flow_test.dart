@@ -9,7 +9,6 @@ import 'package:heitjehulp_app/features/hulpvrager/paden_hulpvrager.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/l10n/teksten_familie_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
-import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 
 import '../support/hh_familie_wikkel.dart';
 import '../support/hh_hulpvrager_wikkel.dart';
@@ -165,13 +164,10 @@ void main() {
       await tikKnop(tester, TekstenFamilieNl.f3HulpVragen(testOudereNaam));
 
       await tikTekst(tester, 'klusje in huis');
-      await tikKnop(tester, TekstenNl.verder);
       await tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
       await tikTekst(tester, TekstenHulpvragerNl.dagdeelMiddag);
-      await tikKnop(tester, TekstenNl.verder);
       // O4: het adres van de OUDERE staat al ingevuld.
       expect(find.text('Prins Bernhardlaan 12'), findsOneWidget);
-      await tikKnop(tester, TekstenNl.verder);
       await tikKnop(tester, TekstenHulpvragerNl.bevestigenAkkoord);
 
       final body = klusGateway.aangemaakteKlussen.single.alsBody;
@@ -226,11 +222,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tikTekst(tester, 'klusje in huis');
-      await tikKnop(tester, TekstenNl.verder);
       await tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
       await tikTekst(tester, TekstenHulpvragerNl.dagdeelMiddag);
-      await tikKnop(tester, TekstenNl.verder);
-      await tikKnop(tester, TekstenNl.verder);
       await tikKnop(tester, TekstenHulpvragerNl.bevestigenAkkoord);
       final body = klusGateway.aangemaakteKlussen.single.alsBody;
       expect(body['bron'], NieuweKlus.bronApp);

@@ -7,17 +7,8 @@ abstract final class HhPadenHulpvrager {
   static const _basis = HhPaden.hulpvrager;
   static const _hulpVragen = '$_basis/hulp-vragen';
 
-  /// O2 stap 1 van 4.
+  /// Hulp vragen op één pagina (was O2-O5 in vier stappen).
   static const hulpVragenWat = '$_hulpVragen/wat';
-
-  /// O3 stap 2 van 4.
-  static const hulpVragenWanneer = '$_hulpVragen/wanneer';
-
-  /// O4 stap 3 van 4.
-  static const hulpVragenWaar = '$_hulpVragen/waar';
-
-  /// O5 stap 4 van 4.
-  static const hulpVragenBevestigen = '$_hulpVragen/bevestigen';
 
   /// O6.
   static const hulpVragenVerstuurd = '$_hulpVragen/verstuurd';
