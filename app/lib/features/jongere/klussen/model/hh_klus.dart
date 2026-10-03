@@ -73,8 +73,8 @@ class HhKlus {
   /// server bij een helper meestuurt). Nooit het document zelf.
   final bool isJongereIdGecontroleerd;
 
-  /// M9: wie de klus plaatste (de oudere zelf, of een familielid namens
-  /// hem). F3 laat alleen bij eigen geplaatste klussen "stoppen" zien.
+  /// Wie de klus plaatste (de bewoner zelf, of de meldkamer bij een
+  /// telefonische klus).
   final String geplaatstDoorId;
 
   static const veldStatus = 'status';

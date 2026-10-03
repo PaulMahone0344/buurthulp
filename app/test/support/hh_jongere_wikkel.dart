@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
+import 'package:heitjehulp_app/core/pb/fake_ouder_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_scherm.dart';
@@ -120,6 +121,7 @@ Widget hhJongereWikkel(
   String pad, {
   required FakeProfielGateway profielGateway,
   FakeFotoKiezer? fotoKiezer,
+  FakeOuderGateway? ouderGateway,
   SessieState? sessie,
   bool urlOpenerLukt = true,
   HhDichtheid dichtheid = HhDichtheid.normaal,
@@ -131,6 +133,7 @@ Widget hhJongereWikkel(
     urlOpenerLukt: urlOpenerLukt,
     profielGateway: profielGateway,
     fotoKiezer: fotoKiezer ?? FakeFotoKiezer(),
+    ouderGateway: ouderGateway,
   );
   final router = GoRouter(
     initialLocation: pad,
@@ -162,6 +165,7 @@ Future<ProviderContainer> pompJongereApp(
   WidgetTester tester, {
   required FakeProfielGateway profielGateway,
   FakeFotoKiezer? fotoKiezer,
+  FakeOuderGateway? ouderGateway,
   GeheugenKeyValueStore? opslag,
   bool urlOpenerLukt = true,
 }) async {
@@ -171,6 +175,7 @@ Future<ProviderContainer> pompJongereApp(
     profielGateway: profielGateway,
     fotoKiezer: fotoKiezer ?? FakeFotoKiezer(),
     urlOpenerLukt: urlOpenerLukt,
+    ouderGateway: ouderGateway,
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(

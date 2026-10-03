@@ -85,10 +85,12 @@ describe('D4 systeembeheer', () => {
     expect(data.aanroepen).toContainEqual({ methode: 'zetGeblokkeerd', args: ['u1', true] })
     expect(await screen.findByText('Geblokkeerd')).toBeInTheDocument()
 
-    await user.selectOptions(screen.getByLabelText('Rol van Sami'), 'familie')
+    await user.selectOptions(screen.getByLabelText('Rol van Sami'), 'hulpvrager')
     await user.click(screen.getByRole('button', { name: 'Rol opslaan' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Rol wijzigen' }))
-    expect(data.aanroepen).toContainEqual({ methode: 'wijzigRol', args: ['u1', 'familie'] })
+    expect(data.aanroepen).toContainEqual({ methode: 'wijzigRol', args: ['u1', 'hulpvrager'] })
+    // B3 (K5): familie is geen keuze meer.
+    expect(within(screen.getByLabelText('Rol van Sami')).queryByRole('option', { name: 'Familie' })).not.toBeInTheDocument()
   })
 
   it('slaat een instelling op', async () => {

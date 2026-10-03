@@ -332,9 +332,17 @@ async function main() {
   check('helper in Tiel-West ziet de klus van een bewoner in "Tiel en omstreken"', await ziet(helpers.oudWest, k3));
   check('helper in Passewaaij ziet die ook', await ziet(helpers.oudPass, k3));
   check('helper in "Tiel en omstreken" ziet klussen in Tiel-West en Passewaaij', (await ziet(helpers.oudMet, kWest)) && (await ziet(helpers.oudMet, kPass)));
-  check('oud gedrag: helper in Tiel-West ziet Tiel-West wel, Passewaaij niet', (await ziet(helpers.oudWest, kWest)) && !(await ziet(helpers.oudWest, kPass)));
-  r = await route(helpers.oudWest.client, `/api/hh/klussen/${kPass.id}/accepteren`);
-  check(`oud gedrag: Tiel-West accepteert geen Passewaaij-klus (409 wijk, kreeg ${r.status} ${r.body?.reden})`, r.status === 409 && r.body?.reden === 'wijk');
+  // B3 (91-b3-wijken): zijn Tiel-West en Passewaaij allebei regio, dan
+  // passen ze bij elkaar (iedereen in Tiel ziet alle klussen).
+  if (west.regio === true && pass.regio === true) {
+    check('B3: helper in Tiel-West ziet Tiel-West en Passewaaij (beide regio)', (await ziet(helpers.oudWest, kWest)) && (await ziet(helpers.oudWest, kPass)));
+    r = await route(helpers.oudWest.client, `/api/hh/klussen/${kPass.id}/accepteren`);
+    check(`B3: Tiel-West accepteert een Passewaaij-klus (kreeg ${r.status})`, r.status === 200, JSON.stringify(r.body));
+  } else {
+    check('oud gedrag: helper in Tiel-West ziet Tiel-West wel, Passewaaij niet', (await ziet(helpers.oudWest, kWest)) && !(await ziet(helpers.oudWest, kPass)));
+    r = await route(helpers.oudWest.client, `/api/hh/klussen/${kPass.id}/accepteren`);
+    check(`oud gedrag: Tiel-West accepteert geen Passewaaij-klus (409 wijk, kreeg ${r.status} ${r.body?.reden})`, r.status === 409 && r.body?.reden === 'wijk');
+  }
   r = await route(helpers.oudMet.client, `/api/hh/klussen/${kWest.id}/accepteren`);
   check(`regio-helper accepteert een Tiel-West-klus (kreeg ${r.status})`, r.status === 200, JSON.stringify(r.body));
   r = await route(helpers.oudPass.client, `/api/hh/klussen/${k3.id}/accepteren`);

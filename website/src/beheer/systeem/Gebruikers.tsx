@@ -4,14 +4,13 @@
 
 import { useCallback, useState, type FormEvent } from 'react'
 import type { BeheerData } from '../data/beheerData'
-import type { Gebruiker, Rol } from '../data/types'
+import { ROLLEN, type Gebruiker, type Rol } from '../data/types'
 import { Bevestigvenster } from '../gedeeld/Bevestigvenster'
 import { Foutmelding } from '../gedeeld/Meldbalk'
 import { Pil } from '../gedeeld/Pil'
 import { useLaden } from '../gedeeld/useLaden'
 import { ROL_LABEL } from '../teksten'
 
-const ROLLEN: Rol[] = ['hulpvrager', 'jongere', 'familie', 'coordinator']
 const GEEN: Gebruiker[] = []
 
 type Handeling = { soort: 'rol'; gebruiker: Gebruiker; rol: Rol } | { soort: 'blok'; gebruiker: Gebruiker }

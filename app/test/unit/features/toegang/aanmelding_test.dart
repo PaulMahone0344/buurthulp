@@ -47,41 +47,33 @@ void main() {
     });
   });
 
-  group('herkenOuderContact', () {
-    test('herkent een e-mailadres', () {
-      expect(
-        herkenOuderContact(' ouder@voorbeeld.nl '),
-        const OuderEmail('ouder@voorbeeld.nl'),
-      );
+  group('valideerOuderEmail (B3: alleen e-mail, geen telefoon meer)', () {
+    test('een e-mailadres is goed', () {
+      expect(valideerOuderEmail(' ouder@voorbeeld.nl '), isNull);
     });
 
-    test('herkent een 06-nummer, ook met spaties, streepjes of +31', () {
+    test('leeg, een 06-nummer of onzin is fout', () {
       expect(
-        herkenOuderContact('06-12 34 56 78'),
-        const OuderTelefoon('0612345678'),
+        valideerOuderEmail(''),
+        TekstenAanmeldenNl.validatieOuderVerplicht,
       );
-      expect(
-        herkenOuderContact('+31 6 12345678'),
-        const OuderTelefoon('0612345678'),
-      );
-      expect(
-        herkenOuderContact('0031612345678'),
-        const OuderTelefoon('0612345678'),
-      );
+      for (final fout in ['06 12 34 56 78', 'mama', 'mama@']) {
+        expect(
+          valideerOuderEmail(fout),
+          TekstenAanmeldenNl.validatieOuderOngeldig,
+          reason: fout,
+        );
+      }
     });
 
-    test('vast nummer, te kort of onzin is niets', () {
-      expect(herkenOuderContact('0344123456'), isNull);
-      expect(herkenOuderContact('061234567'), isNull);
-      expect(herkenOuderContact('mama'), isNull);
-      expect(herkenOuderContact(''), isNull);
-    });
-
-    test('velden: e-mail naar ouder_email, nummer naar ouder_telefoon', () {
-      expect(const OuderEmail('a@b.nl').velden, {'ouder_email': 'a@b.nl'});
-      expect(const OuderTelefoon('0612345678').velden, {
-        'ouder_telefoon': '0612345678',
-      });
+    test('niet je eigen adres', () {
+      expect(
+        valideerOuderEmail(
+          'Daan@voorbeeld.nl',
+          eigenEmail: 'daan@voorbeeld.nl ',
+        ),
+        TekstenAanmeldenNl.validatieOuderEigen,
+      );
     });
   });
 
@@ -152,7 +144,7 @@ void main() {
         geboortedatum: DateTime.utc(2012, 5, 14),
         postcode: '4003 ab',
         huisnummer: '7',
-        ouder: const OuderTelefoon('0612345678'),
+        ouderEmail: ' Mama@Voorbeeld.nl ',
       );
       expect(aanmelding.rol, HhRol.jongere);
       expect(aanmelding.naam, 'Daan');
@@ -160,7 +152,7 @@ void main() {
         'geboortedatum': '2012-05-14T00:00:00.000Z',
         'postcode': '4003 AB',
         'huisnummer': '7',
-        'ouder_telefoon': '0612345678',
+        'ouder_email': 'mama@voorbeeld.nl',
       });
     });
 

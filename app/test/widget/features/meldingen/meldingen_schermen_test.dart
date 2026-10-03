@@ -270,15 +270,6 @@ void main() {
       },
     );
 
-    testWidgets('familie: het belletje staat op de landing', (tester) async {
-      await tester.pumpWidget(
-        hhMeldingenWikkel(HhPaden.familie, rol: HhRol.familie),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byType(MeldingenBel), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
     testWidgets('oudere: geen belletje en geen teller op O1', (tester) async {
       await tester.pumpWidget(
         hhMeldingenWikkel(

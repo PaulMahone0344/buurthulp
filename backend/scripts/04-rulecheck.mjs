@@ -222,13 +222,29 @@ async function main() {
   await magNiet('oudere 1 kan klus van oudere 2 niet direct bekijken', () => hv1.collection('hh_klussen').getOne(K.k03));
   const klussenJ1 = await j1.collection('hh_klussen').getFullList();
   check('jongere 1 (Tiel-West) ziet open klussen in eigen wijk (k02, k11)', heeft(klussenJ1, K.k02) && heeft(klussenJ1, K.k11));
-  check('jongere 1 ziet open klus in Passewaaij NIET (k03)', !heeft(klussenJ1, K.k03));
+  // B3 (91-b3-wijken): zijn Tiel-West en Passewaaij allebei regio, dan
+  // passen ze bij elkaar en ziet jongere 1 de Passewaaij-klus juist WEL.
+  const wijkenTiel = await su.collection('hh_wijken').getFullList({ filter: 'gemeente = "Tiel"' });
+  const tielRegio = ['Tiel-West', 'Passewaaij'].every((w) => wijkenTiel.some((r) => r.wijk === w && r.regio === true));
+  if (tielRegio) {
+    check('jongere 1 ziet open klus in Passewaaij (k03) — Tiel-wijken zijn regio (B3)', heeft(klussenJ1, K.k03));
+  } else {
+    check('jongere 1 ziet open klus in Passewaaij NIET (k03)', !heeft(klussenJ1, K.k03));
+  }
   check('jongere 1 ziet eigen toegewezen klussen (k04, k07)', heeft(klussenJ1, K.k04) && heeft(klussenJ1, K.k07));
   check('jongere 1 ziet concept van oudere 1 NIET (k01)', !heeft(klussenJ1, K.k01));
   check('jongere 1 ziet klus toegewezen aan jongere 2 NIET (k05)', !heeft(klussenJ1, K.k05));
-  await magNiet('jongere 1 kan k03 (andere wijk) niet direct bekijken', () => j1.collection('hh_klussen').getOne(K.k03));
+  if (tielRegio) {
+    await mag('jongere 1 kan k03 (Passewaaij) direct bekijken — regio (B3)', () => j1.collection('hh_klussen').getOne(K.k03));
+  } else {
+    await magNiet('jongere 1 kan k03 (andere wijk) niet direct bekijken', () => j1.collection('hh_klussen').getOne(K.k03));
+  }
   const klussenJ3 = await j3.collection('hh_klussen').getFullList();
-  check('jongere 3 (Passewaaij) ziet k03 wel, k02 niet', heeft(klussenJ3, K.k03) && !heeft(klussenJ3, K.k02));
+  if (tielRegio) {
+    check('jongere 3 (Passewaaij) ziet k03 en k02 — regio (B3)', heeft(klussenJ3, K.k03) && heeft(klussenJ3, K.k02));
+  } else {
+    check('jongere 3 (Passewaaij) ziet k03 wel, k02 niet', heeft(klussenJ3, K.k03) && !heeft(klussenJ3, K.k02));
+  }
   const klussenFam = await fam.collection('hh_klussen').getFullList();
   check('familielid ziet alle klussen van gekoppelde oudere 1', ['k01', 'k02', 'k04', 'k05', 'k07', 'k09', 'k11', 'k12'].every((k) => heeft(klussenFam, K[k])));
   check('familielid ziet klussen van ongekoppelde oudere 2 NIET', !['k03', 'k06', 'k08', 'k10'].some((k) => heeft(klussenFam, K[k])));

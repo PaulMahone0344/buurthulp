@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../features/coordinator/coordinator_guard.dart';
 import '../features/coordinator/coordinator_routes.dart';
 import '../features/coordinator/screen/coordinator_stub_screen.dart';
-import '../features/familie/familie_routes.dart';
-import '../features/familie/screen/familie_stub_screen.dart';
 import '../features/hulpvrager/beoordelen/beoordelen_routes.dart';
 import '../features/hulpvrager/hulpvrager_routes.dart';
 import '../features/hulpvrager/provider/hulpvrager_providers.dart'
@@ -146,10 +144,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             hhTabPagina(state, const JongereStubScreen()),
       ),
       GoRoute(
-        path: HhPaden.familie,
-        builder: (context, state) => const FamilieStubScreen(),
-      ),
-      GoRoute(
         path: HhPaden.coordinator,
         pageBuilder: (context, state) =>
             hhTabPagina(state, const CoordinatorStubScreen()),
@@ -164,7 +158,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ...beoordelenRoutes(),
       ...meldingenRoutes(),
       ...veiligheidRoutes(),
-      ...familieRoutes(),
       // Alleen in debug-builds; een release kent dit pad niet.
       if (kDebugMode)
         GoRoute(

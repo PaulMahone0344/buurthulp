@@ -16,7 +16,7 @@ enum IncidentSoort {
 
 /// O11: een incident melden via de gewone API (createRule: melder =
 /// jijzelf; met een klus alleen als je deelnemer bent). De hook maakt er
-/// meldingen van voor de coordinatoren (en bij nood het familielid).
+/// meldingen van voor de coordinatoren.
 abstract interface class IncidentGateway {
   /// Geeft het id van het nieuwe incident.
   Future<Result<String>> meld({

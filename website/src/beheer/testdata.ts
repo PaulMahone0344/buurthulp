@@ -63,6 +63,9 @@ export function profiel(o: Partial<Profiel>): Profiel {
     screeningNotitie: '',
     bijgewerktOp: '2026-09-18T10:00:00.000Z',
     documentFotoUrl: 'https://pb.test/id.jpg?token=t',
+    ouderToestemmingOp: '',
+    ouderAvp: null,
+    ouderStatus: '',
     ...o,
   }
 }

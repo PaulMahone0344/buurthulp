@@ -11,7 +11,6 @@ import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../theme.dart';
-import '../../familie/provider/hulpvraag_namens.dart';
 import '../../toegang/domein/werkgebied.dart';
 import '../../toegang/model/hh_rol.dart';
 import '../../toegang/provider/sessie_providers.dart';
@@ -94,13 +93,6 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
     switch (result) {
       case Ok<GeplaatsteHulpvraag>():
         ref.read(conceptProvider.notifier).wis();
-        // M9 (F2): namens een oudere terug naar F3 van die oudere.
-        final namens = ref.read(actieveNamensProvider);
-        if (namens != null) {
-          ref.read(hulpvraagNamensProvider.notifier).wis();
-          context.go(namens.naPlaatsen);
-          return;
-        }
         // go, geen push: terug vanaf O6 bestaat niet.
         context.go(HhPadenHulpvrager.hulpVragenVerstuurd);
       case Err<GeplaatsteHulpvraag>(:final fout):

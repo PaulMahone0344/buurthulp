@@ -8,7 +8,7 @@ import '../../../theme.dart';
 import '../paden_meldingen.dart';
 import '../provider/meldingen_providers.dart';
 
-/// Het belletje met de ongelezen-teller (jongere, familie, coordinator).
+/// Het belletje met de ongelezen-teller (jongere, coordinator).
 /// Tik opent het meldingen-overzicht. Raakvlak = knophoogte uit theme.dart;
 /// de schermlezer hoort "Meldingen, 2 ongelezen".
 class MeldingenBel extends ConsumerWidget {

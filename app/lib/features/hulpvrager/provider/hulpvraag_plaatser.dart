@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/hh_fout.dart';
 import '../../../core/result.dart';
-import '../../familie/provider/hulpvraag_namens.dart';
 import '../domein/adres.dart';
 import '../domein/bedragen.dart';
 import '../domein/wanneer.dart';
@@ -32,12 +31,10 @@ class HulpvraagPlaatser {
       return Result.err(const HhFout(HhFoutSoort.ongeldigeInvoer));
     }
     final tijdvak = tijdvakVoor(dag, dagdeel);
-    // M9 (F2): een familielid plaatst namens de gekozen oudere.
-    final namens = _ref.read(actieveNamensProvider);
     final klus = NieuweKlus(
-      hulpvragerId: namens?.oudereId ?? gebruikerId,
+      hulpvragerId: gebruikerId,
       geplaatstDoorId: gebruikerId,
-      bron: namens == null ? NieuweKlus.bronApp : NieuweKlus.bronFamilie,
+      bron: NieuweKlus.bronApp,
       klustypeId: klustype.id,
       omschrijving: concept.toelichting.trim(),
       adres: stelAdresSamen(

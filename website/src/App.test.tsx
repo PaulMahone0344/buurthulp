@@ -123,4 +123,13 @@ describe('HeitjeHulp voorpagina', () => {
 
     expect(await screen.findByRole('heading', { name: /Inloggen voor de meldkamer/ })).toBeInTheDocument()
   })
+
+describe('B3 ouder-pagina', () => {
+  it('#/ouder opent de ouder-pagina (stap 1) en niet de voorpagina', async () => {
+    window.location.hash = '#/ouder'
+    render(<App />)
+    expect(await screen.findByRole('heading', { level: 1, name: 'Je kind wil helper worden bij HeitjeHulp' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Hoofdnavigatie' })).not.toBeInTheDocument()
+  })
+})
 })

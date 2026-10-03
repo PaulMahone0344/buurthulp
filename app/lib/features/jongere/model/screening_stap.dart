@@ -3,22 +3,28 @@ import 'package:flutter/foundation.dart';
 import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_jongere_nl.dart';
 import '../../toegang/domein/aanmelding.dart';
+import '../ouder/model/hh_ouder_stand.dart';
 import '../paden_jongere.dart';
 import 'hh_profiel.dart';
 import 'hh_screening_status.dart';
 
 /// Alles wat de aanmeldschermen van de helper nodig hebben, in een object:
-/// het profiel (null zolang het nog niet bestaat) en de accountvelden uit
-/// hh_users.
+/// het profiel (null zolang het nog niet bestaat), de accountvelden uit
+/// hh_users en (B3) de stand van de ouder-toestemming.
 @immutable
 class ScreeningGegevens {
   const ScreeningGegevens({
     this.profiel,
     this.account = const HhAccountGegevens(),
+    this.ouder,
   });
 
   final HhProfiel? profiel;
   final HhAccountGegevens account;
+
+  /// B3: GET /api/hh/ouder/status, alleen voor een helper onder 18. Null:
+  /// niet opgehaald of niet gelukt (dan geldt alleen ouder_toestemming_op).
+  final HhOuderStand? ouder;
 
   /// Zonder profiel is de status nieuw: er is nog niets ingediend.
   HhScreeningStatus get verificatiestatus =>
@@ -32,10 +38,15 @@ class ScreeningGegevens {
     return geboren == null ? null : isMinderjarig(geboren, vandaag);
   }
 
-  ScreeningGegevens copyWith({HhProfiel? profiel, HhAccountGegevens? account}) {
+  ScreeningGegevens copyWith({
+    HhProfiel? profiel,
+    HhAccountGegevens? account,
+    HhOuderStand? ouder,
+  }) {
     return ScreeningGegevens(
       profiel: profiel ?? this.profiel,
       account: account ?? this.account,
+      ouder: ouder ?? this.ouder,
     );
   }
 
@@ -43,10 +54,11 @@ class ScreeningGegevens {
   bool operator ==(Object other) =>
       other is ScreeningGegevens &&
       other.profiel == profiel &&
-      other.account == account;
+      other.account == account &&
+      other.ouder == ouder;
 
   @override
-  int get hashCode => Object.hash(profiel, account);
+  int get hashCode => Object.hash(profiel, account, ouder);
 }
 
 /// Wat een helper na het aanmeldformulier nog doet (B2): een foto van zijn

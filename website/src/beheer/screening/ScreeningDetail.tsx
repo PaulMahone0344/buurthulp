@@ -42,6 +42,22 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
   const [gelukt, setGelukt] = useState('')
   const [bezig, setBezig] = useState(false)
   const signaal = vogSignaal(profiel.vogGeldigTot, nu())
+  const [ouderStatus, setOuderStatus] = useState(profiel.ouderStatus)
+
+  async function ouderVrij() {
+    setGelukt('')
+    setFout('')
+    setBezig(true)
+    try {
+      await data.ouderVrijgeven(profiel.gebruikerId)
+      setOuderStatus('vrijgegeven')
+      setGelukt(`${profiel.naam} kan de ouder weer een mail sturen.`)
+    } catch (e) {
+      setFout(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBezig(false)
+    }
+  }
 
   async function besluit(verificatiestatus: Screeningbesluit['verificatiestatus']) {
     const b: Screeningbesluit = { verificatiestatus, notitie, vogStatus, vogGeldigTot, ibanGeverifieerd, vogGezienOp }
@@ -87,6 +103,28 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
         <dt>IBAN</dt>
         <dd>
           {profiel.iban || 'niet ingevuld'} {profiel.ibanGeverifieerd ? '(geverifieerd)' : '(niet geverifieerd)'}
+        </dd>
+        {/* B3: alleen lezen. De ouder geeft toestemming via de ouder-pagina;
+            de meldkamer zet het nooit zelf. */}
+        <dt>Ouder</dt>
+        <dd>
+          {profiel.ouderToestemmingOp
+            ? `Ouder gaf toestemming op ${toonDatum(profiel.ouderToestemmingOp)}`
+            : 'Geen toestemming van een ouder (nodig onder 18)'}
+          {profiel.ouderAvp === null ? null : (
+            <span className="admin-muted"> · {profiel.ouderAvp ? 'AVP: ja' : 'AVP: nee'}</span>
+          )}
+          {/* B3: na intrekken mag het kind pas weer mailen als de meldkamer
+              dat toestaat (eerst contact; B11 maakt hier een wachtrij van). */}
+          {ouderStatus === 'ingetrokken' ? (
+            <>
+              <br />
+              <span className="beheer-signaal">Ouder trok de toestemming in.</span>{' '}
+              <button className="mini-btn mini-btn--ghost" type="button" disabled={bezig} onClick={() => void ouderVrij()}>
+                Kind mag ouder opnieuw mailen
+              </button>
+            </>
+          ) : null}
         </dd>
         <dt>Over mij</dt>
         <dd>{profiel.overMij || 'niet ingevuld'}</dd>

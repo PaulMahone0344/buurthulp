@@ -63,6 +63,8 @@ export interface BeheerData {
   /** Profielen van alle jongeren, met bestandstoken in de foto-url's. */
   profielen(): Promise<Profiel[]>
   beoordeel(profielId: string, besluit: Screeningbesluit): Promise<void>
+  /** B3: de ouder trok in; de meldkamer laat het kind de ouder opnieuw mailen. */
+  ouderVrijgeven(helperId: string): Promise<void>
 
   // ---- D4 systeembeheer -----------------------------------------------
   wijken(): Promise<Wijk[]>

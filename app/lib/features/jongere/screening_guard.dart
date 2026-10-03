@@ -5,7 +5,9 @@ import '../toegang/model/hh_rol.dart';
 import '../toegang/model/sessie_state.dart';
 import 'domein/helper_wacht.dart';
 import 'klussen/paden_klussen.dart';
+import 'model/hh_screening_status.dart';
 import 'model/screening_stap.dart';
+import 'ouder/model/hh_ouder_stand.dart';
 import 'paden_jongere.dart';
 
 /// Uitbreiding van de router-guard (M3, B2). Loopt pas als
@@ -40,9 +42,21 @@ String? screeningRedirect(
   }
   if (stand is! AsyncData<ScreeningGegevens>) return null;
   final wacht = helperWacht(stand.value, klok());
-  if (wacht.isAanmelden) return HhPadenJongere.overzicht;
+  if (wacht.isAanmelden) {
+    return moetEerstNaarOuder(stand.value, klok())
+        ? HhPadenOuder.ouder
+        : HhPadenJongere.overzicht;
+  }
   if (wacht.heeftBalk && locatie.startsWith('${HhPadenKlussen.klus}/')) {
     return HhPaden.jongere;
   }
   return null;
 }
+
+/// B3: net aangemeld, onder 18 en er ging nog geen mail naar de ouder: dan
+/// eerst de stap "Ouder" (die stuurt de mail meteen). Zonder stand (route
+/// nog niet op de server) gewoon naar "Je aanmelding", zoals in B2.
+bool moetEerstNaarOuder(ScreeningGegevens gegevens, DateTime vandaag) =>
+    gegevens.verificatiestatus == HhScreeningStatus.nieuw &&
+    gegevens.isMinderjarigOp(vandaag) == true &&
+    gegevens.ouder?.status == HhOuderStatus.geen;

@@ -116,4 +116,51 @@ describe('D2 screening', () => {
     expect(await within(detail).findByRole('status')).toHaveTextContent('Sami is afgewezen.')
     expect(data.stand.profielen[0].verificatiestatus).toBe('afgewezen')
   })
+
+  it('B3: toont ouder-toestemming en AVP alleen lezen, zonder knop om het zelf te zetten', async () => {
+    const data = new FakeBeheerData(
+      {
+        profielen: [
+          profiel({ id: 'p1', naam: 'Daan', ouderToestemmingOp: '2026-10-04T10:00:00.000Z', ouderAvp: true }),
+          profiel({ id: 'p2', naam: 'Fleur', ouderToestemmingOp: '', ouderAvp: null }),
+        ],
+      },
+      COORDINATOR,
+    )
+    opzet(data, { jongere: 'p1' })
+    const detail = await screen.findByRole('region', { name: 'Screening van Daan' })
+    expect(within(detail).getByText(/Ouder gaf toestemming op 4 oktober 2026/)).toBeInTheDocument()
+    expect(within(detail).getByText(/AVP: ja/)).toBeInTheDocument()
+    expect(within(detail).queryByRole('checkbox', { name: /ouder/i })).not.toBeInTheDocument()
+    expect(within(detail).queryByRole('button', { name: /toestemming/i })).not.toBeInTheDocument()
+  })
+
+  it('B3: zonder ouder-toestemming staat er "nog niet gegeven"', async () => {
+    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p2', naam: 'Fleur' })] }, COORDINATOR)
+    opzet(data, { jongere: 'p2' })
+    const detail = await screen.findByRole('region', { name: 'Screening van Fleur' })
+    expect(within(detail).getByText(/Geen toestemming van een ouder/)).toBeInTheDocument()
+    expect(within(detail).queryByText(/AVP/)).not.toBeInTheDocument()
+  })
+
+  it('B3: ouder trok in -> de meldkamer laat het kind opnieuw mailen (alleen dan een knop)', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      { profielen: [profiel({ id: 'p1', gebruikerId: 'j1', naam: 'Daan', ouderStatus: 'ingetrokken', ouderAvp: true })] },
+      COORDINATOR,
+    )
+    opzet(data, { jongere: 'p1' })
+    const detail = await screen.findByRole('region', { name: 'Screening van Daan' })
+    expect(within(detail).getByText(/Ouder trok de toestemming in/)).toBeInTheDocument()
+    await user.click(within(detail).getByRole('button', { name: 'Kind mag ouder opnieuw mailen' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'ouderVrijgeven', args: ['j1'] })
+    expect(await within(detail).findByText(/Daan kan de ouder weer een mail sturen/)).toBeInTheDocument()
+  })
+
+  it('B3: zonder intrekken geen vrijgeef-knop', async () => {
+    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', naam: 'Daan', ouderStatus: 'gegeven' })] }, COORDINATOR)
+    opzet(data, { jongere: 'p1' })
+    const detail = await screen.findByRole('region', { name: 'Screening van Daan' })
+    expect(within(detail).queryByRole('button', { name: 'Kind mag ouder opnieuw mailen' })).not.toBeInTheDocument()
+  })
 })

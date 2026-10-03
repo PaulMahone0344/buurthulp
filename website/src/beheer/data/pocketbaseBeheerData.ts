@@ -23,8 +23,10 @@ import type {
   Koppelkandidaat,
   Oudere,
   Profiel,
+  Rol,
   Wijk,
 } from './types'
+import { ROLLEN } from './types'
 
 const MELDING_GEEN_COORDINATOR =
   'Dit beheerpaneel is alleen voor coordinatoren. Je bent weer uitgelogd.'
@@ -62,7 +64,7 @@ export function naarKlus(r: Uitgebreid): Klus {
   return {
     id: r.id,
     status: tekst(r.status) as Klus['status'],
-    bron: tekst(r.bron) as Klus['bron'],
+    bron: tekst(r.bron) === 'app' || tekst(r.bron) === 'telefoon' ? (tekst(r.bron) as Klus['bron']) : '',
     omschrijving: tekst(r.omschrijving),
     adres: tekst(r.adres),
     aangemaaktOp: naarIso(r.created),
@@ -97,9 +99,13 @@ export function naarIncident(r: Uitgebreid): Incident {
   }
 }
 
+/** B3: de rij in hh_ouder_toestemming hangt aan de helper (terugverwijzing). */
+const OUDER_RIJ = 'hh_ouder_toestemming_via_helper'
+
 export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => string): Profiel {
   const gebruiker = uitgebreid(r, 'gebruiker')
   const wijk = gebruiker ? uitgebreid(gebruiker, 'wijk') : undefined
+  const ouderRij = gebruiker ? uitgebreid(gebruiker, OUDER_RIJ) : undefined
   const document = tekst(r.document_foto)
   return {
     id: r.id,
@@ -118,6 +124,9 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     screeningNotitie: tekst(r.screening_notitie),
     bijgewerktOp: naarIso(r.updated),
     documentFotoUrl: document ? bestandUrl(document) : '',
+    ouderToestemmingOp: naarIso(gebruiker?.ouder_toestemming_op),
+    ouderAvp: ouderRij ? ouderRij.avp_verklaard === true : null,
+    ouderStatus: tekst(ouderRij?.status),
   }
 }
 
@@ -159,7 +168,7 @@ export function naarGebruiker(r: RecordModel): Gebruiker {
     id: r.id,
     naam: tekst(r.naam),
     email: tekst(r.email),
-    rol: tekst(r.rol) as Gebruiker['rol'],
+    rol: (ROLLEN as string[]).includes(tekst(r.rol)) ? (tekst(r.rol) as Rol) : '',
     telefoon: tekst(r.telefoon),
     geblokkeerd: r.geblokkeerd === true,
     werkgebiedStatus: tekst(r.werkgebied_status) as Gebruiker['werkgebiedStatus'],
@@ -376,11 +385,19 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
         const records = await col('hh_profielen').getFullList({
           filter: 'gebruiker.rol = "jongere"',
           sort: '-updated',
-          expand: 'gebruiker,gebruiker.wijk',
+          // B3: alleen lezen; de coordinator mag hh_ouder_toestemming lezen
+          // (de hash-velden zijn hidden en komen nooit mee).
+          expand: `gebruiker,gebruiker.wijk,gebruiker.${OUDER_RIJ}`,
         })
         // document_foto is PROTECTED: zonder bestandstoken 404.
         const token = records.length ? await pb.files.getToken() : ''
         return records.map((r) => naarProfiel(r, (bestand) => pb.files.getURL(r, bestand, { token })))
+      }),
+
+    // B3: na intrekken mag het kind pas weer mailen als de meldkamer dit doet.
+    ouderVrijgeven: (helperId) =>
+      metFout(async () => {
+        await pb.send('/api/hh/ouder/vrijgeven', { method: 'POST', body: { helper: helperId } })
       }),
 
     beoordeel: (profielId, besluit) =>
