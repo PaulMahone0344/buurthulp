@@ -167,10 +167,16 @@ async function voorwaarden(su) {
   check(`oude klustypes (${oud.length}) niet actief en met een leeftijd`, oud.every((t) => !t.actief && t.min_leeftijd >= 10), oud.map((t) => `${t.naam}:${t.min_leeftijd}`).join(' '));
   const r = await route(anonClient(), '/api/hh/klussen/bestaatniet/keuren', { besluit: 'goedkeuren' });
   check(`keur-route bestaat (anoniem 401, kreeg ${r.status})`, r.status === 401, 'draai 103-hook-deploy.sh');
-  const seedOngekeurd = await su.collection('hh_klussen').getFullList({
-    filter: su.filter('omschrijving ~ {:merk} && klus_goedgekeurd_op = ""', { merk: SEED_MERK }),
-  });
-  check('alle seed-klussen zijn goedgekeurd (104)', seedOngekeurd.length === 0, `${seedOngekeurd.length} ongekeurd — draai 104 --apply`);
+  // Zonder het veld (100 nog niet gedraaid) weigert PocketBase het filter.
+  const seedOngekeurd = await su
+    .collection('hh_klussen')
+    .getFullList({ filter: su.filter('omschrijving ~ {:merk} && klus_goedgekeurd_op = ""', { merk: SEED_MERK }) })
+    .catch(() => null);
+  check(
+    'alle seed-klussen zijn goedgekeurd (104)',
+    seedOngekeurd !== null && seedOngekeurd.length === 0,
+    seedOngekeurd === null ? 'veld ontbreekt — draai 100 en 104 --apply' : `${seedOngekeurd.length} ongekeurd — draai 104 --apply`,
+  );
   return { perNaam, regio: (await su.collection('hh_wijken').getFullList({ filter: su.filter('wijk = {:w}', { w: REGIO_WIJK.wijk }) }))[0] };
 }
 

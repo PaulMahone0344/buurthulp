@@ -41,7 +41,9 @@ async function main() {
   logMode();
   const klussenCol = await pb.collections.getOne(assertHh('hh_klussen'));
   if (!klussenCol.fields.some((f) => f.name === 'geboren_uiterlijk')) {
-    throw new Error('hh_klussen.geboren_uiterlijk ontbreekt — eerst 100-b4-velden.mjs --apply.');
+    const melding = 'hh_klussen.geboren_uiterlijk ontbreekt — eerst 100-b4-velden.mjs --apply.';
+    if (APPLY) throw new Error(melding);
+    console.log(`! ${melding} (dry-run gaat door)`);
   }
   const types = new Map((await pb.collection('hh_klustypes').getFullList()).map((t) => [t.id, t]));
   const klussen = await pb.collection('hh_klussen').getFullList({ sort: 'created' });
@@ -54,7 +56,9 @@ async function main() {
       continue;
     }
     const type = types.get(k.klustype);
-    const plan = seedPlan(k, type?.min_leeftijd);
+    // Vóór 100 --apply heeft het type nog geen min_leeftijd: dan zoals 100 hem zet.
+    const typeMin = type?.min_leeftijd ?? plaatsHulp.OUDE_KLUSTYPES_MIN_LEEFTIJD[type?.naam];
+    const plan = seedPlan(k, typeMin);
     const velden = Object.keys(plan);
     const merk = String(k.omschrijving).match(/\[seed k\d+\]/)?.[0] ?? k.id;
     if (!velden.length) {
