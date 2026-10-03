@@ -32,7 +32,7 @@ describe('HeitjeHulp voorpagina', () => {
     for (const kop of [
       /Een klein klusje, iemand uit de buurt/,
       /in vier stappen/,
-      /Wat kan wel en wat niet/,
+      /Wat kan er/,
       /Bewoners, helpers, ouders en de meldkamer/,
       /Wij bemiddelen. Wij zijn geen werkgever/,
       /Help je buurt en verdien je zakgeld/,

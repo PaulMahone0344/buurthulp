@@ -107,14 +107,6 @@ export const welDoen: string[] = [
   'Kleine klusjes in en om het huis',
 ]
 
-export const nietDoen: string[] = [
-  'Zorg, zoals wassen of medicijnen geven',
-  'Gevaarlijk werk, zoals hoog op een ladder of aan stroom',
-  'Geldzaken of post van iemand regelen',
-  'Betalen buiten de app om of contant geld',
-  'Werk dat een vakman hoort te doen',
-]
-
 export const rollen: Rol[] = [
   {
     icon: 'House',

@@ -24,7 +24,6 @@ import {
   UserPlus,
   Users,
   Wallet,
-  XCircle,
 } from 'lucide-react'
 import heroImage from '../../assets/heitjehulp-hero.png'
 import {
@@ -38,7 +37,6 @@ import {
   kaders,
   klusTypes,
   navLinks,
-  nietDoen,
   partnerPunten,
   processSteps,
   rollen,
@@ -210,7 +208,7 @@ export function LandingPage() {
               ))}
             </ol>
 
-            <h3 className="lp-subkop">Wat kan wel en wat niet</h3>
+            <h3 className="lp-subkop">Wat kan er</h3>
             <div className="lp-delivery lp-weldoen">
               <div className="lp-delivery__col">
                 <h3 className="lp-delivery__title">
@@ -220,19 +218,6 @@ export function LandingPage() {
                   {welDoen.map((item) => (
                     <li key={item}>
                       <CheckCircle2 size={18} aria-hidden="true" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="lp-delivery__col lp-delivery__col--alt">
-                <h3 className="lp-delivery__title">
-                  <XCircle size={20} /> Dit kan niet
-                </h3>
-                <ul className="lp-checklist lp-checklist--niet">
-                  {nietDoen.map((item) => (
-                    <li key={item}>
-                      <XCircle size={18} aria-hidden="true" />
                       {item}
                     </li>
                   ))}
