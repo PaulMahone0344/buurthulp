@@ -76,3 +76,8 @@ BEANTWOORD DOOR IBRAHIM (3 okt)
 VRAGEN VOOR IBRAHIM
   1. Tiel-West en Passewaaij: mogen die later (na B2) ook "regio" worden, zodat alle helpers in Tiel alle klussen zien? Nu blijven ze onderling apart.
   2. 20 km rond Tiel raakt ook Culemborg, Geldermalsen, Zaltbommel en Wijk bij Duurstede: is dat de bedoeling?
+
+BESLUITEN IBRAHIM (3 okt, na aanvulling werkgebied)
+- Straal blijft 20 km rond Tiel; Culemborg, Geldermalsen, Zaltbommel en Wijk bij Duurstede horen erbij.
+- Tiel-West en Passewaaij gaan ook onder "Tiel en omstreken" (regio) vallen, zodat iedereen in Tiel
+  alle klussen ziet. NIET in de B2-uitrol; doen in B3 of later (raakt alleen testaccounts).
