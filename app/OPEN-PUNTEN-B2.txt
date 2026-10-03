@@ -1,0 +1,47 @@
+HEITJEHULP B2 - AANMELDEN EN GOEDKEUREN: OPEN PUNTEN (3 okt 2026)
+Branch b2/aanmelden, worktree ~/flutter-builds/hh-b2. Backend NIET op prod
+(proefrit: backend/proefrit-b2.txt).
+
+KEUZES DIE IK MAAKTE
+  - IBAN niet bij aanmelden en ook geen losse stap: het IBAN-scherm is weg
+    (simpelste). Komt terug bij de eerste uitbetaling (B7/B8).
+  - Wijk komt uit de postcode (server-hook): K4 werkt anders niet, want de
+    lijst-rule en accepteren eisen een wijk. Postcode buiten de wijken =
+    geen wijk = geen klussen. Bij bijwerken wist de server nooit een wijk.
+  - Lijst-rule kan niet rekenen met leeftijd: lijst = "ouder gaf
+    toestemming OF VOG gezien"; accepteren checkt precies (onder 18 ouder,
+    18+ VOG). Geboortedatum kan de helper na aanmelden niet meer wijzigen.
+  - Gele balk "Regel je VOG" in plaats van "Upload je VOG": er is geen
+    upload (B1: alleen de datum vog_gezien_op). Knop "Over je VOG" opent de
+    uitleg met de Justis-link.
+  - Versturen kan zodra de ID-foto er staat; VOG en Over mij hoeven niet.
+  - Geen foto's van mensen meer: geen profielfoto-stap, bewoner ziet bij
+    zijn helper een icoon, de voornaam en "ID gecontroleerd".
+  - Server stuurt een bewoner bij een helper alleen voornaam +
+    id_gecontroleerd (onRecordEnrich); geboortedatum, adres en
+    ouder-gegevens zitten niet meer in het antwoord.
+  - Familie-rol: registreren toont "kies eerst op het welkomscherm" (de rol
+    staat sinds B0 niet in de keuze; opruimen in B3).
+  - Vinkje voorwaarden + privacy wijst naar een placeholder
+    (HhConfig.voorwaardenUrl = heitjehulp.nl/voorwaarden).
+
+OPEN (niet in B2)
+  - Ouder-toestemming zet nu alleen de meldkamer/superuser
+    (ouder_toestemming_op); het paneel heeft er geen veld voor. B3 bouwt de
+    code-flow. Tot dan wacht elke helper onder 18 op Start.
+  - Koppelen door de meldkamer (hh_coordinator.pb.js) kijkt nog niet naar
+    ouder-toestemming/VOG gezien; alleen accepteren door de helper. B11.
+  - Velden selfie, intake_op, vog_status, straal_km, beschikbaarheid,
+    klustypes, telefoon staan nog op de server (data blijft); opruimen met
+    een apart script na akkoord.
+  - Filteren op geboortedatum door een bewoner kan in theorie nog (enrich
+    verbergt alleen het antwoord). Netter: een view-collectie (B11).
+  - Oude checks 07, 11 en 65 passen niet meer bij B2.
+  - iDIN niet gebouwd (K2), zie OPEN-PUNTEN.txt punt 89.
+
+VRAGEN VOOR IBRAHIM
+  1. Mogen de 3 seed-helpers (allemaal 18+) "VOG gezien op" krijgen? Anders zien ze na uitrol geen klussen en zijn 04/50 deels rood.
+  2. Tekst gele balk: "Regel je VOG" goed, of liever iets anders (er is geen upload)?
+  3. Moet het paneel nu al een veld "ouder gaf toestemming op" krijgen, of wachten helpers onder 18 tot B3?
+  4. Postcodes buiten Tiel-West/Passewaaij (bv. 4001, 4002, 4005, 4006): wijken erbij, of melden "nog niet in jouw buurt"?
+  5. Waar komen voorwaarden en privacyverklaring te staan (nu placeholder heitjehulp.nl/voorwaarden)?

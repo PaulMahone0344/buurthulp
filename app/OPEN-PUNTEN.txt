@@ -714,3 +714,8 @@ M5: 88. Android-emulatorbuild is in M5 niet gedraaid (alleen iOS-simulator,
     zoals de opdracht vroeg). flutter_map heeft geen platformcode, dus er
     is geen manifest-wijziging nodig; internet-permissie staat al in de
     debug-manifest.
+
+B2: 89. iDIN ("Verifieer via je bank") is NIET gebouwd (keuze K2): er is nog
+    geen iDIN-aanbieder. Als die er is: knop bij aanmelden, alleen het
+    resultaat bewaren (idin_geverifieerd), vinkje bij goedkeuren. Zie ook
+    app/OPEN-PUNTEN-B2.txt.

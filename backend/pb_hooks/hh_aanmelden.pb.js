@@ -10,10 +10,11 @@
 //       bijwerken van de geboortedatum (die mag de eigenaar sinds 80 niet
 //       meer zelf, maar de coordinator wel).
 //    b. Wijk uit de postcode (keuze K4: geen werkgebied-stap meer). Komt er
-//       een postcode mee (aanmaken, of een andere postcode bij bijwerken),
-//       dan zet de server wijk = de actieve hh_wijken waar de 4 cijfers bij
-//       horen, of leeg als er geen wijk bij hoort. Stuurt een coordinator
-//       zelf een wijk mee, dan blijft die staan.
+//       een postcode mee bij aanmaken, dan zet de server wijk = de actieve
+//       hh_wijken waar de 4 cijfers bij horen, of leeg. Bij bijwerken met
+//       een andere postcode alleen als er een wijk bij hoort (een bestaande
+//       wijk wordt nooit gewist). Stuurt een coordinator zelf een wijk mee,
+//       dan blijft die staan.
 //
 // 2. hh_profielen GOEDKEUREN WIST HET ID-DOCUMENT (B1-gat 2)
 //    onRecordUpdate (model-hook): draait bij ELKE opslag, ook via de
@@ -84,7 +85,10 @@ onRecordUpdateRequest((e) => {
     !!e.auth && e.auth.collection().name === "hh_users" && String(e.auth.get("rol") || "") === "coordinator";
   const wijkGestuurd = String(e.record.get("wijk") || "") !== String(oud.get("wijk") || "");
   if (postcode && postcode !== pcOud && !(isCoordinator && wijkGestuurd)) {
-    e.record.set("wijk", hulp.wijkUitDatabase($app, toString, postcode));
+    // Bij bijwerken alleen een GEVONDEN wijk zetten: een postcode buiten de
+    // wijken wist een bestaande wijk niet (bestaande accounts, M4-data).
+    const wijk = hulp.wijkUitDatabase($app, toString, postcode);
+    if (wijk) e.record.set("wijk", wijk);
   }
 
   e.next();

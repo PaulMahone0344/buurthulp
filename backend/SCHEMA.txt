@@ -922,9 +922,11 @@ HOOKS (deploy met scripts/83-hook-deploy.sh; 2 nieuwe bestanden)
   hh_aanmelden.pb.js (NIEUW):
     - onRecordCreateRequest/UpdateRequest hh_users: helper (rol jongere)
       jonger dan 10 -> 400 "Je moet minstens 10 jaar zijn om helper te
-      worden." (ook superuser en coordinator). Komt er een (andere)
-      postcode mee, dan wijk = de actieve hh_wijken met die 4 cijfers, of
-      leeg. Een coordinator die zelf een wijk meestuurt wint.
+      worden." (ook superuser en coordinator). Bij aanmaken met postcode:
+      wijk = de actieve hh_wijken met die 4 cijfers, of leeg. Bij bijwerken
+      met een andere postcode alleen als er een wijk bij hoort (een
+      bestaande wijk wordt nooit gewist). Een coordinator die zelf een wijk
+      meestuurt wint.
     - onRecordUpdate hh_profielen (MODEL-hook, elke opslag: API,
       superuser, script, $app): verificatiestatus -> goedgekeurd wist
       document_foto en zet id_gecontroleerd_op = nu (B1-gat 2).
@@ -951,12 +953,12 @@ HOOKS (deploy met scripts/83-hook-deploy.sh; 2 nieuwe bestanden)
 B2CHECK (scripts/82-b2check.mjs, dry-run standaard)
   Met --apply, met eigen tijdelijke accounts "b2check-...@heitjehulp.
   invalid" en eigen klussen: < 10 geweigerd (anoniem en superuser), 10 mag;
-  postcode -> wijk; geboortedatum vast voor de eigenaar; per helper wie de
-  open klus ziet en accepteert (< 18 met/zonder toestemming, 18+ met/zonder
-  VOG); ID opnieuw uploaden na goedkeuring geweigerd; superuser-goedkeuring
+  postcode -> wijk (bij bijwerken nooit gewist); geboortedatum vast voor de
+  eigenaar; per helper wie de open klus ziet en accepteert (< 18 met/zonder
+  toestemming, 18+ met/zonder VOG); ID opnieuw uploaden na goedkeuring geweigerd; superuser-goedkeuring
   wist het document (bestand 404); wat een bewoner van zijn helper ziet;
   alles opgeruimd. Lokaal bewezen tegen PocketBase 0.25.9 met het
-  prod-schema: 59 groen. 62-beheercheck geeft zijn tijdelijke helper nu een
+  prod-schema: 61 groen. 62-beheercheck geeft zijn tijdelijke helper nu een
   geboortedatum en vog_gezien_op (anders weigert B2 hem terecht).
   Test zonder server: node --test backend/tests/*.test.mjs.
 

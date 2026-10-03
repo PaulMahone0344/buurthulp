@@ -232,6 +232,9 @@ async function main() {
     const pc = `${ander.postcodes[0]} AA`;
     const na = await mag(`eigenaar zet postcode ${pc}`, () => eigen.client.collection('hh_users').update(eigen.id, { postcode: pc }));
     check('  wijk volgt de postcode', na?.wijk === ander.id, `wijk="${na?.wijk}"`);
+    const buiten = await mag('eigenaar zet een postcode buiten de wijken (9999 ZZ)', () =>
+      eigen.client.collection('hh_users').update(eigen.id, { postcode: '9999 ZZ' }));
+    check('  de wijk blijft staan (wordt niet gewist)', buiten?.wijk === ander.id, `wijk="${buiten?.wijk}"`);
   }
 
   // ---------------------------------------------------------------- D

@@ -1,0 +1,101 @@
+HeitjeHulp B2 — proefrit (DRY-RUN tegen prod, niets geschreven) 2026-10-03T20:59:41Z
+Branch b2/aanmelden (worktree ~/flutter-builds/hh-b2). NOG NIET OP PROD.
+
+WAT VERANDERT ER OP PROD (na JA)
+  Rules (80, gewikkeld, de live rule blijft letterlijk staan):
+    hh_profielen.updateRule  na goedkeuring geen nieuwe ID-foto (eigenaar)
+    hh_klussen.list/viewRule helper ziet open klussen pas met
+                             ouder_toestemming_op OF vog_gezien_op
+    hh_users.updateRule      geboortedatum alleen nog via coordinator
+  Hooks (83): NIEUW hh_aanmelden.pb.js + hh_aanmelden_hulp.js; BIJ
+    hh_klussen.pb.js (accepteren: leeftijd/ouder/VOG) en hh_beheer.pb.js
+    (punt 3 zet alleen nog id_gecontroleerd_door).
+  Geen nieuwe velden, geen datamigratie. Details: SCHEMA.txt sectie B2.
+
+LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie, schema = export van de
+16 hh_-collecties van prod, alleen gelezen; hooks uit deze branch)
+  80 --apply lokaal: 4 rules bijgewerkt, PocketBase accepteert ze
+  82 --apply lokaal: 61 groen, 0 rood
+  72 --apply lokaal: 54 groen (B1 blijft werken met de nieuwe hooks)
+  62 --apply lokaal: 118 groen (met de aanpassing in 62, zie onder)
+  Tegenproef: 80 lokaal teruggedraaid -> 82 wordt rood op precies de
+  lijst- en uploadchecks (7 rood); daarna weer --apply.
+  04 en 50 zijn lokaal NIET gedraaid (die gebruiken de seed-accounts).
+
+=== DRY-RUNS TEGEN PROD (alleen lezen) ===
+
+=== node scripts/80-b2-rules.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
++ ZOU hh_profielen.updateRule aanvullen — dry-run
+  - oud:   "((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((gebruiker = @request.auth.id && @request.body.gebruiker:isset = false && @request.body.vog_status:isset = false && @request.body.iban_geverifieerd:isset = false && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false && (@request.body.verificatiestatus:isset = false || ((verificatiestatus = \"nieuw\" || verificatiestatus = \"\") && @request.body.verificatiestatus = \"in_behandeling\"))) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false && @request.body.intake_op:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.id_gecontroleerd_op:isset = false && @request.body.id_gecontroleerd_door:isset = false && @request.body.vog_gezien_op:isset = false))"
+  + nieuw: "(((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((gebruiker = @request.auth.id && @request.body.gebruiker:isset = false && @request.body.vog_status:isset = false && @request.body.iban_geverifieerd:isset = false && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false && (@request.body.verificatiestatus:isset = false || ((verificatiestatus = \"nieuw\" || verificatiestatus = \"\") && @request.body.verificatiestatus = \"in_behandeling\"))) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false && @request.body.intake_op:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.id_gecontroleerd_op:isset = false && @request.body.id_gecontroleerd_door:isset = false && @request.body.vog_gezien_op:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (verificatiestatus != \"goedgekeurd\" || @request.body.document_foto:isset = false))"
++ ZOU hh_klussen.listRule aanvullen — dry-run
+  - oud:   "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && hulpvrager.wijk = @request.auth.wijk && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\") || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
+  + nieuw: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && hulpvrager.wijk = @request.auth.wijk && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\" && (@request.auth.ouder_toestemming_op != \"\" || @collection.hh_profielen.vog_gezien_op ?!= \"\")) || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
++ ZOU hh_klussen.viewRule aanvullen — dry-run
+  - oud:   "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && hulpvrager.wijk = @request.auth.wijk && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\") || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
+  + nieuw: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && hulpvrager.wijk = @request.auth.wijk && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\" && (@request.auth.ouder_toestemming_op != \"\" || @collection.hh_profielen.vog_gezien_op ?!= \"\")) || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
++ ZOU hh_users.updateRule aanvullen — dry-run
+  - oud:   "(((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((id = @request.auth.id && @request.body.rol:isset = false) || @request.auth.rol = \"coordinator\")) && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.geblokkeerd:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.ouder_toestemming_op:isset = false && @request.body.ouder_iban_ok:isset = false))"
+  + nieuw: "((((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((id = @request.auth.id && @request.body.rol:isset = false) || @request.auth.rol = \"coordinator\")) && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.geblokkeerd:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.ouder_toestemming_op:isset = false && @request.body.ouder_iban_ok:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.geboortedatum:isset = false))"
+
+DRY-RUN: 4 rule(s) zouden veranderen. Draai met --apply.
+
+=== node scripts/82-b2check.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+DRY-RUN: er wordt NIETS geschreven.
+
+B. Voorwaarden op de server (alleen lezen)
+  ✗ hh_profielen.updateRule heeft de B2-aanvulling — draai 80 --apply
+  ✗ hh_klussen.listRule heeft de B2-aanvulling — draai 80 --apply
+  ✗ hh_klussen.viewRule heeft de B2-aanvulling — draai 80 --apply
+  ✗ hh_users.updateRule heeft de B2-aanvulling — draai 80 --apply
+  ✓ er is een actieve wijk met postcode 4003
+
+Wat --apply ZOU doen:
+  · tijdelijke accounts maken (b2check-...@heitjehulp.invalid): coordinator, bewoner, 6 helpers, 3 registraties;
+  · twee eigen open klussen; per helper nameten wie ze ziet en wie mag accepteren;
+  · een testfoto als ID uploaden, goedkeuren (coordinator en superuser), opnieuw uploaden geweigerd;
+  · bekijken wat een bewoner van zijn helper ziet;
+  · alles opruimen en nameten.
+
+1 groen, 4 rood (leescontroles).
+Rood is verwacht zolang 80 nog niet uitgerold is.
+
+LET OP VOOR DE UITROL
+  1. Seed-jongeren: de 3 seed-helpers (jongere1-3) zijn alle drie 18+ en
+     hebben GEEN vog_gezien_op. Na 80 + 83 zien zij geen open klussen meer
+     en weigert accepteren (403 vog). Daardoor worden in 04-rulecheck de
+     checks "jongere 1/3 ziet open klussen in eigen wijk" en in
+     50-koppelcheck het accepteren door jongere 1 ROOD. Dat is het nieuwe
+     gedrag, geen fout. Groen krijgen kan alleen door vog_gezien_op op de
+     3 seed-profielen te zetten (meldkamer via het paneel, of superuser):
+     dat is een wijziging aan bestaande accounts -> VRAAG aan Ibrahim.
+     Zelfde geldt voor de iPhone-test met een seed-helper.
+  2. 07-screeningcheck, 11-accepteercheck en 65-vog-accepteercheck (M3/M5,
+     niet in de uitrollijst) gaan uit van de oude screening en worden na B2
+     deels rood. Niet draaien; opruimen in een latere milestone.
+  3. 83 heeft ssh -n (de "echo y |"-les van B1). Toch: auto-mode uit en
+     stap 2b (diff) nalezen. Twee bestanden zijn NIEUW (geen diff).
+  4. Een oude app-versie (vóór B2) kan na 80 geen geboortedatum meer
+     zetten in J1 en ziet de nieuwe wachtstand niet; er zijn nog geen echte
+     gebruikers.
+
+UITROLLIJST (vanuit backend/, .env laden: set -a; . /Users/h/Desktop/qawayhabase/.env; set +a)
+  0. (vraag 1 beantwoord?)
+  1. node scripts/00-backup.mjs
+  2. node scripts/80-b2-rules.mjs            (dry-run, lees na)
+     node scripts/80-b2-rules.mjs --apply
+  3. ./scripts/83-hook-deploy.sh             (stap 2b nalezen, dan y)
+  4. node scripts/82-b2check.mjs --apply     (verwacht: 61 groen, 0 rood)
+  5. node scripts/72-b1check.mjs --apply     (verwacht: 54 groen)
+     node scripts/62-beheercheck.mjs --apply (verwacht: alles groen)
+     node scripts/04-rulecheck.mjs --apply   (rood alleen op seed-jongere-
+     node scripts/50-koppelcheck.mjs --apply  klussen, zie LET OP 1)
+  6. Website (beheerpaneel) en app pas daarna uitrollen (de app verwacht
+     de B2-hooks: wachtbalk, vinkje ID gecontroleerd).
+  ROLLBACK: ./scripts/83-hook-deploy.sh --rollback (zet 2 hooks terug,
+  haalt de 2 nieuwe weg); rules terug uit de backup van stap 1
+  (00-backup.mjs --vergelijk toont het verschil).
