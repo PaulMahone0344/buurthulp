@@ -200,6 +200,14 @@
   color: #fff;
 }
 
+.lp-hero__naam {
+  margin: 0;
+  color: var(--accent);
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
 .lp-hero__title {
   max-width: 16ch;
   margin: 20px 0 0;
@@ -381,6 +389,10 @@
   padding: 0;
   list-style: none;
   counter-reset: step;
+}
+
+.lp-steps--drie {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .lp-step {
@@ -977,42 +989,44 @@
   color: var(--green);
 }
 
-/* ---------- PROEF ---------- */
-.lp-proef {
+/* ---------- PARTNERS ---------- */
+.lp-partners {
   display: grid;
-  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
   gap: clamp(1.5rem, 1rem + 2vw, 3rem);
   align-items: start;
 }
 
-.lp-proef__cijfers {
+.lp-partner-card {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 0;
-}
-
-.lp-proef__cijfers div {
-  display: grid;
-  gap: 4px;
-  padding: 22px;
+  justify-items: start;
+  gap: 14px;
+  padding: clamp(1.6rem, 1.2rem + 1.5vw, 2.4rem);
   border-radius: var(--lp-radius);
   background: var(--green-dark);
   color: #fff;
+  box-shadow: var(--lp-shadow-lg);
 }
 
-.lp-proef__cijfers dt {
-  order: 2;
-  color: rgba(255, 255, 255, 0.72);
-  font-weight: 650;
+.lp-partner-card svg {
+  color: var(--accent);
 }
 
-.lp-proef__cijfers dd {
-  order: 1;
+.lp-partner-card h3 {
   margin: 0;
-  font-size: 2.6rem;
-  font-weight: 820;
-  line-height: 1;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+}
+
+.lp-partner-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.55;
+}
+
+.lp-partner-card .lp-btn {
+  margin-top: 6px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .lp-fases {
@@ -1038,6 +1052,7 @@
 }
 
 .lp-fases span {
+  display: inline-flex;
   color: var(--green);
   font-size: 0.78rem;
   font-weight: 800;
@@ -1172,9 +1187,13 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .lp-steps.lp-steps--drie {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   .lp-split,
   .lp-results,
-  .lp-proef,
+  .lp-partners,
   .lp-faq,
   .lp-regels {
     grid-template-columns: 1fr;
@@ -1220,6 +1239,10 @@
     grid-template-columns: 1fr;
   }
 
+  .lp-steps.lp-steps--drie {
+    grid-template-columns: 1fr;
+  }
+
   .lp-rol,
   .lp-delivery__col {
     padding: 22px;
@@ -1227,6 +1250,12 @@
 
   .lp-tab span {
     font-size: 0.86rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .lp-hero__title {
+    font-size: 2.35rem;
   }
 }
 

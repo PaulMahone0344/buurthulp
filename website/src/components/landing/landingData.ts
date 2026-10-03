@@ -1,15 +1,11 @@
-// Inhoud van de HeitjeHulp-voorpagina. Bron: pilotvoorstel v5 (kleine start,
-// geen subsidie) en wat er in de app echt gebouwd is (M0-M10, M14).
-// Bewust NIET publiek: bedragen, tarieven, begroting, verdienmodel, namen van
-// partners en concurrenten. Zie App.test.tsx, die dat bewaakt.
+// Inhoud van de HeitjeHulp-voorpagina. Bron: besluit 3 okt 2026 (KEUZE-A-B-C,
+// keuze B + wijzigingen collega): HeitjeHulp is een bedrijf dat bemiddelt
+// tussen bewoners en helpers, geen werkgever.
+// Bewust NIET publiek: bedragen en prijzen (volgen later), begroting,
+// verdienmodel, namen van partners en concurrenten. Zie App.test.tsx, die dat bewaakt.
 
 export interface NavLink {
   href: string
-  label: string
-}
-
-export interface Stat {
-  value: string
   label: string
 }
 
@@ -19,7 +15,7 @@ export interface IconItem {
   text: string
 }
 
-export type KaderKey = 'juridisch' | 'vog' | 'verzekering' | 'avg'
+export type KaderKey = 'betalen' | 'ouders' | 'vog' | 'privacy'
 
 export interface Kader {
   key: KaderKey
@@ -37,300 +33,302 @@ export interface Rol {
   items: { title: string; text: string }[]
 }
 
-export interface Fase {
-  label: string
-  title: string
-  text: string
-}
-
 export interface Vraag {
   vraag: string
   antwoord: string
 }
 
+export const SLOGAN = 'Heitje voor een karweitje, in jouw buurt.'
+
 export const navLinks: NavLink[] = [
-  { href: '#werkwijze', label: 'Werkwijze' },
+  { href: '#werkwijze', label: 'Zo werkt het' },
   { href: '#voor-wie', label: 'Voor wie' },
+  { href: '#helpers', label: 'Helpers' },
   { href: '#veiligheid', label: 'Veiligheid' },
-  { href: '#kaders', label: 'Vooraf geregeld' },
-  { href: '#proef', label: 'De proef' },
+  { href: '#partners', label: 'Partners' },
   { href: '#vragen', label: 'Vragen' },
 ]
 
 export const heroPoints: string[] = [
-  'Jongeren van 16 t/m 20, volledig gescreend met VOG',
-  'Aanmelden via app, website of telefoon',
-  'Familie kan meekijken, de oudere houdt de regie',
+  'Plaats je klus met een foto',
+  'Kies zelf je helper, op sterren en recensies',
+  'Chat in de app, je nummer blijft verborgen',
 ]
 
-export const problemText: string[] = [
-  'Steeds meer ouderen wonen zelfstandig thuis, terwijl de kring die hen bij kleine dingen helpt kleiner wordt. Kinderen wonen verder weg, buren kennen elkaar minder en de druk op mantelzorgers en wijkteams loopt op. Juist de kleine dingen blijven liggen: te klein voor een indicatie, maar het verschil tussen zelfredzaam zijn en vastlopen.',
-  'Tegelijk staan jongeren die iets willen betekenen voor hun buurt langs de zijlijn. Het vrijwilligersbestand vergrijst; jongeren zitten er nauwelijks in. HeitjeHulp verbindt die twee — veilig, lokaal en herleidbaar.',
+export const introText: string[] = [
+  'Je heg moet gesnoeid worden. Je hond moet uit. Of je wilt hulp met je nieuwe telefoon. Kleine klussen, maar ze blijven liggen. En vaak woont er iemand om de hoek die je graag helpt.',
+  'HeitjeHulp brengt die twee bij elkaar. Jij plaatst een klus. Helpers uit je buurt reageren. Jij kiest wie het doet. HeitjeHulp regelt het contact, de betaling en de veiligheid.',
 ]
 
-export const helpTypes: string[] = [
-  'Boodschappen en kleine praktische hulp',
+export const klusTypes: string[] = [
+  'Tuin bijhouden of onkruid wieden',
+  'Boodschappen doen',
+  'Hond uitlaten of planten water geven',
+  'Auto of fiets wassen',
   'Hulp met telefoon, tablet of computer',
   'Kleine klusjes in en om het huis',
-  'Tuin of balkon bijhouden, afval wegbrengen',
-  'Begeleiding naar een afspraak',
 ]
 
 export const verhaal = {
   tekst:
-    'Mevrouw Jansen (81) belt het aanmeldpunt: de lamp in haar keuken is kapot en ze durft de trap niet meer op. De hulpvraag wordt genoteerd en ze krijgt een bevestiging. Youssef (16), gescreend en uit dezelfde straat, ziet de klus in de app en komt na school langs. Hij vervangt de lamp, neemt de tijd voor een praatje en rondt de klus af. De volgende keer vraagt mevrouw Jansen gewoon weer naar Youssef.',
+    'Sanne zet een foto van haar voortuin in de app: het onkruid staat hoog. Drie helpers uit de buurt reageren. Ze kijkt naar hun sterren en leest de recensies. Ze kiest Daan (14). Zijn moeder gaf eerder al toestemming met een code. Daan komt zaterdag langs en de tuin is weer netjes. Sanne geeft hem vijf sterren. Daan krijgt zijn zakgeld en een nieuwe badge.',
   bijschrift: 'Een voorbeeld van hoe een klus verloopt',
 }
 
 export const processSteps: IconItem[] = [
   {
-    icon: 'PhoneCall',
-    title: 'Aanmelden',
-    text: 'De oudere meldt een hulpvraag aan via de app, de website of telefonisch — of een familielid, mantelzorger of het wijkteam doet het namens haar.',
+    icon: 'Camera',
+    title: 'Klus plaatsen',
+    text: 'Zeg wat er moet gebeuren en maak een foto. Kies de dag en de tijd. De prijs per klus zie je vooraf.',
   },
   {
-    icon: 'MapPin',
-    title: 'Oppakken',
-    text: 'Een gescreende jongere uit dezelfde wijk ziet de klus en neemt hem aan. De oudere ziet vooraf wie er komt.',
-  },
-  {
-    icon: 'HandHeart',
-    title: 'Uitvoeren',
-    text: 'De jongere laat weten dat hij onderweg is, doet de klus en rondt hem af. Elke stap wordt vastgelegd.',
+    icon: 'MessageCircle',
+    title: 'Reacties krijgen',
+    text: 'Helpers uit je buurt zien je klus en reageren. Je kunt met ze chatten in de app.',
   },
   {
     icon: 'Star',
-    title: 'Beoordelen',
-    text: 'Oudere en jongere beoordelen elkaar. Bij een goede ervaring vraagt de oudere dezelfde jongere opnieuw.',
+    title: 'Helper kiezen',
+    text: 'Je ziet de sterren en recensies van elke helper. Jij kiest wie de klus doet.',
+  },
+  {
+    icon: 'Wallet',
+    title: 'Klaar en betalen',
+    text: 'Je betaalt met saldo dat je vooraf oplaadt met iDEAL. Na de klus geef je de helper sterren en een recensie.',
   },
 ]
 
 export const welDoen: string[] = [
-  'Boodschappen doen',
-  'Kleine klusjes in en om het huis',
+  'Tuin, balkon of stoep bijhouden',
+  'Boodschappen doen of iets ophalen',
+  'Hond uitlaten, planten water geven',
+  'Auto of fiets wassen',
   'Hulp met telefoon, tablet of computer',
-  'Begeleiding naar een afspraak',
-  'Tuin of balkon bijhouden, afval wegbrengen',
-  'Een praatje bij elke klus',
+  'Kleine klusjes in en om het huis',
 ]
 
 export const nietDoen: string[] = [
-  'Persoonlijke verzorging of medische handelingen',
-  'Structurele huishoudelijke hulp',
-  'Geld- of administratiebeheer',
-  'Alles wat onder een Wmo-indicatie of zorgaanbod valt',
-  'Georganiseerd gezelschap — daarvoor verwijzen we naar welzijn',
+  'Zorg, zoals wassen of medicijnen geven',
+  'Gevaarlijk werk, zoals hoog op een ladder of aan stroom',
+  'Geldzaken of post van iemand regelen',
+  'Betalen buiten de app om of contant geld',
+  'Werk dat een vakman hoort te doen',
 ]
 
 export const rollen: Rol[] = [
   {
-    icon: 'Heart',
-    rol: 'Ouderen',
-    kop: 'Hulp vragen zonder gedoe',
+    icon: 'House',
+    rol: 'Bewoners',
+    kop: 'Hulp bij een klus in en om je huis',
     items: [
-      { title: 'Groot en rustig', text: 'Grote knoppen, grote letters en weinig stappen. Geen cijfers of drukte op het scherm.' },
-      { title: 'Zien wie er komt', text: 'Vooraf weten welke jongere komt, en een melding als hij onderweg is.' },
-      { title: 'Zonder smartphone', text: 'Telefonisch aanmelden kan altijd; de meldkamer zet de hulpvraag in het systeem.' },
+      { title: 'Voor iedereen', text: 'Iedere bewoner in Nederland kan een klus plaatsen. Jong of oud.' },
+      { title: 'Jij kiest', text: 'Je ziet wie er reageert en kiest zelf op sterren en recensies.' },
+      { title: 'Vaste hulp', text: 'Elke week of maand dezelfde klus? Dat kan met het abonnement Plus.' },
+    ],
+  },
+  {
+    icon: 'Sparkles',
+    rol: 'Helpers',
+    kop: 'Zakgeld verdienen in je eigen buurt',
+    items: [
+      { title: 'Vanaf 10 jaar', text: 'Er is geen maximum leeftijd. Scholieren, studenten en volwassenen zijn welkom.' },
+      { title: 'Klussen dichtbij', text: 'Je ziet klussen in je buurt die passen bij je leeftijd.' },
+      { title: 'Groeien', text: 'Je spaart XP en badges en stijgt in niveau.' },
     ],
   },
   {
     icon: 'Users',
-    rol: 'Familie',
-    kop: 'Meekijken op afstand',
+    rol: 'Ouders',
+    kop: 'Jij geeft toestemming',
     items: [
-      { title: 'Met toestemming', text: 'De oudere bepaalt wie meekijkt en wat die mag zien; toestemming intrekken kan altijd.' },
-      { title: 'Namens aanmelden', text: 'Een familielid kan een hulpvraag plaatsen voor de oudere.' },
-      { title: 'Op de hoogte', text: 'Meldingen bij de belangrijke momenten van een klus.' },
-    ],
-  },
-  {
-    icon: 'GraduationCap',
-    rol: 'Jongeren',
-    kop: 'Iets betekenen in je eigen buurt',
-    items: [
-      { title: 'Klussen in de buurt', text: 'Een kaart met open hulpvragen dichtbij; aannemen met één knop.' },
-      { title: 'Stap voor stap', text: 'Onderweg, bezig, klaar — de app begeleidt elke klus en legt hem vast.' },
-      { title: 'Altijd een achtervang', text: 'Een vaste knop om iets te melden dat niet klopt, en een vertrouwenspersoon.' },
+      { title: 'Met een code', text: 'Is je kind jonger dan 18? Dan krijg jij een code per e-mail of sms om toestemming te geven.' },
+      { title: 'Eén keer', text: 'Daarna regelt je kind zijn klussen zelf in de app.' },
+      { title: 'Vragen?', text: 'Neem contact op met de meldkamer van HeitjeHulp.' },
     ],
   },
   {
     icon: 'ClipboardCheck',
-    rol: 'Coördinator',
-    kop: 'De meldkamer houdt overzicht',
+    rol: 'Meldkamer',
+    kop: 'HeitjeHulp houdt een oogje in het zeil',
     items: [
-      { title: 'Alle hulpvragen', text: 'Zien welke klus te lang wacht, zelf koppelen, vrijgeven of annuleren.' },
-      { title: 'Screening', text: 'Document, selfie, VOG en intake van elke jongere beoordelen, altijd met een notitie.' },
-      { title: 'Meldingen opvolgen', text: 'Incidenten en signalen komen direct binnen en worden afgehandeld en vastgelegd.' },
+      { title: 'Goedkeuren', text: 'De meldkamer keurt elke nieuwe helper goed voordat die kan reageren.' },
+      { title: 'Helpen', text: 'Gaat er iets mis? De meldkamer helpt je verder.' },
+      { title: 'Meldingen', text: 'Elke melding wordt bekeken en opgevolgd.' },
     ],
   },
 ]
 
-export const safetyItems: IconItem[] = [
+export const helperSteps: IconItem[] = [
   {
-    icon: 'IdCard',
-    title: 'Identiteit & selfie',
-    text: 'Controle van een geldig identiteitsbewijs en een eenmalige selfie, handmatig beoordeeld. Geen gezichtsherkenning.',
+    icon: 'UserPlus',
+    title: 'Aanmelden',
+    text: 'Download de app en maak een account. De meldkamer kijkt je aanmelding na.',
+  },
+  {
+    icon: 'KeyRound',
+    title: 'Jonger dan 18?',
+    text: 'Je ouder krijgt een code per e-mail of sms. Met die code geeft je ouder toestemming.',
   },
   {
     icon: 'FileCheck2',
-    title: 'Geldige VOG',
-    text: 'Verplicht voor elke jongere. Verloopt de VOG, dan kan de jongere niet meer gekoppeld worden.',
+    title: '18 jaar of ouder?',
+    text: 'Je hebt een VOG nodig: een Verklaring Omtrent het Gedrag. Zonder VOG kun je niet helpen.',
+  },
+]
+
+export const helperBeloning: IconItem[] = [
+  {
+    icon: 'Coins',
+    title: 'Zakgeld',
+    text: 'Voor elke klus krijg je geld. HeitjeHulp betaalt het uit op je rekening.',
   },
   {
-    icon: 'Users',
-    title: 'Persoonlijke intake',
-    text: 'Een kennismakingsgesprek met gedragsregels en uitleg over wat je doet als je iets ziet dat niet klopt.',
+    icon: 'Trophy',
+    title: 'XP en badges',
+    text: 'Elke klus levert XP op. Bij bijzondere klussen verdien je een badge.',
   },
   {
-    icon: 'ShieldCheck',
-    title: 'Meldknop & opvolging',
-    text: 'Jongeren melden zorgen via een vaste knop. Wij beoordelen en schakelen waar nodig het wijkteam in.',
+    icon: 'TrendingUp',
+    title: 'Niveaus',
+    text: 'Hoe meer klussen en goede recensies, hoe hoger je niveau.',
+  },
+]
+
+export const helperInApp: string[] = [
+  'Klussen in je buurt die bij je leeftijd passen',
+  'Je verdiensten per maand en per jaar',
+  'Je sterren en recensies',
+  'Je XP, badges en niveau',
+]
+
+export const safetyItems: IconItem[] = [
+  {
+    icon: 'ClipboardCheck',
+    title: 'Meldkamer keurt goed',
+    text: 'Elke nieuwe helper wordt eerst goedgekeurd door de meldkamer van HeitjeHulp.',
+  },
+  {
+    icon: 'MessageCircle',
+    title: 'Chat zonder nummers',
+    text: 'Je chat in de app. Telefoonnummers blijven verborgen.',
+  },
+  {
+    icon: 'ShieldAlert',
+    title: 'Meldknop',
+    text: 'Klopt er iets niet? Druk op de meldknop. De meldkamer kijkt mee en helpt.',
+  },
+  {
+    icon: 'KeyRound',
+    title: 'Toestemming ouder',
+    text: 'Onder 18 helpt niemand zonder toestemming van een ouder, met een code.',
   },
 ]
 
 export const gedragsregels: string[] = [
-  'Nooit contant geld aannemen',
-  'Alleen komen op de afgesproken tijd',
+  'Alles loopt via de app, ook het betalen',
+  'Geen contant geld',
   'Alleen de afgesproken klus doen',
-  'Alles melden wat afwijkt',
+  'Melden als er iets niet klopt',
 ]
 
 export const kaders: Kader[] = [
   {
-    key: 'juridisch',
-    icon: 'Scale',
-    tab: 'Juridische vorm',
-    title: 'Vrijwilligers van een stichting zonder winstoogmerk',
-    intro:
-      'De jongeren zijn vrijwilliger van Stichting HeitjeHulp. Zij krijgen een bescheiden vrijwilligersvergoeding binnen de wettelijke norm — aantoonbaar geen loon.',
+    key: 'betalen',
+    icon: 'Wallet',
+    tab: 'Betalen',
+    title: 'Saldo vooraf, geen contant geld',
+    intro: 'Je laadt saldo op met iDEAL. Als de klus klaar is, gaat het bedrag van je saldo af.',
     points: [
-      'Geen dienstverband, geen zzp-constructie en geen werkgeversrol voor de gemeente.',
-      'Het platform bewaakt de wettelijke maxima van de vrijwilligersvergoeding automatisch.',
-      'Elke jongere tekent een deelnemersafspraak; bij minderjarigen tekenen de ouders mee.',
-      'Bescherming van minderjarigen: geen inzet laat op de avond, school gaat altijd voor.',
+      'De prijs per klus zie je vooraf, voordat je een helper kiest.',
+      'HeitjeHulp betaalt de helper uit. Je hoeft geen geld te geven.',
+      'Herhaalklussen, zoals elke week de tuin, gaan met het abonnement Plus.',
+    ],
+  },
+  {
+    key: 'ouders',
+    icon: 'KeyRound',
+    tab: 'Ouders',
+    title: 'Toestemming met een code',
+    intro: 'Helpers jonger dan 18 hebben toestemming van een ouder nodig.',
+    points: [
+      'Je kind vult bij het aanmelden het e-mailadres of telefoonnummer van een ouder in.',
+      'De ouder krijgt een code per e-mail of sms en geeft daarmee toestemming.',
+      'Jonge helpers zien alleen klussen die passen bij hun leeftijd.',
     ],
   },
   {
     key: 'vog',
     icon: 'FileCheck2',
-    tab: 'VOG & screening',
-    title: 'Volledig gescreend vóór de eerste klus',
-    intro: 'Geen enkele jongere wordt actief voordat de hele screening is doorlopen.',
+    tab: 'VOG',
+    title: 'VOG voor helpers vanaf 18 jaar',
+    intro: 'Ben je 18 jaar of ouder? Dan heb je een Verklaring Omtrent het Gedrag nodig.',
     points: [
-      'Identiteitsbewijs (BSN afgeschermd) en selfie, handmatig beoordeeld.',
-      'Een geldige Verklaring Omtrent het Gedrag, aangevraagd door de stichting.',
-      'Een persoonlijk intakegesprek met gedragsregels en instructie over signaleren.',
-      'Bij twijfel wordt een match beëindigd, zonder discussie.',
+      'Zonder geldige VOG kun je niet reageren op klussen.',
+      'Onder 18 is geen VOG nodig. Dan geeft een ouder toestemming.',
+      'De meldkamer keurt elke helper goed, jong of oud.',
     ],
   },
   {
-    key: 'verzekering',
-    icon: 'ShieldCheck',
-    tab: 'Verzekering',
-    title: 'Schade nooit op het bordje van de jongere',
-    intro:
-      'Klussen tellen alleen als ze via het platform zijn vastgelegd. Zo is elke klus herleidbaar en valt hij onder de verzekering die vóór de start geregeld wordt.',
-    points: [
-      'Uitgangspunt is de gemeentelijke vrijwilligersverzekering; anders sluit de stichting zelf een polis af.',
-      'Schade wordt gemeld bij de stichting, nooit bij de jongere persoonlijk.',
-      'Klussen buiten het platform om vallen er niet onder — dat staat in de gedragsregels.',
-    ],
-  },
-  {
-    key: 'avg',
+    key: 'privacy',
     icon: 'Lock',
     tab: 'Privacy',
     title: 'Zo min mogelijk gegevens',
-    intro: 'HeitjeHulp werkt met twee kwetsbare groepen. Privacy is daarom een ontwerpkeuze, geen sluitstuk.',
+    intro: 'We vragen alleen wat nodig is om een klus goed te laten verlopen.',
     points: [
-      'Van ouderen: naam, adres, telefoon en de hulpvraag in neutrale woorden — geen medische redenen.',
-      'Geen BSN, geen biometrie, geen gezondheidsgegevens.',
-      'Servers binnen de EER, versleuteld; alleen wie het nodig heeft, kan erbij.',
-      'Rapportages bevatten alleen totalen, nooit gegevens die naar een persoon te herleiden zijn.',
+      'Telefoonnummers blijven verborgen. Je praat via de chat in de app.',
+      'De meldkamer leest alleen mee als iemand een melding doet.',
+      'Je gegevens staan versleuteld op servers in Europa.',
     ],
   },
 ]
 
-export const proefStats: Stat[] = [
-  { value: '5', label: 'ouderen' },
-  { value: '5', label: 'jongeren' },
-  { value: '1', label: 'wijk' },
-  { value: '8', label: 'weken' },
-]
-
-export const fases: Fase[] = [
+export const partnerPunten: IconItem[] = [
   {
-    label: 'Stap 1',
-    title: 'Proef',
-    text: 'Vijf ouderen en vijf jongeren in één wijk, acht weken. Bewijzen dat aanmelden, oppakken, uitvoeren en beoordelen in de praktijk werken — ook voor een oudere zonder smartphone.',
+    icon: 'Megaphone',
+    title: 'Vertellen over HeitjeHulp',
+    text: 'Jullie laten jongeren weten dat ze in hun buurt zakgeld kunnen verdienen.',
   },
   {
-    label: 'Stap 2',
-    title: 'Uitbreiding',
-    text: 'Alleen als de proef slaagt, groeien we voorzichtig door. Wat "geslaagd" betekent, spreken we vooraf af.',
-  },
-  {
-    label: 'Stap 3',
-    title: 'Structureel',
-    text: 'Pas daarna bespreken we samen met partners of en hoe HeitjeHulp blijvend in de wijk past.',
-  },
-]
-
-export const aanvullend: IconItem[] = [
-  {
-    icon: 'HandHeart',
-    title: 'Aanvullend, niet vervangend',
-    text: 'We pakken de kleine hulpvragen op die nu blijven liggen. Wat bij welzijn, zorg of de Wmo hoort, laten we daar.',
-  },
-  {
-    icon: 'GraduationCap',
-    title: 'Een nieuwe groep vrijwilligers',
-    text: 'Jongeren van 16 t/m 20 zijn in het bestaande vrijwilligersbestand vrijwel afwezig. Wij vergroten de vijver.',
+    icon: 'Handshake',
+    title: 'Helpen bij de start',
+    text: 'Samen helpen we jongeren op weg met hun eerste klus.',
   },
   {
     icon: 'MapPin',
-    title: 'Eigen wijk, vast gezicht',
-    text: 'Hulp uit de eigen buurt, en bij een goede klik steeds dezelfde jongere. Dat bouwt vertrouwen.',
+    title: 'Dichtbij in de wijk',
+    text: 'Jullie kennen de buurt. Zo komen bewoners en helpers sneller bij elkaar.',
   },
-]
-
-export const results: string[] = [
-  'Aantal en soort uitgevoerde hulpvragen',
-  'Actieve ouderen en jongeren',
-  'Hoeveel aanmeldingen telefonisch of namens de oudere binnenkwamen',
-  'Tevredenheid van ouderen en jongeren',
-  'Incidenten en hoe ze zijn opgevolgd',
 ]
 
 export const vragen: Vraag[] = [
   {
-    vraag: 'Wie zijn de jongeren?',
+    vraag: 'Is HeitjeHulp de werkgever van de helpers?',
     antwoord:
-      'Jongeren van 16 t/m 20 jaar uit de eigen wijk. Ze zijn vrijwilliger van Stichting HeitjeHulp, hebben een geldige VOG en een intakegesprek gehad, en worden begeleid door iemand met jarenlange ervaring in het jongerenwerk.',
+      'Nee. HeitjeHulp is een bemiddelaar. We brengen bewoners en helpers bij elkaar en regelen de chat, de betaling en de veiligheid. De helper is niet bij ons in dienst.',
   },
   {
-    vraag: 'Mijn moeder heeft geen smartphone. Kan zij meedoen?',
+    vraag: 'Vanaf welke leeftijd kun je helpen?',
     antwoord:
-      'Ja. Aanmelden kan telefonisch, en een familielid, mantelzorger of het wijkteam kan ook namens haar een hulpvraag plaatsen. Zij krijgt altijd een bevestiging.',
+      'Vanaf 10 jaar. Er is geen maximum. Ben je jonger dan 18? Dan geeft een ouder toestemming met een code. Ben je 18 of ouder? Dan heb je een VOG nodig.',
   },
   {
-    vraag: 'Kan ik als familielid meekijken?',
+    vraag: 'Hoe kies ik een helper?',
     antwoord:
-      'Ja, als de oudere daar toestemming voor geeft. Zij bepaalt wat u mag zien en kan de toestemming altijd weer intrekken.',
+      'Helpers reageren op je klus. Je ziet hun sterren en recensies. Je kunt ook eerst met ze chatten. Daarna kies je er één.',
+  },
+  {
+    vraag: 'Wat kost een klus?',
+    antwoord:
+      'De prijs per klus zie je vooraf in de app. Je betaalt met saldo dat je oplaadt met iDEAL. Je betaalt nooit contant.',
   },
   {
     vraag: 'Wat als er iets misgaat?',
     antwoord:
-      'Jongeren melden alles wat afwijkt via een vaste knop in de app. De meldkamer volgt elke melding op en schakelt waar nodig het wijkteam in. Schade wordt bij de stichting gemeld, nooit bij de jongere persoonlijk.',
+      'Druk op de meldknop in de app. De meldkamer van HeitjeHulp kijkt mee en helpt je verder.',
   },
   {
-    vraag: 'Wat kost het?',
+    vraag: 'Kan ik HeitjeHulp al gebruiken?',
     antwoord:
-      'De oudere betaalt een kleine bijdrage per klus. Daarvan krijgt de jongere een vrijwilligersvergoeding binnen de wettelijke norm. Het precieze tarief hoort u bij de aanmelding; HeitjeHulp maakt geen winst.',
-  },
-  {
-    vraag: 'Is HeitjeHulp al te gebruiken?',
-    antwoord:
-      'De app is gebouwd en een eerste kleine proef is in voorbereiding. Wilt u meedoen als oudere, jongere of partnerorganisatie? Neem contact met ons op.',
+      'De app komt binnenkort. Wil je een bericht als het zover is? Of wil je partner worden? Mail ons op info@heitjehulp.nl.',
   },
 ]

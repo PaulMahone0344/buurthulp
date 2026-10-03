@@ -2,38 +2,45 @@ import { useState, type ComponentType } from 'react'
 import {
   ArrowRight,
   ArrowUpRight,
+  Camera,
   CheckCircle2,
   ClipboardCheck,
+  Coins,
   FileCheck2,
-  GraduationCap,
   HandHeart,
-  Heart,
-  IdCard,
+  Handshake,
+  House,
+  KeyRound,
   Lock,
   MapPin,
-  PhoneCall,
+  Megaphone,
+  MessageCircle,
   Quote,
-  Scale,
-  ShieldCheck,
+  ShieldAlert,
   Sparkles,
   Star,
+  TrendingUp,
+  Trophy,
+  UserPlus,
   Users,
+  Wallet,
   XCircle,
 } from 'lucide-react'
 import heroImage from '../../assets/heitjehulp-hero.png'
 import {
-  aanvullend,
-  fases,
+  SLOGAN,
   gedragsregels,
-  helpTypes,
+  helperBeloning,
+  helperInApp,
+  helperSteps,
   heroPoints,
+  introText,
   kaders,
+  klusTypes,
   navLinks,
   nietDoen,
-  problemText,
+  partnerPunten,
   processSteps,
-  proefStats,
-  results,
   rollen,
   safetyItems,
   verhaal,
@@ -44,22 +51,29 @@ import {
 import './landing.css'
 
 const CONTACT_MAIL = 'mailto:info@heitjehulp.nl'
+const PARTNER_MAIL = 'mailto:info@heitjehulp.nl?subject=Partner%20worden%20van%20HeitjeHulp'
 
 const iconMap: Record<string, ComponentType<{ size?: number; strokeWidth?: number }>> = {
+  Camera,
   CheckCircle2,
   ClipboardCheck,
+  Coins,
   FileCheck2,
-  GraduationCap,
-  HandHeart,
-  Heart,
-  IdCard,
+  Handshake,
+  House,
+  KeyRound,
   Lock,
   MapPin,
-  PhoneCall,
-  Scale,
-  ShieldCheck,
+  Megaphone,
+  MessageCircle,
+  ShieldAlert,
+  Sparkles,
   Star,
+  TrendingUp,
+  Trophy,
+  UserPlus,
   Users,
+  Wallet,
 }
 
 function Icon({ name, size = 22, strokeWidth = 2 }: { name: string; size?: number; strokeWidth?: number }) {
@@ -68,7 +82,7 @@ function Icon({ name, size = 22, strokeWidth = 2 }: { name: string; size?: numbe
 }
 
 export function LandingPage() {
-  const [activeKader, setActiveKader] = useState<KaderKey>('juridisch')
+  const [activeKader, setActiveKader] = useState<KaderKey>('betalen')
   const current = kaders.find((k) => k.key === activeKader) ?? kaders[0]
 
   return (
@@ -103,28 +117,26 @@ export function LandingPage() {
           <img
             className="lp-hero__img"
             src={heroImage}
-            alt="Een jongere helpt een oudere buurtbewoner bij de voordeur"
+            alt="Een jonge helper staat bij de voordeur van een buurtbewoner"
             fetchPriority="high"
           />
           <div className="lp-hero__veil" />
           <div className="lp-shell lp-hero__content">
-            <span className="lp-eyebrow lp-eyebrow--light">
-              <Sparkles size={15} /> Stichting HeitjeHulp
-            </span>
+            <p className="lp-hero__naam">HeitjeHulp</p>
             <h1 className="lp-hero__title">
-              Gescreende jongeren helpen ouderen in de <em>eigen wijk</em>.
+              Heitje voor een karweitje, <em>in jouw buurt</em>.
             </h1>
             <p className="lp-hero__lead">
-              Een boodschap, een lamp, een formulier, een praatje. HeitjeHulp koppelt ouderen met kleine
-              hulpvragen aan betrouwbare jongeren uit dezelfde buurt — veilig, begeleid en herleidbaar.
+              Plaats een klus met een foto. Helpers uit je buurt reageren. Jij kiest wie het doet. HeitjeHulp
+              brengt jullie bij elkaar en regelt het betalen.
             </p>
             <div className="lp-hero__actions">
               <a className="lp-btn lp-btn--primary" href="#werkwijze">
                 Zo werkt het
                 <ArrowRight size={18} />
               </a>
-              <a className="lp-btn lp-btn--ghost" href="#contact">
-                Meedoen
+              <a className="lp-btn lp-btn--ghost" href="#helpers">
+                Ik wil helpen
               </a>
             </div>
             <ul className="lp-hero__points">
@@ -137,23 +149,23 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---------- PROBLEEM ---------- */}
-        <section className="lp-section" id="oplossing" aria-labelledby="kop-probleem">
+        {/* ---------- WAT IS HEITJEHULP ---------- */}
+        <section className="lp-section" id="wat" aria-labelledby="kop-wat">
           <div className="lp-shell lp-split">
             <div className="lp-split__copy">
-              <span className="lp-eyebrow">Waarom HeitjeHulp</span>
-              <h2 className="lp-h2" id="kop-probleem">
-                Kleine hulpvragen vallen tussen wal en schip.
+              <span className="lp-eyebrow">Wat is HeitjeHulp</span>
+              <h2 className="lp-h2" id="kop-wat">
+                Een klein klusje, iemand uit de buurt.
               </h2>
-              {problemText.map((p) => (
+              {introText.map((p) => (
                 <p className="lp-body" key={p.slice(0, 24)}>
                   {p}
                 </p>
               ))}
             </div>
-            <div className="lp-help-card" aria-label="Soorten hulpvragen">
-              <p className="lp-help-card__label">Waarbij HeitjeHulp helpt</p>
-              {helpTypes.map((type) => (
+            <div className="lp-help-card" aria-label="Voorbeelden van klussen">
+              <p className="lp-help-card__label">Klussen die je kunt plaatsen</p>
+              {klusTypes.map((type) => (
                 <div className="lp-help-row" key={type}>
                   <span className="lp-dot" />
                   {type}
@@ -176,13 +188,13 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---------- WERKWIJZE ---------- */}
+        {/* ---------- ZO WERKT HET (BEWONERS) ---------- */}
         <section className="lp-section" id="werkwijze" aria-labelledby="kop-werkwijze">
           <div className="lp-shell">
             <div className="lp-section-head">
-              <span className="lp-eyebrow">Werkwijze</span>
+              <span className="lp-eyebrow">Zo werkt het</span>
               <h2 className="lp-h2" id="kop-werkwijze">
-                Van hulpvraag tot vertrouwd gezicht — in vier stappen.
+                Van foto tot klaar, in vier stappen.
               </h2>
             </div>
             <ol className="lp-steps">
@@ -198,11 +210,11 @@ export function LandingPage() {
               ))}
             </ol>
 
-            <h3 className="lp-subkop">Wat wij wel en niet doen</h3>
+            <h3 className="lp-subkop">Wat kan wel en wat niet</h3>
             <div className="lp-delivery lp-weldoen">
               <div className="lp-delivery__col">
                 <h3 className="lp-delivery__title">
-                  <CheckCircle2 size={20} /> Wat wij wel doen
+                  <CheckCircle2 size={20} /> Dit kan
                 </h3>
                 <ul className="lp-checklist">
                   {welDoen.map((item) => (
@@ -215,7 +227,7 @@ export function LandingPage() {
               </div>
               <div className="lp-delivery__col lp-delivery__col--alt">
                 <h3 className="lp-delivery__title">
-                  <XCircle size={20} /> Wat wij niet doen
+                  <XCircle size={20} /> Dit kan niet
                 </h3>
                 <ul className="lp-checklist lp-checklist--niet">
                   {nietDoen.map((item) => (
@@ -236,11 +248,10 @@ export function LandingPage() {
             <div className="lp-section-head">
               <span className="lp-eyebrow">Voor wie</span>
               <h2 className="lp-h2" id="kop-rollen">
-                Eén platform, vier rollen.
+                Bewoners, helpers, ouders en de meldkamer.
               </h2>
               <p className="lp-body lp-section-head__sub">
-                Iedereen ziet alleen wat bij zijn rol hoort. Wat je mag zien, wordt op de server bewaakt —
-                niet alleen in de app.
+                Iedereen ziet in de app alleen wat bij hem of haar hoort.
               </p>
             </div>
             <div className="lp-rollen">
@@ -269,23 +280,83 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---------- TELEFONISCH ---------- */}
-        <section className="lp-section" aria-labelledby="kop-telefoon">
+        {/* ---------- BEMIDDELAAR ---------- */}
+        <section className="lp-section" aria-labelledby="kop-bemiddelaar">
           <div className="lp-shell lp-callout">
             <div className="lp-callout__icon">
-              <PhoneCall size={30} strokeWidth={2} />
+              <Handshake size={30} strokeWidth={2} />
             </div>
             <div>
-              <span className="lp-eyebrow">Ook zonder smartphone</span>
-              <h2 className="lp-h2" id="kop-telefoon">
-                Bellen kan altijd.
+              <span className="lp-eyebrow">Wie is HeitjeHulp</span>
+              <h2 className="lp-h2" id="kop-bemiddelaar">
+                Wij bemiddelen. Wij zijn geen werkgever.
               </h2>
               <p className="lp-body">
-                Niet iedere oudere gebruikt een app. Daarom kan een hulpvraag ook telefonisch worden
-                doorgegeven. De meldkamer zet hem in het systeem, en vanaf dan loopt hij precies zoals een
-                klus uit de app. Aanmelden kan ook door familie, mantelzorger of wijkteam — de oudere houdt
-                altijd zelf de regie.
+                HeitjeHulp is een bedrijf dat bewoners en helpers bij elkaar brengt. De helper is niet bij ons in
+                dienst. Jij en de helper spreken samen de klus af. Wij zorgen voor de app, de chat, het betalen en
+                de meldkamer die meekijkt als er iets misgaat.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- HELPERS ---------- */}
+        <section className="lp-section lp-section--tint" id="helpers" aria-labelledby="kop-helpers">
+          <div className="lp-shell">
+            <div className="lp-section-head">
+              <span className="lp-eyebrow">Voor helpers</span>
+              <h2 className="lp-h2" id="kop-helpers">
+                Help je buurt en verdien je zakgeld.
+              </h2>
+              <p className="lp-body lp-section-head__sub">
+                Je kunt helpen vanaf 10 jaar. Er is geen maximum leeftijd.
+              </p>
+            </div>
+            <ol className="lp-steps lp-steps--drie">
+              {helperSteps.map((step, i) => (
+                <li className="lp-step" key={step.title}>
+                  <span className="lp-step__num">{i + 1}</span>
+                  <span className="lp-step__icon">
+                    <Icon name={step.icon} size={22} />
+                  </span>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ---------- WAT JE KRIJGT ---------- */}
+        <section className="lp-section lp-section--dark" aria-labelledby="kop-beloning">
+          <div className="lp-shell lp-results">
+            <div className="lp-results__head">
+              <span className="lp-eyebrow lp-eyebrow--light">Wat je krijgt</span>
+              <h2 className="lp-h2 lp-h2--light" id="kop-beloning">
+                Zakgeld, XP, badges en niveaus.
+              </h2>
+              <div className="lp-aanvullend">
+                {helperBeloning.map((item) => (
+                  <article key={item.title}>
+                    <Icon name={item.icon} size={20} />
+                    <div>
+                      <h3>{item.title}</h3>
+                      <p>{item.text}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="lp-results__label">Dit zie je in de app</p>
+              <ul className="lp-results__list">
+                {helperInApp.map((r) => (
+                  <li key={r}>
+                    <CheckCircle2 size={18} />
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
@@ -296,10 +367,10 @@ export function LandingPage() {
             <div className="lp-section-head">
               <span className="lp-eyebrow">Veiligheid</span>
               <h2 className="lp-h2" id="kop-veiligheid">
-                Vertrouwen is de hoofdvoorwaarde.
+                Veilig helpen en geholpen worden.
               </h2>
               <p className="lp-body lp-section-head__sub">
-                Geen enkele jongere wordt actief voordat de volledige screening is doorlopen.
+                De meldkamer van HeitjeHulp keurt elke helper goed en helpt als er iets misgaat.
               </p>
             </div>
             <div className="lp-safety-grid">
@@ -315,8 +386,8 @@ export function LandingPage() {
             </div>
             <div className="lp-regels">
               <div>
-                <h3>Gedragsregels voor elke jongere</h3>
-                <p>Bij twijfel wordt een match beëindigd, zonder discussie.</p>
+                <h3>Afspraken voor iedereen</h3>
+                <p>Houdt iemand zich er niet aan? Dan kan de meldkamer het account stoppen.</p>
               </div>
               <ul>
                 {gedragsregels.map((regel) => (
@@ -330,17 +401,17 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---------- KADERS ---------- */}
+        {/* ---------- GOED OM TE WETEN ---------- */}
         <section className="lp-section lp-section--dark" id="kaders" aria-labelledby="kop-kaders">
           <div className="lp-shell">
             <div className="lp-section-head lp-section-head--center">
-              <span className="lp-eyebrow lp-eyebrow--light">Vooraf geregeld</span>
+              <span className="lp-eyebrow lp-eyebrow--light">Goed om te weten</span>
               <h2 className="lp-h2 lp-h2--light" id="kop-kaders">
-                Juridisch, screening, verzekering en privacy.
+                Betalen, ouders, VOG en privacy.
               </h2>
             </div>
 
-            <div className="lp-tabs" role="tablist" aria-label="Kaders">
+            <div className="lp-tabs" role="tablist" aria-label="Goed om te weten">
               {kaders.map((k) => (
                 <button
                   key={k.key}
@@ -378,79 +449,46 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---------- PROEF ---------- */}
-        <section className="lp-section" id="proef" aria-labelledby="kop-proef">
+        {/* ---------- PARTNERS ---------- */}
+        <section className="lp-section" id="partners" aria-labelledby="kop-partners">
           <div className="lp-shell">
             <div className="lp-section-head">
-              <span className="lp-eyebrow">De proef</span>
-              <h2 className="lp-h2" id="kop-proef">
-                Klein beginnen, in drie stappen.
+              <span className="lp-eyebrow">Partners</span>
+              <h2 className="lp-h2" id="kop-partners">
+                Samen met het jongerenwerk.
               </h2>
               <p className="lp-body lp-section-head__sub">
-                Eerst bewijzen dat het werkt, dan pas groeien. Na elke stap volgt een korte rapportage.
+                Organisaties voor jongerenwerk kennen de jongeren in de wijk. Als partner helpen ze HeitjeHulp
+                bekend te maken. HeitjeHulp blijft zelf de bemiddelaar.
               </p>
             </div>
-            <div className="lp-proef">
-              <dl className="lp-proef__cijfers" aria-label="De eerste proef">
-                {proefStats.map((stat) => (
-                  <div key={stat.label}>
-                    <dt>{stat.label}</dt>
-                    <dd>{stat.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <ol className="lp-fases">
-                {fases.map((fase) => (
-                  <li key={fase.label}>
-                    <span>{fase.label}</span>
-                    <h3>{fase.title}</h3>
-                    <p>{fase.text}</p>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </section>
-
-        {/* ---------- AANVULLEND + METEN ---------- */}
-        <section className="lp-section lp-section--dark" aria-labelledby="kop-aanvullend">
-          <div className="lp-shell lp-results">
-            <div className="lp-results__head">
-              <span className="lp-eyebrow lp-eyebrow--light">Naast het bestaande aanbod</span>
-              <h2 className="lp-h2 lp-h2--light" id="kop-aanvullend">
-                We vergroten de vijver in plaats van eruit te vissen.
-              </h2>
-              <div className="lp-aanvullend">
-                {aanvullend.map((item) => (
-                  <article key={item.title}>
-                    <Icon name={item.icon} size={20} />
-                    <div>
-                      <h3>{item.title}</h3>
-                      <p>{item.text}</p>
-                    </div>
-                  </article>
-                ))}
+            <div className="lp-partners">
+              <div className="lp-partner-card">
+                <Handshake size={30} strokeWidth={2} aria-hidden="true" />
+                <h3>Word partner</h3>
+                <p>Werk je bij een organisatie voor jongerenwerk? Mail ons en we vertellen je graag meer.</p>
+                <a className="lp-btn lp-btn--primary" href={PARTNER_MAIL}>
+                  Mail info@heitjehulp.nl
+                  <ArrowUpRight size={18} />
+                </a>
               </div>
-            </div>
-            <div>
-              <p className="lp-results__label">Wat we bijhouden en delen</p>
-              <ul className="lp-results__list">
-                {results.map((r) => (
-                  <li key={r}>
-                    <CheckCircle2 size={18} />
-                    <span>{r}</span>
+              <ul className="lp-fases">
+                {partnerPunten.map((punt) => (
+                  <li key={punt.title}>
+                    <span>
+                      <Icon name={punt.icon} size={18} />
+                    </span>
+                    <h3>{punt.title}</h3>
+                    <p>{punt.text}</p>
                   </li>
                 ))}
               </ul>
-              <p className="lp-body lp-body--light lp-results__noot">
-                Altijd in totalen, nooit tot een persoon te herleiden.
-              </p>
             </div>
           </div>
         </section>
 
         {/* ---------- VRAGEN ---------- */}
-        <section className="lp-section" id="vragen" aria-labelledby="kop-vragen">
+        <section className="lp-section lp-section--tint" id="vragen" aria-labelledby="kop-vragen">
           <div className="lp-shell lp-faq">
             <div className="lp-section-head">
               <span className="lp-eyebrow">Vragen</span>
@@ -477,7 +515,7 @@ export function LandingPage() {
                 Meedoen of meer weten?
               </h2>
               <p className="lp-body lp-body--light">
-                Als oudere, familielid, jongere of organisatie in de wijk: we horen graag van u.
+                Als bewoner, helper, ouder of organisatie: we horen graag van je.
               </p>
             </div>
             <div className="lp-cta__actions">
@@ -498,7 +536,9 @@ export function LandingPage() {
             </span>
             <span>HeitjeHulp</span>
           </a>
-          <p>Stichting HeitjeHulp · veilige hulp van jongeren voor ouderen in de eigen wijk</p>
+          <p>
+            {SLOGAN} HeitjeHulp bemiddelt tussen bewoners en helpers en is geen werkgever.
+          </p>
         </div>
       </footer>
     </div>
