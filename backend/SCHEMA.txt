@@ -881,3 +881,85 @@ B1CHECK (scripts/72-b1check.mjs, dry-run standaard)
 UITROLLEN (volgorde)
   00-backup.mjs -> 70 --apply -> 71 --apply -> 73-hook-deploy.sh ->
   72-b1check.mjs --apply
+
+================================================================
+B2 - AANMELDEN EN GOEDKEUREN ZONDER SCREENING (3 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b2.txt)
+================================================================
+
+Keuzes (prompt B2): K1 rolcodes blijven (hulpvrager/jongere/coordinator);
+K2 geen iDIN; K3 ouder-code is B3, B2 bewaart alleen ouder_email of
+ouder_telefoon; K4 geen werkgebied-stap: de wijk komt uit de postcode.
+Geen nieuwe velden. Velden opruimen (selfie, intake_op, telefoon,
+vog_status, straal_km, beschikbaarheid, klustypes) gebeurt NIET in B2: de
+app schrijft ze niet meer, de data blijft staan (geen datamigratie).
+
+RULES (scripts/80-b2-rules.mjs, GEWIKKELD of GERICHT zoals 61/71/41)
+  hh_profielen.updateRule  (huidig) && ((coordinator) ||
+      (verificatiestatus != "goedgekeurd" ||
+       @request.body.document_foto:isset = false))
+    = B1-gat 1: na goedkeuring geen nieuwe ID-foto (ook niet met
+      "document_foto+"; bewezen in 82). over_mij enz. mag nog wel.
+  hh_klussen.listRule/viewRule  in de helper-tak, direct achter
+      @collection.hh_profielen.verificatiestatus ?= "goedgekeurd":
+      && (@request.auth.ouder_toestemming_op != "" ||
+          @collection.hh_profielen.vog_gezien_op ?!= "")
+    Een rule kan niet met datums rekenen; de LIJST eist daarom "ouder gaf
+    toestemming OF VOG gezien", de accepteer-hook doet de precieze check
+    op leeftijd. Beide velden zet alleen coordinator/server (slot 71).
+    Eigen (toegewezen) klussen blijven zichtbaar (andere tak).
+  hh_users.updateRule  (huidig) && ((coordinator) ||
+      (@request.body.geboortedatum:isset = false))
+    De leeftijd bepaalt wat een helper mag; alleen bij registreren zet de
+    eigenaar hem zelf.
+  VOLGORDE: na B1. Draai 02, 06, 13, 21, 61 of 71 daarna niet meer met
+  --apply zonder 80 opnieuw.
+
+HOOKS (deploy met scripts/83-hook-deploy.sh; 2 nieuwe bestanden)
+  hh_aanmelden_hulp.js (NIEUW, geen hook): leeftijd, isTeJong (< 10),
+    klusBlokkade, postcodeCijfers, wijkVoorPostcode, voornaam,
+    VERBORGEN_VOOR_ANDEREN. Getest zonder server.
+  hh_aanmelden.pb.js (NIEUW):
+    - onRecordCreateRequest/UpdateRequest hh_users: helper (rol jongere)
+      jonger dan 10 -> 400 "Je moet minstens 10 jaar zijn om helper te
+      worden." (ook superuser en coordinator). Komt er een (andere)
+      postcode mee, dan wijk = de actieve hh_wijken met die 4 cijfers, of
+      leeg. Een coordinator die zelf een wijk meestuurt wint.
+    - onRecordUpdate hh_profielen (MODEL-hook, elke opslag: API,
+      superuser, script, $app): verificatiestatus -> goedgekeurd wist
+      document_foto en zet id_gecontroleerd_op = nu (B1-gat 2).
+    - onRecordEnrich hh_users, alleen rol jongere: extra veld
+      id_gecontroleerd (ja/nee = id_gecontroleerd_op op het profiel). Voor
+      een kijker die niet de helper zelf, geen coordinator en geen
+      superuser is: geboortedatum, adres, huisnummer, postcode, plaats,
+      telefoon, contact_*, ouder_* en email weg, naam = voornaam. Zonder
+      ingelogde kijker (registreren/inloggen = de eigenaar) blijft alles.
+  hh_beheer.pb.js punt 3: zet bij goedkeuren door een coordinator alleen
+    nog id_gecontroleerd_door (het wissen deed hij dubbel; zit nu in de
+    model-hook).
+  hh_klussen.pb.js accepteren: na "goedgekeurd" de B2-blokkade
+    (403 { melding, reden }):
+      geboortedatum  geen geboortedatum
+      ouder          onder 18 zonder ouder_toestemming_op
+      vog            18+ zonder vog_gezien_op
+      vogverlopen    vog_geldig_tot vóór vandaag (oude data, blijft)
+    Melding zonder wijk: "Je postcode hoort nog niet bij een wijk van
+    HeitjeHulp. Neem contact op met de meldkamer."
+  NIET aangepast: koppelen door de coordinator (hh_coordinator.pb.js)
+  kijkt alleen naar vog_geldig_tot (zie app/OPEN-PUNTEN-B2.txt).
+
+B2CHECK (scripts/82-b2check.mjs, dry-run standaard)
+  Met --apply, met eigen tijdelijke accounts "b2check-...@heitjehulp.
+  invalid" en eigen klussen: < 10 geweigerd (anoniem en superuser), 10 mag;
+  postcode -> wijk; geboortedatum vast voor de eigenaar; per helper wie de
+  open klus ziet en accepteert (< 18 met/zonder toestemming, 18+ met/zonder
+  VOG); ID opnieuw uploaden na goedkeuring geweigerd; superuser-goedkeuring
+  wist het document (bestand 404); wat een bewoner van zijn helper ziet;
+  alles opgeruimd. Lokaal bewezen tegen PocketBase 0.25.9 met het
+  prod-schema: 59 groen. 62-beheercheck geeft zijn tijdelijke helper nu een
+  geboortedatum en vog_gezien_op (anders weigert B2 hem terecht).
+  Test zonder server: node --test backend/tests/*.test.mjs.
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 80 --apply -> 83-hook-deploy.sh -> 82 --apply ->
+  72, 62, 04, 50 (zie proefrit-b2.txt: 04 en 50 gebruiken de seed-jongeren)

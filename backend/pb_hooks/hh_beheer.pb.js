@@ -1,7 +1,8 @@
 // HeitjeHulp M14 — hh_beheer.pb.js (PocketBase JS-hook, gedeelde prod-server)
 //
 // Drie dingen voor het beheerpaneel (website, #/beheer), plus (B1) punt 3:
-// bij goedkeuren van een profiel wist de server het ID-document.
+// bij goedkeuren van een profiel onthoudt de server welke coordinator het
+// deed (het wissen van het ID-document zit sinds B2 in hh_aanmelden.pb.js).
 //
 // 1. GEBLOKKEERD = BUITEN (hh_users.geblokkeerd, script 60)
 //    a. onRecordAuthWithPasswordRequest op hh_users: een geblokkeerde
@@ -36,7 +37,7 @@
 // een bewuste weigering); json-velden met toString() decoderen.
 //
 // DEPLOY: scripts/63-hook-deploy.sh (dit bestand + hh_beheer_hulp.js); de
-// B1-versie met backup/rollback: scripts/73-hook-deploy.sh.
+// B1-versie met backup/rollback: scripts/73-hook-deploy.sh; B2: 83.
 // 10-hook-deploy.sh kent alleen hh_klussen.pb.js. ROLLBACK: 63 --rollback.
 // VOORWAARDE: 60-beheer-velden.mjs --apply (veld geblokkeerd, hh_auditlog).
 
@@ -209,47 +210,41 @@ onRecordDeleteRequest(
 );
 
 // --------------------------------------------------------------------------
-// 3. B1: ID-document wissen bij goedkeuren (hh_profielen)
+// 3. B1/B2: wie keurde goed (hh_profielen)
 // --------------------------------------------------------------------------
 // Zet een COORDINATOR via de API verificatiestatus van iets anders naar
-// "goedgekeurd", dan doet deze hook VOOR het opslaan (dus in dezelfde
-// handeling, zelfde transactie als de goedkeuring):
-//   - document_foto leeg  -> PocketBase verwijdert het bestand bij het opslaan
-//   - id_gecontroleerd_op   = nu
-//   - id_gecontroleerd_door = de coordinator
-// De API-rule (71) is dan al gecontroleerd op de body van de coordinator; wat
-// de hook zet valt daar niet onder. Mislukt het opslaan, dan gebeurt er niets
-// (ook het wissen niet). Een superuser (beheer-UI) of een script via $app
-// valt hier NIET onder: dat is geen beheerhandeling van een coordinator.
+// "goedgekeurd", dan zet deze hook VOOR het opslaan id_gecontroleerd_door =
+// de coordinator. Het wissen van document_foto en id_gecontroleerd_op = nu
+// doet sinds B2 de model-hook in hh_aanmelden.pb.js (onRecordUpdate): die
+// draait langs ELKE weg (ook superuser/script) en in dezelfde opslag. Zo
+// loopt het wissen niet dubbel. Superuser of $app laat _door leeg: dat is
+// geen beheerhandeling van een coordinator.
 // Naast de auditlog-hook hierboven (die ziet in "naar" dat document_foto
 // leeg is, zonder de bestandsnaam: document_foto is GEHEIM).
-// VOORWAARDE: 70-b1-velden.mjs --apply (id_gecontroleerd_op/_door).
+// VOORWAARDE: 70-b1-velden.mjs --apply (id_gecontroleerd_door), en
+// hh_aanmelden.pb.js op de server (anders wist niemand het document).
 onRecordUpdateRequest((e) => {
-  let wissen = false;
+  let goedkeuring = false;
   try {
     const hulp = require(`${__hooks}/hh_beheer_hulp.js`);
     const coordinator = !!e.auth && hulp.isCoordinator(e.auth.collection().name, e.auth.get("rol"));
     if (coordinator) {
       const oud = String(e.record.original().get("verificatiestatus") || "");
       const nieuw = String(e.record.get("verificatiestatus") || "");
-      wissen = hulp.isGoedkeuring(oud, nieuw);
+      goedkeuring = hulp.isGoedkeuring(oud, nieuw);
     }
   } catch (err) {
     console.log("[hh_beheer] goedkeuring nakijken mislukt:", String(err));
-    wissen = false;
+    goedkeuring = false;
   }
 
-  if (wissen) {
-    // Bewust GEEN try/catch om het zetten: lukt het niet, dan liever de hele
-    // goedkeuring weigeren dan goedkeuren met het document nog op de server.
-    e.record.set("document_foto", "");
-    e.record.set("id_gecontroleerd_op", new DateTime());
+  if (goedkeuring) {
     e.record.set("id_gecontroleerd_door", e.auth.id);
   }
 
   e.next();
 
-  if (wissen) {
-    console.log(`[hh_beheer] profiel ${e.record.id} goedgekeurd door ${e.auth.id}: ID-document gewist`);
+  if (goedkeuring) {
+    console.log(`[hh_beheer] profiel ${e.record.id} goedgekeurd door ${e.auth.id}`);
   }
 }, "hh_profielen");

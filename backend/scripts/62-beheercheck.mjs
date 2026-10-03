@@ -214,12 +214,15 @@ async function main() {
 
   const coord = await tijdelijkAccount('coordinator', 'coordinator');
   const oudere = await tijdelijkAccount('oudere', 'hulpvrager');
-  const jongere = await tijdelijkAccount('jongere', 'jongere');
+  // B2: een helper vanaf 18 met VOG gezien mag klussen zien en aannemen
+  // (zonder geboortedatum/vog_gezien_op weigert de B2-hook).
+  const jongere = await tijdelijkAccount('jongere', 'jongere', { geboortedatum: '2000-01-01 00:00:00.000Z' });
   const familie = await tijdelijkAccount('familie', 'familie');
   const profielJongere = await su.collection(assertHh('hh_profielen')).create({
     gebruiker: jongere.id,
     verificatiestatus: 'goedgekeurd',
     vog_status: 'goedgekeurd',
+    vog_gezien_op: '2026-10-01 12:00:00.000Z',
   });
   const profielFamilie = await su.collection(assertHh('hh_profielen')).create({ gebruiker: familie.id });
   // Een klus en een incident van een ANDER (de oudere), om te zien dat de
