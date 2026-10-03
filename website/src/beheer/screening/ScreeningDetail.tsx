@@ -88,6 +88,17 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
         <dd>
           {profiel.iban || 'niet ingevuld'} {profiel.ibanGeverifieerd ? '(geverifieerd)' : '(niet geverifieerd)'}
         </dd>
+        {/* B3: alleen lezen. De ouder geeft toestemming via de ouder-pagina;
+            de meldkamer zet het nooit zelf. */}
+        <dt>Ouder</dt>
+        <dd>
+          {profiel.ouderToestemmingOp
+            ? `Ouder gaf toestemming op ${toonDatum(profiel.ouderToestemmingOp)}`
+            : 'Geen toestemming van een ouder (nodig onder 18)'}
+          {profiel.ouderAvp === null ? null : (
+            <span className="admin-muted"> · {profiel.ouderAvp ? 'AVP: ja' : 'AVP: nee'}</span>
+          )}
+        </dd>
         <dt>Over mij</dt>
         <dd>{profiel.overMij || 'niet ingevuld'}</dd>
         {profiel.screeningNotitie ? (

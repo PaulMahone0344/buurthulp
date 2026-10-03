@@ -81,6 +81,10 @@ export type Profiel = {
   bijgewerktOp: string
   /** Kant-en-klare url met bestandstoken; leeg als er geen bestand is. */
   documentFotoUrl: string
+  /** B3: hh_users.ouder_toestemming_op (ISO); leeg = geen toestemming. */
+  ouderToestemmingOp: string
+  /** B3: AVP-vinkje van de ouder (hh_ouder_toestemming); null = geen rij. */
+  ouderAvp: boolean | null
 }
 
 export type Wijk = {

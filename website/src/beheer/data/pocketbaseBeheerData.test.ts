@@ -224,6 +224,29 @@ describe('omzetten', () => {
     expect(profiel.vogGezienOp).toBe('2026-10-01')
   })
 
+  it('B3: leest ouder-toestemming (hh_users) en het AVP-vinkje (hh_ouder_toestemming)', () => {
+    const gebruiker = {
+      id: 'j1',
+      collectionId: 'u',
+      collectionName: 'hh_users',
+      naam: 'Daan',
+      ouder_toestemming_op: '2026-10-04 10:00:00.000Z',
+      expand: {
+        hh_ouder_toestemming_via_helper: { id: 't1', collectionId: 't', collectionName: 'hh_ouder_toestemming', avp_verklaard: true },
+      },
+    }
+    const met = naarProfiel(
+      { id: 'p1', collectionId: 'c', collectionName: 'hh_profielen', gebruiker: 'j1', expand: { gebruiker } },
+      (b) => b,
+    )
+    expect(met.ouderToestemmingOp).toBe('2026-10-04T10:00:00.000Z')
+    expect(met.ouderAvp).toBe(true)
+
+    const zonder = naarProfiel({ id: 'p2', collectionId: 'c', collectionName: 'hh_profielen' }, (b) => b)
+    expect(zonder.ouderToestemmingOp).toBe('')
+    expect(zonder.ouderAvp).toBeNull()
+  })
+
   it('maakt van een json-waarde leesbare tekst', () => {
     expect(naarInstelling({ id: 'i', collectionId: 'c', collectionName: 'hh_instellingen', sleutel: 'straal_km', waarde: 5 }).waarde).toBe('5')
     expect(

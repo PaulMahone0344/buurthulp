@@ -97,9 +97,13 @@ export function naarIncident(r: Uitgebreid): Incident {
   }
 }
 
+/** B3: de rij in hh_ouder_toestemming hangt aan de helper (terugverwijzing). */
+const OUDER_RIJ = 'hh_ouder_toestemming_via_helper'
+
 export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => string): Profiel {
   const gebruiker = uitgebreid(r, 'gebruiker')
   const wijk = gebruiker ? uitgebreid(gebruiker, 'wijk') : undefined
+  const ouderRij = gebruiker ? uitgebreid(gebruiker, OUDER_RIJ) : undefined
   const document = tekst(r.document_foto)
   return {
     id: r.id,
@@ -118,6 +122,8 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     screeningNotitie: tekst(r.screening_notitie),
     bijgewerktOp: naarIso(r.updated),
     documentFotoUrl: document ? bestandUrl(document) : '',
+    ouderToestemmingOp: naarIso(gebruiker?.ouder_toestemming_op),
+    ouderAvp: ouderRij ? ouderRij.avp_verklaard === true : null,
   }
 }
 
@@ -376,7 +382,9 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
         const records = await col('hh_profielen').getFullList({
           filter: 'gebruiker.rol = "jongere"',
           sort: '-updated',
-          expand: 'gebruiker,gebruiker.wijk',
+          // B3: alleen lezen; de coordinator mag hh_ouder_toestemming lezen
+          // (de hash-velden zijn hidden en komen nooit mee).
+          expand: `gebruiker,gebruiker.wijk,gebruiker.${OUDER_RIJ}`,
         })
         // document_foto is PROTECTED: zonder bestandstoken 404.
         const token = records.length ? await pb.files.getToken() : ''
