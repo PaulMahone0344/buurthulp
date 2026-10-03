@@ -27,6 +27,7 @@ import '../provider/chat_providers.dart';
 import '../widget/bericht_bubbel.dart';
 import '../widget/chat_invoer.dart';
 import '../widget/chat_kop.dart';
+import '../widget/gesprek_verwijderen_dialoog.dart';
 
 /// B6. De chat tussen bewoner en helper bij één klus (mockup Chat.dc.html).
 /// De klus (en dus wie de ander is en of de chat open is) komt uit de
@@ -50,6 +51,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _isBezig = false;
   bool _isGeweigerd = false;
   String? _fout;
+  String? _gelukt;
 
   @override
   void initState() {
@@ -101,6 +103,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
     });
     if (uitkomst is VerstuurGeweigerd) _ververs();
+  }
+
+  /// "Gesprek verwijderen": eerst vragen, dan alleen voor mij weg. Loopt er
+  /// een melding op de klus, dan legt het scherm uit dat het later kan.
+  Future<void> _verwijderGesprek(ChatSleutel sleutel, String naam) async {
+    if (_isBezig) return;
+    final weg = await vraagGesprekVerwijderen(context, naam);
+    if (!weg || !mounted) return;
+    setState(() {
+      _isBezig = true;
+      _fout = null;
+      _gelukt = null;
+    });
+    final uitkomst = await ref
+        .read(chatGatewayProvider)
+        .verbergGesprek(sleutel.klusId);
+    if (!mounted) return;
+    setState(() {
+      _isBezig = false;
+      switch (uitkomst) {
+        case GesprekVerborgen():
+          _gelukt = TekstenChatNl.gesprekVerwijderd;
+        case GesprekIncident():
+          _fout = TekstenChatNl.verwijderIncident;
+        case GesprekVerbergFout(:final fout):
+          _fout = fout.isGeenVerbinding
+              ? fout.melding
+              : TekstenChatNl.verwijderMislukt;
+      }
+    });
+    if (uitkomst is GesprekVerborgen) {
+      ref.invalidate(chatProvider(sleutel));
+      ref.invalidate(ongelezenChatProvider);
+    }
   }
 
   @override
@@ -179,7 +215,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onTerug: onTerug,
             onMeld: () =>
                 context.push(HhPadenVeiligheid.probleemBij(widget.klusId)),
+            onVerwijder: helperId.isEmpty
+                ? null
+                : () => _verwijderGesprek(sleutel, naam),
           ),
+          if (_gelukt != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                HhRuimte.l,
+                HhRuimte.s,
+                HhRuimte.l,
+                0,
+              ),
+              child: HhMeldBalk(soort: HhMeldSoort.geslaagd, tekst: _gelukt!),
+            ),
           if (_fout != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(

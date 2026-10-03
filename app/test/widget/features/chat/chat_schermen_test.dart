@@ -146,6 +146,61 @@ void main() {
       expect(find.textContaining(TekstenChatNl.gelezen), findsOneWidget);
     });
 
+    testWidgets('account van de ander verwijderd: "Bericht verwijderd"', (
+      tester,
+    ) async {
+      final chat = fakeChat([
+        testBericht(afzender: '', tekst: '', gewist: true),
+      ]);
+      await tester.pumpWidget(hhChatWikkel(_pad, chatGateway: chat));
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenChatNl.berichtVerwijderd), findsOneWidget);
+    });
+
+    testWidgets('gesprek verwijderen: vragen, dan weg (alleen voor mij)', (
+      tester,
+    ) async {
+      final chat = fakeChat([testBericht(tekst: 'Ik kom om twee')]);
+      await tester.pumpWidget(hhChatWikkel(_pad, chatGateway: chat));
+      await tester.pumpAndSettle();
+      expect(find.text('Ik kom om twee'), findsOneWidget);
+
+      // Annuleren: er gebeurt niets.
+      await tester.tap(find.text(TekstenChatNl.gesprekVerwijderen));
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenChatNl.verwijderVraag), findsOneWidget);
+      await tester.tap(find.widgetWithText(HhKnop, TekstenChatNl.verwijderNee));
+      await tester.pumpAndSettle();
+      expect(chat.verborgenKlussen, isEmpty);
+      expect(find.text('Ik kom om twee'), findsOneWidget);
+
+      await tester.tap(find.text(TekstenChatNl.gesprekVerwijderen));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(HhKnop, TekstenChatNl.verwijderJa));
+      await tester.pumpAndSettle();
+      expect(chat.verborgenKlussen, ['k-uitvoeren']);
+      expect(find.text('Ik kom om twee'), findsNothing);
+      expect(find.text(TekstenChatNl.gesprekVerwijderd), findsOneWidget);
+    });
+
+    testWidgets(
+      'gesprek verwijderen bij een lopende melding: uitleg, niets weg',
+      (tester) async {
+        final chat = fakeChat([testBericht(tekst: 'Ik kom om twee')])
+          ..isIncident = true;
+        await tester.pumpWidget(hhChatWikkel(_pad, chatGateway: chat));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(TekstenChatNl.gesprekVerwijderen));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.widgetWithText(HhKnop, TekstenChatNl.verwijderJa),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text(TekstenChatNl.verwijderIncident), findsOneWidget);
+        expect(find.text('Ik kom om twee'), findsOneWidget);
+      },
+    );
+
     testWidgets('weggefilterd: korte uitleg in de bubbel', (tester) async {
       final chat = fakeChat([
         testBericht(

@@ -33,7 +33,11 @@ class BerichtBubbel extends StatelessWidget {
     final achtergrond = isVanMij ? HhKleuren.primair : HhKleuren.oppervlak;
     final rond = HhRuimte.l;
     final hoek = HhRadius.klein;
-    final isSnel = bericht.soort == HhBerichtSoort.snel;
+    final isSnel = bericht.soort == HhBerichtSoort.snel && !bericht.isGewist;
+    // Integratie (AVG): het account van de afzender is weg.
+    final inhoud = bericht.isGewist
+        ? TekstenChatNl.berichtVerwijderd
+        : bericht.tekst;
     final moment = bericht.gemaakt;
     final tijd = moment == null ? '' : tijdTekst(moment);
     final onder = [
@@ -42,8 +46,11 @@ class BerichtBubbel extends StatelessWidget {
     ].join(' · ');
 
     final stijl = tekst.bodyLarge?.copyWith(
-      color: isSnel && !isVanMij ? HhKleuren.primair : voorgrond,
+      color: bericht.isGewist
+          ? gedempt
+          : (isSnel && !isVanMij ? HhKleuren.primair : voorgrond),
       fontWeight: isSnel ? FontWeight.w600 : null,
+      fontStyle: bericht.isGewist ? FontStyle.italic : null,
     );
 
     return Semantics(
@@ -51,7 +58,7 @@ class BerichtBubbel extends StatelessWidget {
       label: TekstenChatNl.bubbelSemantiek(
         isVanMij ? TekstenChatNl.ik : naamAfzender,
         tijd,
-        bericht.tekst,
+        inhoud,
         isGelezen: toonGelezen,
       ),
       excludeSemantics: true,
@@ -100,13 +107,13 @@ class BerichtBubbel extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            TextSpan(text: bericht.tekst),
+                            TextSpan(text: inhoud),
                           ],
                         ),
                         style: stijl,
                       ),
                     ),
-                    if (bericht.isGefilterd)
+                    if (bericht.isGefilterd && !bericht.isGewist)
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(

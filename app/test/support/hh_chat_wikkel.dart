@@ -40,6 +40,7 @@ HhBericht testBericht({
   int minutenGeleden = 30,
   bool gelezen = false,
   bool gefilterd = false,
+  bool gewist = false,
 }) => HhBericht(
   id: id,
   klusId: klus,
@@ -50,6 +51,7 @@ HhBericht testBericht({
   gemaakt: uitvoerNu.subtract(Duration(minutes: minutenGeleden)),
   gelezenOp: gelezen ? uitvoerNu : null,
   isGefilterd: gefilterd,
+  isGewist: gewist,
 );
 
 FakeChatGateway fakeChat([List<HhBericht> berichten = const []]) {

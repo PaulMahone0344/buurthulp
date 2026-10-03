@@ -49,6 +49,7 @@ Map<String, dynamic> _bericht({
   String klus = 'k1',
   String gelezen = '',
   bool gefilterd = false,
+  bool gewist = false,
 }) => {
   'id': id,
   'collectionName': 'hh_berichten',
@@ -59,6 +60,7 @@ Map<String, dynamic> _bericht({
   'soort': 'snel',
   'gelezen_op': gelezen,
   'gefilterd': gefilterd,
+  'gewist': gewist,
   'created': '2026-10-04 09:52:00.000Z',
 };
 
@@ -173,4 +175,42 @@ void main() {
     ).berichten('k1', helperId: 'j1');
     expect((r as Err).fout.soort, HhFoutSoort.geenVerbinding);
   });
+
+  // Integratie (antwoorden Ibrahim 4 okt): gesprek verwijderen en AVG.
+  test('een gewist bericht (account weg) komt binnen als isGewist', () async {
+    final server = _NepServer()
+      ..zet('GET', _berichten, 200, _pagina([_bericht(gewist: true)]));
+    final r = await PocketBaseChatGateway(
+      server.gateway(),
+    ).berichten('k1', helperId: 'j1');
+    expect((r as Ok<List<HhBericht>>).waarde.single.isGewist, isTrue);
+  });
+
+  test(
+    'verbergGesprek: POST naar de route; 409 = incident, 500 = fout',
+    () async {
+      const pad = '/api/hh/chat/k1/verbergen';
+      for (final (status, verwacht) in [
+        (200, isA<GesprekVerborgen>()),
+        (409, isA<GesprekIncident>()),
+        (500, isA<GesprekVerbergFout>()),
+      ]) {
+        final server = _NepServer()
+          ..zet(
+            'POST',
+            pad,
+            status,
+            status == 200
+                ? {'verborgen': 2}
+                : {'status': status, 'message': 'x', 'data': {}},
+          );
+        final uit = await PocketBaseChatGateway(
+          server.gateway(),
+        ).verbergGesprek('k1');
+        expect(uit, verwacht, reason: '$status');
+        expect(server.verzoeken.single.methode, 'POST');
+        expect(server.verzoeken.single.pad, pad);
+      }
+    },
+  );
 }

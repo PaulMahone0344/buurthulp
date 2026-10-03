@@ -19,6 +19,7 @@ class ChatKop extends StatelessWidget {
     required this.ondertitel,
     required this.onTerug,
     this.onMeld,
+    this.onVerwijder,
     super.key,
   });
 
@@ -28,6 +29,9 @@ class ChatKop extends StatelessWidget {
 
   /// Leeg: geen meldknop (zolang de klus niet geladen is).
   final VoidCallback? onMeld;
+
+  /// "Gesprek verwijderen" (integratie). Leeg: geen knop.
+  final VoidCallback? onVerwijder;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +86,7 @@ class ChatKop extends StatelessWidget {
             ),
           ),
         ),
-        _InfoBalk(ruimte: ruimte),
+        _InfoBalk(ruimte: ruimte, onVerwijder: onVerwijder),
       ],
     );
   }
@@ -154,9 +158,10 @@ class _Vlag extends StatelessWidget {
 }
 
 class _InfoBalk extends StatelessWidget {
-  const _InfoBalk({required this.ruimte});
+  const _InfoBalk({required this.ruimte, this.onVerwijder});
 
   final double ruimte;
+  final VoidCallback? onVerwijder;
 
   @override
   Widget build(BuildContext context) {
@@ -167,17 +172,36 @@ class _InfoBalk extends StatelessWidget {
         border: Border(bottom: BorderSide(color: HhKleuren.rand)),
       ),
       padding: EdgeInsets.symmetric(horizontal: ruimte * 2, vertical: ruimte),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: ruimte,
         children: [
-          const Icon(Icons.lock_outline, size: 16, color: HhKleuren.primair),
-          SizedBox(width: ruimte),
-          Flexible(
-            child: Text(
-              TekstenChatNl.verborgen,
-              style: tekst.bodySmall?.copyWith(color: HhKleuren.tekstGedempt),
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.lock_outline,
+                size: 16,
+                color: HhKleuren.primair,
+              ),
+              SizedBox(width: ruimte),
+              Flexible(
+                child: Text(
+                  TekstenChatNl.verborgen,
+                  style: tekst.bodySmall?.copyWith(
+                    color: HhKleuren.tekstGedempt,
+                  ),
+                ),
+              ),
+            ],
           ),
+          if (onVerwijder != null)
+            TextButton.icon(
+              onPressed: onVerwijder,
+              icon: const Icon(Icons.delete_outline, size: 18),
+              label: const Text(TekstenChatNl.gesprekVerwijderen),
+            ),
         ],
       ),
     );

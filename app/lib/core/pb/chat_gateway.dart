@@ -33,6 +33,31 @@ final class VerstuurFout extends VerstuurUitkomst {
   final HhFout fout;
 }
 
+/// Wat er van "Gesprek verwijderen" terugkomt (integratie, antwoorden
+/// Ibrahim 4 okt). Het gesprek verdwijnt alleen voor mij; de ander houdt
+/// zijn kopie.
+@immutable
+sealed class VerbergUitkomst {
+  const VerbergUitkomst();
+}
+
+/// Weg voor mij. [aantal] berichten verborgen.
+final class GesprekVerborgen extends VerbergUitkomst {
+  const GesprekVerborgen(this.aantal);
+  final int aantal;
+}
+
+/// 409: er loopt een melding (incident) op deze klus; eerst de meldkamer.
+final class GesprekIncident extends VerbergUitkomst {
+  const GesprekIncident();
+}
+
+/// Geen verbinding, geen deelnemer of een andere fout.
+final class GesprekVerbergFout extends VerbergUitkomst {
+  const GesprekVerbergFout(this.fout);
+  final HhFout fout;
+}
+
 /// De chat per klus (B6, collectie hh_berichten). De server bepaalt wie
 /// leest en schrijft (rule 111) en filtert (hook hh_chat.pb.js); de app
 /// leest, volgt live, verstuurt en zet gelezen_op.
@@ -64,6 +89,10 @@ abstract interface class ChatGateway {
 
   /// Elke wijziging in een bericht dat ik mag zien (voor de teller).
   Stream<void> volgAlle();
+
+  /// "Gesprek verwijderen": verbergt het gesprek bij [klusId] alleen voor
+  /// mij (route POST /api/hh/chat/{klus}/verbergen).
+  Future<VerbergUitkomst> verbergGesprek(String klusId);
 }
 
 class PocketBaseChatGateway implements ChatGateway {
@@ -159,6 +188,29 @@ class PocketBaseChatGateway implements ChatGateway {
       return Map.unmodifiable(telling);
     });
   }
+
+  @override
+  Future<VerbergUitkomst> verbergGesprek(String klusId) async {
+    final result = await _gateway.voerUit<VerbergUitkomst>((client) async {
+      try {
+        final body = await client.send<Map<String, dynamic>>(
+          '/api/hh/chat/${Uri.encodeComponent(klusId)}/verbergen',
+          method: 'POST',
+        );
+        final aantal = body['verborgen'];
+        return GesprekVerborgen(aantal is int ? aantal : 0);
+      } on ClientException catch (e) {
+        if (e.statusCode == _statusIncident) return const GesprekIncident();
+        rethrow;
+      }
+    });
+    return switch (result) {
+      Ok<VerbergUitkomst>(:final waarde) => waarde,
+      Err<VerbergUitkomst>(:final fout) => GesprekVerbergFout(fout),
+    };
+  }
+
+  static const _statusIncident = 409;
 
   @override
   Stream<HhBericht> volg(String klusId) => _abonnement(

@@ -55,6 +55,23 @@ abstract final class TekstenChatNl {
   static const snelHelper = ['Ik ben onderweg', 'Ik ben er', 'Klaar'];
   static const snelBewoner = ['Prima!', 'Ik ben thuis', 'Bel even aan'];
 
+  // ---- Gesprek verwijderen en AVG (integratie, antwoorden Ibrahim 4 okt) --
+  static const gesprekVerwijderen = 'Gesprek verwijderen';
+  static const verwijderVraag = 'Gesprek verwijderen?';
+  static String verwijderUitleg(String naam) =>
+      'Het gesprek verdwijnt alleen bij jou. '
+      '${naam.isEmpty ? 'De ander' : naam} houdt de berichten. '
+      'Een nieuw bericht zie je wel weer.';
+  static const verwijderNee = 'Niet verwijderen';
+  static const verwijderJa = 'Verwijderen';
+  static const gesprekVerwijderd = 'Het gesprek is verwijderd.';
+  static const verwijderIncident =
+      'Er loopt een melding over deze klus. Je kunt het gesprek verwijderen '
+      'zodra de meldkamer die heeft afgehandeld.';
+  static const verwijderMislukt =
+      'Het gesprek is niet verwijderd. Probeer het opnieuw.';
+  static const berichtVerwijderd = 'Bericht verwijderd';
+
   // ---- Melding (terugval-titel; de server geeft er altijd een mee) --------
   static const meldingTitel = 'Nieuw bericht';
 }

@@ -28,6 +28,12 @@ class FakeChatGateway implements ChatGateway {
 
   bool isOffline = false;
   bool isGesloten = false;
+
+  /// De server antwoordt 409: er loopt een melding op de klus.
+  bool isIncident = false;
+
+  /// Klussen waarvan ik het gesprek verwijderde (verbergGesprek).
+  final List<String> verborgenKlussen = [];
   HhFout? volgendeFout;
   int aantalLaadacties = 0;
   int _volgnummer = 0;
@@ -138,6 +144,17 @@ class FakeChatGateway implements ChatGateway {
     final stroom = StreamController<void>.broadcast();
     _alle.add(stroom);
     return stroom.stream;
+  }
+
+  @override
+  Future<VerbergUitkomst> verbergGesprek(String klusId) async {
+    final fout = _neemFout();
+    if (fout != null) return GesprekVerbergFout(fout);
+    if (isIncident) return const GesprekIncident();
+    verborgenKlussen.add(klusId);
+    final voor = _berichten.length;
+    _berichten.removeWhere((b) => b.klusId == klusId);
+    return GesprekVerborgen(voor - _berichten.length);
   }
 
   /// Sluit de open stromen; tests roepen dit aan in addTearDown.

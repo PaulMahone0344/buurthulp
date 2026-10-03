@@ -33,6 +33,7 @@ class HhBericht {
     this.gemaakt,
     this.gelezenOp,
     this.isGefilterd = false,
+    this.isGewist = false,
   });
 
   static const collectie = 'hh_berichten';
@@ -55,6 +56,10 @@ class HhBericht {
   /// De server verving een nummer, mailadres of link door "•••".
   final bool isGefilterd;
 
+  /// Integratie (AVG): het account van de afzender is verwijderd; de tekst
+  /// is leeg en de app toont "Bericht verwijderd".
+  final bool isGewist;
+
   bool get isGelezen => gelezenOp != null;
   bool isVan(String gebruikerId) => afzenderId == gebruikerId;
 
@@ -68,6 +73,7 @@ class HhBericht {
     gemaakt: HhProfiel.datumVanServer(record.getStringValue('created')),
     gelezenOp: HhProfiel.datumVanServer(record.getStringValue(veldGelezenOp)),
     isGefilterd: record.getBoolValue('gefilterd'),
+    isGewist: record.getBoolValue('gewist'),
   );
 
   HhBericht metGelezenOp(DateTime moment) => HhBericht(
@@ -80,6 +86,7 @@ class HhBericht {
     gemaakt: gemaakt,
     gelezenOp: moment,
     isGefilterd: isGefilterd,
+    isGewist: isGewist,
   );
 
   @override
@@ -88,8 +95,9 @@ class HhBericht {
       other.id == id &&
       other.tekst == tekst &&
       other.gelezenOp == gelezenOp &&
-      other.isGefilterd == isGefilterd;
+      other.isGefilterd == isGefilterd &&
+      other.isGewist == isGewist;
 
   @override
-  int get hashCode => Object.hash(id, tekst, gelezenOp, isGefilterd);
+  int get hashCode => Object.hash(id, tekst, gelezenOp, isGefilterd, isGewist);
 }
