@@ -29,7 +29,11 @@ test('90: hash-velden zijn hidden, er is geen veld voor de code zelf', () => {
   for (const n of ['helper', 'ouder_email', 'code_hash', 'code_verloopt_op', 'pogingen', 'token_hash', 'status', 'ouder_naam', 'iban', 'avp_verklaard', 'gegeven_op', 'ingetrokken_op']) {
     assert.ok(namen.includes(n), n);
   }
-  assert.deepEqual(STATUSSEN, ['verstuurd', 'gegeven', 'ingetrokken', 'verlopen']);
+  assert.deepEqual(STATUSSEN, ['verstuurd', 'gegeven', 'ingetrokken', 'verlopen', 'vrijgegeven']);
+  const door = velden.find((f) => f.name === 'vrijgegeven_door');
+  assert.equal(door.collectionId, 'pbc_users');
+  assert.equal(door.cascadeDelete, false);
+  assert.ok(namen.includes('vrijgegeven_op'));
   const helper = velden.find((f) => f.name === 'helper');
   assert.equal(helper.collectionId, 'pbc_users');
   assert.equal(helper.cascadeDelete, true);

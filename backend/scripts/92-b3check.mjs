@@ -21,8 +21,11 @@
 //      ouder_toestemming_op + ouder_iban_ok op de helper; vóór: geen open
 //      klus en accepteren 403 ouder; na: de klus zichtbaar; zonder
 //      goedkeuring meldkamer nog steeds niet
-//   F. intrekken met de link: veld gewist, klus direct weg, accepteren 403
-//      ouder, nogmaals intrekken 200, status "ingetrokken"
+//   F. intrekken met de link: veld gewist; de klus die het kind al had
+//      aangenomen komt VRIJ (open, logregel "ouder trok toestemming in",
+//      bewoner krijgt "We zoeken iemand anders"); accepteren 403 ouder,
+//      nogmaals intrekken 200, status "ingetrokken"; zelf opnieuw mailen
+//      409 ingetrokken tot de meldkamer vrijgeeft (helper/bewoner 403)
 //   G. API: helper, bewoner en anoniem lezen niets; coordinator leest wel
 //      maar zonder hash-velden; niemand schrijft; helper zet
 //      ouder_toestemming_op niet zelf
@@ -145,7 +148,7 @@ async function voorwaarden(su) {
     for (const g of GEHEIM) check(`${COLLECTIE}.${g} is hidden`, col.fields.find((f) => f.name === g)?.hidden === true);
   }
   const anon = anonClient();
-  for (const [pad, method] of [['/api/hh/ouder/versturen', 'POST'], ['/api/hh/ouder/status', 'GET']]) {
+  for (const [pad, method] of [['/api/hh/ouder/versturen', 'POST'], ['/api/hh/ouder/status', 'GET'], ['/api/hh/ouder/vrijgeven', 'POST']]) {
     const r = await verzoek(anon, pad, method);
     check(`route ${method} ${pad} bestaat (anoniem 401, ${toon(r)})`, r.status === 401, 'draai 93-hook-deploy.sh');
   }
@@ -321,6 +324,8 @@ async function main() {
   rij = await rijVan(kind.id);
   check('rij: gegeven, naam, IBAN, AVP, code gewist', rij.status === 'gegeven' && rij.ouder_naam === 'B3check Ouder' && rij.iban === IBAN && rij.avp_verklaard === true && rij.code_hash === '');
   check('na toestemming: helper ziet de open klus', await ziet(kind));
+  r = await verzoek(kind.client, `/api/hh/klussen/${klus.id}/accepteren`);
+  check(`na toestemming: het kind neemt de klus aan (${toon(r)})`, r.status === 200, JSON.stringify(r.body));
   r = await verzoek(kind.client, '/api/hh/ouder/status', 'GET');
   check(`status voor de helper: gegeven (${toon(r)})`, r.body?.status === 'gegeven');
   r = await verzoek(kind.client, '/api/hh/ouder/versturen', 'POST', {});
@@ -336,6 +341,16 @@ async function main() {
   check(`intrekken (200 ingetrokken, ${toon(r)})`, r.status === 200 && r.body?.status === 'ingetrokken');
   const kindWeer = await su.collection('hh_users').getOne(kind.id);
   check('ouder_toestemming_op is gewist, ouder_iban_ok nee', !kindWeer.ouder_toestemming_op && kindWeer.ouder_iban_ok === false);
+  const klusNa = await su.collection('hh_klussen').getOne(klus.id);
+  check('de aangenomen klus kwam vrij: open, geen helper', klusNa.status === 'open' && !klusNa.toegewezen_jongere, `${klusNa.status} ${klusNa.toegewezen_jongere}`);
+  const logs = await su.collection('hh_klus_status').getFullList({ filter: su.filter('klus = {:k} && naar = "open" && van = "geaccepteerd"', { k: klus.id }) });
+  check('logregel geaccepteerd -> open, door leeg (systeem), "ouder trok toestemming in"', logs.length === 1 && !logs[0].door && logs[0].toelichting === 'ouder trok toestemming in', JSON.stringify(logs.map((l) => [l.door, l.toelichting])));
+  let melding = [];
+  for (let i = 0; i < 10 && !melding.length; i++) {
+    melding = await su.collection('hh_meldingen').getFullList({ filter: su.filter('ontvanger = {:o} && klus = {:k} && titel = "We zoeken iemand anders"', { o: bewoner.id, k: klus.id }) });
+    if (!melding.length) await new Promise((ok) => setTimeout(ok, 300));
+  }
+  check('bewoner kreeg "We zoeken iemand anders" (bestaande meldingen-hook)', melding.length === 1);
   check('helper ziet de open klus direct niet meer', !(await ziet(kind)));
   r = await verzoek(kind.client, `/api/hh/klussen/${klus.id}/accepteren`);
   check(`na intrekken accepteren geweigerd (403 ouder, ${toon(r)})`, r.status === 403 && r.body?.reden === 'ouder');
@@ -343,6 +358,18 @@ async function main() {
   check(`nog een keer intrekken: zelfde uitkomst (${toon(r)})`, r.status === 200 && r.body?.status === 'ingetrokken');
   r = await verzoek(kind.client, '/api/hh/ouder/status', 'GET');
   check(`status voor de helper: ingetrokken (${toon(r)})`, r.body?.status === 'ingetrokken');
+  r = await verzoek(kind.client, '/api/hh/ouder/versturen', 'POST', {});
+  check(`na intrekken zelf opnieuw mailen geweigerd (409 ingetrokken, ${toon(r)})`, r.status === 409 && r.body?.reden === 'ingetrokken');
+  for (const [wie, c] of [['helper', kind.client], ['bewoner', bewoner.client]]) {
+    r = await verzoek(c, '/api/hh/ouder/vrijgeven', 'POST', { helper: kind.id });
+    check(`${wie} kan niet vrijgeven (403, ${toon(r)})`, r.status === 403);
+  }
+  r = await verzoek(coord.client, '/api/hh/ouder/vrijgeven', 'POST', { helper: kind.id });
+  check(`meldkamer geeft vrij (${toon(r)})`, r.status === 200 && r.body?.status === 'vrijgegeven');
+  r = await verzoek(kind.client, '/api/hh/ouder/status', 'GET');
+  check(`daarna voor de app weer "geen" (${toon(r)})`, r.body?.status === 'geen');
+  r = await verzoek(kind.client, '/api/hh/ouder/versturen', 'POST', {});
+  check(`daarna mag het kind weer mailen (${toon(r)})`, r.status === 200);
 
   // ---------------------------------------------------------------- G
   kop('G. API-toegang tot hh_ouder_toestemming');

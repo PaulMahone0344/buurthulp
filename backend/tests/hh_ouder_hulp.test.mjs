@@ -103,10 +103,13 @@ function past(r, filter, params) {
   });
 }
 
-function nepOmgeving({ helpers = [], nu = T0, mailFaalt = false } = {}) {
+function nepOmgeving({ helpers = [], nu = T0, mailFaalt = false, klussen = [] } = {}) {
   const db = {
     hh_users: helpers.map((h) => rec('hh_users', h)),
     hh_ouder_toestemming: [],
+    hh_klussen: klussen.map((k) => rec('hh_klussen', k)),
+    hh_klus_status: [],
+    hh_auditlog: [],
   };
   let volgnummer = 0;
   let teller = 0;
@@ -241,7 +244,7 @@ test('opnieuw sturen: oude code vervalt, nieuwe token, pogingen terug op 0, max 
   assert.equal(versturen(env).status, 200);
 });
 
-test('versturen na toestemming: 409; na intrekken mag het weer', () => {
+test('versturen na toestemming: 409; na intrekken ook (eerst de meldkamer), daarna weer', () => {
   const { env, db, mails } = nepOmgeving({ helpers: [KIND] });
   versturen(env, { ouderEmail: 'mama@voorbeeld.nl' });
   const { body } = hulp.controleerCode(env, { token: tokenUit(mails), ip: '1.1.1.1' });
@@ -252,6 +255,13 @@ test('versturen na toestemming: 409; na intrekken mag het weer', () => {
   assert.equal(dicht.status, 409);
   assert.equal(dicht.body.reden, 'algegeven');
   hulp.trekIn(env, { token: tokenUit(mails), ip: '1.1.1.1' });
+  const na = versturen(env);
+  assert.equal(na.status, 409);
+  assert.equal(na.body.reden, 'ingetrokken');
+  assert.equal(na.body.melding, 'Je ouder heeft de toestemming ingetrokken. De meldkamer neemt contact met je op.');
+  const vrij = hulp.meldkamerVrijgeven(env, { coordinatorId: 'c1', rol: 'coordinator', helperId: 'h1' });
+  assert.equal(vrij.status, 200, JSON.stringify(vrij.body));
+  assert.equal(db.hh_ouder_toestemming[0].get('status'), 'vrijgegeven');
   assert.equal(versturen(env).status, 200);
   assert.equal(db.hh_ouder_toestemming[0].get('status'), 'verstuurd');
 });
@@ -586,4 +596,69 @@ test('jsvmOmgeving met HH_MAIL_AFZENDER: van "HeitjeHulp" <info@heitjehulp.nl> e
   const m = jsvmMet('info@heitjehulp.nl');
   assert.deepEqual(m.from, { address: 'info@heitjehulp.nl', name: 'HeitjeHulp' });
   assert.deepEqual(m.headers, { 'Reply-To': 'info@heitjehulp.nl' });
+});
+
+// ---- B3-antwoorden Ibrahim: klus vrij bij intrekken, eerst de meldkamer ------
+
+function gegevenMetKlussen(klussen) {
+  const omg = nepOmgeving({ helpers: [KIND, { ...KIND, id: 'h2', email: 'ander@x.nl' }], klussen });
+  versturen(omg.env, { ouderEmail: 'mama@voorbeeld.nl' });
+  const token = tokenUit(omg.mails);
+  const sessie = hulp.controleerCode(omg.env, { token, ip: 'a' }).body.sessie;
+  hulp.geefToestemming(omg.env, { sessie, naam: 'Anna', iban: 'NL91ABNA0417164300', akkoord: true, avp: true, ip: 'a' });
+  return { ...omg, token };
+}
+
+test('intrekken: geaccepteerde en onderweg-klussen van het kind komen vrij, met logregel', () => {
+  const { env, db, token } = gegevenMetKlussen([
+    { id: 'k1', status: 'geaccepteerd', toegewezen_jongere: 'h1' },
+    { id: 'k2', status: 'onderweg', toegewezen_jongere: 'h1' },
+    { id: 'k3', status: 'bezig', toegewezen_jongere: 'h1' },
+    { id: 'k4', status: 'afgerond', toegewezen_jongere: 'h1' },
+    { id: 'k5', status: 'geaccepteerd', toegewezen_jongere: 'h2' },
+  ]);
+  const uit = hulp.trekIn(env, { token, ip: 'a' });
+  assert.equal(uit.status, 200);
+  const klus = (id) => db.hh_klussen.find((k) => k.id === id);
+  for (const id of ['k1', 'k2']) {
+    assert.equal(klus(id).get('status'), 'open', id);
+    assert.equal(klus(id).get('toegewezen_jongere'), '', id);
+  }
+  assert.equal(klus('k3').get('status'), 'bezig');
+  assert.equal(klus('k4').get('status'), 'afgerond');
+  assert.equal(klus('k5').get('toegewezen_jongere'), 'h2');
+  assert.deepEqual(
+    db.hh_klus_status.map((l) => [l.get('klus'), l.get('van'), l.get('naar'), l.get('door') ?? '', l.get('toelichting')]),
+    [
+      ['k1', 'geaccepteerd', 'open', '', 'ouder trok toestemming in'],
+      ['k2', 'onderweg', 'open', '', 'ouder trok toestemming in'],
+    ],
+  );
+  // Nog een keer intrekken: niets dubbel.
+  hulp.trekIn(env, { token, ip: 'a' });
+  assert.equal(db.hh_klus_status.length, 2);
+});
+
+test('meldkamer geeft vrij: alleen coordinator, alleen na intrekken; status geen voor de app', () => {
+  const { env, db, token } = gegevenMetKlussen([]);
+  assert.equal(hulp.meldkamerVrijgeven(env, { coordinatorId: 'h2', rol: 'jongere', helperId: 'h1' }).status, 403);
+  assert.equal(hulp.meldkamerVrijgeven(env, { coordinatorId: 'c1', rol: 'coordinator', helperId: 'h1' }).body.reden, 'nietingetrokken');
+  assert.equal(hulp.meldkamerVrijgeven(env, { coordinatorId: 'c1', rol: 'coordinator', helperId: 'onbekend' }).status, 404);
+  hulp.trekIn(env, { token, ip: 'a' });
+  assert.equal(hulp.statusVoorHelper(env, { helper: db.hh_users[0], leeftijd: 14 }).body.status, 'ingetrokken');
+  const vrij = hulp.meldkamerVrijgeven(env, { coordinatorId: 'c1', rol: 'coordinator', helperId: 'h1' });
+  assert.equal(vrij.status, 200);
+  const rij = db.hh_ouder_toestemming[0];
+  assert.equal(rij.get('status'), 'vrijgegeven');
+  assert.equal(rij.get('vrijgegeven_door'), 'c1');
+  assert.ok(rij.get('vrijgegeven_op'));
+  assert.equal(hulp.statusVoorHelper(env, { helper: db.hh_users[0], leeftijd: 14 }).body.status, 'geen');
+  assert.equal(db.hh_auditlog.length, 1);
+  assert.equal(db.hh_auditlog[0].get('doel_collectie'), 'hh_ouder_toestemming');
+});
+
+test('mail en ouder-pagina na intrekken: de meldkamer, geen nieuwe code', () => {
+  const m = hulp.intrekMail({ voornaam: 'Daan' });
+  assert.match(m.tekst, /neem dan contact op met HeitjeHulp/i);
+  assert.ok(!/nieuwe code/.test(m.tekst));
 });

@@ -25,6 +25,15 @@
 //                                    naam | iban; 401 sessie; 409 status
 //   POST /api/hh/ouder/intrekken    PUBLIEK met link-token (altijd geldig) of
 //        body { token } | { sessie }  ouder-sessie. 200 {status: ingetrokken}
+//                                    Klussen van het kind op geaccepteerd/
+//                                    onderweg komen in dezelfde transactie
+//                                    vrij (open, logregel; de meldingen-hook
+//                                    doet de rest).
+//   POST /api/hh/ouder/vrijgeven    ingelogde COORDINATOR. body { helper }
+//                                    Na intrekken mag het kind pas weer mailen
+//                                    als de meldkamer dit doet (versturen geeft
+//                                    tot dan 409 ingetrokken). 200; 403;
+//                                    404 geenrij; 409 nietingetrokken.
 //
 // MAIL (K4): $app.newMailClient() met de bestaande globale SMTP-instelling
 // van de server. Dit bestand wijzigt GEEN instelling. Afzender (besluit 4
@@ -139,3 +148,25 @@ routerAdd("POST", "/api/hh/ouder/intrekken", (e) => {
   });
   return e.json(uit.status, uit.body);
 });
+
+routerAdd(
+  "POST",
+  "/api/hh/ouder/vrijgeven",
+  (e) => {
+    const hulp = require(`${__hooks}/hh_ouder_hulp.js`);
+    const data = new DynamicModel({ helper: "" });
+    try {
+      e.bindBody(data);
+    } catch (_) {
+      // Leeg: meldkamerVrijgeven geeft 404.
+    }
+    const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage, os: $os });
+    const uit = hulp.meldkamerVrijgeven(env, {
+      coordinatorId: e.auth.id,
+      rol: e.auth.collection().name === "hh_users" ? String(e.auth.get("rol") || "") : "",
+      helperId: String(data.helper || ""),
+    });
+    return e.json(uit.status, uit.body);
+  },
+  $apis.requireAuth("hh_users")
+);

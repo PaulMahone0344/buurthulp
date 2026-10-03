@@ -60,6 +60,10 @@ var MELDING = {
   email: "Vul het e-mailadres van je ouder in.",
   eigenadres: "Vul het e-mailadres van je ouder in, niet je eigen adres.",
   algegeven: "Je ouder heeft al toestemming gegeven.",
+  ingetrokken: "Je ouder heeft de toestemming ingetrokken. De meldkamer neemt contact met je op.",
+  coordinator: "Alleen de meldkamer kan dit doen.",
+  geenrij: "Voor deze helper is nog nooit een ouder gemaild.",
+  nietingetrokken: "De toestemming is niet ingetrokken; er is niets vrij te geven.",
   limiet: "Je hebt vandaag al 3 keer een mail gestuurd. Probeer het morgen opnieuw.",
   mail: "De mail kon niet worden verstuurd. Probeer het later opnieuw.",
   verstuurd: "We hebben je ouder een mail gestuurd.",
@@ -215,9 +219,9 @@ function intrekMail(g) {
     "Hallo,",
     "",
     "Je hebt je toestemming voor " + naam + " ingetrokken. " + naam + " kan nu geen klussen meer aannemen bij HeitjeHulp.",
-    "Wil je later toch weer toestemming geven? Dan kan " + naam + " je in de app een nieuwe code sturen.",
+    "Wil je later toch weer toestemming geven? Neem dan contact op met HeitjeHulp.",
     "",
-    "Was jij dit niet? Neem dan contact op met HeitjeHulp.",
+    "Was jij dit niet? Neem dan ook contact op met HeitjeHulp.",
     "",
     "Groet,",
     "HeitjeHulp",
@@ -227,8 +231,8 @@ function intrekMail(g) {
     '<div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#0B2A25;max-width:560px">' +
     "<p>Hallo,</p>" +
     "<p>Je hebt je toestemming voor " + n + " ingetrokken. " + n + " kan nu geen klussen meer aannemen bij HeitjeHulp.</p>" +
-    "<p>Wil je later toch weer toestemming geven? Dan kan " + n + " je in de app een nieuwe code sturen.</p>" +
-    "<p>Was jij dit niet? Neem dan contact op met HeitjeHulp.</p>" +
+    "<p>Wil je later toch weer toestemming geven? Neem dan contact op met HeitjeHulp.</p>" +
+    "<p>Was jij dit niet? Neem dan ook contact op met HeitjeHulp.</p>" +
     "<p>Groet,<br>HeitjeHulp</p>" +
     "</div>";
   return { onderwerp: onderwerp, tekst: tekst, html: html };
@@ -321,8 +325,11 @@ function rijVanToken(env, token) {
 /// Wat de ouder-pagina over de stand te zien krijgt.
 function standVoorOuder(env, rij) {
   var helper = helperVan(env, rij);
+  var stand = standVan(rij, env.nu());
   var body = {
-    status: standVan(rij, env.nu()),
+    // "vrijgegeven" (de meldkamer gaf het kind een nieuwe kans) betekent
+    // voor de ouder: deze link/code werkt niet meer.
+    status: stand === "vrijgegeven" ? "verlopen" : stand,
     voornaam: helper ? voornaam(helper.get("naam")) : "",
   };
   if (body.status === "gegeven") {
@@ -350,6 +357,8 @@ function verstuur(env, invoer) {
   if (rij && String(rij.get("status") || "") === "gegeven" && String(helper.get("ouder_toestemming_op") || "")) {
     return antwoord(409, "algegeven");
   }
+  // Antwoord Ibrahim 4 okt: na intrekken eerst de meldkamer (meldkamerVrijgeven).
+  if (rij && String(rij.get("status") || "") === "ingetrokken") return antwoord(409, "ingetrokken");
   var eerder = verstuurdVandaag(rij, nu);
   if (eerder >= MAX_PER_DAG) return antwoord(429, "limiet");
 
@@ -506,6 +515,7 @@ function trekIn(env, invoer) {
 
   var helper = helperVan(env, rij);
   var wasGegeven = String(rij.get("status") || "") === "gegeven";
+  var vrijgegeven = 0;
   var nu = isoVan(env.nu());
   env.app.runInTransaction(function (tx) {
     rij.set("status", "ingetrokken");
@@ -518,8 +528,10 @@ function trekIn(env, invoer) {
       helper.set("ouder_toestemming_op", "");
       helper.set("ouder_iban_ok", false);
       tx.save(helper);
+      vrijgegeven = geefKlussenVrij(tx, env.Record, helper.id);
     }
   });
+  if (vrijgegeven) env.log("[hh_ouder] " + vrijgegeven + " klus(sen) vrijgegeven na intrekken (helper " + helper.id + ")");
   var email = String(rij.get("ouder_email") || "");
   if (wasGegeven && !isNepAdres(email)) {
     var mail = intrekMail({ voornaam: helper ? voornaam(helper.get("naam")) : "" });
@@ -533,6 +545,65 @@ function trekIn(env, invoer) {
   return ok(standVoorOuder(env, rij));
 }
 
+/// Antwoord Ibrahim 4 okt: trekt de ouder in terwijl het kind een klus heeft
+/// die nog niet begonnen is (geaccepteerd of onderweg), dan komt die klus
+/// VRIJ: terug naar open, geen helper, plus een logregel (door leeg =
+/// systeem). De bestaande meldingen-hook (hh_meldingen.pb.js, na het
+/// opslaan van de logregel) stuurt de bewoner dan "We zoeken iemand anders"
+/// en de helpers in de buurt "Nieuwe klus". Bezig of afgerond blijft staan.
+/// Zelfde vorm als vrijgeven door de coordinator (hh_coordinator.pb.js).
+var VRIJ_BIJ_INTREKKEN = ["geaccepteerd", "onderweg"];
+var TOELICHTING_INTREKKEN = "ouder trok toestemming in";
+
+function geefKlussenVrij(tx, Record, helperId) {
+  var klussen = tx.findRecordsByFilter("hh_klussen", "toegewezen_jongere = {:jongere}", "", 0, 0, { jongere: helperId });
+  var aantal = 0;
+  for (var i = 0; i < klussen.length; i++) {
+    var klus = klussen[i];
+    var status = String(klus.get("status") || "");
+    if (VRIJ_BIJ_INTREKKEN.indexOf(status) === -1) continue;
+    klus.set("toegewezen_jongere", "");
+    klus.set("status", "open");
+    tx.save(klus);
+    var log = new Record(tx.findCollectionByNameOrId("hh_klus_status"));
+    log.set("klus", klus.id);
+    log.set("van", status);
+    log.set("naar", "open");
+    log.set("toelichting", TOELICHTING_INTREKKEN);
+    tx.save(log);
+    aantal++;
+  }
+  return aantal;
+}
+
+// ---- meldkamerVrijgeven -----------------------------------------------------------
+/// Na intrekken mag het kind niet zelf opnieuw mailen. Alleen een
+/// coordinator zet de rij van "ingetrokken" op "vrijgegeven"; daarna kan
+/// het kind weer een mail sturen. Met een auditregel (zoals M14).
+///   invoer = { coordinatorId, rol, helperId }
+function meldkamerVrijgeven(env, invoer) {
+  if (invoer.rol !== "coordinator") return antwoord(403, "coordinator");
+  var rij = rijVanHelper(env, String(invoer.helperId || ""));
+  if (!rij) return antwoord(404, "geenrij");
+  if (String(rij.get("status") || "") !== "ingetrokken") return antwoord(409, "nietingetrokken");
+  rij.set("status", "vrijgegeven");
+  rij.set("vrijgegeven_op", isoVan(env.nu()));
+  rij.set("vrijgegeven_door", invoer.coordinatorId);
+  env.app.save(rij);
+  try {
+    var audit = new env.Record(env.app.findCollectionByNameOrId("hh_auditlog"));
+    audit.set("door", invoer.coordinatorId);
+    audit.set("actie", "wijzigen");
+    audit.set("doel_collectie", COLLECTIE);
+    audit.set("doel_id", rij.id);
+    audit.set("detail", { velden: ["status"], van: { status: "ingetrokken" }, naar: { status: "vrijgegeven" } });
+    env.app.save(audit);
+  } catch (err) {
+    env.log("[hh_ouder] auditregel vrijgeven mislukt:", String(err));
+  }
+  return ok({ status: "vrijgegeven" });
+}
+
 // ---- statusVoorHelper -------------------------------------------------------------
 ///   invoer = { helper (record), leeftijd }
 function statusVoorHelper(env, invoer) {
@@ -540,8 +611,10 @@ function statusVoorHelper(env, invoer) {
   var nu = env.nu();
   var nodig = invoer.leeftijd === null || invoer.leeftijd === undefined || invoer.leeftijd < VOLWASSEN;
   var rij = rijVanHelper(env, helper.id);
+  var stand = rij ? standVan(rij, nu) : "geen";
   var body = {
-    status: rij ? standVan(rij, nu) : "geen",
+    // Vrijgegeven door de meldkamer: voor de app weer "nog niets verstuurd".
+    status: stand === "vrijgegeven" ? "geen" : stand,
     nodig: nodig,
     ouder_email: rij ? String(rij.get("ouder_email") || "") : normaliseerEmail(helper.get("ouder_email")),
     verstuurd_op: rij ? String(rij.get("laatst_verstuurd_op") || "") : "",
@@ -648,5 +721,7 @@ module.exports = {
   controleerCode: controleerCode,
   geefToestemming: geefToestemming,
   trekIn: trekIn,
+  meldkamerVrijgeven: meldkamerVrijgeven,
+  TOELICHTING_INTREKKEN: TOELICHTING_INTREKKEN,
   statusVoorHelper: statusVoorHelper,
 };

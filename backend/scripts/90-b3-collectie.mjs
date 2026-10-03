@@ -27,7 +27,9 @@
 //   token_hash           tekst, HIDDEN  sha256 van de link-token
 //   sessie_hash          tekst, HIDDEN  sha256 van de ouder-sessie
 //   sessie_verloopt_op   datum (30 minuten)
-//   status               keuze, verplicht: verstuurd | gegeven | ingetrokken | verlopen
+//   status               keuze, verplicht: verstuurd | gegeven | ingetrokken |
+//                        verlopen | vrijgegeven (de meldkamer gaf het kind na
+//                        intrekken een nieuwe kans; daarna mag het weer mailen)
 //   ouder_naam           tekst, max 100
 //   iban                 tekst, max 34 (ouder vult in; mag rekening kind zijn)
 //   avp_verklaard        ja/nee ("ik heb een aansprakelijkheidsverzekering")
@@ -36,6 +38,8 @@
 //   laatst_verstuurd_op  datum
 //   gegeven_op           datum
 //   ingetrokken_op       datum
+//   vrijgegeven_op       datum   (meldkamer, na intrekken)
+//   vrijgegeven_door     relatie hh_users (coordinator), geen cascade
 //   created, updated
 // INDEXEN  uniek op helper; token_hash; ouder_email
 // RULES    lezen (list/view) alleen coordinator; aanmaken, bijwerken en
@@ -52,7 +56,7 @@ import { superuserClient, assertHh, APPLY, logMode, fail } from './_lib.mjs';
 import { COORD } from './61-beheer-rules.mjs';
 
 export const COLLECTIE = 'hh_ouder_toestemming';
-export const STATUSSEN = ['verstuurd', 'gegeven', 'ingetrokken', 'verlopen'];
+export const STATUSSEN = ['verstuurd', 'gegeven', 'ingetrokken', 'verlopen', 'vrijgegeven'];
 /// Velden die nooit in een API-antwoord mogen staan (ook niet voor de coordinator).
 export const GEHEIM = ['code_hash', 'token_hash', 'sessie_hash'];
 
@@ -90,6 +94,9 @@ export function toestemmingVelden(ids) {
     { name: 'laatst_verstuurd_op', type: 'date' },
     { name: 'gegeven_op', type: 'date' },
     { name: 'ingetrokken_op', type: 'date' },
+    // Na intrekken eerst de meldkamer (antwoord Ibrahim 4 okt).
+    { name: 'vrijgegeven_op', type: 'date' },
+    { name: 'vrijgegeven_door', type: 'relation', collectionId: ids.hh_users, maxSelect: 1, cascadeDelete: false },
     ...AUTODATES,
   ];
 }
@@ -138,6 +145,16 @@ async function main() {
 
   const aanwezig = new Set(bestaand.fields.map((f) => f.name));
   const ontbreekt = gewenst.filter((f) => !aanwezig.has(f.name));
+  // Keuzewaarden alleen AANVULLEN (bv. status "vrijgegeven" erbij).
+  let keuzesErbij = 0;
+  const velden = bestaand.fields.map((f) => {
+    const wens = gewenst.find((g) => g.name === f.name && g.type === 'select' && f.type === 'select');
+    const mist = wens ? wens.values.filter((v) => !f.values.includes(v)) : [];
+    if (!mist.length) return f;
+    keuzesErbij += mist.length;
+    console.log(`  ${APPLY ? '＋ keuze' : '+ ZOU keuze'}: ${COLLECTIE}.${f.name} + ${mist.join(', ')}`);
+    return { ...f, values: [...f.values, ...mist] };
+  });
   for (const f of gewenst) {
     if (aanwezig.has(f.name)) console.log(`  ✓ bestaat al: ${COLLECTIE}.${f.name}`);
     else console.log(`  ${APPLY ? '＋ voeg toe' : '+ ZOU toevoegen'}: ${COLLECTIE}.${f.name} (${f.type})`);
@@ -149,7 +166,7 @@ async function main() {
   for (const [k, v] of Object.entries(ruleWijzigingen)) {
     console.log(`  ${APPLY ? '↻' : '+ ZOU'} ${k}: ${JSON.stringify(bestaand[k] ?? null)} -> ${JSON.stringify(v)}`);
   }
-  if (!ontbreekt.length && !nieuweIndexen.length && !Object.keys(ruleWijzigingen).length) {
+  if (!ontbreekt.length && !keuzesErbij && !nieuweIndexen.length && !Object.keys(ruleWijzigingen).length) {
     console.log('\nNiets te doen: collectie, velden, indexen en rules staan er al.');
     return;
   }
@@ -158,7 +175,7 @@ async function main() {
     return;
   }
   await pb.collections.update(bestaand.id, {
-    fields: [...bestaand.fields, ...ontbreekt],
+    fields: [...velden, ...ontbreekt],
     indexes: [...huidig, ...nieuweIndexen],
     ...ruleWijzigingen,
   });
