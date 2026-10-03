@@ -11,8 +11,13 @@ WAT VERANDERT ER OP PROD (na JA)
   Hooks (93): NIEUW hh_ouder_hulp.js + hh_ouder.pb.js. Verder niets.
     hh_familie.pb.js/hh_familie_hulp.js blijven op de server staan (K5:
     niet meer meesturen, niet weghalen).
-  Mail: de hook stuurt via de BESTAANDE SMTP van de server (TransIP,
-    afzender "QawayahBase" <info@bovexa.nl>). Geen instelling gewijzigd.
+  Mail: de hook stuurt via de BESTAANDE SMTP van de server (TransIP).
+    Afzender "HeitjeHulp" <info@bovexa.nl> (naam per bericht; adres uit
+    HH_MAIL_AFZENDER zodra die op de server staat). Geen instelling gewijzigd.
+  Intrekken: klussen van het kind op geaccepteerd/onderweg komen vrij
+    (open + logregel, bewoner krijgt "We zoeken iemand anders"). Daarna
+    mag het kind pas weer mailen als de meldkamer vrijgeeft (nieuwe route
+    POST /api/hh/ouder/vrijgeven, knop in het paneel).
   Geen datamigratie, geen gebruikers of collecties verwijderd.
   Details: SCHEMA.txt sectie B3.
 
@@ -20,11 +25,15 @@ LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie; schema = export van de 16
 hh_-collecties van prod, alleen gelezen; hooks uit deze branch; nep-SMTP op
 127.0.0.1:2525 die alles opvangt en NIETS doorstuurt; nep-Nominatim)
   90 dry-run -> --apply -> nog een keer: "niets te doen"; 91 idem.
-  92 --apply: 78 groen, 0 rood (0 mails: .invalid wordt nooit verstuurd).
+  92 --apply: 89 groen, 0 rood (0 mails: .invalid wordt nooit verstuurd),
+    o.a. klus vrij bij intrekken + melding bewoner, 409 ingetrokken,
+    vrijgeven alleen coordinator. 90 op een bestaande (lokale) collectie
+    vult velden en de keuze "vrijgegeven" aan.
   Hele flow met ECHTE mail-route naar de nep-SMTP (scratchpad
-  proef-flow.mjs): 20 groen, 0 rood — helper 14 jaar registreert (wijk via
-    nep-Nominatim) -> versturen -> 1 mail gevangen: aan de ouder, From
-    "QawayahBase <info@bovexa.nl>", onderwerp "Daan wil helper worden bij
+  proef-flow.mjs): 20 groen, 0 rood, in BEIDE standen (HH_MAIL_AFZENDER
+    leeg: From "HeitjeHulp <info@bovexa.nl>"; gezet: From "HeitjeHulp
+    <info@heitjehulp.nl>" + Reply-To) — helper 14 jaar registreert (wijk via
+    nep-Nominatim) -> versturen -> 1 mail gevangen: aan de ouder, onderwerp "Daan wil helper worden bij
     HeitjeHulp", code + link https://heitjehulp.nl/#/ouder?t=..., "Code 24
     uur geldig", "Was jij dit niet? Negeer deze mail."; de code staat
     nergens in de database -> ouder: code + e-mail -> sessie ->
@@ -36,15 +45,15 @@ hh_-collecties van prod, alleen gelezen; hooks uit deze branch; nep-SMTP op
     "Je toestemming is ingetrokken". Geen horizontale scroll op 320, 390,
     768, 1440.
   Oude checks lokaal (met lokale seed in een kopie, GEHEIMEN.txt niet
-    aangeraakt): 04 223 groen (zowel met als zonder regio), 50 60 groen,
-    82 80 groen (beide standen), 72 54 groen, 62 118 groen, 42 41 groen.
+    aangeraakt), opnieuw na de antwoorden van 4 okt: 04 223, 50 60, 82 80,
+    72 54, 62 118 groen (04 en 82 eerder ook zonder regio groen; 42 41).
 
-=== DRY-RUNS TEGEN PROD (alleen lezen) ===
+=== DRY-RUNS TEGEN PROD (alleen lezen, opnieuw 4 okt na de antwoorden) ===
 
 === node scripts/90-b3-collectie.mjs ===
 Verbonden met https://api.qawayahbase.com (DRY-RUN) 
 
-  + ZOU aanmaken: hh_ouder_toestemming (base, 19 velden)
+  + ZOU aanmaken: hh_ouder_toestemming (base, 21 velden)
 
 DRY-RUN: de collectie zou worden aangemaakt. Draai met --apply.
 
@@ -66,6 +75,7 @@ B. Voorwaarden op de server (alleen lezen)
   ✗ collectie hh_ouder_toestemming bestaat — draai 90 --apply
   ✗ route POST /api/hh/ouder/versturen bestaat (anoniem 401, kreeg 404) — draai 93-hook-deploy.sh
   ✗ route GET /api/hh/ouder/status bestaat (anoniem 401, kreeg 404) — draai 93-hook-deploy.sh
+  ✗ route POST /api/hh/ouder/vrijgeven bestaat (anoniem 401, kreeg 404) — draai 93-hook-deploy.sh
   ✓ wijk "Tiel en omstreken" bestaat (B2)
   ✗ wijk Tiel-West is regio (91) — draai 91 --apply
   ✗ wijk Passewaaij is regio (91) — draai 91 --apply
@@ -79,20 +89,31 @@ Wat --apply ZOU doen:
   · leesrechten op hh_ouder_toestemming per rol;
   · alles opruimen en nameten.
 
-2 groen, 5 rood (leescontroles).
+2 groen, 6 rood (leescontroles).
 Rood is verwacht zolang 90, 91 en 93 nog niet uitgerold zijn.
 
 === node scripts/94-b3-mailcheck.mjs ===
 Verbonden met https://api.qawayahbase.com (ALLEEN LEZEN)
 
   ✓ SMTP staat aan (smtp.transip.email:587)
-  · afzender: "QawayahBase" <info@bovexa.nl>
+  · globale afzender (alle apps, wordt NIET gewijzigd): "QawayahBase" <info@bovexa.nl>
+  · HH_MAIL_AFZENDER (zoals meegegeven; de server-omgeving zelf is niet te lezen): (niet gezet)
+  ✓ de ouder-mail komt van: "HeitjeHulp" <info@bovexa.nl>, geen Reply-To
   · appURL van de server: https://qawayahbase.com — de link in de mail gebruikt https://heitjehulp.nl (hh_ouder_hulp.js BASIS_URL)
 
+=== HH_MAIL_AFZENDER=info@heitjehulp.nl node scripts/94-b3-mailcheck.mjs ===
+Verbonden met https://api.qawayahbase.com (ALLEEN LEZEN)
+
+  ✓ SMTP staat aan (smtp.transip.email:587)
+  · globale afzender (alle apps, wordt NIET gewijzigd): "QawayahBase" <info@bovexa.nl>
+  · HH_MAIL_AFZENDER (zoals meegegeven; de server-omgeving zelf is niet te lezen): info@heitjehulp.nl
+  ✓ de ouder-mail komt van: "HeitjeHulp" <info@heitjehulp.nl>, Reply-To info@heitjehulp.nl
+  ! LET OP: HH_MAIL_AFZENDER is op heitjehulp.nl, de SMTP-gebruiker op bovexa.nl: TransIP kan dit weigeren of de mail komt in spam. Eerst de mailbox en SMTP voor dat domein regelen (SPF/DKIM).
+  · appURL van de server: https://qawayahbase.com — de link in de mail gebruikt https://heitjehulp.nl (hh_ouder_hulp.js BASIS_URL)
 
 LET OP VOOR DE UITROL
   1. 92 --apply op prod verstuurt GEEN mail (alleen .invalid-adressen) en
-     doet ~20 publieke verzoeken: niet twee keer binnen een uur vanaf
+     doet ~22 publieke verzoeken: niet twee keer binnen een uur vanaf
      hetzelfde adres draaien (dan 429 "teveel").
   2. 93 heeft ssh -n zoals 83. Auto-mode uit; stap 2 (lijst) nalezen: er
      komen precies 2 nieuwe bestanden bij, geen diff (beide nieuw).
@@ -102,8 +123,12 @@ LET OP VOOR DE UITROL
      helpers onder 18 laten aanmelden (of de mail later opnieuw laten
      sturen). De website moet VITE_POCKETBASE_URL=https://api.qawayahbase.com
      hebben (zoals het beheerpaneel).
-  4. De afzender is "QawayahBase" <info@bovexa.nl> (globale instelling,
-     geldt voor alle apps). Zie OPEN-PUNTEN-B3 vraag 1.
+  4. Afzender: zolang HH_MAIL_AFZENDER niet op de server staat komt de mail
+     van "HeitjeHulp" <info@bovexa.nl>. info@heitjehulp.nl moet eerst als
+     mailbox bestaan en de SMTP van TransIP moet ervan mogen versturen
+     (SPF/DKIM). Pas DAN HH_MAIL_AFZENDER zetten (aparte stap met ja, zie
+     uitrollijst stap 9). 94 met HH_MAIL_AFZENDER=info@heitjehulp.nl
+     waarschuwt nu terecht (ander domein dan de SMTP-gebruiker).
   5. Eerst backend, dan website, dan app. Een oude app (B2) blijft werken:
      die kent de routes niet en kijkt alleen naar ouder_toestemming_op.
      Een nieuwe app zonder backend valt terug op B2 (geen stap Ouder).
@@ -118,13 +143,22 @@ UITROLLIJST (vanuit backend/, .env laden: set -a; . /Users/h/Desktop/qawayhabase
   4. node scripts/91-b3-wijken.mjs             (dry-run: 2 wijken)
      node scripts/91-b3-wijken.mjs --apply
   5. ./scripts/93-hook-deploy.sh               (stap 2 nalezen, dan y)
-  6. node scripts/92-b3check.mjs --apply       (verwacht: 78 groen, 0 rood)
+  6. node scripts/92-b3check.mjs --apply       (verwacht: 89 groen, 0 rood)
   7. node scripts/82-b2check.mjs --apply       (verwacht: 80 groen)
      node scripts/72-b1check.mjs --apply       (verwacht: 54 groen)
      node scripts/62-beheercheck.mjs --apply   (verwacht: 118 groen)
      node scripts/04-rulecheck.mjs --apply     (verwacht: 223 groen)
      node scripts/50-koppelcheck.mjs --apply   (verwacht: 60 groen)
   8. Website (ouder-pagina's + beheerpaneel) en daarna de app uitrollen.
+  9. APARTE STAP, ALLEEN MET JA (niet bij de rest): info@heitjehulp.nl moet
+     als mailbox bestaan en SMTP moet ervan mogen versturen (TransIP,
+     SPF/DKIM voor heitjehulp.nl). Daarna HH_MAIL_AFZENDER=info@heitjehulp.nl
+     in de systemd-env van pocketbase (Environment= in de unit of een
+     drop-in), daemon-reload + restart van pocketbase (raakt ALLE apps op
+     de server: rustig moment kiezen). Controle: 94 met
+     HH_MAIL_AFZENDER=info@heitjehulp.nl (geen waarschuwing als SMTP-gebruiker
+     dan ook op heitjehulp.nl staat) en een proefmail naar een eigen adres.
+     Terug: de regel weghalen + restart (dan weer info@bovexa.nl).
   ROLLBACK: ./scripts/93-hook-deploy.sh --rollback (haalt de 2 nieuwe
   bestanden weg); node scripts/91-b3-wijken.mjs --terug --apply (regio weer
   uit). De collectie uit 90 mag blijven staan (doet niets zonder hooks); weg

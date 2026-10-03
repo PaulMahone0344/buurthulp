@@ -1036,10 +1036,12 @@ hh_ouder_toestemming  NIEUW (scripts/90-b3-collectie.mjs), één rij per helper
   token_hash           tekst, HIDDEN  sha256 van de link-token (40 tekens)
   sessie_hash          tekst, HIDDEN  sha256 van de ouder-sessie
   sessie_verloopt_op   datum (30 minuten)
-  status               verstuurd | gegeven | ingetrokken | verlopen
+  status               verstuurd | gegeven | ingetrokken | verlopen |
+                       vrijgegeven (meldkamer gaf na intrekken een nieuwe kans)
   ouder_naam, iban (NL, mod-97), avp_verklaard (ja/nee)
   verstuur_dag, verstuur_aantal (max 3 mails per UTC-dag), laatst_verstuurd_op
   gegeven_op, ingetrokken_op, created, updated
+  vrijgegeven_op, vrijgegeven_door (coordinator, geen cascade)
   Indexen: uniek helper; token_hash; ouder_email.
   Regels: lezen ALLEEN coordinator (en de hash-velden ook niet: hidden);
   aanmaken/bijwerken/verwijderen niemand (null). Alles via de hook ($app).
@@ -1080,6 +1082,24 @@ niets; hh_familie*.js gaan niet meer mee maar blijven op de server)
     POST /api/hh/ouder/intrekken   PUBLIEK met link-token (altijd geldig)
       of sessie -> rij ingetrokken, ouder_toestemming_op leeg, ouder_iban_ok
       nee; de helper ziet direct geen open klussen meer. Bevestigingsmail.
+      In DEZELFDE transactie (antwoord Ibrahim 4 okt): klussen van het kind
+      op geaccepteerd of onderweg -> open, toegewezen_jongere leeg, logregel
+      in hh_klus_status (door leeg = systeem, toelichting "ouder trok
+      toestemming in"). De bestaande meldingen-hook (hh_meldingen.pb.js)
+      stuurt dan de bewoner "We zoeken iemand anders" en de helpers in de
+      buurt "Nieuwe klus". Bezig/afgerond blijft staan. hh_klussen.pb.js is
+      NIET aangepast.
+      Daarna: versturen geeft 409 ingetrokken ("Je ouder heeft de
+      toestemming ingetrokken. De meldkamer neemt contact met je op.").
+    POST /api/hh/ouder/vrijgeven   ingelogde COORDINATOR. {helper}. Rij van
+      ingetrokken naar vrijgegeven (+ auditregel); daarna mag het kind weer
+      mailen (de app ziet status "geen"). 403 / 404 geenrij / 409
+      nietingetrokken. Paneel: knop "Kind mag ouder opnieuw mailen" in het
+      screening-detail; een echte wachtrij is B11.
+    AFZENDER (antwoord Ibrahim 4 okt): naam altijd "HeitjeHulp" (per bericht,
+      de globale instelling blijft). Adres uit HH_MAIL_AFZENDER (omgeving van
+      de pocketbase-dienst, bedoeld info@heitjehulp.nl, dan ook Reply-To);
+      niet gezet: het globale adres (nu info@bovexa.nl).
     Rate-limit: alle publieke routes samen 30 per IP per uur ($app.store).
     Adressen op .invalid/.test/.example/.localhost krijgen nooit mail.
   K6-fundament: token_hash + sessie op de rij. B5 kan per klus een route
@@ -1092,9 +1112,14 @@ CHECKS
     zet het veld, intrekken wist het, < 18 zonder toestemming kan niet
     accepteren, geen API-leestoegang behalve coordinator, code nooit
     leesbaar. Hooguit 1x per uur per IP draaien (rate-limit).
-  94-b3-mailcheck.mjs: ALLEEN LEZEN, SMTP aan en afzender.
-  Test zonder server: node --test backend/tests/*.test.mjs (142 tests).
+  94-b3-mailcheck.mjs: ALLEEN LEZEN, SMTP aan, de effectieve afzender
+    (HH_MAIL_AFZENDER meegeven; de server-omgeving zelf is niet te lezen) en
+    een waarschuwing als dat adres op een ander domein staat dan de
+    SMTP-gebruiker.
+  Test zonder server: node --test backend/tests/*.test.mjs (152 tests).
 
 UITROLLEN (volgorde)
   00-backup.mjs -> 94 (lezen) -> 90 --apply -> 91 --apply ->
   93-hook-deploy.sh -> 92 --apply -> 82, 72, 62, 04, 50
+  APARTE STAP MET JA (later): mailbox info@heitjehulp.nl + SMTP-recht bij
+  TransIP (SPF/DKIM) -> HH_MAIL_AFZENDER in de systemd-env van pocketbase.
