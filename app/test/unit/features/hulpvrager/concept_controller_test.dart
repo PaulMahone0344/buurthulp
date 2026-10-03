@@ -26,34 +26,43 @@ void main() {
       expect(naWat.heeftWat, isTrue);
       expect(begin.klustype, isNull, reason: 'oude state is niet gewijzigd');
 
+      controller.zetOmschrijving('Heg knippen');
+      controller.zetFoto(testKlusFoto);
       controller.kiesDagKeuze(HhDagKeuze.morgen);
-      expect(container.read(conceptProvider).dag, DateTime(2026, 9, 16));
-      expect(container.read(conceptProvider).heeftWanneer, isFalse);
-
-      controller.kiesDagdeel(HhDagdeel.middag);
-      expect(container.read(conceptProvider).heeftWanneer, isTrue);
+      final naDag = container.read(conceptProvider);
+      expect(naDag.dag, DateTime(2026, 9, 16));
+      expect(naDag.vanafMinuten, 10 * 60, reason: 'tijdwiel begint op 10:00');
+      expect(naDag.heeftWanneer, isTrue);
+      expect(naDag.isCompleet, isFalse, reason: 'adres en vinkje ontbreken');
 
       controller.zetWaar(
         adres: 'Kerkstraat 1',
         postcode: '4001 AA',
         plaats: 'Tiel',
-        toelichting: 'Twee tassen.',
       );
+      controller.zetNeeLijstAkkoord(true);
       final compleet = container.read(conceptProvider);
       expect(compleet.isCompleet, isTrue);
-      expect(compleet.klustype, testKlustypes.first);
       expect(naWat.adres, isNull, reason: 'tussenstate blijft zoals hij was');
     });
 
-    test('een eigen dag zet de dagkeuze op andereDag', () {
+    test('vandaag: het tijdwiel begint twee hele uren na nu', () {
+      final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
+      container.read(conceptProvider.notifier).kiesDagKeuze(HhDagKeuze.vandaag);
+      // testNu is 10:00.
+      expect(container.read(conceptProvider).vanafMinuten, 12 * 60);
+    });
+
+    test('een gekozen tijd blijft staan bij een andere dag', () {
       final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
       final controller = container.read(conceptProvider.notifier);
-
-      controller.kiesDag(DateTime(2026, 9, 20, 14));
-
+      controller.kiesDagKeuze(HhDagKeuze.morgen);
+      controller.zetVanaf(14 * 60 + 30);
+      controller.kiesDag(DateTime(2026, 9, 20, 9));
       final concept = container.read(conceptProvider);
       expect(concept.dagKeuze, HhDagKeuze.andereDag);
       expect(concept.dag, DateTime(2026, 9, 20));
+      expect(concept.vanafMinuten, 14 * 60 + 30);
     });
 
     test('van morgen terug naar kies een dag houdt de dag vast', () {
@@ -66,10 +75,47 @@ void main() {
       expect(container.read(conceptProvider).dag, DateTime(2026, 9, 16));
     });
 
+    test('eindtijd aan: een uur na de begintijd; uit: telt niet mee', () {
+      final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
+      final controller = container.read(conceptProvider.notifier);
+      controller.kiesDagKeuze(HhDagKeuze.morgen);
+
+      controller.zetEindtijd(true);
+      expect(container.read(conceptProvider).eindMinuten, 11 * 60);
+
+      controller.zetTot(9 * 60);
+      expect(container.read(conceptProvider).heeftGeldigeEindtijd, isFalse);
+
+      controller.zetEindtijd(false);
+      expect(container.read(conceptProvider).eindMinuten, isNull);
+      expect(container.read(conceptProvider).heeftGeldigeEindtijd, isTrue);
+    });
+
+    test('omschrijving: hooguit 300 tekens, minstens 5 telt als ingevuld', () {
+      final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
+      final controller = container.read(conceptProvider.notifier);
+      controller.zetOmschrijving('x' * 350);
+      expect(container.read(conceptProvider).omschrijving.length, 300);
+      controller.zetOmschrijving(' abc ');
+      expect(container.read(conceptProvider).heeftOmschrijving, isFalse);
+      controller.zetOmschrijving('Heg knippen');
+      expect(container.read(conceptProvider).heeftOmschrijving, isTrue);
+    });
+
+    test('foto weghalen maakt het concept weer onvolledig', () {
+      final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
+      final controller = container.read(conceptProvider.notifier);
+      controller.zetFoto(testKlusFoto);
+      expect(container.read(conceptProvider).heeftFoto, isTrue);
+      controller.zetFoto(null);
+      expect(container.read(conceptProvider).heeftFoto, isFalse);
+    });
+
     test('wis maakt alles leeg', () {
       final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
       final controller = container.read(conceptProvider.notifier);
       controller.kiesKlustype(testKlustypes.first);
+      controller.zetNeeLijstAkkoord(true);
 
       controller.wis();
 
@@ -78,19 +124,25 @@ void main() {
   });
 
   group('HulpvraagPlaatser', () {
-    HulpvraagConcept compleetConcept() => HulpvraagConcept(
-      klustype: testKlustypes[2], // klusje in huis, 1250
-      dagKeuze: HhDagKeuze.morgen,
-      dag: DateTime(2026, 9, 16),
-      dagdeel: HhDagdeel.ochtend,
-      adres: 'Kerkstraat 1',
-      postcode: '4001 AA',
-      plaats: 'Tiel',
-      toelichting: ' Lamp ophangen. ',
-    );
+    final kleineKlusjes = testKlustypes.firstWhere((t) => t.id == 'kt-klusje');
+    HulpvraagConcept compleetConcept({bool metEindtijd = true}) =>
+        HulpvraagConcept(
+          klustype: kleineKlusjes,
+          omschrijving: ' Lamp ophangen. ',
+          foto: testKlusFoto,
+          dagKeuze: HhDagKeuze.morgen,
+          dag: DateTime(2026, 9, 16),
+          vanafMinuten: 9 * 60,
+          heeftEindtijd: metEindtijd,
+          totMinuten: 10 * 60 + 30,
+          isNeeLijstAkkoord: true,
+          adres: 'Kerkstraat 1',
+          postcode: '4001 AA',
+          plaats: 'Tiel',
+        );
 
     test(
-      'plaatst precies een klus met status open en juiste bedragen',
+      'plaatst precies een klus met status open, foto, vinkje en tijden',
       () async {
         final gateway = fakeKlusGateway();
         final container = hulpvragerContainer(klusGateway: gateway);
@@ -101,7 +153,8 @@ void main() {
 
         expect(result, isA<Ok<GeplaatsteHulpvraag>>());
         expect(gateway.aangemaakteKlussen, hasLength(1));
-        final body = gateway.aangemaakteKlussen.single.alsBody;
+        final klus = gateway.aangemaakteKlussen.single;
+        final body = klus.alsBody;
         expect(body['status'], 'open');
         expect(body['bron'], 'app');
         expect(body['hulpvrager'], 'id-hulpvrager');
@@ -112,18 +165,68 @@ void main() {
         expect(body['commissie'], 0);
         expect(body['adres'], 'Kerkstraat 1, 4001 AA Tiel');
         expect(body['omschrijving'], 'Lamp ophangen.');
+        expect(body['nee_lijst_akkoord'], isTrue);
+        expect(identical(klus.foto, testKlusFoto), isTrue);
+        expect(
+          body.containsKey('foto'),
+          isFalse,
+          reason: 'foto gaat als bestand',
+        );
         expect(body.containsKey('toegewezen_jongere'), isFalse);
         expect(body.containsKey('lat'), isFalse);
+        // Keur- en rekenvelden zet de server (rule 101 weigert ze anders).
+        for (final veld in [
+          'klus_goedgekeurd_op',
+          'min_leeftijd',
+          'geboren_uiterlijk',
+          'controle_markering',
+        ]) {
+          expect(body.containsKey(veld), isFalse, reason: veld);
+        }
         expect(
           DateTime.parse(body['wanneer_van'] as String).toLocal(),
           DateTime(2026, 9, 16, 9),
         );
         expect(
           DateTime.parse(body['wanneer_tot'] as String).toLocal(),
-          DateTime(2026, 9, 16, 12),
+          DateTime(2026, 9, 16, 10, 30),
         );
       },
     );
+
+    test('zonder eindtijd gaat wanneer_tot niet mee', () async {
+      final gateway = fakeKlusGateway();
+      final container = hulpvragerContainer(klusGateway: gateway);
+
+      await container
+          .read(hulpvraagPlaatserProvider)
+          .plaats(
+            concept: compleetConcept(metEindtijd: false),
+            gebruikerId: 'id-hulpvrager',
+          );
+
+      final body = gateway.aangemaakteKlussen.single.alsBody;
+      expect(body.containsKey('wanneer_tot'), isFalse);
+    });
+
+    test('zonder foto of vinkje plaatst niets', () async {
+      final gateway = fakeKlusGateway();
+      final container = hulpvragerContainer(klusGateway: gateway);
+      final plaatser = container.read(hulpvraagPlaatserProvider);
+
+      final zonderFoto = await plaatser.plaats(
+        concept: compleetConcept().copyWith(foto: () => null),
+        gebruikerId: 'id-hulpvrager',
+      );
+      final zonderVinkje = await plaatser.plaats(
+        concept: compleetConcept().copyWith(isNeeLijstAkkoord: false),
+        gebruikerId: 'id-hulpvrager',
+      );
+
+      expect(zonderFoto, isA<Err<GeplaatsteHulpvraag>>());
+      expect(zonderVinkje, isA<Err<GeplaatsteHulpvraag>>());
+      expect(gateway.aangemaakteKlussen, isEmpty);
+    });
 
     // M6: de app schrijft GEEN logregel meer; dat doet de hook zelf bij het
     // aanmaken van de klus (backend OPEN-PUNT 16, app OPEN-PUNT M4:32).

@@ -16,6 +16,15 @@ abstract final class KlustypeIcoon {
     'pets': Icons.pets_outlined,
     'local_pharmacy': Icons.local_pharmacy_outlined,
     'restaurant': Icons.restaurant_outlined,
+    // B4: de 13 categorieën (backend/pb_hooks/hh_klusplaatsen_hulp.js).
+    'pedal_bike': Icons.pedal_bike_outlined,
+    'inventory_2': Icons.inventory_2_outlined,
+    'computer': Icons.computer_outlined,
+    'fence': Icons.fence_outlined,
+    'favorite_border': Icons.favorite_border,
+    'brush': Icons.brush_outlined,
+    'lightbulb': Icons.lightbulb_outline,
+    'more_horiz': Icons.more_horiz,
   };
 
   static const terugval = Icons.volunteer_activism_outlined;

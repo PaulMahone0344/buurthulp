@@ -24,12 +24,15 @@ import 'package:heitjehulp_app/features/hulpvrager/model/hh_gegevens.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_klustype.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hulpvraag_concept.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/nieuwe_klus.dart';
+import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/model/hh_klus_logregel.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 
 const _isSmoke = bool.fromEnvironment('HH_SMOKE');
 const _merk = '[m4-smoke]';
 const _accountsPad = '../backend/seed-accounts.local.json';
+const _png1x1 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
 
 T _ok<T>(Result<T> result) => switch (result) {
   Ok<T>(:final waarde) => waarde,
@@ -61,7 +64,7 @@ void main() {
       final klustypes = _ok<List<HhKlustype>>(await klussen.klustypes());
       expect(klustypes, isNotEmpty);
       final klustype = klustypes.firstWhere(
-        (t) => t.naam == 'boodschappen',
+        (t) => t.naam == 'Boodschappen',
         orElse: () => klustypes.first,
       );
 
@@ -69,31 +72,35 @@ void main() {
         await klussen.mijnGegevens(gebruiker.id),
       );
 
+      // B4: met foto, vinkje en een begintijd morgen om 10:00; de klus
+      // begint ongekeurd (de meldkamer keurt).
       final nu = DateTime.now();
+      final dag = dagVoorKeuze(HhDagKeuze.morgen, nu)!;
       final concept = HulpvraagConcept(
         klustype: klustype,
+        omschrijving:
+            '$_merk boodschappen via de app-code, ${nu.toIso8601String()}',
+        foto: HhFoto(bytes: base64Decode(_png1x1), bestandsnaam: 'smoke.png'),
         dagKeuze: HhDagKeuze.morgen,
-        dag: dagVoorKeuze(HhDagKeuze.morgen, nu),
-        dagdeel: HhDagdeel.ochtend,
+        dag: dag,
+        vanafMinuten: standaardVanaf(dag, nu),
+        isNeeLijstAkkoord: true,
         adres: gegevens.adres.isEmpty ? 'Smoketeststraat 4' : gegevens.adres,
         postcode: gegevens.postcode.isEmpty ? '4001 AA' : gegevens.postcode,
         plaats: gegevens.plaats.isEmpty ? 'Tiel' : gegevens.plaats,
-        toelichting:
-            '$_merk boodschappen via de app-code, ${nu.toIso8601String()}',
       );
-      final tijdvak = tijdvakVoor(concept.dag!, concept.dagdeel!);
       final klus = NieuweKlus(
         hulpvragerId: gebruiker.id,
         klustypeId: klustype.id,
-        omschrijving: concept.toelichting,
+        omschrijving: concept.omschrijving,
         adres: stelAdresSamen(
           adres: concept.adres!,
           postcode: concept.postcode!,
           plaats: concept.plaats!,
         ),
-        wanneerVan: tijdvak.van,
-        wanneerTot: tijdvak.tot,
+        wanneerVan: momentOp(dag, concept.vanafMinuten!),
         bedragen: berekenBedragen(klustype),
+        foto: concept.foto!,
       );
 
       final klusId = _ok<String>(await klussen.klusAanmaken(klus));
@@ -106,6 +113,7 @@ void main() {
       );
       expect(terug.getStringValue('status'), 'open');
       expect(terug.getStringValue('bron'), 'app');
+      expect(terug.getStringValue('klus_goedgekeurd_op'), isEmpty);
       expect(terug.getIntValue('bedrag_bruto'), klustype.richtvergoedingCenten);
       expect(
         terug.getIntValue('vergoeding_jongere'),

@@ -8,7 +8,7 @@ import 'package:heitjehulp_app/features/hulpvrager/model/nieuwe_klus.dart';
 import 'package:heitjehulp_app/features/hulpvrager/paden_hulpvrager.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/l10n/teksten_familie_nl.dart';
-import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 
 import '../support/hh_familie_wikkel.dart';
 import '../support/hh_hulpvrager_wikkel.dart';
@@ -163,12 +163,15 @@ void main() {
       // Eén oudere: F1 stuurt meteen door naar F3.
       await tikKnop(tester, TekstenFamilieNl.f3HulpVragen(testOudereNaam));
 
-      await tikTekst(tester, 'klusje in huis');
-      await tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
-      await tikTekst(tester, TekstenHulpvragerNl.dagdeelMiddag);
-      // Het adres van de OUDERE is bekend: het staat in de samenvatting.
-      expect(find.text('Prins Bernhardlaan 12, 4003 AB Tiel'), findsOneWidget);
-      await tikKnop(tester, TekstenHulpvragerNl.bevestigenAkkoord);
+      await vulKlusIn(tester);
+      // Het adres van de OUDERE is bekend.
+      expect(
+        find.text(
+          TekstenKlusNl.waarAdres('Prins Bernhardlaan 12, 4003 AB Tiel'),
+        ),
+        findsOneWidget,
+      );
+      await tikKnop(tester, TekstenKlusNl.plaatsen);
 
       final body = klusGateway.aangemaakteKlussen.single.alsBody;
       expect(body['hulpvrager'], oudereId);
@@ -221,10 +224,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tikTekst(tester, 'klusje in huis');
-      await tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
-      await tikTekst(tester, TekstenHulpvragerNl.dagdeelMiddag);
-      await tikKnop(tester, TekstenHulpvragerNl.bevestigenAkkoord);
+      await vulKlusIn(tester);
+      await tikKnop(tester, TekstenKlusNl.plaatsen);
       final body = klusGateway.aangemaakteKlussen.single.alsBody;
       expect(body['bron'], NieuweKlus.bronApp);
       expect(body['geplaatst_door'], oudereId);

@@ -12,6 +12,7 @@ import 'package:heitjehulp_app/features/hulpvrager/screen/oudere_meer_screen.dar
 import 'package:heitjehulp_app/features/hulpvrager/status/screen/hulpvragen_lijst_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 
 import '../support/hh_hulpvrager_wikkel.dart';
@@ -20,6 +21,14 @@ Future<void> _tik(WidgetTester tester, String tekst) async {
   final doel = find.text(tekst);
   await tester.ensureVisible(doel);
   await tester.tap(doel);
+  await tester.pumpAndSettle();
+}
+
+/// "Klus plaatsen" staat ook in de titel: tik op de knop.
+Future<void> _tikPlaatsen(WidgetTester tester) async {
+  final knop = find.widgetWithText(HhKnop, TekstenKlusNl.plaatsen);
+  await tester.ensureVisible(knop);
+  await tester.tap(knop);
   await tester.pumpAndSettle();
 }
 
@@ -74,8 +83,8 @@ void _controleerSchermlezer(WidgetTester tester) {
 
 void main() {
   testWidgets(
-    'O1 -> hulp vragen (één pagina) -> O6 plaatst precies een klus met '
-    'status open en juiste bedragen',
+    'O1 -> klus plaatsen (één pagina) -> O6 plaatst precies een klus met '
+    'foto, vinkje, tijd en status open',
     (tester) async {
       final handle = tester.ensureSemantics();
       final klusGateway = fakeKlusGateway();
@@ -86,38 +95,42 @@ void main() {
       _controleerSchermlezer(tester);
       await _tik(tester, TekstenHulpvragerNl.homeHulpVragen);
 
-      // Eén pagina: wat, wanneer, waar.
+      // Eén pagina zoals de mockup KlusPlaatsen.
       expect(find.byType(HulpVragenScreen), findsOneWidget);
-      await _tik(tester, 'klusje in huis');
-      await _tik(tester, TekstenHulpvragerNl.dagMorgen);
-      await _tik(tester, TekstenHulpvragerNl.dagdeelMiddag);
-      // Adres bekend uit mijn gegevens: alleen de toelichting.
-      await tester.enterText(find.byType(TextField), 'Lamp ophangen.');
-      await tester.pumpAndSettle();
+      await vulKlusIn(tester);
+      // Het adres komt uit Mijn gegevens en wordt niet opnieuw gevraagd.
+      expect(
+        find.text(
+          TekstenKlusNl.waarAdres('Prins Bernhardlaan 12, 4003 AB Tiel'),
+        ),
+        findsOneWidget,
+      );
       _controleerSchermlezer(tester);
+      await _tikPlaatsen(tester);
 
-      // De samenvatting staat er zodra alles is ingevuld.
-      expect(find.text('€ 12,50'), findsOneWidget);
-      expect(find.text('Prins Bernhardlaan 12, 4003 AB Tiel'), findsOneWidget);
-      await _tik(tester, TekstenHulpvragerNl.bevestigenAkkoord);
-
-      // O6
+      // O6: de meldkamer kijkt eerst.
       expect(find.byType(HulpVragenVerstuurdScreen), findsOneWidget);
+      expect(find.text(TekstenHulpvragerNl.verstuurdUitleg), findsOneWidget);
       _controleerSchermlezer(tester);
       expect(klusGateway.aangemaakteKlussen, hasLength(1));
-      final body = klusGateway.aangemaakteKlussen.single.alsBody;
+      final klus = klusGateway.aangemaakteKlussen.single;
+      final body = klus.alsBody;
       expect(body['status'], 'open');
       expect(body['bron'], 'app');
       expect(body['klustype'], 'kt-klusje');
       expect(body['bedrag_bruto'], 1250);
       expect(body['vergoeding_jongere'], 1250);
       expect(body['commissie'], 0);
-      expect(body['omschrijving'], 'Lamp ophangen.');
+      expect(body['omschrijving'], 'Lamp ophangen in de gang.');
       expect(body['adres'], 'Prins Bernhardlaan 12, 4003 AB Tiel');
+      expect(body['nee_lijst_akkoord'], isTrue);
+      expect(klus.foto.bestandsnaam, 'klus.png');
+      // Morgen, het tijdwiel op 10:00, zonder eindtijd.
       expect(
         DateTime.parse(body['wanneer_van'] as String).toLocal(),
-        DateTime(2026, 9, 16, 13),
+        DateTime(2026, 9, 16, 10),
       );
+      expect(body.containsKey('wanneer_tot'), isFalse);
       // M6: de app schrijft geen logregel meer; de hook doet dat.
 
       // Terug bestaat niet meer; naar het begin.
@@ -136,14 +149,12 @@ void main() {
     await pompHulpvragerApp(tester, klusGateway: klusGateway);
     await _tik(tester, TekstenHulpvragerNl.homeHulpVragen);
 
-    await _tik(tester, TekstenHulpvragerNl.bevestigenAkkoord);
-    expect(find.text(TekstenHulpvragerNl.paginaKiesWat), findsOneWidget);
+    await _tikPlaatsen(tester);
+    expect(find.text(TekstenKlusNl.ontbreektWat), findsWidgets);
 
-    await _tik(tester, 'tuin');
-    await _tik(tester, TekstenHulpvragerNl.bevestigenAkkoord);
-    expect(find.text(TekstenHulpvragerNl.paginaKiesWanneer), findsOneWidget);
-
-    await _tik(tester, TekstenHulpvragerNl.dagMorgen);
+    await _tik(tester, 'Tuin');
+    await _tikPlaatsen(tester);
+    expect(find.text(TekstenKlusNl.ontbreektOmschrijving), findsWidgets);
     expect(klusGateway.aangemaakteKlussen, isEmpty);
   });
 
@@ -154,20 +165,19 @@ void main() {
     );
 
     await _tik(tester, TekstenHulpvragerNl.homeHulpVragen);
-    await _tik(tester, 'tuin');
-    await _tik(tester, TekstenHulpvragerNl.dagVandaag);
-    await _tik(tester, TekstenHulpvragerNl.dagdeelAvond);
-    await tester.enterText(find.byType(TextField), 'Heg knippen');
-    await tester.pumpAndSettle();
+    await vulKlusIn(tester, categorie: 'Tuin', omschrijving: 'Heg knippen');
 
     expect(
-      find.text(TekstenHulpvragerNl.dagGekozen(TekstenHulpvragerNl.vandaag)),
+      find.text(TekstenHulpvragerNl.dagGekozen(TekstenHulpvragerNl.morgen)),
       findsOneWidget,
     );
     final concept = container.read(conceptProvider);
-    expect(concept.klustype?.naam, 'tuin');
+    expect(concept.klustype?.naam, 'Tuin');
     expect(concept.adres, 'Prins Bernhardlaan 12');
-    expect(concept.toelichting, 'Heg knippen');
+    expect(concept.omschrijving, 'Heg knippen');
+    expect(concept.heeftFoto, isTrue);
+    expect(concept.isNeeLijstAkkoord, isTrue);
+    expect(concept.isCompleet, isTrue);
   });
 
   testWidgets('pagina verlaten vraagt weet u het zeker, met twee knoppen', (
@@ -177,7 +187,7 @@ void main() {
     final container = await pompHulpvragerApp(tester, klusGateway: klusGateway);
 
     await _tik(tester, TekstenHulpvragerNl.homeHulpVragen);
-    await _tik(tester, 'vervoer');
+    await _tik(tester, 'Dieren');
     await _terug(tester);
 
     expect(find.text(TekstenHulpvragerNl.verlatenVraag), findsOneWidget);
@@ -186,7 +196,7 @@ void main() {
     // Nee: blijven, keuze blijft staan.
     await _tik(tester, TekstenHulpvragerNl.verlatenNee);
     expect(find.byType(HulpVragenScreen), findsOneWidget);
-    expect(container.read(conceptProvider).klustype?.naam, 'vervoer');
+    expect(container.read(conceptProvider).klustype?.naam, 'Dieren');
 
     // Ja: terug naar O1, concept leeg.
     await _terug(tester);
@@ -219,7 +229,10 @@ void main() {
     await _terug(tester);
     expect(find.byType(HulpVragenScreen), findsOneWidget);
     // Nu bekend: geen adresvelden meer, het adres zit in het concept.
-    expect(find.text(TekstenHulpvragerNl.waarBekendUitleg), findsOneWidget);
+    expect(
+      find.text(TekstenKlusNl.waarAdres('Kerkstraat 3, 4001 AB Tiel')),
+      findsOneWidget,
+    );
     expect(container.read(conceptProvider).adres, 'Kerkstraat 3');
   });
 

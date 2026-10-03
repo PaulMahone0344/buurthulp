@@ -78,6 +78,28 @@ void main() {
   });
 
   group('KlustypeIcoon', () {
+    test('B4: elk icoon van de 13 categorieën is bekend', () {
+      // Gelijk aan KLUS_CATEGORIEEN in backend/pb_hooks/hh_klusplaatsen_hulp.js.
+      const categorieIconen = [
+        'yard',
+        'pedal_bike',
+        'cleaning_services',
+        'inventory_2',
+        'shopping_cart',
+        'pets',
+        'computer',
+        'fence',
+        'favorite_border',
+        'brush',
+        'handyman',
+        'lightbulb',
+        'more_horiz',
+      ];
+      for (final naam in categorieIconen) {
+        expect(KlustypeIcoon.bekendeNamen, contains(naam), reason: naam);
+      }
+    });
+
     test('bekende namen krijgen een eigen icoon', () {
       for (final naam in KlustypeIcoon.bekendeNamen) {
         expect(KlustypeIcoon.voor(naam), isNot(KlustypeIcoon.terugval));

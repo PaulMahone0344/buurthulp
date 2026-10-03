@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 
+import '../../jongere/foto_kiezer.dart';
 import '../domein/bedragen.dart';
 
-/// Wat de app naar hh_klussen stuurt bij het plaatsen (O5). Precies de
-/// velden die de createRule voor een oudere toestaat: hulpvrager =
-/// geplaatst_door = ik, bron app, status open, geen jongere. lat/lon
-/// blijven leeg (geocoding komt in M5).
+/// Wat de app naar hh_klussen stuurt bij het plaatsen. Precies de velden
+/// die de createRule voor een bewoner toestaat: hulpvrager = geplaatst_door
+/// = ik, bron app, status open, geen helper. lat/lon zet de server
+/// (geocoding, M5). B4: met de verplichte [foto] (als bestand, niet in
+/// [alsBody]), het nee-lijst-vinkje en een optionele eindtijd. De
+/// keur-velden en de leeftijdsgrens zet de server; die gaan nooit mee.
 @immutable
 class NieuweKlus {
   const NieuweKlus({
@@ -14,8 +17,9 @@ class NieuweKlus {
     required this.omschrijving,
     required this.adres,
     required this.wanneerVan,
-    required this.wanneerTot,
     required this.bedragen,
+    required this.foto,
+    this.wanneerTot,
     this.geplaatstDoorId,
     this.bron = bronApp,
   });
@@ -25,8 +29,13 @@ class NieuweKlus {
   final String omschrijving;
   final String adres;
   final DateTime wanneerVan;
-  final DateTime wanneerTot;
+
+  /// Leeg = geen eindtijd (schakelaar "Eindtijd" uit).
+  final DateTime? wanneerTot;
   final HhBedragen bedragen;
+
+  /// De klusfoto; de gateway stuurt hem als bestand in veld [veldFoto].
+  final HhFoto foto;
 
   /// M9: een familielid plaatst namens de oudere (F2). Leeg = de oudere zelf.
   final String? geplaatstDoorId;
@@ -36,6 +45,7 @@ class NieuweKlus {
   static const statusConcept = 'concept';
   static const bronApp = 'app';
   static const bronFamilie = 'familie';
+  static const veldFoto = 'foto';
 
   /// Het verzoek zoals de server hem verwacht. Datums in UTC (ISO 8601),
   /// bedragen in centen.
@@ -46,8 +56,9 @@ class NieuweKlus {
     'omschrijving': omschrijving,
     'adres': adres,
     'wanneer_van': wanneerVan.toUtc().toIso8601String(),
-    'wanneer_tot': wanneerTot.toUtc().toIso8601String(),
+    'wanneer_tot': ?wanneerTot?.toUtc().toIso8601String(),
     'status': statusOpen,
+    'nee_lijst_akkoord': true,
     'bedrag_bruto': bedragen.bedragBruto,
     'vergoeding_jongere': bedragen.vergoedingJongere,
     'commissie': bedragen.commissie,
