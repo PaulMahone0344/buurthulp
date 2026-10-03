@@ -1014,3 +1014,102 @@ B2CHECK (scripts/82-b2check.mjs, dry-run standaard)
 UITROLLEN (volgorde)
   00-backup.mjs -> 81 --apply -> 80 --apply -> 84 --apply ->
   83-hook-deploy.sh -> 82 --apply -> 72, 62, 04, 50
+
+================================================================
+B6 - CHAT IN DE APP (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b6.txt)
+================================================================
+
+Bewoner en helper praten per klus in de app; nummers blijven verborgen.
+Push bestaat nog niet: een nieuw bericht geeft alleen een melding IN de app
+(hh_meldingen, laag 1). Ouder leest NIET mee (besluit). Beheerpaneel-inzage
+is B11; de rule staat klaar.
+
+hh_berichten  NIEUW (8 eigen velden + created/updated; scripts/110-b6-berichten.mjs)
+  klus            verwijzing naar hh_klussen, verplicht; verdwijnt mee met de klus
+  afzender        verwijzing naar hh_users, verplicht; GEEN cascade (zoals
+                  hh_klussen.hulpvrager: berichten blijven als bewijs; een
+                  account met berichten kan dus niet zomaar weg)
+  helper          verwijzing naar hh_users: de helper van DIT gesprek. De hook
+                  zet hem bij aanmaken op klus.toegewezen_jongere. Een nieuwe
+                  helper (na teruggeven) begint een nieuw gesprek en leest het
+                  oude niet.
+  tekst           tekst, verplicht, 1-500 (na het filter)
+  soort           keuze: tekst | snel (snelknop: gewoon bericht, NOOIT een
+                  statuswissel; die loopt via de M6-routes)
+  gelezen_op      datum (leeg = ongelezen); alleen de ontvanger zet hem
+  gefilterd       ja/nee: de hook verving een nummer, mailadres of link
+  contactverzoek  ja/nee: "heb je whatsapp/snap/insta, je nummer?" (alleen
+                  markeren); onzichtbaar voor iedereen behalve coordinator en
+                  superuser (onRecordEnrich)
+  Indexen: idx_hh_berichten_klus (klus, created); idx_hh_berichten_helper (helper)
+
+hh_meldingen.soort + "bericht" (110, de live keuzelijst wordt alleen aangevuld)
+
+RULES hh_berichten (scripts/111-b6-rules.mjs; nieuwe collectie, gezet)
+  Lezen       de bewoner (klus.hulpvrager), de helper van dit gesprek zolang hij
+              toegewezen is (helper = ik && klus.toegewezen_jongere = ik), en
+              de coordinator ALLEEN als er een incident op die klus is
+              (@collection.hh_incidenten.klus ?= klus). Keuze: voorstel uit de
+              prompt. Geen familie, geen andere helpers.
+  Aanmaken    afzender = jijzelf, jij bent bewoner of toegewezen helper, de klus
+              heeft een helper en staat op geaccepteerd | onderweg | bezig |
+              probleem | afgerond | geannuleerd; helper, gelezen_op, gefilterd
+              en contactverzoek NIET meesturen. De coordinator schrijft niet.
+  Bijwerken   alleen wie mag lezen en NIET de afzender is (de ontvanger), en
+              alleen gelezen_op.
+  Verwijderen niemand via de API (null); weg met de klus.
+  NB "De coordinator mag alles op elke hh_-collectie" (ALGEMEEN) geldt hier
+  bewust NIET: inzage alleen bij een melding.
+
+HOOK (backend/pb_hooks/hh_chat.pb.js + hh_chat_hulp.js, beide NIEUW; deploy
+met scripts/113-hook-deploy.sh, dat ALLEEN deze twee bestanden meestuurt)
+  onRecordCreateRequest hh_berichten (vóór opslaan en vóór de rule):
+    - filter: telefoonnummers (cijferreeks met hooguit twee scheidingstekens
+      ertussen en minstens 9 cijfers, datums uitgezonderd: 06-12345678,
+      06 12 34 56 78, +31 (0)6..., 0031..., 0344-123456, "6 1 2 3 4 5 6 7 8"),
+      e-mailadressen (ook "jan (at) gmail punt com") en links (https://,
+      www., wa.me/..., instagram.com/..., bit.ly/...) worden "•••";
+      gefilterd = ja. Het origineel wordt NIET bewaard.
+    - contactverzoek = ja bij whatsapp/appen/snapchat/insta/tiktok/telegram/
+      "je nummer"/mail me ..., ook met spaties of punten ertussen
+      ("w h a t s a p p"). Niet blokkeren.
+    - helper = klus.toegewezen_jongere.
+    - CHAT DICHT: na afgerond/geannuleerd mag een deelnemer nog
+      CHAT_DICHT_NA_UREN = 72 uur schrijven (vergeten spullen, een
+      bedankje), gerekend vanaf de laatste logregel in hh_klus_status naar
+      die status (zonder logregel: updated). Daarna 403 "Deze chat is
+      gesloten." {reden: dicht}. Een rule kan niet met datums rekenen, vandaar
+      in de hook. Lezen blijft mogen. Superuser slaat de check over.
+  onRecordAfterCreateSuccess hh_berichten: melding soort "bericht" voor de
+    andere deelnemer ("Nieuw bericht van Daan" / "Over je klus: Tuin. Open de
+    chat om te lezen." - nooit de inhoud), hooguit één per
+    MELDING_INTERVAL_MINUTEN = 10 per chat per ontvanger; sleutel
+    "bericht:<id>". Een fout breekt het bericht nooit.
+  onRecordUpdateRequest hh_berichten: alles behalve gelezen_op terug naar de
+    opgeslagen waarde (tweede sluis naast de rule).
+  onRecordEnrich hh_berichten: contactverzoek weg voor wie geen coordinator
+    of superuser is (ook realtime).
+  Test zonder server: node --test backend/tests/*.test.mjs (90 filter-/
+  rekentests + 7 rule-tests voor B6).
+
+B6CHECK (scripts/112-b6check.mjs, dry-run standaard)
+  Zonder --apply: collectie, velden, rules letterlijk gelijk aan 111, soort
+  "bericht", en welke afgelopen seed-klus voor de 72-uur-check gebruikt wordt.
+  Met --apply (node --experimental-eventsource voor de realtime-sectie), met
+  tijdelijke accounts "b6check-...@heitjehulp.invalid" en klussen
+  "[b6check]": de twee partijen schrijven en lezen (ook snelknop, geen
+  statuswissel), derden (vreemde bewoner/helper, andere helper, anoniem,
+  coordinator zonder incident) lezen en schrijven niets, coordinator-inzage
+  pas na een incident (en schrijft nooit), vervalsen kan niet (afzender,
+  helper, gelezen_op, gefilterd, contactverzoek, andermans tekst, eigen
+  bericht gelezen, verwijderen, 501 tekens), filter (nummer/mail/link,
+  contactverzoek alleen voor de coordinator), meldingen (één per 10 min,
+  alleen ontvanger), open/dicht (zonder helper dicht, net afgerond open, een
+  afgelopen SEED-klus van > 72 uur: 403 voor bewoner en helper via
+  impersonate, niets geschreven), wissel van helper, realtime; alles
+  opgeruimd. Lokaal bewezen (PB 0.25.9, prod-schema): 84 groen, 0 rood.
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 110 --apply -> 111 --apply -> 113-hook-deploy.sh ->
+  112 --apply -> (72, 62 ter controle) -> app
