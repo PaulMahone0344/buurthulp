@@ -25,6 +25,21 @@ abstract final class TekstenHulpvragerNl {
   static const homeMijnGegevens = 'Mijn gegevens';
   static const homeMijnGegevensSemantiek = 'Bekijk en wijzig mijn gegevens';
 
+  // Tabbalk van de oudere (3 okt, indeling naar BuurtHeld).
+  static const tabStart = 'Start';
+  static const tabMijnHulpvragen = 'Hulpvragen';
+  static const tabMijnHulpvragenSemantiek = 'Mijn hulpvragen';
+  static const tabBelOns = 'Bel ons';
+  static const tabMeer = 'Meer';
+  static const tabbalkLabel = 'Hoofdmenu';
+
+  // Meer
+  static const meerTitel = 'Meer';
+  static const meerGegevensUitleg = 'Uw naam, adres en contactpersoon';
+  static const meerInstellingenUitleg = 'Taal, meldingen en account';
+  static const meerHulpTitel = 'Hulp en uitleg';
+  static const meerHulpUitleg = 'Hoe HeitjeHulp werkt';
+
   // "Mijn hulpvragen" is sinds M6 O8 (lib/features/hulpvrager/status);
   // de teksten daarvan staan in teksten_uitvoeren_nl.dart.
 

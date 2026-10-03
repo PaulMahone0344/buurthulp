@@ -161,7 +161,7 @@ void main() {
   }
 
   group('O1', () {
-    testWidgets('toont naam, drie grote knoppen, instellingen en gegevens', (
+    testWidgets('toont naam, de knop hulp vragen en de tabbalk', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[0]);
@@ -171,10 +171,17 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeMijnHulpvragen), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeBelOns), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeInstellingen), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeMijnGegevens), findsOneWidget);
+      // Sinds 3 okt tabs onderin; instellingen en gegevens zitten in Meer.
+      for (final tab in [
+        TekstenHulpvragerNl.tabStart,
+        TekstenHulpvragerNl.tabMijnHulpvragen,
+        TekstenHulpvragerNl.tabBelOns,
+        TekstenHulpvragerNl.tabMeer,
+      ]) {
+        expect(find.text(tab), findsOneWidget);
+      }
+      expect(find.text(TekstenHulpvragerNl.homeInstellingen), findsNothing);
+      expect(find.text(TekstenHulpvragerNl.homeMijnGegevens), findsNothing);
       expect(find.text(TekstenNl.uitloggen), findsNothing);
     });
 

@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../widget/oudere_tabbalk.dart';
 import 'paden_status.dart';
 import 'screen/hulpvraag_status_screen.dart';
 import 'screen/hulpvragen_lijst_screen.dart';
@@ -10,7 +11,10 @@ import 'screen/hulpvragen_lijst_screen.dart';
 List<RouteBase> statusRoutes() => [
   GoRoute(
     path: HhPadenStatus.hulpvragen,
-    builder: (context, state) => const HulpvragenLijstScreen(),
+    builder: (context, state) => const OudereTabScherm(
+      actief: OudereTab.mijnHulpvragen,
+      child: HulpvragenLijstScreen(),
+    ),
   ),
   GoRoute(
     path: HhPadenStatus.hulpvraagPatroon,

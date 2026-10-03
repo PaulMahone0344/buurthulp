@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../l10n/teksten_nl.dart';
 import '../../theme.dart';
 import '../dichtheid_scope.dart';
+import 'hh_tabbalk.dart';
 
 /// Schermsteiger (app OPEN-PUNT 11, opgelost in M2): groene bovenbalk
 /// met terugknop en titel ([HhBovenbalk]), de inhoud eronder.
@@ -45,8 +46,10 @@ class HhScherm extends StatelessWidget {
     final rand = HhRuimte.voor(HhRuimte.l, dichtheid);
     final bovenrand = HhRuimte.voor(HhRuimte.xl, dichtheid);
 
+    // Een tab (HhTabScherm) heeft nooit een terugknop: daar is de balk.
     final kanTerug =
-        toonTerug ?? (onTerug != null || Navigator.of(context).canPop());
+        !HhTabScope.isInTab(context) &&
+        (toonTerug ?? (onTerug != null || Navigator.of(context).canPop()));
 
     final balk = HhBovenbalk(
       titel: titel,

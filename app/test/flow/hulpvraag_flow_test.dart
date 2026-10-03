@@ -11,6 +11,7 @@ import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wanneer_sc
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wat_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_home_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_gegevens_screen.dart';
+import 'package:heitjehulp_app/features/hulpvrager/screen/oudere_meer_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/status/screen/hulpvragen_lijst_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
@@ -275,17 +276,24 @@ void main() {
     (tester) async {
       await pompHulpvragerApp(tester, klusGateway: fakeKlusGateway());
 
-      await _tik(tester, TekstenHulpvragerNl.homeMijnHulpvragen);
+      // Tabs zijn eigen plekken: geen terugknop.
+      await _tik(tester, TekstenHulpvragerNl.tabMijnHulpvragen);
       expect(find.byType(HulpvragenLijstScreen), findsOneWidget);
-      await _terug(tester);
+      expect(find.byType(HhTerugKnop), findsNothing);
+
+      await _tik(tester, TekstenHulpvragerNl.tabMeer);
+      expect(find.byType(OudereMeerScreen), findsOneWidget);
 
       await _tik(tester, TekstenHulpvragerNl.homeMijnGegevens);
       expect(find.byType(MijnGegevensScreen), findsOneWidget);
       await _terug(tester);
+      expect(find.byType(OudereMeerScreen), findsOneWidget);
 
       await _tik(tester, TekstenHulpvragerNl.homeInstellingen);
       expect(find.byType(InstellingenScreen), findsOneWidget);
       await _terug(tester);
+
+      await _tik(tester, TekstenHulpvragerNl.tabStart);
       expect(find.byType(HulpvragerHomeScreen), findsOneWidget);
     },
   );

@@ -24,4 +24,10 @@ abstract final class HhPadenHulpvrager {
 
   /// O12.
   static const gegevens = '$_basis/gegevens';
+
+  /// Tab "Bel ons" (3 okt): O10 met de tabbalk eronder.
+  static const belOnsTab = '$_basis/bel-ons';
+
+  /// Tab "Meer" (3 okt).
+  static const meer = '$_basis/meer';
 }

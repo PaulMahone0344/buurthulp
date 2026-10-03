@@ -35,7 +35,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tikKnop(tester, TekstenHulpvragerNl.homeBelOns);
+      await tikTekst(tester, TekstenHulpvragerNl.tabBelOns);
       await tikKnop(tester, TekstenMeldingenNl.o10ProbleemMelden);
       await tikKnop(tester, TekstenMeldingenNl.o11Nood);
       expect(incidenten.gemeld, isEmpty, reason: 'eerst bevestigen');
