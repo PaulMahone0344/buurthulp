@@ -37,7 +37,7 @@ String titelVan(HhMelding melding, HhRol rol) {
 }
 
 /// Waar een tik op de melding naartoe gaat, of null als er geen scherm bij
-/// hoort (familie heeft nog geen schermen, M9).
+/// hoort.
 String? doelVan(HhMelding melding, HhRol rol) {
   final klus = melding.klusId;
   switch (rol) {
@@ -56,8 +56,6 @@ String? doelVan(HhMelding melding, HhRol rol) {
         return HhPadenCoordinator.incidentDetail(melding.incidentId);
       }
       return klus.isEmpty ? null : HhPadenCoordinator.klusDetail(klus);
-    case HhRol.familie:
-      return null;
   }
 }
 

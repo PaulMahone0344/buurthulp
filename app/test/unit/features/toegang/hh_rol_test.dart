@@ -8,7 +8,6 @@ void main() {
     test('rol naar route', () {
       expect(HhRol.hulpvrager.pad, HhPaden.hulpvrager);
       expect(HhRol.jongere.pad, HhPaden.jongere);
-      expect(HhRol.familie.pad, HhPaden.familie);
       expect(HhRol.coordinator.pad, HhPaden.coordinator);
       expect(HhPaden.rolPaden, HhRol.values.map((r) => r.pad).toSet());
     });
@@ -18,6 +17,9 @@ void main() {
         expect(HhRol.vanCode(rol.code), rol);
       }
       expect(HhRol.vanCode('Hulpvrager'), isNull);
+      // B3 (K5): de familie-rol bestaat niet meer.
+      expect(HhRol.vanCode('familie'), isNull);
+      expect(HhRol.values, hasLength(3));
       expect(HhRol.vanCode(''), isNull);
       expect(HhRol.vanCode(null), isNull);
     });

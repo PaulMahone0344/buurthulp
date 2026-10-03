@@ -32,8 +32,7 @@ const _andersMax = 500;
 ///   - "Er is iets niet goed gegaan" -> drie vaste keuzes (of "Iets
 ///     anders", zelf typen) -> incident soort probleem, met de lopende klus
 ///     erbij als die er is.
-/// De server (hook) meldt het meteen aan elke coordinator; bij nood ook aan
-/// het gekoppelde familielid.
+/// De server (hook) meldt het meteen aan elke coordinator.
 class ProbleemMeldenScreen extends ConsumerStatefulWidget {
   const ProbleemMeldenScreen({this.klusId = '', super.key});
 

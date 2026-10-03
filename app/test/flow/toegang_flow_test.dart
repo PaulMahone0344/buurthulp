@@ -7,7 +7,6 @@ import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/coordinator/screen/coordinator_stub_screen.dart';
-import 'package:heitjehulp_app/features/familie/screen/familie_stub_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_stub_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
@@ -29,7 +28,6 @@ const _tokenSleutel = 'hh_auth_token';
 Type _landingVan(HhRol rol) => switch (rol) {
   HhRol.hulpvrager => HulpvragerStubScreen,
   HhRol.jongere => JongereStubScreen,
-  HhRol.familie => FamilieStubScreen,
   HhRol.coordinator => CoordinatorStubScreen,
 };
 
@@ -344,19 +342,19 @@ void main() {
     tester,
   ) async {
     final opslag = GeheugenKeyValueStore({
-      _tokenSleutel: testToken(HhRol.familie),
+      _tokenSleutel: testToken(HhRol.coordinator),
     });
     final gateway = fakeMetAlleRollen()..isOffline = true;
     await pompApp(tester, gateway: gateway, opslag: opslag);
 
     expect(find.byType(SplashScreen), findsOneWidget);
     expect(find.text(TekstenNl.foutGeenVerbinding), findsOneWidget);
-    expect(opslag.waarden[_tokenSleutel], testToken(HhRol.familie));
+    expect(opslag.waarden[_tokenSleutel], testToken(HhRol.coordinator));
 
     gateway.isOffline = false;
     await _tik(tester, TekstenNl.opnieuwProberen);
 
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
+    expect(find.byType(CoordinatorStubScreen), findsOneWidget);
   });
 
   testWidgets('offline bij inloggen: meldbalk, knop bruikbaar, daarna door', (
@@ -382,25 +380,18 @@ void main() {
 
   testWidgets('verkeerde rolroute gaat naar de eigen rolroute', (tester) async {
     final opslag = GeheugenKeyValueStore({
-      _tokenSleutel: testToken(HhRol.familie),
+      _tokenSleutel: testToken(HhRol.coordinator),
     });
     final container = await pompApp(
       tester,
       gateway: fakeMetAlleRollen(),
       opslag: opslag,
     );
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
+    expect(find.byType(CoordinatorStubScreen), findsOneWidget);
 
     container.read(routerProvider).go(HhPaden.jongere);
     await tester.pumpAndSettle();
     expect(find.byType(JongereStubScreen), findsNothing);
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
-
-    // Instellingen is wel bereikbaar, en de terugknop brengt je terug.
-    await _tik(tester, TekstenNl.landingInstellingen);
-    expect(find.text(TekstenNl.instellingenTitel), findsOneWidget);
-    await tester.tap(find.text(TekstenNl.terug));
-    await tester.pumpAndSettle();
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
+    expect(find.byType(CoordinatorStubScreen), findsOneWidget);
   });
 }

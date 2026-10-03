@@ -9,7 +9,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/features/coordinator/paden_coordinator.dart';
-import 'package:heitjehulp_app/features/familie/paden_familie.dart';
 import 'package:heitjehulp_app/features/hulpvrager/paden_hulpvrager.dart';
 import 'package:heitjehulp_app/features/hulpvrager/status/paden_status.dart';
 import 'package:heitjehulp_app/features/hulpvrager/veiligheid/paden_veiligheid.dart';
@@ -50,12 +49,6 @@ final schermenPerRol = <HhRol?, List<String>>{
     HhPadenKlussen.profiel,
     HhPadenKlussen.instellingen,
     HhPadenMeldingen.overzicht,
-  ],
-  HhRol.familie: [
-    HhPaden.familie,
-    HhPadenFamilie.koppelen,
-    HhPadenMeldingen.overzicht,
-    HhPaden.instellingen,
   ],
   HhRol.coordinator: [
     HhPaden.coordinator,

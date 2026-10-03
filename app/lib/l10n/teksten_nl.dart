@@ -25,7 +25,6 @@ abstract final class TekstenNl {
   // Rollen
   static const rolHulpvrager = 'Bewoner';
   static const rolJongere = 'Helper';
-  static const rolFamilie = 'Familie';
   static const rolCoordinator = 'Coordinator';
 
   // G1 Splash
@@ -39,7 +38,6 @@ abstract final class TekstenNl {
       'klus, helpers uit de buurt helpen. Kies wat bij jou past.';
   static const keuzeZoekHulp = 'Ik zoek hulp';
   static const keuzeWilHelpen = 'Ik wil helpen';
-  static const keuzeHelpFamilielid = 'Ik help een familielid';
   static const alEenAccount = 'Ik heb al een account';
 
   // G3 Inloggen
@@ -80,7 +78,6 @@ abstract final class TekstenNl {
   static const bevestigEmailVerstuurd = 'De e-mail is opnieuw verstuurd.';
   static const bevestigEmailBanner =
       'Je e-mailadres is nog niet bevestigd. Kijk in je e-mail.';
-  static const bevestigEmailBannerKnop = 'Meer over bevestigen';
 
   // G6 Wachtwoord vergeten
   static const wachtwoordVergetenTitel = 'Wachtwoord vergeten';
@@ -143,8 +140,7 @@ abstract final class TekstenNl {
     ),
     HhVraag(
       'Kan iemand anders het voor mij regelen?',
-      'Ja. Een familielid of mantelzorger kan met een eigen account '
-          'klussen voor je plaatsen.',
+      'Ja. Bel de meldkamer; die kan een klus voor je plaatsen.',
     ),
     HhVraag(
       'Wat als er iets misgaat?',
@@ -179,31 +175,6 @@ abstract final class TekstenNl {
     ),
   ];
 
-  static const hulpVragenFamilie = [
-    HhVraag(
-      'Hoe koppel ik mij aan mijn familielid?',
-      'Je familielid nodigt je uit vanuit zijn of haar account. Daarna zie '
-          'je de klussen mee.',
-    ),
-    HhVraag(
-      'Kan ik klussen plaatsen voor mijn familielid?',
-      'Ja. Je plaatst de klus op naam van je familielid en kijkt mee hoe '
-          'het gaat.',
-    ),
-    HhVraag(
-      'Zie ik wie er langskomt?',
-      'Ja. Je ziet de naam van de helper en de status van de klus.',
-    ),
-    HhVraag(
-      'Wie betaalt?',
-      'De klus staat op naam van je familielid. Je ziet het bedrag vooraf.',
-    ),
-    HhVraag(
-      'Wat als ik me zorgen maak?',
-      'Bel de meldkamer. Die kent de situatie en kan ingrijpen.',
-    ),
-  ];
-
   static const hulpVragenCoordinator = [
     HhVraag(
       'Wat kan ik in de app?',
@@ -232,10 +203,6 @@ abstract final class TekstenNl {
 
   // Landing per rol (M0-stub, gevuld in M3-M10)
   static String landingWelkom(String naam) => 'Hallo $naam';
-  static String landingRol(String rol) => 'Je bent ingelogd als $rol.';
-  static const landingKomtLater =
-      'Dit deel van de app komt in een latere opdracht.';
-  static const landingInstellingen = 'Instellingen';
 
   // Meldingen bij fouten (HhFout.melding)
   static const foutGeenVerbinding =

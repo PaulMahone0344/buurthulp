@@ -28,14 +28,14 @@ class NieuweKlus {
   final DateTime wanneerTot;
   final HhBedragen bedragen;
 
-  /// M9: een familielid plaatst namens de oudere (F2). Leeg = de oudere zelf.
+  /// Wie de klus plaatste (de meldkamer bij een telefonische klus). Leeg =
+  /// de bewoner zelf.
   final String? geplaatstDoorId;
   final String bron;
 
   static const statusOpen = 'open';
   static const statusConcept = 'concept';
   static const bronApp = 'app';
-  static const bronFamilie = 'familie';
 
   /// Het verzoek zoals de server hem verwacht. Datums in UTC (ISO 8601),
   /// bedragen in centen.

@@ -12,7 +12,6 @@ import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
-import '../../familie/provider/hulpvraag_namens.dart';
 import '../model/hh_gegevens.dart';
 import '../paden_hulpvrager.dart';
 import '../provider/concept_controller.dart';
@@ -101,14 +100,10 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
   @override
   Widget build(BuildContext context) {
     final gegevens = ref.watch(gegevensProvider);
-    // M9 (F2): namens een oudere wijst "geen adres" niet naar Mijn
-    // gegevens (dat is het eigen scherm van de oudere); dan het formulier.
-    final isNamens = ref.watch(actieveNamensProvider) != null;
     final tussen = HhRuimte.voor(HhRuimte.l, HhDichtheidScope.van(context));
 
     return switch (gegevens) {
-      AsyncData(:final value)
-          when !_isVoorgevuld && !value.heeftAdres && !isNamens =>
+      AsyncData(:final value) when !_isVoorgevuld && !value.heeftAdres =>
         HhLegeStaat(
           icoon: Icons.home_outlined,
           titel: TekstenHulpvragerNl.waarGeenAdresTitel,

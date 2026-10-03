@@ -1,20 +1,18 @@
 // M12 — dezelfde schermsweep als schermen_sweep_test, maar met gevulde
 // fakes: lijsten met klussen, meldingen en koppelingen, en de
 // detailschermen die een id nodig hebben (klusdetail, uitvoeren,
-// beoordelen, hulpvraag-status, oudere bij familie, coordinator-klus en
+// beoordelen, hulpvraag-status, coordinator-klus en
 // -incident). Lege lijsten verbergen juist de langste regels.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
-import 'package:heitjehulp_app/core/pb/fake_familie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klus_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/features/coordinator/paden_coordinator.dart';
-import 'package:heitjehulp_app/features/familie/paden_familie.dart';
 import 'package:heitjehulp_app/features/hulpvrager/beoordelen/paden_beoordelen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/paden_hulpvrager.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart';
@@ -30,7 +28,6 @@ import 'package:heitjehulp_app/theme.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 
 import '../support/hh_coordinator_wikkel.dart';
-import '../support/hh_familie_wikkel.dart';
 import '../support/hh_hulpvrager_wikkel.dart';
 import '../support/hh_jongere_wikkel.dart';
 import '../support/hh_klussen_wikkel.dart';
@@ -140,24 +137,6 @@ void main() {
               ),
             ),
           ],
-        ),
-      ),
-    );
-
-    // Familie: actieve koppeling met de test-oudere.
-    bevindingen.addAll(
-      await sweep(
-        tester,
-        rol: HhRol.familie,
-        paden: [
-          HhPaden.familie,
-          HhPadenFamilie.oudere(oudereId),
-          HhPadenFamilie.hulpvraag(oudereId, 'k-g'),
-        ],
-        data: SweepData(
-          familie: () => FakeFamilieGateway(koppelingen: [testKoppeling()]),
-          uitvoer: () =>
-              FakeUitvoerGateway(ikBenId: familieId, klussen: ouderenKlussen()),
         ),
       ),
     );

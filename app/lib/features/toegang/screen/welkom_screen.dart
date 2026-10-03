@@ -13,8 +13,7 @@ import '../model/hh_rol.dart';
 import '../provider/sessie_providers.dart';
 
 /// G2. Twee grote keuzes: hulp zoeken (bewoner) en helpen (helper).
-/// Familie staat sinds B0 niet meer in de rolkeuze; de familie-code
-/// blijft tot B4 bestaan. De coordinator registreert niet en logt in via
+/// De coordinator registreert niet en logt in via
 /// "Ik heb al een account". De keuze zet de dichtheid: "Ik zoek hulp"
 /// maakt alles groot voordat er een account is.
 class WelkomScreen extends ConsumerWidget {

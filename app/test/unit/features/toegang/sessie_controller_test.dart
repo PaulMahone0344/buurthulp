@@ -45,13 +45,15 @@ void main() {
     });
 
     test('met geldig token: ingelogd en token opnieuw bewaard', () async {
-      final t = _maak(opslagBegin: {_tokenSleutel: testToken(HhRol.familie)});
+      final t = _maak(
+        opslagBegin: {_tokenSleutel: testToken(HhRol.hulpvrager)},
+      );
 
       await _wacht();
 
       final state = t.container.read(sessieControllerProvider);
-      expect((state as SessieIngelogd).gebruiker.rol, HhRol.familie);
-      expect(t.opslag.waarden[_tokenSleutel], testToken(HhRol.familie));
+      expect((state as SessieIngelogd).gebruiker.rol, HhRol.hulpvrager);
+      expect(t.opslag.waarden[_tokenSleutel], testToken(HhRol.hulpvrager));
     });
 
     test(
@@ -231,14 +233,14 @@ void main() {
 
     test('accountWissen: record weg, token weg, uitgelogd', () async {
       final t = _maak();
-      final container = await ingelogdAls(t, HhRol.familie);
+      final container = await ingelogdAls(t, HhRol.hulpvrager);
 
       final result = await container
           .read(sessieControllerProvider.notifier)
           .accountWissen();
 
       expect(result, isA<Ok<void>>());
-      expect(t.gateway.gewisteAccounts, [testGebruiker(HhRol.familie).id]);
+      expect(t.gateway.gewisteAccounts, [testGebruiker(HhRol.hulpvrager).id]);
       final state = container.read(sessieControllerProvider);
       expect((state as SessieUitgelogd).reden, UitlogReden.accountGewist);
       expect(t.opslag.waarden.containsKey(_tokenSleutel), isFalse);

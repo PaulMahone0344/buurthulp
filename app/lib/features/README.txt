@@ -1,4 +1,4 @@
-Een map per rol (hulpvrager, jongere, familie, coordinator), daarin per
+Een map per rol (hulpvrager, jongere, coordinator), daarin per
 feature model/, repository/, provider/, screen/ zoals in ObyCom.
 toegang/ is de gedeelde toegangsstroom (G1-G8): model, provider, screen,
 validatie en token_store.

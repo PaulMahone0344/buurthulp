@@ -4,7 +4,6 @@ import '../../../core/hh_fout.dart';
 import '../../../core/pb/gateway_providers.dart';
 import '../../../core/pb/klus_gateway.dart';
 import '../../../core/result.dart';
-import '../../familie/provider/hulpvraag_namens.dart';
 import '../../toegang/provider/sessie_providers.dart';
 import '../model/hh_gegevens.dart';
 import '../model/hh_klustype.dart';
@@ -37,11 +36,9 @@ class GegevensController extends AsyncNotifier<HhGegevens> {
   Future<HhGegevens> build() async {
     final gebruiker = ref.watch(huidigeGebruikerProvider);
     if (gebruiker == null) throw const HhFout(HhFoutSoort.nietIngelogd);
-    // M9 (F2): namens een oudere komt het adres uit diens gegevens.
-    final namens = ref.watch(actieveNamensProvider);
     final result = await ref
         .read(klusGatewayProvider)
-        .mijnGegevens(namens?.oudereId ?? gebruiker.id);
+        .mijnGegevens(gebruiker.id);
     return switch (result) {
       Ok<HhGegevens>(:final waarde) => waarde,
       Err<HhGegevens>(:final fout) => throw fout,
