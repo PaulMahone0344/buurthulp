@@ -40,6 +40,11 @@ var VERBORGEN_VOOR_ANDEREN = [
   "ouder_toestemming_op",
   "ouder_iban_ok",
   "werkgebied_status",
+  // ADRES (4 okt): het exacte PDOK-punt en de rest van het adres.
+  "lat",
+  "lon",
+  "toevoeging",
+  "adres_bron",
 ];
 
 /// "2008-05-14 00:00:00.000Z" -> [2008, 5, 14], of null.
@@ -128,6 +133,14 @@ function werkgebiedVoorPunt(punt) {
     if (afstandKm({ lat: g.lat, lon: g.lon }, punt) <= g.straalKm) return g;
   }
   return null;
+}
+
+/// ADRES (4 okt): het werkgebied uit een bekend punt (PDOK, exact), zonder
+/// verzoek. { status: binnen | buiten | onbekend (geen bruikbaar punt), werkgebied }.
+function werkgebiedUitPunt(punt) {
+  if (!punt || !isFinite(punt.lat) || !isFinite(punt.lon)) return { status: "onbekend", werkgebied: null };
+  var gebied = werkgebiedVoorPunt(punt);
+  return gebied ? { status: "binnen", werkgebied: gebied } : { status: "buiten", werkgebied: null };
 }
 
 /// Gestructureerd zoeken op postcode. Met huisnummer erbij (vrije tekst)
@@ -246,6 +259,7 @@ module.exports = {
   WERKGEBIEDEN: WERKGEBIEDEN,
   afstandKm: afstandKm,
   werkgebiedVoorPunt: werkgebiedVoorPunt,
+  werkgebiedUitPunt: werkgebiedUitPunt,
   nominatimUrl: nominatimUrl,
   bepaalWerkgebied: bepaalWerkgebied,
   wijkIdVoor: wijkIdVoor,

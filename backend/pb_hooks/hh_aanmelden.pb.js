@@ -21,6 +21,17 @@
 //                     meldkamer ziet de markering
 //       Stuurt een coordinator zelf een wijk mee, dan blijft die staan.
 //
+//    c. ADRES (4 okt, hh_adres_hulp.js): bewoner en helper hebben een
+//       postcode (4 cijfers + 2 letters) en een huisnummer dat bij PDOK
+//       (BAG) bestaat; straat, plaats, punt (lat/lon) en adres_bron = pdok
+//       komen van PDOK en overschrijven vrije invoer. Bij aanmaken altijd,
+//       bij bijwerken alleen als een adresveld verandert. Werkgebied uit het
+//       exacte PDOK-punt (geen Nominatim). PDOK onbereikbaar: aanmelden gaat
+//       door, adres_bron = ongecontroleerd, werkgebied via Nominatim (B2).
+//       Coordinator/superuser met adres_bron = "handmatig": uitzondering
+//       zonder PDOK. lat/lon/adres_bron zelf meesturen: alleen coordinator
+//       en superuser. De superuser (seed, scripts) is verder niet streng.
+//
 // 2. hh_profielen GOEDKEUREN WIST HET ID-DOCUMENT (B1-gat 2)
 //    onRecordUpdate (model-hook): draait bij ELKE opslag, ook via de
 //    superuser (beheer-UI), een script of een andere hook via $app. Gaat
@@ -46,12 +57,14 @@
 //
 // DEPLOY: scripts/83-hook-deploy.sh (NIEUW bestand, samen met
 // hh_aanmelden_hulp.js). VOORWAARDE: 70-b1-velden.mjs (B1, staat op prod).
+// ADRES: scripts/123-hook-deploy.sh, VOORWAARDE 120-adres-velden.mjs.
 
 // --------------------------------------------------------------------------
-// 1. hh_users aanmaken: te jong weigeren, wijk uit postcode
+// 1. hh_users aanmaken: te jong weigeren, adres via PDOK, wijk uit het punt
 // --------------------------------------------------------------------------
 onRecordCreateRequest((e) => {
   const hulp = require(`${__hooks}/hh_aanmelden_hulp.js`);
+  const adres = require(`${__hooks}/hh_adres_hulp.js`);
   const vandaag = new Date().toISOString().slice(0, 10);
   const rol = String(e.record.get("rol") || "");
   const geboortedatum = String(e.record.get("geboortedatum") || "");
@@ -59,24 +72,50 @@ onRecordCreateRequest((e) => {
     throw new BadRequestError(hulp.MELDING_TE_JONG);
   }
 
+  // ADRES: de server is de waarheid (hh_adres_hulp.beoordeel).
+  const body = e.requestInfo().body || {};
+  const wie = adres.wieIs(e.auth);
+  const uit = adres.beoordeel(adresOmgeving(), {
+    wie: wie,
+    rol: rol,
+    nieuw: true,
+    aangeraakt: true,
+    servervelden: adres.serverveldenGestuurd(body),
+    adresBron: String(body.adres_bron || ""),
+    postcode: e.record.get("postcode"),
+    huisnummer: e.record.get("huisnummer"),
+    toevoeging: e.record.get("toevoeging"),
+  });
+  if (uit.actie === "weiger") throw new BadRequestError(uit.melding);
+  if (uit.actie === "pdok") adres.zetPdokAdres(e.record, uit.adres);
+  if (uit.actie === "terugval") adres.zetOngecontroleerd(e.record, uit);
+  if (uit.actie === "handmatig") e.record.set("adres_bron", "handmatig");
+
   const postcode = String(e.record.get("postcode") || "").trim();
-  const isCoordinator =
-    !!e.auth && e.auth.collection().name === "hh_users" && String(e.auth.get("rol") || "") === "coordinator";
   const wijkGestuurd = String(e.record.get("wijk") || "") !== "";
-  if (postcode && !(isCoordinator && wijkGestuurd)) {
-    const uit = hulp.bepaalWerkgebied(omgeving(), postcode);
-    const wijk = uit.werkgebied ? hulp.wijkIdVoor($app, uit.werkgebied) : "";
-    // Binnen, maar de regio-wijk bestaat nog niet (81 niet gedraaid): dan
-    // telt het als onbekend, zodat de meldkamer het ziet.
-    e.record.set("werkgebied_status", uit.status === "binnen" && !wijk ? "onbekend" : uit.status);
-    e.record.set("wijk", wijk);
+  if (!(wie === "coordinator" && wijkGestuurd)) {
+    let werk = null;
+    if (uit.actie === "pdok") {
+      // Exact punt van PDOK: geen Nominatim nodig.
+      werk = hulp.werkgebiedUitPunt({ lat: uit.adres.lat, lon: uit.adres.lon });
+    } else if (postcode) {
+      // Terugval, uitzondering of oude weg: het postcode-punt (B2).
+      werk = hulp.bepaalWerkgebied(nominatimOmgeving(), postcode);
+    }
+    if (werk) {
+      const wijk = werk.werkgebied ? hulp.wijkIdVoor($app, werk.werkgebied) : "";
+      // Binnen, maar de regio-wijk bestaat nog niet (81 niet gedraaid): dan
+      // telt het als onbekend, zodat de meldkamer het ziet.
+      e.record.set("werkgebied_status", werk.status === "binnen" && !wijk ? "onbekend" : werk.status);
+      e.record.set("wijk", wijk);
+    }
   }
 
   e.next();
 
   /// Echte omgeving voor bepaalWerkgebied (de tests geven een nep mee).
   /// HH_NOMINATIM_URL alleen voor een lokale proef; op prod leeg.
-  function omgeving() {
+  function nominatimOmgeving() {
     return {
       url: $os.getenv("HH_NOMINATIM_URL") || "",
       http: (req) => $http.send(req),
@@ -86,13 +125,27 @@ onRecordCreateRequest((e) => {
       log: (...a) => console.log(...a),
     };
   }
+
+  /// Echte omgeving voor PDOK. HH_PDOK_URL alleen voor een lokale proef.
+  function adresOmgeving() {
+    return {
+      url: $os.getenv("HH_PDOK_URL") || "",
+      http: (req) => $http.send(req),
+      nu: () => Date.now(),
+      store: $app.store(),
+      log: (...a) => console.log(...a),
+      binnen: (punt) => !!hulp.werkgebiedVoorPunt(punt),
+    };
+  }
 }, "hh_users");
 
 // --------------------------------------------------------------------------
-// 1. hh_users bijwerken: te jong weigeren, wijk volgt de postcode
+// 1. hh_users bijwerken: te jong weigeren, ander adres opnieuw via PDOK, de
+//    wijk volgt het (nieuwe) punt
 // --------------------------------------------------------------------------
 onRecordUpdateRequest((e) => {
   const hulp = require(`${__hooks}/hh_aanmelden_hulp.js`);
+  const adres = require(`${__hooks}/hh_adres_hulp.js`);
   const vandaag = new Date().toISOString().slice(0, 10);
   const oud = e.record.original();
   const rol = String(e.record.get("rol") || "");
@@ -102,22 +155,45 @@ onRecordUpdateRequest((e) => {
     throw new BadRequestError(hulp.MELDING_TE_JONG);
   }
 
+  // ADRES: alleen als er aan het adres iets verandert (bestaande accounts
+  // met een onvolledig adres kunnen gewoon hun naam enz. wijzigen).
+  const body = e.requestInfo().body || {};
+  const wie = adres.wieIs(e.auth);
+  const uit = adres.beoordeel(adresOmgeving(), {
+    wie: wie,
+    rol: rol,
+    nieuw: false,
+    aangeraakt: adres.isAdresAangeraakt(e.record, oud),
+    servervelden: adres.serverveldenGestuurd(body),
+    adresBron: String(body.adres_bron || ""),
+    postcode: e.record.get("postcode"),
+    huisnummer: e.record.get("huisnummer"),
+    toevoeging: e.record.get("toevoeging"),
+  });
+  if (uit.actie === "weiger") throw new BadRequestError(uit.melding);
+  if (uit.actie === "pdok") adres.zetPdokAdres(e.record, uit.adres);
+  if (uit.actie === "terugval") adres.zetOngecontroleerd(e.record, uit);
+  if (uit.actie === "handmatig") e.record.set("adres_bron", "handmatig");
+
   const postcode = String(e.record.get("postcode") || "").trim();
   const pcOud = String(oud.get("postcode") || "").trim();
-  const isCoordinator =
-    !!e.auth && e.auth.collection().name === "hh_users" && String(e.auth.get("rol") || "") === "coordinator";
   const wijkGestuurd = String(e.record.get("wijk") || "") !== String(oud.get("wijk") || "");
-  if (postcode && postcode !== pcOud && !(isCoordinator && wijkGestuurd)) {
-    const uit = hulp.bepaalWerkgebied(omgeving(), postcode);
-    if (uit.status === "binnen") {
-      const wijk = hulp.wijkIdVoor($app, uit.werkgebied);
+  if (!(wie === "coordinator" && wijkGestuurd)) {
+    let werk = null;
+    if (uit.actie === "pdok") {
+      werk = hulp.werkgebiedUitPunt({ lat: uit.adres.lat, lon: uit.adres.lon });
+    } else if (postcode && postcode !== pcOud) {
+      werk = hulp.bepaalWerkgebied(nominatimOmgeving(), postcode);
+    }
+    if (werk && werk.status === "binnen") {
+      const wijk = hulp.wijkIdVoor($app, werk.werkgebied);
       e.record.set("werkgebied_status", wijk ? "binnen" : "onbekend");
       if (wijk) e.record.set("wijk", wijk);
-    } else if (uit.status === "buiten") {
+    } else if (werk && werk.status === "buiten") {
       // Verhuisd buiten het werkgebied: geen wijk meer.
       e.record.set("werkgebied_status", "buiten");
       e.record.set("wijk", "");
-    } else {
+    } else if (werk) {
       // Onbekend (geen internet, geen resultaat): de wijk blijft staan.
       e.record.set("werkgebied_status", "onbekend");
     }
@@ -127,7 +203,7 @@ onRecordUpdateRequest((e) => {
 
   /// Echte omgeving voor bepaalWerkgebied (de tests geven een nep mee).
   /// HH_NOMINATIM_URL alleen voor een lokale proef; op prod leeg.
-  function omgeving() {
+  function nominatimOmgeving() {
     return {
       url: $os.getenv("HH_NOMINATIM_URL") || "",
       http: (req) => $http.send(req),
@@ -135,6 +211,18 @@ onRecordUpdateRequest((e) => {
       sleep: (ms) => sleep(ms),
       store: $app.store(),
       log: (...a) => console.log(...a),
+    };
+  }
+
+  /// Echte omgeving voor PDOK. HH_PDOK_URL alleen voor een lokale proef.
+  function adresOmgeving() {
+    return {
+      url: $os.getenv("HH_PDOK_URL") || "",
+      http: (req) => $http.send(req),
+      nu: () => Date.now(),
+      store: $app.store(),
+      log: (...a) => console.log(...a),
+      binnen: (punt) => !!hulp.werkgebiedVoorPunt(punt),
     };
   }
 }, "hh_users");

@@ -85,7 +85,10 @@
 //    geen logregels meer; hh_klus_status.createRule staat alleen nog open
 //    voor de coordinator (13-status-rules.mjs).
 //
-// 2. Geocoding (M5, keuze 2). Bij aanmaken van een hh_klussen via de API en bij
+// 2. Geocoding (M5, keuze 2). ADRES (4 okt): staat de klus op het adres van
+//    de bewoner en is dat door PDOK bevestigd (hh_users.lat/lon, adres_bron =
+//    pdok), dan neemt de hook dat exacte punt en vraagt hij Nominatim niets.
+//    Een ander adres (of een bewoner zonder PDOK-punt): Nominatim zoals hier. Bij aanmaken van een hh_klussen via de API en bij
 //    wijzigen van het adres vraagt de hook Nominatim (OpenStreetMap) om lat/lon
 //    en zet die op het record vóór het opslaan. Mislukt het (time-out, geen
 //    resultaat, rare respons): lat/lon blijven leeg, er komt een logregel, het
@@ -604,7 +607,8 @@ onRecordCreateRequest((e) => {
     const lat = Number(e.record.get("lat") || 0);
     const lon = Number(e.record.get("lon") || 0);
     if (adres && lat === 0 && lon === 0) {
-      const punt = geocodeer(adres);
+      // ADRES: op het (PDOK-)adres van de bewoner -> zijn punt, geen verzoek.
+      const punt = puntVanBewoner(e.record, adres) || geocodeer(adres);
       if (punt) {
         e.record.set("lat", punt.lat);
         e.record.set("lon", punt.lon);
@@ -638,6 +642,29 @@ onRecordCreateRequest((e) => {
   /// ook als de create van de superuser of een seed komt.
   function wieSchreefHem(record) {
     return String(record.get("geplaatst_door") || record.get("hulpvrager") || "");
+  }
+
+  /// ADRES (4 okt): ligt de klus op het door PDOK bevestigde adres van de
+  /// bewoner (hh_users.lat/lon, adres_bron = pdok)? Dan dat punt; anders
+  /// null en vraagt de hook Nominatim zoals in M5.
+  function puntVanBewoner(record, klusAdres) {
+    try {
+      const id = String(record.get("hulpvrager") || "");
+      if (!id) return null;
+      const b = $app.findRecordById("hh_users", id);
+      const adresHulp = require(`${__hooks}/hh_adres_hulp.js`);
+      return adresHulp.puntVoorKlus(klusAdres, {
+        adres: String(b.get("adres") || ""),
+        postcode: String(b.get("postcode") || ""),
+        plaats: String(b.get("plaats") || ""),
+        lat: Number(b.get("lat") || 0),
+        lon: Number(b.get("lon") || 0),
+        adres_bron: String(b.get("adres_bron") || ""),
+      });
+    } catch (err) {
+      console.log("[hh_klussen] punt van de bewoner niet te lezen:", String(err));
+      return null;
+    }
   }
 
   function geocodeer(adresTekst) {
@@ -729,7 +756,8 @@ onRecordUpdateRequest((e) => {
     const nieuwAdres = String(e.record.get("adres") || "").trim();
     const oudAdres = String(e.record.original().get("adres") || "").trim();
     if (nieuwAdres && nieuwAdres !== oudAdres) {
-      const punt = geocodeer(nieuwAdres);
+      // ADRES: op het (PDOK-)adres van de bewoner -> zijn punt, geen verzoek.
+      const punt = puntVanBewoner(e.record, nieuwAdres) || geocodeer(nieuwAdres);
       if (punt) {
         e.record.set("lat", punt.lat);
         e.record.set("lon", punt.lon);
@@ -811,6 +839,29 @@ onRecordUpdateRequest((e) => {
       rol = "";
     }
     return rol === "coordinator";
+  }
+
+  /// ADRES (4 okt): ligt de klus op het door PDOK bevestigde adres van de
+  /// bewoner (hh_users.lat/lon, adres_bron = pdok)? Dan dat punt; anders
+  /// null en vraagt de hook Nominatim zoals in M5.
+  function puntVanBewoner(record, klusAdres) {
+    try {
+      const id = String(record.get("hulpvrager") || "");
+      if (!id) return null;
+      const b = $app.findRecordById("hh_users", id);
+      const adresHulp = require(`${__hooks}/hh_adres_hulp.js`);
+      return adresHulp.puntVoorKlus(klusAdres, {
+        adres: String(b.get("adres") || ""),
+        postcode: String(b.get("postcode") || ""),
+        plaats: String(b.get("plaats") || ""),
+        lat: Number(b.get("lat") || 0),
+        lon: Number(b.get("lon") || 0),
+        adres_bron: String(b.get("adres_bron") || ""),
+      });
+    } catch (err) {
+      console.log("[hh_klussen] punt van de bewoner niet te lezen:", String(err));
+      return null;
+    }
   }
 
   function geocodeer(adresTekst) {

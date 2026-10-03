@@ -260,3 +260,19 @@ test('wijkenPassen: zelfde wijk, of een regio-wijk in dezelfde gemeente', () => 
   assert.equal(hulp.wijkenPassen(null, west), false);
   assert.equal(hulp.wijkenPassen(west, null), false);
 });
+
+// ADRES (4 okt): het werkgebied uit het exacte PDOK-punt, zonder verzoek.
+test('werkgebiedUitPunt: binnen of buiten de straal, geen punt = onbekend', () => {
+  const tiel = hulp.werkgebiedUitPunt({ lat: 51.88761538, lon: 5.43597055 });
+  assert.equal(tiel.status, 'binnen');
+  assert.equal(tiel.werkgebied.wijk, 'Tiel en omstreken');
+  assert.deepEqual(hulp.werkgebiedUitPunt({ lat: 52.3731, lon: 4.8926 }), { status: 'buiten', werkgebied: null });
+  assert.deepEqual(hulp.werkgebiedUitPunt(null), { status: 'onbekend', werkgebied: null });
+  assert.deepEqual(hulp.werkgebiedUitPunt({ lat: NaN, lon: 5 }), { status: 'onbekend', werkgebied: null });
+});
+
+test('VERBORGEN_VOOR_ANDEREN: ook het punt, de toevoeging en de adresbron van een helper', () => {
+  for (const veld of ['lat', 'lon', 'toevoeging', 'adres_bron']) {
+    assert.ok(hulp.VERBORGEN_VOOR_ANDEREN.includes(veld), veld);
+  }
+});
