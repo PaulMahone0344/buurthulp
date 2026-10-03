@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 
+import '../../toegang/domein/werkgebied.dart';
 import 'hh_screening_status.dart';
 
 /// Het hh_profielen-record van een helper (rol jongere). Onveranderlijk;
@@ -172,11 +173,13 @@ class HhAccountGegevens {
     this.geboortedatum,
     this.wijkId = '',
     this.ouderToestemmingOp,
+    this.werkgebiedStatus = HhWerkgebiedStatus.onbepaald,
   });
 
   final DateTime? geboortedatum;
   final String wijkId;
   final DateTime? ouderToestemmingOp;
+  final HhWerkgebiedStatus werkgebiedStatus;
 
   factory HhAccountGegevens.vanRecord(RecordModel record) => HhAccountGegevens(
     geboortedatum: HhProfiel.datumVanServer(
@@ -186,12 +189,16 @@ class HhAccountGegevens {
     ouderToestemmingOp: HhProfiel.datumVanServer(
       record.getStringValue('ouder_toestemming_op'),
     ),
+    werkgebiedStatus: HhWerkgebiedStatus.vanCode(
+      record.getStringValue('werkgebied_status'),
+    ),
   );
 
   HhAccountGegevens copyWith({
     DateTime? Function()? geboortedatum,
     String? wijkId,
     DateTime? Function()? ouderToestemmingOp,
+    HhWerkgebiedStatus? werkgebiedStatus,
   }) {
     return HhAccountGegevens(
       geboortedatum: geboortedatum != null
@@ -201,6 +208,7 @@ class HhAccountGegevens {
       ouderToestemmingOp: ouderToestemmingOp != null
           ? ouderToestemmingOp()
           : this.ouderToestemmingOp,
+      werkgebiedStatus: werkgebiedStatus ?? this.werkgebiedStatus,
     );
   }
 
@@ -209,8 +217,10 @@ class HhAccountGegevens {
       other is HhAccountGegevens &&
       other.geboortedatum == geboortedatum &&
       other.wijkId == wijkId &&
-      other.ouderToestemmingOp == ouderToestemmingOp;
+      other.ouderToestemmingOp == ouderToestemmingOp &&
+      other.werkgebiedStatus == werkgebiedStatus;
 
   @override
-  int get hashCode => Object.hash(geboortedatum, wijkId, ouderToestemmingOp);
+  int get hashCode =>
+      Object.hash(geboortedatum, wijkId, ouderToestemmingOp, werkgebiedStatus);
 }

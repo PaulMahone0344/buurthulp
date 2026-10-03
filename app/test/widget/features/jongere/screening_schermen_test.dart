@@ -9,6 +9,7 @@ import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
 import 'package:heitjehulp_app/features/jongere/widget/helper_wacht_start.dart';
 import 'package:heitjehulp_app/features/jongere/widget/hh_screening_pil.dart';
+import 'package:heitjehulp_app/features/toegang/domein/werkgebied.dart';
 import 'package:heitjehulp_app/features/toegang/widget/aanmeld_stappen.dart';
 import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
@@ -103,6 +104,16 @@ final _gevallen = <String, _Geval>{
     'Start: wacht op VOG',
     HhPaden.jongere,
     fakeJongereGoedgekeurdWachtend,
+  ),
+  'start buiten': _Geval(
+    'Start: buiten het werkgebied',
+    HhPaden.jongere,
+    () => fakeJongereBuitenGebied(),
+  ),
+  'start adres onbekend': _Geval(
+    'Start: adres niet gevonden',
+    HhPaden.jongere,
+    () => fakeJongereBuitenGebied(werkgebied: HhWerkgebiedStatus.onbekend),
   ),
   'start laadfout': _Geval(
     'Start: laadfout',
@@ -294,6 +305,8 @@ void main() {
     });
 
     for (final (sleutel, kop) in [
+      ('start buiten', TekstenAanmeldenNl.nietInBuurtKop),
+      ('start adres onbekend', TekstenAanmeldenNl.adresOnbekendKop),
       ('start nagekeken', TekstenAanmeldenNl.wachtNagekeken),
       ('start ouder', TekstenAanmeldenNl.wachtOuder),
       ('start vog', TekstenAanmeldenNl.wachtVog),

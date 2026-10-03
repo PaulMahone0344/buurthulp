@@ -17,6 +17,7 @@ import 'package:heitjehulp_app/features/jongere/jongere_routes.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_profiel.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
+import 'package:heitjehulp_app/features/toegang/domein/werkgebied.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
@@ -77,6 +78,22 @@ FakeProfielGateway fakeJongereKlaarOmInTeDienen({bool isMinderjarig = false}) =>
 FakeProfielGateway fakeJongereMetStatus(HhScreeningStatus status) {
   final fake = FakeProfielGateway.goedgekeurd(jongereId);
   fake.zetStatus(jongereId, verificatiestatus: status);
+  return fake;
+}
+
+/// Rond (goedgekeurd, VOG gezien), maar zonder wijk: buiten het
+/// werkgebied, of het adres werd niet gevonden ([werkgebied] onbekend).
+FakeProfielGateway fakeJongereBuitenGebied({
+  HhWerkgebiedStatus werkgebied = HhWerkgebiedStatus.buiten,
+}) {
+  final fake = FakeProfielGateway.goedgekeurd(jongereId);
+  fake.zetAccount(
+    jongereId,
+    HhAccountGegevens(
+      geboortedatum: volwassenGeboren,
+      werkgebiedStatus: werkgebied,
+    ),
+  );
   return fake;
 }
 

@@ -1,4 +1,5 @@
 import '../../toegang/domein/aanmelding.dart';
+import '../../toegang/domein/werkgebied.dart';
 import '../model/hh_screening_status.dart';
 import '../model/screening_stap.dart';
 
@@ -11,6 +12,13 @@ enum HelperWacht {
 
   /// Afgewezen door de meldkamer: ook J9 (met "Bel ons").
   afgewezen,
+
+  /// Geen wijk: buiten het werkgebied (Tiel + 20 km). Geen klussen.
+  nietInBuurt,
+
+  /// Geen wijk omdat de server het adres niet kon vinden (geocoding
+  /// mislukt); de meldkamer ziet de markering.
+  adresOnbekend,
 
   /// Verstuurd, de meldkamer kijkt hem na (in_behandeling). Ook bij een
   /// goedgekeurde helper zonder geboortedatum (dat lost de meldkamer op).
@@ -29,7 +37,12 @@ enum HelperWacht {
   bool get isAanmelden => this == aanmelden || this == afgewezen;
 
   /// Ziet hij Start met de gele balk (en geen klussen)?
-  bool get heeftBalk => this == nagekeken || this == ouder || this == vog;
+  bool get heeftBalk =>
+      this == nietInBuurt ||
+      this == adresOnbekend ||
+      this == nagekeken ||
+      this == ouder ||
+      this == vog;
 }
 
 HelperWacht helperWacht(ScreeningGegevens gegevens, DateTime vandaag) {
@@ -39,9 +52,17 @@ HelperWacht helperWacht(ScreeningGegevens gegevens, DateTime vandaag) {
     case HhScreeningStatus.afgewezen:
       return HelperWacht.afgewezen;
     case HhScreeningStatus.inBehandeling:
-      return HelperWacht.nagekeken;
     case HhScreeningStatus.goedgekeurd:
       break;
+  }
+  // Zonder wijk ziet hij nooit klussen: dat eerst zeggen.
+  if (gegevens.account.wijkId.isEmpty) {
+    return gegevens.account.werkgebiedStatus == HhWerkgebiedStatus.onbekend
+        ? HelperWacht.adresOnbekend
+        : HelperWacht.nietInBuurt;
+  }
+  if (gegevens.verificatiestatus == HhScreeningStatus.inBehandeling) {
+    return HelperWacht.nagekeken;
   }
   final geboren = gegevens.account.geboortedatum;
   if (geboren == null) return HelperWacht.nagekeken;

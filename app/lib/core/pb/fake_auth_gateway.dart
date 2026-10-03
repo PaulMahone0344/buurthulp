@@ -1,4 +1,5 @@
 import '../../features/toegang/domein/aanmelding.dart';
+import '../../features/toegang/domein/werkgebied.dart';
 import '../../features/toegang/model/hh_gebruiker.dart';
 import '../hh_fout.dart';
 import '../result.dart';
@@ -77,6 +78,12 @@ class FakeAuthGateway implements AuthGateway {
       naam: aanmelding.naam,
       email: email,
       rol: aanmelding.rol,
+      // Zoals de server (B2): een postcode in de buurt van Tiel (40xx) geeft
+      // de regio-wijk, al het andere ligt buiten het werkgebied.
+      wijkId: _isBijTiel(aanmelding) ? fakeRegioWijk : '',
+      werkgebiedStatus: _isBijTiel(aanmelding)
+          ? HhWerkgebiedStatus.binnen
+          : HhWerkgebiedStatus.buiten,
     );
     final account = FakeAccount(
       gebruiker: gebruiker,
@@ -87,6 +94,12 @@ class FakeAuthGateway implements AuthGateway {
     aantalVerificatieAanvragen++;
     return _logIn(account);
   }
+
+  /// Id van de wijk "Tiel en omstreken" in de fakes.
+  static const fakeRegioWijk = 'wijk-regio';
+
+  static bool _isBijTiel(HhAanmelding aanmelding) =>
+      '${aanmelding.velden['postcode'] ?? ''}'.startsWith('40');
 
   @override
   Future<Result<HhGebruiker>> inloggen({

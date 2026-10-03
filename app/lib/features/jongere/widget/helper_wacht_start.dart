@@ -14,6 +14,14 @@ import '../provider/screening_providers.dart';
 
 /// Kop en uitleg van de gele balk per wachtstand.
 (String, String)? wachtTekst(HelperWacht wacht) => switch (wacht) {
+  HelperWacht.nietInBuurt => (
+    TekstenAanmeldenNl.nietInBuurtKop,
+    TekstenAanmeldenNl.nietInBuurt,
+  ),
+  HelperWacht.adresOnbekend => (
+    TekstenAanmeldenNl.adresOnbekendKop,
+    TekstenAanmeldenNl.adresOnbekend,
+  ),
   HelperWacht.nagekeken => (
     TekstenAanmeldenNl.wachtNagekeken,
     TekstenAanmeldenNl.wachtNagekekenUitleg,

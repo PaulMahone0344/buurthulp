@@ -12,6 +12,8 @@ import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../theme.dart';
 import '../../familie/provider/hulpvraag_namens.dart';
+import '../../toegang/domein/werkgebied.dart';
+import '../../toegang/model/hh_rol.dart';
 import '../../toegang/provider/sessie_providers.dart';
 import '../domein/wanneer.dart';
 import '../model/nieuwe_klus.dart';
@@ -64,8 +66,16 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
   }
 
   Future<void> _plaats() async {
-    final ontbreekt = _watOntbreekt();
     final gebruiker = ref.read(huidigeGebruikerProvider);
+    // B2: een bewoner buiten het werkgebied plaatst geen klus.
+    final buiten = gebruiker == null || gebruiker.rol != HhRol.hulpvrager
+        ? null
+        : werkgebiedMelding(gebruiker.wijkId, gebruiker.werkgebiedStatus);
+    if (buiten != null) {
+      setState(() => _melding = buiten);
+      return;
+    }
+    final ontbreekt = _watOntbreekt();
     if (ontbreekt != null || gebruiker == null) {
       setState(() {
         _toonFouten = true;

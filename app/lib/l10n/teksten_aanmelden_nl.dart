@@ -133,6 +133,15 @@ abstract final class TekstenAanmeldenNl {
       'De meldkamer zag je VOG op $datum.';
   static const vogNogNietGezien = 'De meldkamer heeft je VOG nog niet gezien.';
 
+  // Werkgebied (Tiel + 20 km)
+  static const nietInBuurt =
+      'HeitjeHulp is nog niet in jouw buurt. We laten het je weten zodra we '
+      'er zijn.';
+  static const nietInBuurtKop = 'Nog niet in jouw buurt';
+  static const adresOnbekend =
+      'We konden je adres nog niet vinden. De meldkamer kijkt ernaar.';
+  static const adresOnbekendKop = 'We zoeken je adres nog';
+
   // Bewoner ziet bij zijn helper
   static const idGecontroleerd = 'ID gecontroleerd';
 }

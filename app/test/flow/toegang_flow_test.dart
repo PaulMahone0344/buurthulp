@@ -17,6 +17,7 @@ import 'package:heitjehulp_app/features/toegang/screen/registreren_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/splash_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/welkom_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -107,6 +108,31 @@ void main() {
         find.text(TekstenNl.landingWelkom('Mevrouw Jansen')),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'bewoner buiten het werkgebied: aanmelden lukt, maar geen klus plaatsen',
+    (tester) async {
+      final gateway = fakeMetAlleRollen();
+      await pompApp(tester, gateway: gateway);
+      await _tik(tester, TekstenNl.keuzeZoekHulp);
+
+      await _vul(tester, 0, 'Meneer Amsterdam');
+      await _vul(tester, 1, 'adam@voorbeeld.nl');
+      await _vul(tester, 2, 'Damstraat');
+      await _vul(tester, 3, '1');
+      await _vul(tester, 4, '1012 AB');
+      await _vul(tester, 5, 'Amsterdam');
+      await _vul(tester, 6, 'wachtwoord1');
+      await _vinkAkkoord(tester);
+      await _tik(tester, TekstenNl.registrerenKnop);
+      expect(find.byType(BevestigEmailScreen), findsOneWidget);
+      await _tik(tester, TekstenNl.verder);
+
+      expect(find.byType(HulpvragerStubScreen), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.nietInBuurt), findsOneWidget);
+      expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsNothing);
     },
   );
 

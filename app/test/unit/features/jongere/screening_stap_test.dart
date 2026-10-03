@@ -20,6 +20,7 @@ void main() {
     account: HhAccountGegevens(
       geboortedatum: geboren,
       ouderToestemmingOp: toestemming,
+      wijkId: 'w',
     ),
   );
 
@@ -231,8 +232,10 @@ void main() {
       },
     );
 
-    test('balk alleen bij nagekeken, ouder en VOG', () {
+    test('balk bij geen wijk, adres onbekend, nagekeken, ouder en VOG', () {
       expect(HelperWacht.values.where((w) => w.heeftBalk), [
+        HelperWacht.nietInBuurt,
+        HelperWacht.adresOnbekend,
         HelperWacht.nagekeken,
         HelperWacht.ouder,
         HelperWacht.vog,

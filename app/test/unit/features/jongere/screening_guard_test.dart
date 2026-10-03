@@ -29,7 +29,10 @@ void main() {
         verificatiestatus: status,
         vogGezienOp: vog ? DateTime.utc(2026, 9, 1) : null,
       ),
-      account: HhAccountGegevens(geboortedatum: DateTime.utc(2001, 1, 1)),
+      account: HhAccountGegevens(
+        geboortedatum: DateTime.utc(2001, 1, 1),
+        wijkId: 'w',
+      ),
     ),
   );
 
