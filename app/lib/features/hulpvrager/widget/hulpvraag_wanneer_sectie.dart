@@ -171,6 +171,12 @@ class HulpvraagWanneerSectie extends ConsumerWidget {
               soort: HhMeldSoort.informatie,
               tekst: TekstenKlusNl.alleen18Plus,
             ),
+          ] else if (tijdMinLeeftijd(vanaf: vanaf, tot: eind) > 0) ...[
+            SizedBox(height: klein),
+            const HhMeldBalk(
+              soort: HhMeldSoort.informatie,
+              tekst: TekstenKlusNl.alleen15Plus,
+            ),
           ],
         ],
       ],

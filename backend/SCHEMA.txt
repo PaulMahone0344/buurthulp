@@ -1173,7 +1173,15 @@ TIJDREGEL (punt 7) — alleen 18+ als de klus (NL-wandklok, zomer/winter zelf
     vóór 07:00 begint, OF na 19:00 eindigt (ook over middernacht), OF zonder
     eindtijd na 17:00 begint, OF langer dan 2 uur duurt.
   Precies 07:00, precies 19:00, precies 17:00 zonder eind en precies 2 uur
-  mogen nog voor iedereen. "10-14 evt 18:00" is NIET gebouwd (open punt).
+  mogen nog voor 15-17.
+  10 T/M 14 JAAR (antwoord Ibrahim 4 okt, integratie): om 18:00 klaar. Een
+  klus die na 18:00 eindigt (of zonder eindtijd na 16:00 begint) is pas
+  vanaf 15 (min_leeftijd = max(categorie, 15)). Precies 18:00 / precies
+  16:00 zonder eind mag nog voor 10-14. Zelfde mechanisme: de server zet
+  min_leeftijd + geboren_uiterlijk, de accepteer-route rekent opnieuw
+  (tijdMinLeeftijd in hh_klusplaatsen_hulp.js, constanten JONG_TOT_EN_MET,
+  LAATSTE_EIND_JONG_MIN, LAATSTE_START_ZONDER_EIND_JONG_MIN). 18+: geen grens
+  behalve de bestaande 18+-tijdregel hierboven.
 
 RULES (scripts/101-b4-rules.mjs)
   hh_klussen.listRule/viewRule, GERICHT in de helper-tak, direct achter de

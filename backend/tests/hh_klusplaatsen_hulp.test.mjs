@@ -165,3 +165,27 @@ test('de 13 categorieën met minimumleeftijd (besluit punt 6, voorstel)', () => 
     assert.ok(hulp.OUDE_KLUSTYPES_MIN_LEEFTIJD[oud] >= 10, oud);
   }
 });
+
+// Antwoord Ibrahim (4 okt): helpers van 10 t/m 14 jaar moeten om 18:00 klaar
+// zijn; 15-17 blijft 19:00; 18+ geen grens.
+test('tijdregel 10-14: na 18:00 klaar (of zonder eindtijd na 16:00 begonnen) is pas vanaf 15', () => {
+  assert.equal(hulp.LAATSTE_EIND_JONG_MIN, 18 * 60);
+  assert.equal(hulp.LAATSTE_START_ZONDER_EIND_JONG_MIN, 16 * 60);
+  assert.equal(hulp.JONG_TOT_EN_MET, 14);
+  assert.equal(hulp.tijdMinLeeftijd({ van: zomer(16), tot: zomer(18) }), 0, 'precies 18:00 klaar: iedereen');
+  assert.equal(hulp.tijdMinLeeftijd({ van: zomer(16, 30), tot: zomer(18, 15) }), 15, 'eindigt 18:15');
+  assert.equal(hulp.tijdMinLeeftijd({ van: zomer(17), tot: zomer(19) }), 15, 'eindigt precies 19:00');
+  assert.equal(hulp.tijdMinLeeftijd({ van: zomer(18), tot: zomer(19, 15) }), 18, 'eindigt na 19:00');
+  assert.equal(hulp.tijdMinLeeftijd({ van: zomer(16) }), 0, 'precies 16:00 zonder eindtijd');
+  assert.equal(hulp.tijdMinLeeftijd({ van: zomer(16, 15) }), 15, 'na 16:00 zonder eindtijd');
+  assert.equal(hulp.tijdMinLeeftijd({ van: zomer(17, 15) }), 18, 'na 17:00 zonder eindtijd');
+  assert.equal(hulp.tijdMinLeeftijd({ van: winter(17), tot: winter(18, 30) }), 15, 'wintertijd telt ook');
+  assert.equal(hulp.tijdMinLeeftijd({}), 0, 'zonder begintijd geen tijdregel');
+});
+
+test('minLeeftijdVoorKlus: de 18:00-grens tilt 10- en 13-categorieën naar 15, niet 16 of hoger', () => {
+  assert.equal(hulp.minLeeftijdVoorKlus({ typeMinLeeftijd: 10, van: zomer(17), tot: zomer(18, 30) }), 15);
+  assert.equal(hulp.minLeeftijdVoorKlus({ typeMinLeeftijd: 13, van: zomer(16, 30) }), 15);
+  assert.equal(hulp.minLeeftijdVoorKlus({ typeMinLeeftijd: 16, van: zomer(17), tot: zomer(18, 30) }), 16);
+  assert.equal(hulp.minLeeftijdVoorKlus({ typeMinLeeftijd: 10, van: zomer(15), tot: zomer(17) }), 10);
+});

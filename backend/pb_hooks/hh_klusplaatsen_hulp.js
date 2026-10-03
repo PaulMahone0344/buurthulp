@@ -12,6 +12,9 @@
 //   punt 6  minimumleeftijd per categorie (KLUS_CATEGORIEEN)
 //   punt 7  een klus die vóór 07:00 begint, na 19:00 eindigt, zonder
 //           eindtijd na 17:00 begint of langer dan 2 uur duurt: alleen 18+
+//           Antwoord Ibrahim 4 okt: helpers van 10 t/m 14 moeten om 18:00
+//           klaar zijn (zonder eindtijd: uiterlijk 16:00 begonnen). Een klus
+//           die na 18:00 (tot 19:00) eindigt is dus pas vanaf 15.
 //   punt 8  automatisch voorfilter op de tekst (markeert, blokkeert niet)
 
 /// Absolute ondergrens voor een helper (zelfde als B2).
@@ -23,6 +26,14 @@ var VROEGSTE_START_MIN = 7 * 60;
 var LAATSTE_EIND_MIN = 19 * 60;
 var LAATSTE_START_ZONDER_EIND_MIN = 17 * 60;
 var MAX_DUUR_MIN = 2 * 60;
+
+/// Antwoord Ibrahim 4 okt: helpers tot en met deze leeftijd moeten eerder
+/// klaar zijn. Wie na LAATSTE_EIND_JONG_MIN eindigt is pas vanaf
+/// JONG_TOT_EN_MET + 1 (15). Zonder eindtijd telt, net als bij 19:00, de
+/// begintijd met de maximale duur van 2 uur (16:00).
+var JONG_TOT_EN_MET = 14;
+var LAATSTE_EIND_JONG_MIN = 18 * 60;
+var LAATSTE_START_ZONDER_EIND_JONG_MIN = 16 * 60;
 
 var OMSCHRIJVING_MIN = 5;
 var OMSCHRIJVING_MAX = 300;
@@ -134,12 +145,30 @@ function isAlleen18Plus(k) {
   return eind.minuten > LAATSTE_EIND_MIN;
 }
 
-/// De minimumleeftijd van een klus: de categorie, of 18 door de tijdregel.
-/// Een categorie zonder (geldige) minimumleeftijd telt veilig als 18.
+/// Hoe oud moet een helper zijn door de TIJD van de klus? 0 = geen grens
+/// (binnen het venster van de jongste helpers), 15 = eindigt na 18:00 (of
+/// zonder eindtijd na 16:00 begonnen), 18 = buiten het venster voor onder 18.
+function tijdMinLeeftijd(k) {
+  if (isAlleen18Plus(k || {})) return VOLWASSEN;
+  var van = alsMs(k && k.van);
+  if (van === null) return 0;
+  var tot = alsMs(k && k.tot);
+  if (tot !== null && tot <= van) tot = null;
+  var start = nlTijd(k.van);
+  var laat =
+    tot === null
+      ? start.minuten > LAATSTE_START_ZONDER_EIND_JONG_MIN
+      : nlTijd(k.tot).minuten > LAATSTE_EIND_JONG_MIN;
+  return laat ? JONG_TOT_EN_MET + 1 : 0;
+}
+
+/// De minimumleeftijd van een klus: de categorie, of hoger door de tijd
+/// (15 na 18:00, 18 buiten het venster). Een categorie zonder (geldige)
+/// minimumleeftijd telt veilig als 18.
 function minLeeftijdVoorKlus(k) {
   var type = Number(k && k.typeMinLeeftijd);
   var basis = isFinite(type) && type > 0 ? type : VOLWASSEN;
-  if (isAlleen18Plus(k || {})) basis = Math.max(basis, VOLWASSEN);
+  basis = Math.max(basis, tijdMinLeeftijd(k || {}));
   return Math.max(basis, MIN_LEEFTIJD_HELPER);
 }
 
@@ -245,12 +274,16 @@ module.exports = {
   LAATSTE_EIND_MIN: LAATSTE_EIND_MIN,
   LAATSTE_START_ZONDER_EIND_MIN: LAATSTE_START_ZONDER_EIND_MIN,
   MAX_DUUR_MIN: MAX_DUUR_MIN,
+  JONG_TOT_EN_MET: JONG_TOT_EN_MET,
+  LAATSTE_EIND_JONG_MIN: LAATSTE_EIND_JONG_MIN,
+  LAATSTE_START_ZONDER_EIND_JONG_MIN: LAATSTE_START_ZONDER_EIND_JONG_MIN,
   OMSCHRIJVING_MAX: OMSCHRIJVING_MAX,
   KLUS_CATEGORIEEN: KLUS_CATEGORIEEN,
   OUDE_KLUSTYPES_MIN_LEEFTIJD: OUDE_KLUSTYPES_MIN_LEEFTIJD,
   NEE_LIJST_WOORDEN: NEE_LIJST_WOORDEN,
   nlTijd: nlTijd,
   isAlleen18Plus: isAlleen18Plus,
+  tijdMinLeeftijd: tijdMinLeeftijd,
   minLeeftijdVoorKlus: minLeeftijdVoorKlus,
   geborenUiterlijk: geborenUiterlijk,
   isOudGenoeg: isOudGenoeg,

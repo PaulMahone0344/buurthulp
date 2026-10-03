@@ -41,6 +41,9 @@ abstract final class TekstenKlusNl {
   static const fotoUitleg =
       'Een foto van wat er moet gebeuren, zonder mensen erop. Alleen de '
       'meldkamer en helpers die de klus mogen doen zien hem.';
+
+  /// Antwoord Ibrahim 4 okt: korte tip bij de foto.
+  static const fotoTip = 'Zet geen mensen of je huisnummer op de foto.';
   static const fotoMaken = 'Maak een foto';
   static const fotoKiezen = 'Kies een foto';
   static const fotoVerwijderen = 'Foto verwijderen';
@@ -63,6 +66,12 @@ abstract final class TekstenKlusNl {
       'Let op: door deze tijd kunnen alleen helpers van 18 jaar en ouder '
       'deze klus doen. Voor jongere helpers: tussen 7:00 en 19:00 en '
       'hooguit 2 uur.';
+
+  /// Antwoord Ibrahim 4 okt: helpers van 10 t/m 14 moeten om 18:00 klaar zijn.
+  static const alleen15Plus =
+      'Let op: deze klus eindigt na 18:00. Helpers tot en met 14 jaar moeten '
+      'om 18:00 klaar zijn, dus alleen helpers van 15 jaar en ouder kunnen '
+      'hem doen.';
   static String wanneerVanaf(String dag, String tijd) => '$dag vanaf $tijd';
   static String wanneerVanTot(String dag, String van, String tot) =>
       '$dag van $van tot $tot';

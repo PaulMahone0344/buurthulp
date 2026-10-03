@@ -60,6 +60,11 @@ class _KlusFotoSectieState extends ConsumerState<KlusFotoSectie> {
       children: [
         Text(TekstenKlusNl.fotoUitleg, style: tekst.bodyMedium),
         SizedBox(height: tussen),
+        const HhMeldBalk(
+          soort: HhMeldSoort.informatie,
+          tekst: TekstenKlusNl.fotoTip,
+        ),
+        SizedBox(height: tussen),
         if (foto != null) ...[
           Semantics(
             image: true,

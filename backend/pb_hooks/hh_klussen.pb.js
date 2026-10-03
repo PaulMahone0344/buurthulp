@@ -31,7 +31,7 @@
 //          klus nog niet (klus_goedgekeurd_op leeg)
 //      B4: 403 { melding, reden: "leeftijd" } — de helper is op de klusdag
 //          jonger dan de categorie of de tijdregel vraagt (07:00-19:00, max
-//          2 uur, anders 18+). De route rekent dat zelf opnieuw uit met
+//          2 uur, anders 18+; 10-14 jaar om 18:00 klaar, anders 15+). De route rekent dat zelf opnieuw uit met
 //          hh_klusplaatsen_hulp.js en vertrouwt de opgeslagen velden niet.
 //
 // 1b. M6 — POST /api/hh/klussen/{id}/status  body {naar}

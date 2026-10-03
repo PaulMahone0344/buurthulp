@@ -287,6 +287,8 @@ void main() {
         expect(find.text(kop), findsWidgets, reason: kop);
       }
       expect(find.text(TekstenKlusNl.fotoVerplicht), findsOneWidget);
+      // Antwoord Ibrahim 4 okt: een korte tip bij de foto.
+      expect(find.text(TekstenKlusNl.fotoTip), findsOneWidget);
       expect(_omschrijvingVeld, findsOneWidget);
     });
 
@@ -518,6 +520,24 @@ void main() {
       container.read(conceptProvider.notifier).zetTot(14 * 60);
       await tester.pumpAndSettle();
       expect(find.text(TekstenKlusNl.alleen18Plus), findsNothing);
+    });
+
+    testWidgets('eindigt na 18:00: waarschuwing pas vanaf 15 jaar', (
+      tester,
+    ) async {
+      final container = await _pompMetContainer(tester);
+      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      container.read(conceptProvider.notifier)
+        ..zetVanaf(17 * 60)
+        ..zetEindtijd(true)
+        ..zetTot(18 * 60 + 30);
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.alleen15Plus), findsOneWidget);
+      expect(find.text(TekstenKlusNl.alleen18Plus), findsNothing);
+
+      container.read(conceptProvider.notifier).zetTot(18 * 60);
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.alleen15Plus), findsNothing);
     });
 
     testWidgets('eindtijd voor de begintijd wordt gemeld', (tester) async {

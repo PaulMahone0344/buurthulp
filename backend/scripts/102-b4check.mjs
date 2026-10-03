@@ -15,7 +15,8 @@
 //   F. goedkeuren: helper van 14 en 25 zien de tuinklus, helper van 11 niet
 //      en kan hem niet accepteren (403 leeftijd); melding "nieuwe klus" alleen
 //      aan wie oud genoeg is; foto alleen met bestandstoken van wie hem ziet
-//   G. leeftijd per categorie en de tijdregel (07:00-19:00, 2 uur, 17:00)
+//   G. leeftijd per categorie en de tijdregel (07:00-19:00, 2 uur, 17:00;
+//      10 t/m 14 jaar: om 18:00 klaar, zonder eindtijd uiterlijk 16:00)
 //   H. wijzigen na goedkeuring door de bewoner: opnieuw nakijken
 //   I. afkeuren: geannuleerd, één melding met de reden
 //   J. telefonische ingang: de coordinator plaatst namens een bewoner,
@@ -373,7 +374,17 @@ async function main() {
   await geval('Boodschappen 13:00-16:00 (langer dan 2 uur)', { klustype: boodschappen.id, wanneer_van: dag.om(13), wanneer_tot: dag.om(16) }, 18, [25]);
   await geval('Boodschappen 17:30 zonder eindtijd', { klustype: boodschappen.id, wanneer_van: dag.om(17, 30), wanneer_tot: '' }, 18, [25]);
   await geval('Boodschappen 18:00-19:30 (eindigt na 19:00)', { klustype: boodschappen.id, wanneer_van: dag.om(18), wanneer_tot: dag.om(19, 30) }, 18, [25]);
-  const kLicht = await geval('Boodschappen 17:30-18:30', { klustype: boodschappen.id, wanneer_van: dag.om(17, 30), wanneer_tot: dag.om(18, 30) }, 10, [11, 14, 17, 25]);
+  const kLicht = await geval('Boodschappen 16:30-18:00 (precies 18:00 klaar)', { klustype: boodschappen.id, wanneer_van: dag.om(16, 30), wanneer_tot: dag.om(18) }, 10, [11, 14, 17, 25]);
+  // Antwoord Ibrahim 4 okt: 10 t/m 14 jaar om 18:00 klaar; 15-17 tot 19:00.
+  const kNa18 = await geval('Boodschappen 17:30-18:30 (eindigt na 18:00)', { klustype: boodschappen.id, wanneer_van: dag.om(17, 30), wanneer_tot: dag.om(18, 30) }, 15, [17, 25]);
+  await geval('Boodschappen 16:30 zonder eindtijd (na 16:00)', { klustype: boodschappen.id, wanneer_van: dag.om(16, 30), wanneer_tot: '' }, 15, [17, 25]);
+  await geval('Boodschappen 16:00 zonder eindtijd', { klustype: boodschappen.id, wanneer_van: dag.om(16), wanneer_tot: '' }, 10, [11, 14, 17, 25]);
+  if (kNa18) {
+    r = await route(h14.client, `/api/hh/klussen/${kNa18.id}/accepteren`);
+    check(`helper van 14 accepteert de klus tot 18:30 NIET (403 leeftijd, kreeg ${r.status})`, r.status === 403 && r.body?.reden === 'leeftijd' && /15 jaar/.test(r.body?.melding ?? ''), r.body?.melding);
+    r = await route(h17.client, `/api/hh/klussen/${kNa18.id}/accepteren`);
+    check(`helper van 17 accepteert de klus tot 18:30 wel (kreeg ${r.status})`, r.status === 200, JSON.stringify(r.body));
+  }
   if (kAvond) {
     r = await route(h17.client, `/api/hh/klussen/${kAvond.id}/accepteren`);
     check(`helper van 17 accepteert de klus van 20:00 NIET (403 leeftijd, kreeg ${r.status})`, r.status === 403 && r.body?.reden === 'leeftijd' && /18 jaar/.test(r.body?.melding ?? ''), r.body?.melding);

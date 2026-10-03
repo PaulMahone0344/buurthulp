@@ -25,4 +25,19 @@ void main() {
     expect(isAlleenVoor18Plus(vanaf: uur(14), tot: uur(13)), isFalse);
     expect(isAlleenVoor18Plus(vanaf: uur(18), tot: uur(17)), isTrue);
   });
+
+  // Antwoord Ibrahim 4 okt: 10 t/m 14 jaar om 18:00 klaar (tijdMinLeeftijd).
+  test(
+    '10 t/m 14: na 18:00 klaar of zonder eindtijd na 16:00 is pas vanaf 15',
+    () {
+      expect(tijdMinLeeftijd(vanaf: uur(16), tot: uur(18)), 0);
+      expect(tijdMinLeeftijd(vanaf: uur(16, 30), tot: uur(18, 15)), 15);
+      expect(tijdMinLeeftijd(vanaf: uur(17), tot: uur(19)), 15);
+      expect(tijdMinLeeftijd(vanaf: uur(16)), 0);
+      expect(tijdMinLeeftijd(vanaf: uur(16, 15)), 15);
+      expect(tijdMinLeeftijd(vanaf: uur(17, 15)), 18);
+      expect(tijdMinLeeftijd(vanaf: uur(18), tot: uur(19, 15)), 18);
+      expect(tijdMinLeeftijd(vanaf: uur(10), tot: uur(11)), 0);
+    },
+  );
 }
