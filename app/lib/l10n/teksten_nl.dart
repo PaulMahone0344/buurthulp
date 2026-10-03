@@ -107,6 +107,10 @@ abstract final class TekstenNl {
   static const instellingenMeldingenSchakelaar = 'Meldingen ontvangen';
   static const instellingenMeldingenHulp =
       'Bijvoorbeeld als er nieuws is over een klus.';
+  static const instellingenLetters = 'Lettergrootte';
+  static const instellingenLettersSchakelaar = 'Grotere letters';
+  static const instellingenLettersHulp =
+      'Maakt tekst en knoppen in de hele app groter.';
   static const instellingenAccount = 'Account';
   static const instellingenOpgeslagen = 'Opgeslagen.';
   static const uitloggen = 'Uitloggen';

@@ -91,28 +91,22 @@ void main() {
   });
 
   group('SessieController.inloggen en registreren', () {
-    test(
-      'inloggen slaagt: ingelogd, token bewaard, dichtheid volgt rol',
-      () async {
-        final t = _maak();
-        await _wacht();
+    test('inloggen slaagt: ingelogd, token bewaard, letters normaal', () async {
+      final t = _maak();
+      await _wacht();
 
-        final result = await t.container
-            .read(sessieControllerProvider.notifier)
-            .inloggen(
-              email: testGebruiker(HhRol.hulpvrager).email,
-              wachtwoord: testWachtwoord,
-            );
+      final result = await t.container
+          .read(sessieControllerProvider.notifier)
+          .inloggen(
+            email: testGebruiker(HhRol.hulpvrager).email,
+            wachtwoord: testWachtwoord,
+          );
 
-        expect(result, isA<Ok<void>>());
-        expect(
-          t.container.read(huidigeGebruikerProvider)?.rol,
-          HhRol.hulpvrager,
-        );
-        expect(t.opslag.waarden[_tokenSleutel], testToken(HhRol.hulpvrager));
-        expect(t.container.read(dichtheidProvider), HhDichtheid.groot);
-      },
-    );
+      expect(result, isA<Ok<void>>());
+      expect(t.container.read(huidigeGebruikerProvider)?.rol, HhRol.hulpvrager);
+      expect(t.opslag.waarden[_tokenSleutel], testToken(HhRol.hulpvrager));
+      expect(t.container.read(dichtheidProvider), HhDichtheid.normaal);
+    });
 
     test('inloggen met fout wachtwoord: Err en uitgelogd', () async {
       final t = _maak();
@@ -165,7 +159,7 @@ void main() {
       expect(t.gateway.laatsteRegistratieBody?['rol'], 'hulpvrager');
       expect(t.gateway.laatsteRegistratieBody?['taal'], 'nl');
       expect(t.container.read(huidigeGebruikerProvider)?.naam, 'Nieuw');
-      expect(t.container.read(dichtheidProvider), HhDichtheid.groot);
+      expect(t.container.read(dichtheidProvider), HhDichtheid.normaal);
     });
   });
 
@@ -245,30 +239,33 @@ void main() {
   });
 
   group('dichtheidProvider', () {
-    test('volgt de gekozen rol voor het inloggen', () async {
+    test('normaal voor elke rol, ook de gekozen hulpvrager', () async {
       final t = _maak();
       await _wacht();
 
       expect(t.container.read(dichtheidProvider), HhDichtheid.normaal);
       t.container.read(gekozenRolProvider.notifier).kies(HhRol.hulpvrager);
-      expect(t.container.read(dichtheidProvider), HhDichtheid.groot);
-      t.container.read(gekozenRolProvider.notifier).kies(HhRol.familie);
       expect(t.container.read(dichtheidProvider), HhDichtheid.normaal);
     });
 
-    test('ingelogd wint van de gekozen rol', () async {
+    test('grotere letters aan: groot, en lokaal bewaard', () async {
       final t = _maak();
       await _wacht();
-      t.container.read(gekozenRolProvider.notifier).kies(HhRol.hulpvrager);
 
-      await t.container
-          .read(sessieControllerProvider.notifier)
-          .inloggen(
-            email: testGebruiker(HhRol.jongere).email,
-            wachtwoord: testWachtwoord,
-          );
+      await t.container.read(groteLettersProvider.notifier).zet(true);
 
-      expect(t.container.read(dichtheidProvider), HhDichtheid.normaal);
+      expect(t.container.read(dichtheidProvider), HhDichtheid.groot);
+      expect(t.opslag.waarden['hh_grote_letters'], 'true');
+    });
+
+    test('bewaarde keuze wordt bij opstarten geladen', () async {
+      final t = _maak();
+      await t.opslag.schrijf('hh_grote_letters', 'true');
+      t.container.invalidate(groteLettersProvider);
+      t.container.read(groteLettersProvider);
+      await _wacht();
+
+      expect(t.container.read(dichtheidProvider), HhDichtheid.groot);
     });
   });
 }

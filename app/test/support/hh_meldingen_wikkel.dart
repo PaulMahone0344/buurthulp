@@ -116,7 +116,10 @@ Widget hhMeldingenWikkel(
     ],
   );
   addTearDown(container.dispose);
-  final d = dichtheid ?? rol.dichtheid;
+  // Oudere-schermen blijven ook in de grote stand getest.
+  final d =
+      dichtheid ??
+      (rol == HhRol.hulpvrager ? HhDichtheid.groot : HhDichtheid.normaal);
   return UncontrolledProviderScope(
     container: container,
     child: MaterialApp.router(

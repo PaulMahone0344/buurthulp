@@ -21,28 +21,28 @@ void main() {
       expect(find.text(TekstenNl.welkomTitel), findsOneWidget);
     });
 
-    testWidgets('"Ik zoek hulp" maakt de knoppen 60 hoog', (tester) async {
-      await pompApp(tester, gateway: fakeMetAlleRollen());
+    testWidgets(
+      '"Ik zoek hulp" houdt de gewone knophoogte (geen verschil per rol)',
+      (tester) async {
+        await pompApp(tester, gateway: fakeMetAlleRollen());
 
-      final normaal = tester
-          .getSize(find.widgetWithText(HhKnop, TekstenNl.keuzeHelpFamilielid))
-          .height;
-      expect(
-        normaal,
-        greaterThanOrEqualTo(HhMaten.knopHoogte(HhDichtheid.normaal)),
-      );
+        final normaal = tester
+            .getSize(find.widgetWithText(HhKnop, TekstenNl.keuzeHelpFamilielid))
+            .height;
+        expect(
+          normaal,
+          greaterThanOrEqualTo(HhMaten.knopHoogte(HhDichtheid.normaal)),
+        );
 
-      await tester.tap(find.widgetWithText(HhKnop, TekstenNl.keuzeZoekHulp));
-      await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(HhKnop, TekstenNl.keuzeZoekHulp));
+        await tester.pumpAndSettle();
 
-      final groot = tester
-          .getSize(find.widgetWithText(HhKnop, TekstenNl.registrerenKnop))
-          .height;
-      expect(
-        groot,
-        greaterThanOrEqualTo(HhMaten.knopHoogte(HhDichtheid.groot)),
-      );
-    });
+        final groot = tester
+            .getSize(find.widgetWithText(HhKnop, TekstenNl.registrerenKnop))
+            .height;
+        expect(groot, lessThan(HhMaten.knopHoogte(HhDichtheid.groot)));
+      },
+    );
 
     testWidgets('/dev bestaat alleen in debug-builds', (tester) async {
       final container = await pompApp(tester, gateway: fakeMetAlleRollen());

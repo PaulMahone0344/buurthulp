@@ -14,6 +14,7 @@ import '../../../theme.dart';
 import '../model/hh_gebruiker.dart';
 import '../provider/meldingen_voorkeur.dart';
 import '../provider/sessie_providers.dart';
+import '../../../app/dichtheid_controller.dart';
 
 /// G7. Taal (alleen opslaan in hh_users.taal), meldingen (alleen lokaal
 /// opslaan, geen push), uitloggen en account wissen met bevestiging.
@@ -113,6 +114,7 @@ class _InstellingenScreenState extends ConsumerState<InstellingenScreen> {
   Widget build(BuildContext context) {
     final gebruiker = ref.watch(huidigeGebruikerProvider);
     final meldingenAan = ref.watch(meldingenVoorkeurProvider);
+    final groteLetters = ref.watch(groteLettersProvider);
     final dichtheid = HhDichtheidScope.van(context);
     final tekst = Theme.of(context).textTheme;
     final tussen = HhRuimte.voor(HhRuimte.l, dichtheid);
@@ -144,6 +146,36 @@ class _InstellingenScreenState extends ConsumerState<InstellingenScreen> {
                 ),
                 SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
                 Text(TekstenNl.instellingenTaalHulp, style: tekst.bodyMedium),
+              ],
+            ),
+          ),
+          SizedBox(height: tussen),
+          HhKaart(
+            kop: TekstenNl.instellingenLetters,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MergeSemantics(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          TekstenNl.instellingenLettersSchakelaar,
+                          style: tekst.bodyLarge,
+                        ),
+                      ),
+                      Switch(
+                        value: groteLetters,
+                        onChanged: (aan) =>
+                            ref.read(groteLettersProvider.notifier).zet(aan),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  TekstenNl.instellingenLettersHulp,
+                  style: tekst.bodyMedium,
+                ),
               ],
             ),
           ),

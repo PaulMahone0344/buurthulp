@@ -2,17 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/validatie.dart';
-import 'package:heitjehulp_app/theme.dart';
 
 void main() {
   group('HhRol', () {
-    test('rol naar dichtheid: alleen hulpvrager is groot', () {
-      expect(HhRol.hulpvrager.dichtheid, HhDichtheid.groot);
-      expect(HhRol.jongere.dichtheid, HhDichtheid.normaal);
-      expect(HhRol.familie.dichtheid, HhDichtheid.normaal);
-      expect(HhRol.coordinator.dichtheid, HhDichtheid.normaal);
-    });
-
     test('rol naar route', () {
       expect(HhRol.hulpvrager.pad, HhPaden.hulpvrager);
       expect(HhRol.jongere.pad, HhPaden.jongere);
