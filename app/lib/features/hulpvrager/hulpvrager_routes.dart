@@ -10,6 +10,7 @@ import 'screen/mijn_gegevens_screen.dart';
 import 'screen/oudere_meer_screen.dart';
 import 'veiligheid/screen/bel_ons_screen.dart';
 import 'widget/oudere_tabbalk.dart';
+import '../../design/components/hh_tabbalk.dart';
 
 /// De routes van M4 (O2-O6 en O12). O1
 /// zit op de rolroute /hulpvrager uit M2. Wordt in lib/app/router.dart met
@@ -41,11 +42,14 @@ List<RouteBase> hulpvragerRoutes() => [
   ),
   GoRoute(
     path: HhPadenHulpvrager.belOnsTab,
-    builder: (context, state) =>
-        const OudereTabScherm(actief: OudereTab.belOns, child: BelOnsScreen()),
+    pageBuilder: (context, state) => hhTabPagina(
+      state,
+      const OudereTabScherm(actief: OudereTab.belOns, child: BelOnsScreen()),
+    ),
   ),
   GoRoute(
     path: HhPadenHulpvrager.meer,
-    builder: (context, state) => const OudereMeerScreen(),
+    pageBuilder: (context, state) =>
+        hhTabPagina(state, const OudereMeerScreen()),
   ),
 ];

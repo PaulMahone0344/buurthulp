@@ -5,6 +5,11 @@ import '../../theme.dart';
 import '../dichtheid_scope.dart';
 import '../lijn.dart';
 
+/// Pagina voor een tab-route: zonder overgangsanimatie. Een tab is een
+/// vaste plek; schuiven bij elke tik maakt duizelig (3 okt).
+Page<void> hhTabPagina(GoRouterState state, Widget child) =>
+    NoTransitionPage<void>(key: state.pageKey, child: child);
+
 /// Eén tab in de [HhTabbalk]: woord, icoon en het pad waar hij heen gaat.
 @immutable
 class HhTab {
