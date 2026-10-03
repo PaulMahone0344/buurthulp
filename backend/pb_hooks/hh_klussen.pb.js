@@ -110,7 +110,8 @@ routerAdd(
     const MELDING_GEEN_JONGERE = "Alleen een helper kan een klus aannemen.";
     const MELDING_NIET_GOEDGEKEURD =
       "Je aanmelding is nog niet goedgekeurd. Je kunt nog geen klussen aannemen.";
-    const MELDING_GEEN_WIJK = "Je postcode hoort nog niet bij een wijk van HeitjeHulp. Neem contact op met de meldkamer.";
+    const MELDING_GEEN_WIJK =
+      "HeitjeHulp is nog niet in jouw buurt. We laten het je weten zodra we er zijn.";
     const MELDING_NIET_GEVONDEN = "Deze klus bestaat niet meer.";
 
     const klusId = String(e.request.pathValue("id") || "").trim();

@@ -165,13 +165,13 @@ async function main() {
     await voorwaarden(su);
     console.log('\nWat --apply ZOU doen:');
     console.log(`  · tijdelijke accounts maken (${MAIL_PREFIX}...${MAIL_DOMEIN}): coordinator, 3 bewoners, 8 helpers, 5 registraties;`);
-    console.log('  · ~9 Nominatim-verzoeken (1 per seconde) voor de werkgebied-checks;');
-    console.log('  · twee eigen open klussen; per helper nameten wie ze ziet en wie mag accepteren;');
+    console.log('  · 8 Nominatim-verzoeken (1 per seconde) voor de werkgebied-checks;');
+    console.log('  · vijf eigen open klussen (ook in Tiel-West en Passewaaij); per helper nameten wie ze ziet en wie mag accepteren;');
     console.log('  · een testfoto als ID uploaden, goedkeuren (coordinator en superuser), opnieuw uploaden geweigerd;');
     console.log('  · bekijken wat een bewoner van zijn helper ziet;');
     console.log('  · alles opruimen en nameten.');
     console.log(`\n${groen} groen, ${rood} rood (leescontroles).`);
-    if (rood > 0) console.log('Rood is verwacht zolang 80 nog niet uitgerold is.');
+    if (rood > 0) console.log('Rood is verwacht zolang 81 en 80 nog niet uitgerold zijn.');
     return;
   }
 

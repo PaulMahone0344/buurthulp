@@ -39,6 +39,7 @@ var VERBORGEN_VOOR_ANDEREN = [
   "ouder_telefoon",
   "ouder_toestemming_op",
   "ouder_iban_ok",
+  "werkgebied_status",
 ];
 
 /// "2008-05-14 00:00:00.000Z" -> [2008, 5, 14], of null.
