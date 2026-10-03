@@ -12,6 +12,7 @@ import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_meld_balk.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_klus_nl.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
@@ -295,6 +296,30 @@ class _Detail extends StatelessWidget {
               style: tekst.bodyLarge,
             ),
           ),
+          // B4: de foto die de bewoner bij de klus zette (beschermd; de
+          // URL heeft een kortlevend bestandstoken).
+          if (klus.klusFotoUrl.isNotEmpty) ...[
+            SizedBox(height: tussen),
+            HhKaart(
+              kop: TekstenKlusNl.helperFotoKop,
+              child: Semantics(
+                image: true,
+                label: TekstenKlusNl.helperFotoSemantiek,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(HhRadius.groot),
+                  child: Image.network(
+                    klus.klusFotoUrl,
+                    fit: BoxFit.cover,
+                    excludeFromSemantics: true,
+                    errorBuilder: (context, error, stack) => Text(
+                      TekstenKlusNl.helperFotoLuktNiet,
+                      style: tekst.bodyMedium,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           if (isMijn || isAangenomen) ...[
             Text(TekstenKlussenNl.j13AangenomenUitleg, style: tekst.bodyMedium),

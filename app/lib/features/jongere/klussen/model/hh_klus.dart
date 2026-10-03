@@ -36,6 +36,9 @@ class HhKlus {
     this.jongereNaam = '',
     this.isJongereIdGecontroleerd = false,
     this.geplaatstDoorId = '',
+    this.wordtNagekeken = false,
+    this.afkeurReden = '',
+    this.klusFotoUrl = '',
   });
 
   final String id;
@@ -77,6 +80,18 @@ class HhKlus {
   /// hem). F3 laat alleen bij eigen geplaatste klussen "stoppen" zien.
   final String geplaatstDoorId;
 
+  /// B4: een open klus die de meldkamer nog niet goedkeurde
+  /// (klus_goedgekeurd_op leeg). Alleen de bewoner (en de meldkamer) ziet
+  /// hem dan; helpers nog niet.
+  final bool wordtNagekeken;
+
+  /// B4: de reden als de meldkamer de klus afkeurde (status geannuleerd).
+  final String afkeurReden;
+
+  /// B4: de foto van de klus (beschermd bestand) als URL met een kortlevend
+  /// bestandstoken; leeg als er geen foto is of hij niet is meegevraagd.
+  final String klusFotoUrl;
+
   static const veldStatus = 'status';
   static const veldToegewezenJongere = 'toegewezen_jongere';
   static const veldWanneerVan = 'wanneer_van';
@@ -110,6 +125,7 @@ class HhKlus {
   factory HhKlus.vanRecord(
     RecordModel record, {
     String Function(RecordModel oudere, String bestand)? fotoUrl,
+    String Function(RecordModel klus, String bestand)? klusFotoUrl,
   }) {
     final klustype = record.get<RecordModel?>('expand.klustype');
     final oudere = record.get<RecordModel?>('expand.hulpvrager');
@@ -118,10 +134,13 @@ class HhKlus {
     final lon = record.getDoubleValue('lon');
     final heeftPunt = lat != 0 || lon != 0;
     final foto = oudere?.getStringValue('foto') ?? '';
+    final klusFotos = record.getListValue<String>('foto');
+    final status = statusVanCode(record.getStringValue(veldStatus));
+    final afgekeurd = record.getStringValue('klus_afgekeurd_op').isNotEmpty;
     return HhKlus(
       id: record.id,
       hulpvragerId: record.getStringValue('hulpvrager'),
-      status: statusVanCode(record.getStringValue(veldStatus)),
+      status: status,
       klustypeId: record.getStringValue('klustype'),
       klustypeNaam: klustype?.getStringValue('naam') ?? '',
       klustypeIcoon: klustype?.getStringValue('icoon') ?? '',
@@ -148,6 +167,14 @@ class HhKlus {
       isJongereIdGecontroleerd:
           jongere?.getBoolValue('id_gecontroleerd') ?? false,
       geplaatstDoorId: record.getStringValue('geplaatst_door'),
+      wordtNagekeken:
+          status == HhKlusStatus.open &&
+          !afgekeurd &&
+          record.getStringValue('klus_goedgekeurd_op').isEmpty,
+      afkeurReden: afgekeurd ? record.getStringValue('klus_afkeur_reden') : '',
+      klusFotoUrl: klusFotos.isNotEmpty && klusFotoUrl != null
+          ? klusFotoUrl(record, klusFotos.first)
+          : '',
     );
   }
 
@@ -194,6 +221,9 @@ class HhKlus {
       isJongereIdGecontroleerd:
           isJongereIdGecontroleerd ?? this.isJongereIdGecontroleerd,
       geplaatstDoorId: geplaatstDoorId ?? this.geplaatstDoorId,
+      wordtNagekeken: wordtNagekeken,
+      afkeurReden: afkeurReden,
+      klusFotoUrl: klusFotoUrl,
     );
   }
 
@@ -207,7 +237,10 @@ class HhKlus {
       other.jongereNaam == jongereNaam &&
       other.isJongereIdGecontroleerd == isJongereIdGecontroleerd &&
       other.adres == adres &&
-      other.wanneerVan == wanneerVan;
+      other.wanneerVan == wanneerVan &&
+      other.wordtNagekeken == wordtNagekeken &&
+      other.afkeurReden == afkeurReden &&
+      other.klusFotoUrl == klusFotoUrl;
 
   @override
   int get hashCode => Object.hash(
@@ -219,5 +252,8 @@ class HhKlus {
     isJongereIdGecontroleerd,
     adres,
     wanneerVan,
+    wordtNagekeken,
+    afkeurReden,
+    klusFotoUrl,
   );
 }

@@ -16,6 +16,7 @@ import 'package:heitjehulp_app/theme.dart';
 
 import '../../../../support/hh_jongere_wikkel.dart';
 import '../../../../support/hh_uitvoeren_wikkel.dart';
+import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 
 /// Elk M6-scherm in de staat die het nodig heeft.
 class _Geval {
@@ -266,6 +267,70 @@ void main() {
       );
     });
 
+    // B4: de meldkamer keurt elke klus eerst.
+    testWidgets('ongekeurd: "wordt nagekeken" met gele balk, stoppen kan', (
+      tester,
+    ) async {
+      await _pomp(
+        tester,
+        _Geval(
+          'O7 nagekeken',
+          HhPadenStatus.hulpvraag('k-uitvoeren'),
+          () => fakeUitvoer(
+            klussen: [
+              uitvoerKlus(
+                status: HhKlusStatus.open,
+                metJongere: false,
+                wordtNagekeken: true,
+              ),
+            ],
+            ikBen: oudereId,
+          ),
+          isOudere: true,
+        ),
+        dichtheid: HhDichtheid.groot,
+      );
+      expect(find.text(TekstenKlusNl.wordtNagekeken), findsOneWidget);
+      final balk = tester.widget<HhMeldBalk>(
+        find.widgetWithText(HhMeldBalk, TekstenKlusNl.wordtNagekekenUitleg),
+      );
+      expect(balk.soort, HhMeldSoort.waarschuwing);
+      expect(find.text(TekstenUitvoerenNl.o7GeenJongere), findsNothing);
+      expect(
+        find.widgetWithText(HhKnop, TekstenUitvoerenNl.o7Annuleren),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('afgekeurd: de reden van de meldkamer staat erbij', (
+      tester,
+    ) async {
+      await _pomp(
+        tester,
+        _Geval(
+          'O7 afgekeurd',
+          HhPadenStatus.hulpvraag('k-uitvoeren'),
+          () => fakeUitvoer(
+            klussen: [
+              uitvoerKlus(
+                status: HhKlusStatus.geannuleerd,
+                metJongere: false,
+                afkeurReden: 'Sigaretten kan niet.',
+              ),
+            ],
+            ikBen: oudereId,
+          ),
+          isOudere: true,
+        ),
+        dichtheid: HhDichtheid.groot,
+      );
+      expect(find.text(TekstenKlusNl.afgekeurd), findsOneWidget);
+      expect(
+        find.text(TekstenKlusNl.afgekeurdReden('Sigaretten kan niet.')),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('na afloop geen knop bellen en geen knop stoppen', (
       tester,
     ) async {
@@ -318,6 +383,32 @@ void main() {
       await tikTekst(tester, TekstenUitvoerenNl.o8TabAfgerond);
       expect(find.byType(HulpvraagTegel), findsOneWidget);
       expect(find.text('Sanne heeft de klus gedaan.'), findsOneWidget);
+    });
+
+    testWidgets('B4: een ongekeurde klus zegt "wordt nagekeken" op de tegel', (
+      tester,
+    ) async {
+      await _pomp(
+        tester,
+        _Geval(
+          'O8 nagekeken',
+          HhPadenStatus.hulpvragen,
+          () => fakeUitvoer(
+            klussen: [
+              uitvoerKlus(
+                status: HhKlusStatus.open,
+                metJongere: false,
+                wordtNagekeken: true,
+              ),
+            ],
+            ikBen: oudereId,
+          ),
+          isOudere: true,
+        ),
+        dichtheid: HhDichtheid.groot,
+      );
+      expect(find.text(TekstenKlusNl.wordtNagekeken), findsOneWidget);
+      expect(find.text(TekstenUitvoerenNl.o8NogNiemand), findsNothing);
     });
 
     testWidgets('tik op een tegel opent O7', (tester) async {

@@ -19,6 +19,7 @@ import 'package:heitjehulp_app/features/jongere/klussen/widget/klussen_kaart.dar
 import 'package:heitjehulp_app/features/jongere/reputatie/screen/mijn_reputatie_screen.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/screen/klus_uitvoeren_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart';
+import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
 
@@ -312,6 +313,42 @@ void main() {
   });
 
   group('J13 klusdetail', () {
+    testWidgets('B4: de foto van de bewoner staat bij de klus', (tester) async {
+      await _pomp(
+        tester,
+        _Geval(
+          'J13 met foto',
+          HhPadenKlussen.klusDetail('k-foto'),
+          () => fakeKlussen(
+            open: [
+              testKlus(
+                id: 'k-foto',
+                klusFotoUrl:
+                    'https://nep.test/api/files/x/k-foto/a.jpg?token=t',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text(TekstenKlusNl.helperFotoKop), findsOneWidget);
+      // De url met het bestandstoken gaat ongewijzigd naar het plaatje.
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Image &&
+              w.image is NetworkImage &&
+              (w.image as NetworkImage).url.endsWith('a.jpg?token=t'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('B4: zonder foto geen fotokaart', (tester) async {
+      await _pomp(tester, _gevallen[3]);
+      expect(find.text(TekstenKlusNl.helperFotoKop), findsNothing);
+    });
+
     testWidgets(
       'open klus: wijk en afstand, geen adres of naam, knop aannemen',
       (tester) async {
