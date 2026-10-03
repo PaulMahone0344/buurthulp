@@ -321,6 +321,6 @@ export const vragen: Vraag[] = [
   {
     vraag: 'Kan ik HeitjeHulp al gebruiken?',
     antwoord:
-      'De app komt binnenkort. Wil je een bericht als het zover is? Of wil je partner worden? Mail ons op info@heitjehulp.nl.',
+      'De app en de webapp komen binnenkort. Wil je een bericht als het zover is? Of wil je partner worden? Mail ons op info@heitjehulp.nl.',
   },
 ]
