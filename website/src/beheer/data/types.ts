@@ -12,13 +12,16 @@ export type Klusstatus =
   | 'geannuleerd'
   | 'probleem'
 
-export type Rol = 'hulpvrager' | 'jongere' | 'familie' | 'coordinator'
+// B3 (K5): de familie-rol is weg uit de code. Oude accounts met rol
+// "familie" kunnen op de server nog bestaan; die komen hier binnen als ''.
+export type Rol = 'hulpvrager' | 'jongere' | 'coordinator'
+export const ROLLEN: Rol[] = ['hulpvrager', 'jongere', 'coordinator']
 
 export type Screeningstatus = 'nieuw' | 'in_behandeling' | 'goedgekeurd' | 'afgewezen'
 
 export type Betaalstatus = 'open' | 'betaald' | 'mislukt' | 'terugbetaald'
 
-export type Klusbron = 'app' | 'telefoon' | 'familie'
+export type Klusbron = 'app' | 'telefoon'
 
 /** De ingelogde beheerder. Alleen rol coordinator komt hier ooit terecht. */
 export type Coordinator = {

@@ -39,7 +39,6 @@ export const SOORT_LABEL: Record<string, string> = {
 export const ROL_LABEL: Record<Rol, string> = {
   hulpvrager: 'Oudere',
   jongere: 'Jongere',
-  familie: 'Familie',
   coordinator: 'Coordinator',
 }
 

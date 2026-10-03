@@ -23,8 +23,10 @@ import type {
   Koppelkandidaat,
   Oudere,
   Profiel,
+  Rol,
   Wijk,
 } from './types'
+import { ROLLEN } from './types'
 
 const MELDING_GEEN_COORDINATOR =
   'Dit beheerpaneel is alleen voor coordinatoren. Je bent weer uitgelogd.'
@@ -62,7 +64,7 @@ export function naarKlus(r: Uitgebreid): Klus {
   return {
     id: r.id,
     status: tekst(r.status) as Klus['status'],
-    bron: tekst(r.bron) as Klus['bron'],
+    bron: tekst(r.bron) === 'app' || tekst(r.bron) === 'telefoon' ? (tekst(r.bron) as Klus['bron']) : '',
     omschrijving: tekst(r.omschrijving),
     adres: tekst(r.adres),
     aangemaaktOp: naarIso(r.created),
@@ -165,7 +167,7 @@ export function naarGebruiker(r: RecordModel): Gebruiker {
     id: r.id,
     naam: tekst(r.naam),
     email: tekst(r.email),
-    rol: tekst(r.rol) as Gebruiker['rol'],
+    rol: (ROLLEN as string[]).includes(tekst(r.rol)) ? (tekst(r.rol) as Rol) : '',
     telefoon: tekst(r.telefoon),
     geblokkeerd: r.geblokkeerd === true,
     werkgebiedStatus: tekst(r.werkgebied_status) as Gebruiker['werkgebiedStatus'],

@@ -9,7 +9,6 @@ const accounts = [
   { id: 'c1', email: 'coord@heitjehulp.nl', wachtwoord: 'goed', rol: 'coordinator' as const, naam: 'Coordinator Een' },
   { id: 'j1', email: 'jongere@heitjehulp.nl', wachtwoord: 'goed', rol: 'jongere' as const, naam: 'Sami' },
   { id: 'o1', email: 'oudere@heitjehulp.nl', wachtwoord: 'goed', rol: 'hulpvrager' as const, naam: 'Jansen' },
-  { id: 'f1', email: 'familie@heitjehulp.nl', wachtwoord: 'goed', rol: 'familie' as const, naam: 'Kind' },
   { id: 'c2', email: 'blok@heitjehulp.nl', wachtwoord: 'goed', rol: 'coordinator' as const, naam: 'Blok', geblokkeerd: true },
 ]
 
@@ -32,7 +31,7 @@ describe('toegang tot het beheerpaneel', () => {
     expect(await screen.findByRole('heading', { name: 'Meldkamer' })).toBeInTheDocument()
   })
 
-  it.each(['jongere@heitjehulp.nl', 'oudere@heitjehulp.nl', 'familie@heitjehulp.nl'])(
+  it.each(['jongere@heitjehulp.nl', 'oudere@heitjehulp.nl'])(
     'weigert %s netjes en toont niets van het paneel',
     async (email) => {
       const data = new FakeBeheerData({ accounts })
