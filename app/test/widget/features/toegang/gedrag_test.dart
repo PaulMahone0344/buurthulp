@@ -126,7 +126,7 @@ void main() {
         const BevestigEmailScreen(),
         gateway: gateway,
         sessie: SessieIngelogd(
-          testGebruiker(HhRol.familie, isBevestigd: false),
+          testGebruiker(HhRol.jongere, isBevestigd: false),
         ),
       );
 
@@ -197,7 +197,7 @@ void main() {
         tester,
         const InstellingenScreen(),
         gateway: fakeMetAlleRollen(),
-        sessie: SessieIngelogd(testGebruiker(HhRol.familie)),
+        sessie: SessieIngelogd(testGebruiker(HhRol.jongere)),
         opslag: opslag,
       );
 
@@ -239,9 +239,9 @@ void main() {
         tester,
         const InstellingenScreen(),
         gateway: gateway,
-        sessie: SessieIngelogd(testGebruiker(HhRol.familie)),
+        sessie: SessieIngelogd(testGebruiker(HhRol.jongere)),
       );
-      gateway.ingelogd = testGebruiker(HhRol.familie);
+      gateway.ingelogd = testGebruiker(HhRol.jongere);
 
       await _tik(tester, find.widgetWithText(HhKnop, TekstenNl.accountWissen));
       expect(find.text(TekstenNl.accountWissenVraag), findsOneWidget);
@@ -254,7 +254,7 @@ void main() {
         tester,
         find.widgetWithText(HhKnop, TekstenNl.accountWissenBevestig),
       );
-      expect(gateway.gewisteAccounts, [testGebruiker(HhRol.familie).id]);
+      expect(gateway.gewisteAccounts, [testGebruiker(HhRol.jongere).id]);
     });
 
     testWidgets('uitloggen zet de sessie op uitgelogd', (tester) async {

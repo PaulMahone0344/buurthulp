@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,17 +7,18 @@ import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_chat_gateway.dart';
+import 'package:heitjehulp_app/features/chat/provider/chat_providers.dart';
 import 'package:heitjehulp_app/core/pb/fake_incident_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
-import 'package:heitjehulp_app/core/pb/fake_familie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klus_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
-import 'package:heitjehulp_app/features/familie/provider/familie_providers.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_gegevens.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_klustype.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart';
+import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/jongere/reputatie/provider/beoordeling_providers.dart';
 import 'package:heitjehulp_app/features/hulpvrager/veiligheid/provider/veiligheid_providers.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
@@ -24,6 +27,8 @@ import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/features/toegang/provider/sessie_providers.dart';
 import 'package:heitjehulp_app/features/toegang/screen/hulp_screen.dart';
+import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
 
 import 'hh_toegang_wikkel.dart';
@@ -31,59 +36,119 @@ import 'hh_toegang_wikkel.dart';
 /// Een vaste "nu" voor de M4-tests: dinsdag 15 september 2026, 10:00.
 final testNu = DateTime(2026, 9, 15, 10);
 
-/// Zes soorten hulp, gelijk aan de seed op de server.
+/// De 13 categorieën van B4 (backend/pb_hooks/hh_klusplaatsen_hulp.js),
+/// plus één oud klustype van vóór B4 dat niet meer te kiezen is. Kleine
+/// klusjes heeft een richtvergoeding, om het doorgeven van bedragen te
+/// kunnen zien (op de server is die nu 0; prijzen komen in B7).
 const testKlustypes = [
   HhKlustype(
-    id: 'kt-boodschappen',
-    naam: 'boodschappen',
-    icoon: 'shopping_cart',
-    richtduurMinuten: 60,
-    richtvergoedingCenten: 1000,
+    id: 'kt-tuin',
+    naam: 'Tuin',
+    icoon: 'yard',
+    minLeeftijd: 13,
+    volgorde: 1,
   ),
   HhKlustype(
-    id: 'kt-tuin',
-    naam: 'tuin',
-    icoon: 'yard',
-    richtduurMinuten: 90,
-    richtvergoedingCenten: 1500,
+    id: 'kt-auto',
+    naam: 'Auto & fiets',
+    icoon: 'pedal_bike',
+    minLeeftijd: 13,
+    volgorde: 2,
+  ),
+  HhKlustype(
+    id: 'kt-schoonmaak',
+    naam: 'Schoonmaak',
+    icoon: 'cleaning_services',
+    minLeeftijd: 16,
+    volgorde: 3,
+  ),
+  HhKlustype(
+    id: 'kt-opruimen',
+    naam: 'Opruimen',
+    icoon: 'inventory_2',
+    minLeeftijd: 13,
+    volgorde: 4,
+  ),
+  HhKlustype(
+    id: 'kt-boodschappen',
+    naam: 'Boodschappen',
+    icoon: 'shopping_cart',
+    minLeeftijd: 10,
+    volgorde: 5,
+  ),
+  HhKlustype(
+    id: 'kt-dieren',
+    naam: 'Dieren',
+    icoon: 'pets',
+    minLeeftijd: 10,
+    volgorde: 6,
+  ),
+  HhKlustype(
+    id: 'kt-computer',
+    naam: 'Computer',
+    icoon: 'computer',
+    minLeeftijd: 13,
+    volgorde: 7,
+  ),
+  HhKlustype(
+    id: 'kt-rondom',
+    naam: 'Rondom huis',
+    icoon: 'fence',
+    minLeeftijd: 10,
+    volgorde: 8,
+  ),
+  HhKlustype(
+    id: 'kt-hand',
+    naam: 'Helpende hand',
+    icoon: 'favorite_border',
+    minLeeftijd: 10,
+    volgorde: 9,
+  ),
+  HhKlustype(
+    id: 'kt-creatief',
+    naam: 'Creatief',
+    icoon: 'brush',
+    minLeeftijd: 13,
+    volgorde: 10,
   ),
   HhKlustype(
     id: 'kt-klusje',
-    naam: 'klusje in huis',
+    naam: 'Kleine klusjes',
     icoon: 'handyman',
-    richtduurMinuten: 60,
+    minLeeftijd: 10,
+    volgorde: 11,
     richtvergoedingCenten: 1250,
   ),
   HhKlustype(
-    id: 'kt-tablet',
-    naam: 'telefoon/tablet-hulp',
-    icoon: 'devices',
-    richtduurMinuten: 45,
-    richtvergoedingCenten: 750,
+    id: 'kt-kennis',
+    naam: 'Hulp & kennis',
+    icoon: 'lightbulb',
+    minLeeftijd: 13,
+    volgorde: 12,
   ),
   HhKlustype(
-    id: 'kt-wandelen',
-    naam: 'wandelen/gezelschap',
-    icoon: 'directions_walk',
-    richtduurMinuten: 60,
-    richtvergoedingCenten: 750,
+    id: 'kt-overig',
+    naam: 'Overig',
+    icoon: 'more_horiz',
+    minLeeftijd: 13,
+    volgorde: 13,
   ),
+  // Oud (M1-seed), niet actief: mag nooit als tegel verschijnen.
   HhKlustype(
     id: 'kt-vervoer',
     naam: 'vervoer',
     icoon: 'directions_car',
-    richtduurMinuten: 90,
-    richtvergoedingCenten: 1500,
+    minLeeftijd: 18,
+    isActief: false,
   ),
 ];
 
-/// Een zevende soort, om "Meer" te testen.
-const testExtraKlustype = HhKlustype(
-  id: 'kt-huisdier',
-  naam: 'huisdier',
-  icoon: 'pets',
-  richtduurMinuten: 30,
-  richtvergoedingCenten: 500,
+/// Een kleine, echte png (1x1), als de foto van de klus.
+final testKlusFoto = HhFoto(
+  bytes: base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
+  ),
+  bestandsnaam: 'klus.png',
 );
 
 /// De gegevens van de nep-hulpvrager, met of zonder adres.
@@ -120,7 +185,8 @@ ProviderContainer hulpvragerContainer({
   FakeBeoordelingGateway? beoordelingGateway,
   FakeMeldingenGateway? meldingenGateway,
   FakeIncidentGateway? incidentGateway,
-  FakeFamilieGateway? familieGateway,
+  FakeFotoKiezer? fotoKiezer,
+  FakeChatGateway? chatGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -143,11 +209,13 @@ ProviderContainer hulpvragerContainer({
       incidentGatewayProvider.overrideWithValue(
         incidentGateway ?? FakeIncidentGateway(),
       ),
-      // M9: het blok "Familie" op O12. Standaard een lege fake.
-      familieGatewayProvider.overrideWithValue(
-        familieGateway ?? FakeFamilieGateway(),
-      ),
+      // B6: de Chat-knop op O7. Standaard een lege fake.
+      chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
       klokProvider.overrideWithValue(() => nu ?? testNu),
+      // B4: de klusfoto. Standaard kiest de fake meteen [testKlusFoto].
+      fotoKiezerProvider.overrideWithValue(
+        fotoKiezer ?? FakeFotoKiezer(volgende: testKlusFoto),
+      ),
       keyValueStoreProvider.overrideWithValue(
         opslag ?? GeheugenKeyValueStore(),
       ),
@@ -221,4 +289,29 @@ Future<ProviderContainer> pompHulpvragerApp(
   );
   await tester.pumpAndSettle();
   return container;
+}
+
+/// Vult "Klus plaatsen" helemaal in via de knoppen, zoals een bewoner:
+/// categorie, omschrijving, foto (de fake kiest [testKlusFoto]), morgen
+/// (standaard 10:00, tijdwiel niet gedraaid) en het nee-lijst-vinkje. Het
+/// adres komt uit Mijn gegevens. Tikt NIET op "Klus plaatsen".
+Future<void> vulKlusIn(
+  WidgetTester tester, {
+  String categorie = 'Kleine klusjes',
+  String omschrijving = 'Lamp ophangen in de gang.',
+}) async {
+  Future<void> tik(Finder doel) async {
+    await tester.ensureVisible(doel);
+    await tester.tap(doel);
+    await tester.pumpAndSettle();
+  }
+
+  await tik(find.text(categorie));
+  final veld = find.byType(TextField).first;
+  await tester.ensureVisible(veld);
+  await tester.enterText(veld, omschrijving);
+  await tester.pumpAndSettle();
+  await tik(find.text(TekstenKlusNl.fotoKiezen));
+  await tik(find.text(TekstenHulpvragerNl.dagMorgen));
+  await tik(find.text(TekstenKlusNl.neeLijstAkkoord));
 }

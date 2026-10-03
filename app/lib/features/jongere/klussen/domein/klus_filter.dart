@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../hulpvrager/model/hulpvraag_concept.dart';
 import '../model/hh_klus.dart';
 import 'afstand.dart';
 import 'dagdeel.dart';

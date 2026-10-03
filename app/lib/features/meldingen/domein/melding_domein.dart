@@ -1,4 +1,6 @@
+import '../../../l10n/teksten_chat_nl.dart';
 import '../../../l10n/teksten_meldingen_nl.dart';
+import '../../chat/paden_chat.dart';
 import '../../coordinator/paden_coordinator.dart';
 import '../../hulpvrager/status/paden_status.dart';
 import '../../jongere/klussen/domein/wanneer_tekst.dart';
@@ -32,14 +34,21 @@ String titelVan(HhMelding melding, HhRol rol) {
           ? TekstenMeldingenNl.soortGeannuleerdJongere
           : TekstenMeldingenNl.soortGeannuleerdOudere,
     HhMeldingSoort.incident => TekstenMeldingenNl.soortIncident,
+    HhMeldingSoort.bericht => TekstenChatNl.meldingTitel,
     HhMeldingSoort.onbekend => TekstenMeldingenNl.soortOnbekend,
   };
 }
 
 /// Waar een tik op de melding naartoe gaat, of null als er geen scherm bij
-/// hoort (familie heeft nog geen schermen, M9).
+/// hoort.
 String? doelVan(HhMelding melding, HhRol rol) {
   final klus = melding.klusId;
+  // B6: een chatbericht opent de chat (bewoner en helper).
+  if (melding.soort == HhMeldingSoort.bericht &&
+      klus.isNotEmpty &&
+      (rol == HhRol.jongere || rol == HhRol.hulpvrager)) {
+    return HhPadenChat.chat(klus);
+  }
   switch (rol) {
     case HhRol.jongere:
       if (klus.isEmpty) return null;
@@ -56,8 +65,6 @@ String? doelVan(HhMelding melding, HhRol rol) {
         return HhPadenCoordinator.incidentDetail(melding.incidentId);
       }
       return klus.isEmpty ? null : HhPadenCoordinator.klusDetail(klus);
-    case HhRol.familie:
-      return null;
   }
 }
 

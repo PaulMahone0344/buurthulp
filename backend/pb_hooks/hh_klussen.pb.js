@@ -1,4 +1,4 @@
-// HeitjeHulp M5 + M6 — hh_klussen.pb.js (PocketBase JS-hook, gedeelde prod-server)
+// HeitjeHulp M5 + M6 (+ B2, B4) — hh_klussen.pb.js (PocketBase JS-hook, gedeelde prod-server)
 //
 // Alles hieronder raakt alleen hh_klussen en hh_klus_status:
 //
@@ -27,6 +27,12 @@
 //      409 { melding, reden: "bezet" | "wijk" } — al aangenomen, niet meer
 //          open, of de oudere woont in een andere wijk (B2: een regio-wijk
 //          als "Tiel en omstreken" past bij elke wijk in dezelfde gemeente)
+//      B4: 409 { melding, reden: "nietgekeurd" } — de meldkamer keurde de
+//          klus nog niet (klus_goedgekeurd_op leeg)
+//      B4: 403 { melding, reden: "leeftijd" } — de helper is op de klusdag
+//          jonger dan de categorie of de tijdregel vraagt (07:00-19:00, max
+//          2 uur, anders 18+; 10-14 jaar om 18:00 klaar, anders 15+). De route rekent dat zelf opnieuw uit met
+//          hh_klusplaatsen_hulp.js en vertrouwt de opgeslagen velden niet.
 //
 // 1b. M6 — POST /api/hh/klussen/{id}/status  body {naar}
 //    De statusmachine, alleen voor de TOEGEWEZEN jongere:
@@ -97,7 +103,12 @@
 // generieke 500); daarom zet de transactie alleen een uitkomst en gooit niets,
 // de statuscode komt erna.
 //
-// DEPLOY: scripts/10-hook-deploy.sh (kopie naar /root/pb_hooks/, geen restart;
+// B4: de accepteer-route kijkt ook naar de keuring van de meldkamer en de
+// leeftijd (zie 1). Het plaatsen zelf (foto, tijd, leeftijdsgrens, keuren)
+// zit in hh_klusplaatsen.pb.js; dat bestand laadt vóór dit bestand en roept
+// e.next() aan, zodat de geocoding en de eerste logregel hier gewoon volgen.
+//
+// DEPLOY: sinds B4 scripts/103-hook-deploy.sh (eerder 10/83; kopie naar /root/pb_hooks/, geen restart;
 // PocketBase herlaadt hooks bij een bestandswijziging). ROLLBACK: het bestand
 // weer verwijderen uit /root/pb_hooks/.
 
@@ -113,6 +124,7 @@ routerAdd(
     const MELDING_GEEN_WIJK =
       "HeitjeHulp is nog niet in jouw buurt. We laten het je weten zodra we er zijn.";
     const MELDING_NIET_GEVONDEN = "Deze klus bestaat niet meer.";
+    const MELDING_NIET_GEKEURD = "Deze klus wordt nog nagekeken door de meldkamer.";
 
     const klusId = String(e.request.pathValue("id") || "").trim();
     if (!klusId) {
@@ -142,6 +154,7 @@ routerAdd(
 
     // --- De toewijzing: alles in één transactie ----------------------------
     let uitkomst = "";
+    let nodigeLeeftijd = 0;
     $app.runInTransaction((txApp) => {
       let klus;
       try {
@@ -167,6 +180,16 @@ routerAdd(
       // gemeente (hh_aanmelden_hulp.js wijkenPassen).
       if (!wijkenPassenVoor(txApp, String(oudere.get("wijk") || "").trim(), wijk)) {
         uitkomst = "wijk";
+        return;
+      }
+      // B4: eerst de meldkamer, dan de leeftijd op de klusdag.
+      if (!String(klus.get("klus_goedgekeurd_op") || "").trim()) {
+        uitkomst = "nietgekeurd";
+        return;
+      }
+      nodigeLeeftijd = leeftijdNodigVoor(txApp, klus);
+      if (nodigeLeeftijd > 0) {
+        uitkomst = "leeftijd";
         return;
       }
 
@@ -199,6 +222,12 @@ routerAdd(
     if (uitkomst === "wijk") {
       return e.json(409, { melding: MELDING_WIJK, reden: "wijk" });
     }
+    if (uitkomst === "nietgekeurd") {
+      return e.json(409, { melding: MELDING_NIET_GEKEURD, reden: "nietgekeurd" });
+    }
+    if (uitkomst === "leeftijd") {
+      return e.json(403, { melding: `Deze klus is pas vanaf ${nodigeLeeftijd} jaar.`, reden: "leeftijd" });
+    }
     return e.json(409, { melding: MELDING_BEZET, reden: "bezet" });
 
     // ---- helpers, BINNEN de handler (pool-runtime deelt geen scope) ----
@@ -228,6 +257,25 @@ routerAdd(
         }
       };
       return hulp.wijkenPassen(lees(oudereWijkId), lees(helperWijkId));
+    }
+
+    /// B4: hoe oud moet je zijn voor deze klus, als de helper (e.auth) dat
+    /// op de klusdag NIET is? 0 = oud genoeg. Rekent opnieuw uit uit de
+    /// categorie en de tijden (hh_klusplaatsen_hulp.js), net als de hook die
+    /// geboren_uiterlijk zet; zonder begintijd telt vandaag.
+    function leeftijdNodigVoor(app, klus) {
+      const plaats = require(`${__hooks}/hh_klusplaatsen_hulp.js`);
+      let typeMin;
+      try {
+        typeMin = app.findRecordById("hh_klustypes", String(klus.get("klustype") || "")).getInt("min_leeftijd");
+      } catch (_) {
+        typeMin = undefined; // onbekende categorie: veilig 18
+      }
+      const van = String(klus.get("wanneer_van") || "");
+      const tot = String(klus.get("wanneer_tot") || "");
+      const min = plaats.minLeeftijdVoorKlus({ typeMinLeeftijd: typeMin, van: van, tot: tot });
+      const grens = plaats.geborenUiterlijk(van || new Date().toISOString(), min);
+      return plaats.isOudGenoeg(String(e.auth.get("geboortedatum") || ""), grens) ? 0 : min;
     }
 
     /// B2: waarom mag deze goedgekeurde helper nog niet? null = mag.

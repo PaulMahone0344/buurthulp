@@ -51,6 +51,7 @@ HhKlus testKlus({
   String toegewezenJongereId = '',
   int vergoedingCenten = 1000,
   String omschrijving = 'Weekboodschappen bij de Jumbo',
+  String klusFotoUrl = '',
 }) {
   final van = wanneerVan ?? klussenNu.add(const Duration(hours: 4));
   return HhKlus(
@@ -69,6 +70,7 @@ HhKlus testKlus({
     wanneerTot: wanneerTot ?? van.add(const Duration(hours: 1)),
     vergoedingJongereCenten: vergoedingCenten,
     toegewezenJongereId: toegewezenJongereId,
+    klusFotoUrl: klusFotoUrl,
   );
 }
 

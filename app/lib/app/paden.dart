@@ -14,7 +14,6 @@ abstract final class HhPaden {
   // Landing per rol (M0-stubs; tabs komen in M3-M10)
   static const hulpvrager = '/hulpvrager';
   static const jongere = '/jongere';
-  static const familie = '/familie';
   static const coordinator = '/coordinator';
 
   /// Alleen in debug-builds geregistreerd.
@@ -38,5 +37,5 @@ abstract final class HhPaden {
     wachtwoordVergeten,
   };
 
-  static const rolPaden = {hulpvrager, jongere, familie, coordinator};
+  static const rolPaden = {hulpvrager, jongere, coordinator};
 }

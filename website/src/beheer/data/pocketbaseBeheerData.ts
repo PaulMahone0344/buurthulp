@@ -19,12 +19,16 @@ import type {
   Incident,
   Instelling,
   Klus,
+  KlusNaTeKijken,
   Klustype,
   Koppelkandidaat,
+  Markering,
   Oudere,
   Profiel,
+  Rol,
   Wijk,
 } from './types'
+import { ROLLEN } from './types'
 
 const MELDING_GEEN_COORDINATOR =
   'Dit beheerpaneel is alleen voor coordinatoren. Je bent weer uitgelogd.'
@@ -62,7 +66,7 @@ export function naarKlus(r: Uitgebreid): Klus {
   return {
     id: r.id,
     status: tekst(r.status) as Klus['status'],
-    bron: tekst(r.bron) as Klus['bron'],
+    bron: tekst(r.bron) === 'app' || tekst(r.bron) === 'telefoon' ? (tekst(r.bron) as Klus['bron']) : '',
     omschrijving: tekst(r.omschrijving),
     adres: tekst(r.adres),
     aangemaaktOp: naarIso(r.created),
@@ -97,9 +101,13 @@ export function naarIncident(r: Uitgebreid): Incident {
   }
 }
 
+/** B3: de rij in hh_ouder_toestemming hangt aan de helper (terugverwijzing). */
+const OUDER_RIJ = 'hh_ouder_toestemming_via_helper'
+
 export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => string): Profiel {
   const gebruiker = uitgebreid(r, 'gebruiker')
   const wijk = gebruiker ? uitgebreid(gebruiker, 'wijk') : undefined
+  const ouderRij = gebruiker ? uitgebreid(gebruiker, OUDER_RIJ) : undefined
   const document = tekst(r.document_foto)
   return {
     id: r.id,
@@ -118,6 +126,9 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     screeningNotitie: tekst(r.screening_notitie),
     bijgewerktOp: naarIso(r.updated),
     documentFotoUrl: document ? bestandUrl(document) : '',
+    ouderToestemmingOp: naarIso(gebruiker?.ouder_toestemming_op),
+    ouderAvp: ouderRij ? ouderRij.avp_verklaard === true : null,
+    ouderStatus: tekst(ouderRij?.status),
   }
 }
 
@@ -159,7 +170,7 @@ export function naarGebruiker(r: RecordModel): Gebruiker {
     id: r.id,
     naam: tekst(r.naam),
     email: tekst(r.email),
-    rol: tekst(r.rol) as Gebruiker['rol'],
+    rol: (ROLLEN as string[]).includes(tekst(r.rol)) ? (tekst(r.rol) as Rol) : '',
     telefoon: tekst(r.telefoon),
     geblokkeerd: r.geblokkeerd === true,
     werkgebiedStatus: tekst(r.werkgebied_status) as Gebruiker['werkgebiedStatus'],
@@ -218,6 +229,29 @@ async function metFout<T>(werk: () => Promise<T>): Promise<T> {
     return await werk()
   } catch (fout) {
     throw new BeheerFout(foutmelding(fout))
+  }
+}
+
+const MARKERINGEN: Markering[] = ['telefoon', 'email', 'link', 'neelijst']
+
+/** B4: een ongekeurde klus; [fotoUrl] maakt van een bestandsnaam een url met token. */
+export function naarKlusNaTeKijken(r: Uitgebreid, fotoUrl: (bestand: string) => string): KlusNaTeKijken {
+  const oudere = uitgebreid(r, 'hulpvrager')
+  const klustype = uitgebreid(r, 'klustype')
+  const fotos = Array.isArray(r.foto) ? r.foto.map(tekst).filter(Boolean) : []
+  const markering = Array.isArray(r.controle_markering) ? r.controle_markering.map(tekst) : []
+  return {
+    id: r.id,
+    aangemaaktOp: naarIso(r.created),
+    bron: tekst(r.bron) as KlusNaTeKijken['bron'],
+    hulpvragerNaam: tekst(oudere?.naam),
+    klustypeNaam: tekst(klustype?.naam),
+    minLeeftijd: getal(r.min_leeftijd),
+    wanneerVan: naarIso(r.wanneer_van),
+    wanneerTot: naarIso(r.wanneer_tot),
+    omschrijving: tekst(r.omschrijving),
+    markering: MARKERINGEN.filter((m) => markering.includes(m)),
+    fotoUrl: fotos.length ? fotoUrl(fotos[0]) : '',
   }
 }
 
@@ -371,16 +405,45 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
         })
       }),
 
+    klussenNaTeKijken: () =>
+      metFout(async () => {
+        const records = await col('hh_klussen').getFullList({
+          filter: 'status = "open" && klus_goedgekeurd_op = "" && klus_afgekeurd_op = ""',
+          sort: 'created',
+          expand: 'hulpvrager,klustype',
+        })
+        // foto is PROTECTED: zonder bestandstoken 404.
+        const metFoto = records.some((r) => Array.isArray(r.foto) && r.foto.length > 0)
+        const token = metFoto ? await pb.files.getToken() : ''
+        return records.map((r) => naarKlusNaTeKijken(r, (bestand) => pb.files.getURL(r, bestand, { token })))
+      }),
+
+    keurKlus: (klusId, besluit) =>
+      metFout(async () => {
+        await pb.send(`/api/hh/klussen/${encodeURIComponent(klusId)}/keuren`, {
+          method: 'POST',
+          body: besluit.besluit === 'afkeuren' ? { besluit: 'afkeuren', reden: besluit.reden.trim() } : { besluit: 'goedkeuren' },
+        })
+      }),
+
     profielen: () =>
       metFout(async () => {
         const records = await col('hh_profielen').getFullList({
           filter: 'gebruiker.rol = "jongere"',
           sort: '-updated',
-          expand: 'gebruiker,gebruiker.wijk',
+          // B3: alleen lezen; de coordinator mag hh_ouder_toestemming lezen
+          // (de hash-velden zijn hidden en komen nooit mee).
+          expand: `gebruiker,gebruiker.wijk,gebruiker.${OUDER_RIJ}`,
         })
         // document_foto is PROTECTED: zonder bestandstoken 404.
         const token = records.length ? await pb.files.getToken() : ''
         return records.map((r) => naarProfiel(r, (bestand) => pb.files.getURL(r, bestand, { token })))
+      }),
+
+    // B3: na intrekken mag het kind pas weer mailen als de meldkamer dit doet.
+    ouderVrijgeven: (helperId) =>
+      metFout(async () => {
+        await pb.send('/api/hh/ouder/vrijgeven', { method: 'POST', body: { helper: helperId } })
       }),
 
     beoordeel: (profielId, besluit) =>

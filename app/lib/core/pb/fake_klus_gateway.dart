@@ -47,8 +47,16 @@ class FakeKlusGateway implements KlusGateway {
     aantalKlustypeAanvragen++;
     final fout = _neemFout();
     if (fout != null) return Result.err(fout);
-    final gesorteerd = [..._klustypes]
-      ..sort((a, b) => a.naam.compareTo(b.naam));
+    // Zoals de server: alleen actief, op volgorde en dan naam.
+    final gesorteerd =
+        [
+          for (final t in _klustypes)
+            if (t.isActief) t,
+        ]..sort(
+          (a, b) => a.volgorde != b.volgorde
+              ? a.volgorde.compareTo(b.volgorde)
+              : a.naam.compareTo(b.naam),
+        );
     return Result.ok(gesorteerd);
   }
 

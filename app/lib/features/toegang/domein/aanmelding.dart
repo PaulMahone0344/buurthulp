@@ -5,7 +5,7 @@ import '../../jongere/datum_invoer.dart';
 import '../model/hh_rol.dart';
 
 /// B2: aanmelden in één scherm per rol. Pure regels (leeftijd, adres,
-/// ouder-contact) en wat er naar hh_users gaat. De client-controle is voor
+/// e-mail van de ouder) en wat er naar hh_users gaat. De client-controle is voor
 /// de gebruiker; de server weigert een helper onder de 10 ook zelf
 /// (hh_aanmelden.pb.js).
 
@@ -80,66 +80,19 @@ String? valideerStraat(String waarde) =>
 String? valideerPlaats(String waarde) =>
     waarde.trim().isEmpty ? TekstenAanmeldenNl.validatiePlaatsVerplicht : null;
 
-/// Het contact van de ouder van een helper onder 18: een e-mailadres of
-/// een mobiel nummer (06). Eén veld; de app herkent wat het is.
-@immutable
-sealed class OuderContact {
-  const OuderContact();
-
-  /// Wat naar hh_users gaat (ouder_email of ouder_telefoon).
-  Map<String, String> get velden;
-}
-
-final class OuderEmail extends OuderContact {
-  const OuderEmail(this.email);
-
-  final String email;
-
-  @override
-  Map<String, String> get velden => {'ouder_email': email};
-
-  @override
-  bool operator ==(Object other) => other is OuderEmail && other.email == email;
-
-  @override
-  int get hashCode => email.hashCode;
-}
-
-final class OuderTelefoon extends OuderContact {
-  const OuderTelefoon(this.nummer);
-
-  /// Altijd als 06xxxxxxxx.
-  final String nummer;
-
-  @override
-  Map<String, String> get velden => {'ouder_telefoon': nummer};
-
-  @override
-  bool operator ==(Object other) =>
-      other is OuderTelefoon && other.nummer == nummer;
-
-  @override
-  int get hashCode => nummer.hashCode;
-}
-
-/// Null als het geen e-mailadres en geen Nederlands mobiel nummer is.
-OuderContact? herkenOuderContact(String invoer) {
-  final schoon = invoer.trim();
-  if (schoon.isEmpty) return null;
-  if (schoon.contains('@')) {
-    return _emailPatroon.hasMatch(schoon) ? OuderEmail(schoon) : null;
+/// B3 (antwoord Ibrahim 4 okt): van de ouder van een helper onder 18 vraagt
+/// de app alleen nog het e-mailadres (sms kan nog niet). Een eerder bewaard
+/// ouder_telefoon blijft op de server staan. Niet je eigen adres.
+String? valideerOuderEmail(String invoer, {String? eigenEmail}) {
+  final schoon = invoer.trim().toLowerCase();
+  if (schoon.isEmpty) return TekstenAanmeldenNl.validatieOuderVerplicht;
+  if (!_emailPatroon.hasMatch(schoon)) {
+    return TekstenAanmeldenNl.validatieOuderOngeldig;
   }
-  var cijfers = schoon.replaceAll(RegExp(r'[\s\-().]'), '');
-  if (cijfers.startsWith('+31')) cijfers = '0${cijfers.substring(3)}';
-  if (cijfers.startsWith('0031')) cijfers = '0${cijfers.substring(4)}';
-  return RegExp(r'^06\d{8}$').hasMatch(cijfers) ? OuderTelefoon(cijfers) : null;
-}
-
-String? valideerOuderContact(String invoer) {
-  if (invoer.trim().isEmpty) return TekstenAanmeldenNl.validatieOuderVerplicht;
-  return herkenOuderContact(invoer) == null
-      ? TekstenAanmeldenNl.validatieOuderOngeldig
-      : null;
+  if (eigenEmail != null && schoon == eigenEmail.trim().toLowerCase()) {
+    return TekstenAanmeldenNl.validatieOuderEigen;
+  }
+  return null;
 }
 
 /// Alles wat een aanmelding naar de server stuurt naast naam, e-mail,
@@ -191,7 +144,7 @@ final class BewonerAanmelding extends HhAanmelding {
   };
 }
 
-/// Helper (rol jongere), vanaf 10 jaar. Onder 18 met [ouder].
+/// Helper (rol jongere), vanaf 10 jaar. Onder 18 met [ouderEmail].
 final class HelperAanmelding extends HhAanmelding {
   const HelperAanmelding({
     required this.voornaam,
@@ -200,14 +153,14 @@ final class HelperAanmelding extends HhAanmelding {
     required this.geboortedatum,
     required this.postcode,
     required this.huisnummer,
-    this.ouder,
+    this.ouderEmail,
   });
 
   final String voornaam;
   final DateTime geboortedatum;
   final String postcode;
   final String huisnummer;
-  final OuderContact? ouder;
+  final String? ouderEmail;
 
   @override
   HhRol get rol => HhRol.jongere;
@@ -220,6 +173,7 @@ final class HelperAanmelding extends HhAanmelding {
     'geboortedatum': datumVoorServer(geboortedatum),
     'postcode': normaliseerPostcode(postcode),
     'huisnummer': huisnummer.trim(),
-    ...?ouder?.velden,
+    if ((ouderEmail ?? '').trim().isNotEmpty)
+      'ouder_email': (ouderEmail ?? '').trim().toLowerCase(),
   };
 }

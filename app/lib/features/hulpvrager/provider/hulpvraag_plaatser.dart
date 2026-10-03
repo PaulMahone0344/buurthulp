@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/hh_fout.dart';
 import '../../../core/result.dart';
-import '../../familie/provider/hulpvraag_namens.dart';
 import '../domein/adres.dart';
 import '../domein/bedragen.dart';
 import '../domein/wanneer.dart';
@@ -11,8 +10,9 @@ import '../model/nieuwe_klus.dart';
 import 'hulpvrager_providers.dart';
 
 /// Zet een compleet concept om in een hh_klussen-rij (status open, bron
-/// app). De logregel in hh_klus_status schrijft de hook zelf bij het
-/// aanmaken (M6, backend OPEN-PUNT 16); de app doet dat niet meer.
+/// app) met de foto als bestand. De logregel, de leeftijdsgrens, de
+/// markering en de keuring doet de server (hooks M6 en B4); de klus is
+/// eerst "wordt nagekeken".
 class HulpvraagPlaatser {
   const HulpvraagPlaatser(this._ref);
 
@@ -24,30 +24,31 @@ class HulpvraagPlaatser {
   }) async {
     final klustype = concept.klustype;
     final dag = concept.dag;
-    final dagdeel = concept.dagdeel;
+    final vanaf = concept.vanafMinuten;
+    final foto = concept.foto;
     if (klustype == null ||
         dag == null ||
-        dagdeel == null ||
-        !concept.heeftWaar) {
+        vanaf == null ||
+        foto == null ||
+        !concept.isCompleet) {
       return Result.err(const HhFout(HhFoutSoort.ongeldigeInvoer));
     }
-    final tijdvak = tijdvakVoor(dag, dagdeel);
-    // M9 (F2): een familielid plaatst namens de gekozen oudere.
-    final namens = _ref.read(actieveNamensProvider);
+    final eind = concept.eindMinuten;
     final klus = NieuweKlus(
-      hulpvragerId: namens?.oudereId ?? gebruikerId,
+      hulpvragerId: gebruikerId,
       geplaatstDoorId: gebruikerId,
-      bron: namens == null ? NieuweKlus.bronApp : NieuweKlus.bronFamilie,
+      bron: NieuweKlus.bronApp,
       klustypeId: klustype.id,
-      omschrijving: concept.toelichting.trim(),
+      omschrijving: concept.omschrijving.trim(),
       adres: stelAdresSamen(
         adres: concept.adres ?? '',
         postcode: concept.postcode ?? '',
         plaats: concept.plaats ?? '',
       ),
-      wanneerVan: tijdvak.van,
-      wanneerTot: tijdvak.tot,
+      wanneerVan: momentOp(dag, vanaf),
+      wanneerTot: eind == null ? null : momentOp(dag, eind),
       bedragen: berekenBedragen(klustype),
+      foto: foto,
     );
 
     final gateway = _ref.read(klusGatewayProvider);

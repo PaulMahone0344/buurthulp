@@ -37,7 +37,10 @@ class HulpvraagTegel extends StatelessWidget {
     final wanneer = afgesproken.isEmpty
         ? TekstenUitvoerenNl.o7GeenTijd
         : afgesproken;
-    final zin = klus.jongereVoornaam.isEmpty && klus.status == HhKlusStatus.open
+    final zin =
+        klus.jongereVoornaam.isEmpty &&
+            klus.status == HhKlusStatus.open &&
+            !klus.wordtNagekeken
         ? TekstenUitvoerenNl.o8NogNiemand
         : statusZin(klus);
 

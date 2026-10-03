@@ -1014,3 +1014,395 @@ B2CHECK (scripts/82-b2check.mjs, dry-run standaard)
 UITROLLEN (volgorde)
   00-backup.mjs -> 81 --apply -> 80 --apply -> 84 --apply ->
   83-hook-deploy.sh -> 82 --apply -> 72, 62, 04, 50
+
+================================================================
+B3 - OUDER-TOESTEMMING MET CODE (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b3.txt)
+================================================================
+
+Keuzes (prompt B3): K1 alleen e-mail (sms later); K2 de OUDER vult de code
+in op de website, niet het kind in de app; K3 ouder-pagina's in website/
+op #/ouder, link met vaste basis https://heitjehulp.nl (werkt pas als de
+site online is); K4 mail via de bestaande globale SMTP van de server
+(geen instelling gewijzigd); K5 familie alleen uit de CODE (collecties en
+data blijven); K6 alleen het fundament voor per-klus-goedkeuren (B5).
+
+hh_ouder_toestemming  NIEUW (scripts/90-b3-collectie.mjs), één rij per helper
+  helper               relatie hh_users, verplicht, 1, cascade
+  ouder_email          e-mail, verplicht
+  code_hash            tekst, HIDDEN  sha256("hh-ouder-code:<helper>:<code>")
+  code_verloopt_op     datum (24 uur)
+  pogingen             getal (max 5 foute codes, dan geblokkeerd)
+  token_hash           tekst, HIDDEN  sha256 van de link-token (40 tekens)
+  sessie_hash          tekst, HIDDEN  sha256 van de ouder-sessie
+  sessie_verloopt_op   datum (30 minuten)
+  status               verstuurd | gegeven | ingetrokken | verlopen |
+                       vrijgegeven (meldkamer gaf na intrekken een nieuwe kans)
+  ouder_naam, iban (NL, mod-97), avp_verklaard (ja/nee)
+  verstuur_dag, verstuur_aantal (max 3 mails per UTC-dag), laatst_verstuurd_op
+  gegeven_op, ingetrokken_op, created, updated
+  vrijgegeven_op, vrijgegeven_door (coordinator, geen cascade)
+  Indexen: uniek helper; token_hash; ouder_email.
+  Regels: lezen ALLEEN coordinator (en de hash-velden ook niet: hidden);
+  aanmaken/bijwerken/verwijderen niemand (null). Alles via de hook ($app).
+  De code zelf staat NERGENS (ook niet in een log); de app krijgt hem nooit.
+  Waarom een eigen collectie: de helper leest zijn eigen hh_users-rij, dus
+  hashes en IBAN horen daar niet. Het RESULTAAT staat wel op hh_users
+  (ouder_toestemming_op, ouder_iban_ok uit B1): daar kijken de lijst-rule
+  (B2) en de accepteer-hook al naar.
+
+hh_wijken  (scripts/91-b3-wijken.mjs, besluit Ibrahim): Tiel-West en
+  Passewaaij krijgen regio = ja. Met de B2-rule ziet dan iedereen in Tiel
+  alle klussen in Tiel. 04-rulecheck en 82-b2check lezen of de wijken regio
+  zijn en verwachten dan het nieuwe gedrag (anders het oude). 50 blijft
+  groen (andere_wijk kijkt naar het wijk-id). --terug --apply draait het
+  terug.
+
+HOOKS (deploy met scripts/93-hook-deploy.sh; 2 nieuwe bestanden, verder
+niets; hh_familie*.js gaan niet meer mee maar blijven op de server)
+  hh_ouder_hulp.js (geen hook): alle logica en de mailteksten, getest
+    zonder server en zonder mail (backend/tests/hh_ouder_hulp.test.mjs).
+  hh_ouder.pb.js:
+    POST /api/hh/ouder/versturen   ingelogde helper < 18. body {ouder_email?}
+      Nieuwe code + nieuwe link-token (oude vervallen), pogingen 0, mail
+      naar de ouder. Max 3 per dag (429 limiet). 400 email/eigenadres,
+      403 rol, 409 volwassen/geboortedatum/algegeven, 502 mail (telt niet).
+      Een nieuw adres komt ook op hh_users.ouder_email.
+    GET  /api/hh/ouder/status      ingelogde helper: status, nodig,
+      ouder_email, verstuurd_op, geblokkeerd, gegeven_op, nog_te_sturen.
+    POST /api/hh/ouder/code        PUBLIEK. {email, code} of {token}
+      Goede code -> ouder-sessie (30 min). 5x fout -> 429 geblokkeerd (ook
+      de goede code) tot een nieuwe code. Onbekend adres = zelfde antwoord
+      als een foute code. De link (token) slaat de code over zolang de code
+      geldig is; daarna geeft hij alleen de stand (gegeven/verlopen/
+      ingetrokken).
+    POST /api/hh/ouder/toestemming PUBLIEK met sessie. {sessie, naam, iban,
+      akkoord: true, avp} -> rij gegeven + hh_users.ouder_toestemming_op =
+      nu, ouder_iban_ok = ja (in één transactie).
+    POST /api/hh/ouder/intrekken   PUBLIEK met link-token (altijd geldig)
+      of sessie -> rij ingetrokken, ouder_toestemming_op leeg, ouder_iban_ok
+      nee; de helper ziet direct geen open klussen meer. Bevestigingsmail.
+      In DEZELFDE transactie (antwoord Ibrahim 4 okt): klussen van het kind
+      op geaccepteerd of onderweg -> open, toegewezen_jongere leeg, logregel
+      in hh_klus_status (door leeg = systeem, toelichting "ouder trok
+      toestemming in"). De bestaande meldingen-hook (hh_meldingen.pb.js)
+      stuurt dan de bewoner "We zoeken iemand anders" en de helpers in de
+      buurt "Nieuwe klus". Bezig/afgerond blijft staan. hh_klussen.pb.js is
+      NIET aangepast.
+      Daarna: versturen geeft 409 ingetrokken ("Je ouder heeft de
+      toestemming ingetrokken. De meldkamer neemt contact met je op.").
+    POST /api/hh/ouder/vrijgeven   ingelogde COORDINATOR. {helper}. Rij van
+      ingetrokken naar vrijgegeven (+ auditregel); daarna mag het kind weer
+      mailen (de app ziet status "geen"). 403 / 404 geenrij / 409
+      nietingetrokken. Paneel: knop "Kind mag ouder opnieuw mailen" in het
+      screening-detail; een echte wachtrij is B11.
+    AFZENDER (antwoord Ibrahim 4 okt): naam altijd "HeitjeHulp" (per bericht,
+      de globale instelling blijft). Adres uit HH_MAIL_AFZENDER (omgeving van
+      de pocketbase-dienst, bedoeld info@heitjehulp.nl, dan ook Reply-To);
+      niet gezet: het globale adres (nu info@bovexa.nl).
+    Rate-limit: alle publieke routes samen 30 per IP per uur ($app.store).
+    Adressen op .invalid/.test/.example/.localhost krijgen nooit mail.
+  K6-fundament: token_hash + sessie op de rij. B5 kan per klus een route
+    toevoegen die dezelfde token/sessie accepteert.
+
+CHECKS
+  92-b3check.mjs (dry-run standaard): tijdelijke accounts op .invalid
+    (nooit mail), zet als superuser een bekende code-hash, en bewijst
+    versturen, 5 pogingen, verlopen, opnieuw sturen, limiet, toestemming
+    zet het veld, intrekken wist het, < 18 zonder toestemming kan niet
+    accepteren, geen API-leestoegang behalve coordinator, code nooit
+    leesbaar. Hooguit 1x per uur per IP draaien (rate-limit).
+  94-b3-mailcheck.mjs: ALLEEN LEZEN, SMTP aan, de effectieve afzender
+    (HH_MAIL_AFZENDER meegeven; de server-omgeving zelf is niet te lezen) en
+    een waarschuwing als dat adres op een ander domein staat dan de
+    SMTP-gebruiker.
+  Test zonder server: node --test backend/tests/*.test.mjs (152 tests).
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 94 (lezen) -> 90 --apply -> 91 --apply ->
+  93-hook-deploy.sh -> 92 --apply -> 82, 72, 62, 04, 50
+  APARTE STAP MET JA (later): mailbox info@heitjehulp.nl + SMTP-recht bij
+  TransIP (SPF/DKIM) -> HH_MAIL_AFZENDER in de systemd-env van pocketbase.
+
+================================================================
+B4 - KLUS PLAATSEN: CATEGORIEËN, FOTO, TIJD, LEEFTIJD, KEUREN (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b4.txt)
+================================================================
+
+Besluiten Ibrahim 3 okt (onderzoek buitenland) punt 5-9. Grenzen zijn een
+VOORSTEL; de exacte NL-regels volgen van de jurist. Alle grenzen staan als
+constanten in pb_hooks/hh_klusplaatsen_hulp.js (en gespiegeld in de app:
+lib/features/hulpvrager/domein/tijdregel.dart, alleen om te waarschuwen).
+
+VELDEN (scripts/100-b4-velden.mjs, additief, idempotent)
+  hh_klussen
+    foto                   1-3 afbeeldingen (jpeg/png/heic/heif), max 5 MB,
+                           PROTECTED. Ophalen alleen met een bestandstoken
+                           van iemand die de klus mag ZIEN (viewRule): de
+                           bewoner, de coordinator, de toegewezen helper, en
+                           helpers die de GOEDGEKEURDE klus in hun lijst zien
+                           (wijk, goedgekeurd, oud genoeg). Keuze: die laatste
+                           groep ziet de foto ook, want daar beslissen ze mee
+                           (mockup HKlusBekijken). Een te jonge helper krijgt
+                           404, ook met zijn eigen token (bewezen in 102).
+    nee_lijst_akkoord      ja/nee: "Mijn klus valt hier niet onder"
+    klus_goedgekeurd_op    datum   ┐
+    klus_goedgekeurd_door  -> hh_users, 1, geen cascade │ alleen coordinator
+    klus_afgekeurd_op      datum   │ (slot 101) en de keur-route
+    klus_afkeur_reden      tekst, max 300 ┘
+    controle_markering     keuze, meerdere: telefoon | email | link | neelijst
+                           (voorfilter van de hook; blokkeert niets)
+    min_leeftijd           geheel getal: max(categorie, 18 door de tijdregel)
+    geboren_uiterlijk      datum: de NEDERLANDSE klusdag min min_leeftijd jaar,
+                           23:59:59.999Z (zonder begintijd: vandaag)
+  hh_klustypes
+    min_leeftijd           geheel getal (10 / 13 / 16)
+    actief                 ja/nee (nieuw veld: de 6 oude types staan op nee)
+    volgorde               geheel getal (volgorde van de tegels)
+  Rijen hh_klustypes: de 13 categorieën (actief, richtduur 60,
+  richtvergoeding 0: prijzen komen in B7):
+     10: Boodschappen, Dieren, Kleine klusjes, Helpende hand, Rondom huis
+     13: Tuin, Opruimen, Auto & fiets, Computer, Creatief, Hulp & kennis, Overig
+     16: Schoonmaak
+  De 6 oude types (boodschappen, tuin, klusje in huis, telefoon/tablet-hulp,
+  wandelen/gezelschap, vervoer) blijven staan, niet-actief, en krijgen ALLEEN
+  een min_leeftijd (10, 13, 16, 13, 10, 18). Geen klus wordt omgezet.
+
+TIJDREGEL (punt 7) — alleen 18+ als de klus (NL-wandklok, zomer/winter zelf
+  uitgerekend; de server draait UTC):
+    vóór 07:00 begint, OF na 19:00 eindigt (ook over middernacht), OF zonder
+    eindtijd na 17:00 begint, OF langer dan 2 uur duurt.
+  Precies 07:00, precies 19:00, precies 17:00 zonder eind en precies 2 uur
+  mogen nog voor 15-17.
+  10 T/M 14 JAAR (antwoord Ibrahim 4 okt, integratie): om 18:00 klaar. Een
+  klus die na 18:00 eindigt (of zonder eindtijd na 16:00 begint) is pas
+  vanaf 15 (min_leeftijd = max(categorie, 15)). Precies 18:00 / precies
+  16:00 zonder eind mag nog voor 10-14. Zelfde mechanisme: de server zet
+  min_leeftijd + geboren_uiterlijk, de accepteer-route rekent opnieuw
+  (tijdMinLeeftijd in hh_klusplaatsen_hulp.js, constanten JONG_TOT_EN_MET,
+  LAATSTE_EIND_JONG_MIN, LAATSTE_START_ZONDER_EIND_JONG_MIN). 18+: geen grens
+  behalve de bestaande 18+-tijdregel hierboven.
+
+RULES (scripts/101-b4-rules.mjs)
+  hh_klussen.listRule/viewRule, GERICHT in de helper-tak, direct achter de
+  B2-voorwaarde (ouder_toestemming_op of vog_gezien_op):
+    && klus_goedgekeurd_op != "" && geboren_uiterlijk != ""
+    && @request.auth.geboortedatum != "" && @request.auth.geboortedatum <= geboren_uiterlijk
+  Een rule kan geen leeftijd uitrekenen; daarom zet de hook per klus de
+  uiterste geboortedatum en vergelijkt de rule alleen datums. De leeftijd
+  telt op de KLUSDAG (wie overmorgen 13 wordt, ziet een tuinklus van
+  overmorgen; bewust: zo oud is hij als hij het werk doet). De bewoner zelf,
+  de toegewezen helper en de familie: andere takken, ongewijzigd.
+  hh_klussen.createRule/updateRule GEWIKKELD:
+    (huidig) && ((coordinator) || (klus_goedgekeurd_op, klus_goedgekeurd_door,
+    klus_afgekeurd_op, klus_afkeur_reden, controle_markering, min_leeftijd en
+    geboren_uiterlijk niet in de body))
+  VOLGORDE: na 100 en 103. Draai 02, 06, 13, 41 of 80 daarna niet meer met
+  --apply zonder 101 opnieuw.
+
+HOOKS (deploy met scripts/103-hook-deploy.sh, alleen deze 3 bestanden)
+  hh_klusplaatsen_hulp.js (NIEUW, geen hook): KLUS_CATEGORIEEN,
+    OUDE_KLUSTYPES_MIN_LEEFTIJD, nlTijd, isAlleen18Plus, minLeeftijdVoorKlus,
+    geborenUiterlijk, isOudGenoeg, voorfilter, controleerNieuweKlus,
+    afkeurTekst, magNieuweKlusMelding. Getest zonder server.
+  hh_klusplaatsen.pb.js (NIEUW; laadt alfabetisch vóór hh_klussen.pb.js en
+  roept e.next() aan, zodat geocoding en de eerste logregel gewoon volgen):
+    - API-create hh_klussen: min_leeftijd, geboren_uiterlijk en
+      controle_markering door de server. Bewoner/familielid met status open:
+      omschrijving 5-300, foto, wanneer_van (niet voorbij, 5 min speling),
+      wanneer_tot (optioneel) na wanneer_van, nee_lijst_akkoord = ja; anders
+      400 met Nederlandse melding ("Voeg een foto van de klus toe. Zie je
+      geen fotoknop? Werk de app dan bij."). Begint ONGEKEURD.
+      Een concept (status concept) hoeft nog niet compleet; concept -> open
+      blijft (M6) en is daarna ongekeurd tot de meldkamer keurt.
+      Coordinator of superuser (TELEFONISCHE INGANG, punt 9; seed): geen
+      eisen, geen foto nodig, en meteen goedgekeurd (_door = coordinator).
+    - API-update hh_klussen: categorie of tijd anders -> leeftijd opnieuw;
+      omschrijving anders -> markering opnieuw. Wijzigt een bewoner/
+      familielid de INHOUD (omschrijving, foto, categorie, tijden, adres) van
+      een goedgekeurde klus, dan vervalt de goedkeuring (opnieuw nakijken).
+    - POST /api/hh/klussen/{id}/keuren  body {besluit, reden}
+      Alleen coordinator; alleen een open klus zonder helper.
+        goedkeuren: klus_goedgekeurd_op/_door, leeftijd opnieuw, logregel
+                    open -> open "goedgekeurd door de meldkamer". Die
+                    logregel laat hh_meldingen de helpers in de wijk een
+                    "nieuwe klus" sturen (gefilterd, zie hieronder).
+        afkeuren:   reden 5-300, klus_afgekeurd_op/_reden, status
+                    geannuleerd, logregel open -> geannuleerd "afgekeurd door
+                    de meldkamer: <reden>".
+      Antwoorden: 200 {klus, besluit, status}; 400 {reden: besluit|reden};
+      401; 403 {reden: rol}; 404; 409 {reden: status|algoedgekeurd}.
+      Geen nieuwe status in de 8-statusmachine: "wordt nagekeken" = open met
+      lege klus_goedgekeurd_op; afgekeurd = geannuleerd met klus_afgekeurd_op.
+    - onRecordCreate (model) hh_meldingen:
+        "nieuwe_klus" wordt NIET opgeslagen (geen e.next()) als de klus nog
+        niet gekeurd is of de ontvanger te jong is (zelfde grens als de
+        rule). hh_meldingen_hulp.js blijft ongemoeid; de teller in de
+        logregel "[hh_meldingen] N melding(en)" telt de overgeslagen mee.
+        "geannuleerd" aan de bewoner van een AFGEKEURDE klus: titel "Je klus
+        is afgekeurd", tekst met de reden.
+  hh_klussen.pb.js accepteren (BIJ): na wijk-check
+      409 {reden: "nietgekeurd"} "Deze klus wordt nog nagekeken door de
+          meldkamer."
+      403 {reden: "leeftijd"} "Deze klus is pas vanaf N jaar." — de route
+          rekent de grens zelf opnieuw uit (categorie + tijden), vertrouwt
+          de opgeslagen velden niet.
+  NIET aangepast: koppelen door de coordinator (hh_coordinator.pb.js) kijkt
+  niet naar leeftijd of keuring (open punt; de coordinator beslist zelf).
+
+SEED (scripts/104-b4-seed-keuren.mjs, dry-run standaard)
+  Alleen klussen met "[seed k" in de omschrijving: klus_goedgekeurd_op = nu
+  en min_leeftijd/geboren_uiterlijk zoals de hook. Andere open klussen van
+  vóór B4 (op prod 2 test-klussen) blijven ongekeurd: die staan in het
+  paneel bij "Klussen na te kijken". Zonder 104 worden 04 en 50 rood.
+
+B4CHECK (scripts/102-b4check.mjs, dry-run standaard)
+  Met --apply, eigen tijdelijke accounts "b4check-...@heitjehulp.invalid"
+  (coordinator, 2 bewoners, helpers van 11, 14, 17 en 25) en ±12 eigen
+  klussen met een testfoto, allemaal met lat/lon (geen Nominatim):
+  plaatsen (foto/omschrijving/vinkje/tijd verplicht, servervelden niet zelf
+  te zetten), ongekeurd onzichtbaar en niet te accepteren en geen melding,
+  alleen coordinator keurt, na goedkeuren ziet 14/25 de tuinklus en 11 niet
+  (ook niet los, accepteren 403 leeftijd), meldingen alleen aan wie oud
+  genoeg is, foto alleen met token van wie hem mag zien, de tijdregel (6
+  gevallen), opnieuw nakijken na een wijziging door de bewoner, afkeuren met
+  één melding met de reden, telefonische ingang zonder foto meteen
+  goedgekeurd; alles opgeruimd.
+  Lokaal bewezen tegen PocketBase 0.25.9 met het prod-schema: 124 groen.
+  Test zonder server: node --test backend/tests/*.test.mjs (122 tests).
+  04-rulecheck aangepast: plaatsen door oudere/familie met foto, vinkje en
+  begintijd; na de wijzigingstests k02/k11 terug op hun goedkeuring.
+
+UITROLLEN (volgorde; zie proefrit-b4.txt)
+  00-backup.mjs -> 100 --apply -> 103-hook-deploy.sh -> 101 --apply ->
+  104 --apply -> 102 --apply -> 82, 72, 62, 04, 50
+
+================================================================
+B6 - CHAT IN DE APP (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b6.txt)
+================================================================
+
+Bewoner en helper praten per klus in de app; nummers blijven verborgen.
+Push bestaat nog niet: een nieuw bericht geeft alleen een melding IN de app
+(hh_meldingen, laag 1). Ouder leest NIET mee (besluit). Beheerpaneel-inzage
+is B11; de rule staat klaar.
+
+hh_berichten  NIEUW (8 eigen velden + created/updated; scripts/110-b6-berichten.mjs)
+  klus            verwijzing naar hh_klussen, verplicht; verdwijnt mee met de klus
+  afzender        verwijzing naar hh_users, GEEN cascade. INTEGRATIE: NIET
+                  verplicht, zodat een account met berichten wel weg kan
+                  (PocketBase maakt de relatie leeg; de hook wist de tekst,
+                  zie AVG hieronder). De createRule eist afzender = jijzelf.
+  helper          verwijzing naar hh_users: de helper van DIT gesprek. De hook
+                  zet hem bij aanmaken op klus.toegewezen_jongere. Een nieuwe
+                  helper (na teruggeven) begint een nieuw gesprek en leest het
+                  oude niet.
+  tekst           tekst, 0-500 (na het filter). INTEGRATIE: niet verplicht
+                  in het schema (een gewist bericht is leeg); een NIEUW leeg
+                  bericht weigert de hook (400 "Typ eerst een bericht.").
+  soort           keuze: tekst | snel (snelknop: gewoon bericht, NOOIT een
+                  statuswissel; die loopt via de M6-routes)
+  gelezen_op      datum (leeg = ongelezen); alleen de ontvanger zet hem
+  gefilterd       ja/nee: de hook verving een nummer, mailadres of link
+  contactverzoek  ja/nee: "heb je whatsapp/snap/insta, je nummer?" (alleen
+                  markeren); onzichtbaar voor iedereen behalve coordinator en
+                  superuser (onRecordEnrich)
+  Indexen: idx_hh_berichten_klus (klus, created); idx_hh_berichten_helper (helper)
+
+hh_meldingen.soort + "bericht" (110, de live keuzelijst wordt alleen aangevuld)
+
+RULES hh_berichten (scripts/111-b6-rules.mjs; nieuwe collectie, gezet)
+  Lezen       de bewoner (klus.hulpvrager), de helper van dit gesprek zolang hij
+              toegewezen is (helper = ik && klus.toegewezen_jongere = ik), en
+              de coordinator ALLEEN als er een incident op die klus is
+              (@collection.hh_incidenten.klus ?= klus). Keuze: voorstel uit de
+              prompt. Geen familie, geen andere helpers.
+  Aanmaken    afzender = jijzelf, jij bent bewoner of toegewezen helper, de klus
+              heeft een helper en staat op geaccepteerd | onderweg | bezig |
+              probleem | afgerond | geannuleerd; helper, gelezen_op, gefilterd
+              en contactverzoek NIET meesturen. De coordinator schrijft niet.
+  Bijwerken   alleen wie mag lezen en NIET de afzender is (de ontvanger), en
+              alleen gelezen_op.
+  Verwijderen niemand via de API (null); weg met de klus.
+  NB "De coordinator mag alles op elke hh_-collectie" (ALGEMEEN) geldt hier
+  bewust NIET: inzage alleen bij een melding.
+
+HOOK (backend/pb_hooks/hh_chat.pb.js + hh_chat_hulp.js, beide NIEUW; deploy
+met scripts/113-hook-deploy.sh, dat ALLEEN deze twee bestanden meestuurt)
+  onRecordCreateRequest hh_berichten (vóór opslaan en vóór de rule):
+    - filter: telefoonnummers (cijferreeks met hooguit twee scheidingstekens
+      ertussen en minstens 9 cijfers, datums uitgezonderd: 06-12345678,
+      06 12 34 56 78, +31 (0)6..., 0031..., 0344-123456, "6 1 2 3 4 5 6 7 8"),
+      e-mailadressen (ook "jan (at) gmail punt com") en links (https://,
+      www., wa.me/..., instagram.com/..., bit.ly/...) worden "•••";
+      gefilterd = ja. Het origineel wordt NIET bewaard.
+    - contactverzoek = ja bij whatsapp/appen/snapchat/insta/tiktok/telegram/
+      "je nummer"/mail me ..., ook met spaties of punten ertussen
+      ("w h a t s a p p"). Niet blokkeren.
+    - helper = klus.toegewezen_jongere.
+    - CHAT DICHT: na afgerond/geannuleerd mag een deelnemer nog
+      CHAT_DICHT_NA_UREN = 72 uur schrijven (vergeten spullen, een
+      bedankje), gerekend vanaf de laatste logregel in hh_klus_status naar
+      die status (zonder logregel: updated). Daarna 403 "Deze chat is
+      gesloten." {reden: dicht}. Een rule kan niet met datums rekenen, vandaar
+      in de hook. Lezen blijft mogen. Superuser slaat de check over.
+  onRecordAfterCreateSuccess hh_berichten: melding soort "bericht" voor de
+    andere deelnemer ("Nieuw bericht van Daan" / "Over je klus: Tuin. Open de
+    chat om te lezen." - nooit de inhoud), hooguit één per
+    MELDING_INTERVAL_MINUTEN = 10 per chat per ontvanger; sleutel
+    "bericht:<id>". Een fout breekt het bericht nooit.
+  onRecordUpdateRequest hh_berichten: alles behalve gelezen_op terug naar de
+    opgeslagen waarde (tweede sluis naast de rule).
+  onRecordEnrich hh_berichten: contactverzoek weg voor wie geen coordinator
+    of superuser is (ook realtime).
+  Test zonder server: node --test backend/tests/*.test.mjs (90 filter-/
+  rekentests + 7 rule-tests voor B6).
+
+B6CHECK (scripts/112-b6check.mjs, dry-run standaard)
+  Zonder --apply: collectie, velden, rules letterlijk gelijk aan 111, soort
+  "bericht", en welke afgelopen seed-klus voor de 72-uur-check gebruikt wordt.
+  Met --apply (node --experimental-eventsource voor de realtime-sectie), met
+  tijdelijke accounts "b6check-...@heitjehulp.invalid" en klussen
+  "[b6check]": de twee partijen schrijven en lezen (ook snelknop, geen
+  statuswissel), derden (vreemde bewoner/helper, andere helper, anoniem,
+  coordinator zonder incident) lezen en schrijven niets, coordinator-inzage
+  pas na een incident (en schrijft nooit), vervalsen kan niet (afzender,
+  helper, gelezen_op, gefilterd, contactverzoek, andermans tekst, eigen
+  bericht gelezen, verwijderen, 501 tekens), filter (nummer/mail/link,
+  contactverzoek alleen voor de coordinator), meldingen (één per 10 min,
+  alleen ontvanger), open/dicht (zonder helper dicht, net afgerond open, een
+  afgelopen SEED-klus van > 72 uur: 403 voor bewoner en helper via
+  impersonate, niets geschreven), wissel van helper, realtime; alles
+  opgeruimd. Lokaal bewezen (PB 0.25.9, prod-schema): 84 groen, 0 rood.
+
+INTEGRATIE B3+B4+B6 (antwoorden Ibrahim 4 okt): GESPREK VERWIJDEREN EN AVG
+  Velden (110, nog vóór de eerste uitrol erbij): verborgen_bewoner,
+  verborgen_helper, gewist, wissen_na_incident (bool). Zet nooit een
+  gebruiker (create/updateRule isset = false + de hook zet ze terug).
+  Lezen (111): bewoner alleen waar verborgen_bewoner = nee, helper alleen
+  waar verborgen_helper = nee; de meldkamer (incident) ziet alles.
+  "Gesprek verwijderen" (POST /api/hh/chat/{klus}/verbergen, knop in het
+  chatscherm met een vraag ervoor): alleen voor jezelf; de ander houdt zijn
+  kopie; een nieuw bericht daarna is weer zichtbaar. Bewaard tot iemand zo
+  verwijdert (geen automatische termijn).
+  Account verwijderd: zijn berichten -> tekst leeg + gewist (de ander ziet
+  "Bericht verwijderd"); berichten blokkeren het verwijderen niet meer.
+  Lopend incident (afhandeling leeg) op de klus:
+    - gesprek verwijderen: GEWEIGERD (409 "Er loopt een melding ...").
+      Waarom: verbergen is geen recht dat haast heeft; na de afhandeling
+      kan het meteen. De meldkamer leest tot dan alles.
+    - account verwijderen: het account gaat WEL meteen weg (AVG-recht, niet
+      blokkeren), alleen het wissen van de tekst wordt UITGESTELD
+      (wissen_na_incident = ja). Zodra de meldkamer de afhandeling invult
+      (of het incident verwijdert) en er geen ander open incident op de klus
+      is, wist hh_chat.pb.js die berichten alsnog.
+  Origineel van gefilterde berichten: blijft NIET bewaard (ongewijzigd).
+  Meldkamer leest alleen bij een incident, ook na afhandelen (ongewijzigd).
+  Bekend: het wissen hangt aan een API-verwijdering (onRecordDeleteRequest);
+  een account dat iemand op de server zelf met $app/sqlite verwijdert, wordt
+  niet gewist (dat doet niemand; beheerpaneel en app gaan via de API).
+  112 secties M en N bewijzen dit.
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 110 --apply -> 111 --apply -> 113-hook-deploy.sh ->
+  112 --apply -> (72, 62 ter controle) -> app

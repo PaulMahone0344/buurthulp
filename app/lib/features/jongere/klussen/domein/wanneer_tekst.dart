@@ -48,3 +48,9 @@ String euroTekst(int centen) {
   final rest = (centen % 100).toString().padLeft(2, '0');
   return '€ $euro,$rest';
 }
+
+/// Wat de helper bij de vergoeding ziet: "Je verdient € 10,00", of
+/// "Vergoeding volgt" zolang er nog geen bedrag is (0).
+String vergoedingVoorHelper(int centen) => centen <= 0
+    ? TekstenKlussenNl.vergoedingVolgt
+    : TekstenKlussenNl.vergoeding(euroTekst(centen));

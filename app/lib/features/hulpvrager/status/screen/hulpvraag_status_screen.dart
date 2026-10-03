@@ -16,6 +16,8 @@ import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
+import '../../../chat/domein/chat_regels.dart';
+import '../../../chat/widget/chat_knop.dart';
 import '../../../jongere/klussen/domein/wanneer_tekst.dart';
 import '../../../jongere/klussen/model/hh_klus.dart';
 import '../../../jongere/uitvoeren/domein/klus_overgang.dart';
@@ -28,12 +30,13 @@ import '../domein/hulpvraag_indeling.dart';
 import '../paden_status.dart';
 import '../provider/status_providers.dart';
 import '../widget/oudere_annuleer_dialoog.dart';
+import '../../../../l10n/teksten_klus_nl.dart';
 
 /// O7. Waar de hulpvraag staat, in gewone taal: "Sanne is onderweg naar u."
-/// Ouderenregel: hooguit drie acties (bellen, stoppen, vernieuwen), grote
-/// tekst en knoppen, altijd een zichtbare terugknop, geen cijfers of
-/// statistiek. De klus wordt live gevolgd; valt dat weg, dan blijven de knop
-/// Vernieuwen en pull-to-refresh werken.
+/// Ouderenregel: hooguit drie acties (chat, bellen, stoppen; zonder helper
+/// vernieuwen in plaats van chat), grote tekst en knoppen, altijd een
+/// zichtbare terugknop, geen cijfers of statistiek. De klus wordt live
+/// gevolgd; valt dat weg, dan blijft pull-to-refresh werken.
 class HulpvraagStatusScreen extends ConsumerStatefulWidget {
   const HulpvraagStatusScreen({required this.klusId, super.key});
 
@@ -158,6 +161,7 @@ class _Inhoud extends StatelessWidget {
     // op dit scherm (ouderenregel).
     final magBeoordelen = heeftJongere && klus.status == HhKlusStatus.afgerond;
     final wanneer = wanneerTekst(klus.wanneerVan, klus.wanneerTot, nu);
+    final toonChat = heeftJongere && heeftChat(klus);
 
     return HhScherm(
       titel: TekstenUitvoerenNl.o7Titel,
@@ -184,7 +188,20 @@ class _Inhoud extends StatelessWidget {
               ],
               // De ene zin die telt, groot en zonder cijfers.
               Text(statusZin(klus), style: tekst.headlineMedium),
-              if (!heeftJongere) ...[
+              // B4: eerst kijkt de meldkamer; een afkeuring met de reden.
+              if (klus.wordtNagekeken) ...[
+                SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+                const HhMeldBalk(
+                  soort: HhMeldSoort.waarschuwing,
+                  tekst: TekstenKlusNl.wordtNagekekenUitleg,
+                ),
+              ] else if (klus.afkeurReden.isNotEmpty) ...[
+                SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+                HhMeldBalk(
+                  soort: HhMeldSoort.waarschuwing,
+                  tekst: TekstenKlusNl.afgekeurdReden(klus.afkeurReden),
+                ),
+              ] else if (!heeftJongere) ...[
                 SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
                 Text(
                   TekstenUitvoerenNl.o7GeenJongereUitleg,
@@ -222,7 +239,17 @@ class _Inhoud extends StatelessWidget {
               ),
               SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
 
-              // Hooguit drie acties, groot en onder elkaar.
+              // Hooguit drie acties, groot en onder elkaar. B6: zodra er een
+              // helper is, neemt de chat de plaats van "Vernieuwen" in (die
+              // blijft als pull-to-refresh; realtime loopt door).
+              if (toonChat) ...[
+                ChatKnop(
+                  klusId: klus.id,
+                  naam: klus.jongereVoornaam,
+                  soort: HhKnopSoort.primair,
+                ),
+                SizedBox(height: tussen),
+              ],
               if (magBellen) ...[
                 BelKnop(
                   klusId: klus.id,
@@ -264,12 +291,13 @@ class _Inhoud extends StatelessWidget {
                 ),
                 SizedBox(height: tussen),
               ],
-              HhKnop(
-                label: TekstenUitvoerenNl.o7Vernieuwen,
-                icoon: Icons.refresh,
-                soort: HhKnopSoort.tekst,
-                onPressed: onVernieuw,
-              ),
+              if (!toonChat)
+                HhKnop(
+                  label: TekstenUitvoerenNl.o7Vernieuwen,
+                  icoon: Icons.refresh,
+                  soort: HhKnopSoort.tekst,
+                  onPressed: onVernieuw,
+                ),
             ],
           ),
         ),

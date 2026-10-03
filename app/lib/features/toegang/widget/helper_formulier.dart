@@ -21,7 +21,7 @@ import 'aanmeld_velden.dart';
 
 /// Aanmelden als helper, één pagina (stijl mockup H6, stap 1 "Jij"):
 /// voornaam, geboortedatum, e-mail, postcode + huisnummer, wachtwoord.
-/// Onder de 18 komt er het veld "E-mail of mobiel van je ouder" bij en de
+/// Onder de 18 komt er het veld "E-mailadres van je ouder" bij (B3) en de
 /// stap "Ouder" in het balkje. Onder de 10 kan het niet (ook de server
 /// weigert). Geen IBAN: dat komt pas bij de eerste uitbetaling (B7/B8).
 class HelperFormulier extends ConsumerStatefulWidget {
@@ -77,7 +77,9 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
     'email': valideerEmail(_email.text),
     'postcode': valideerPostcode(_postcode.text),
     'huisnummer': valideerHuisnummer(_huisnummer.text),
-    'ouder': _isMinderjarig ? valideerOuderContact(_ouder.text) : null,
+    'ouder': _isMinderjarig
+        ? valideerOuderEmail(_ouder.text, eigenEmail: _email.text)
+        : null,
     'wachtwoord': valideerWachtwoord(_wachtwoord.text),
     'akkoord': _isAkkoord ? null : TekstenAanmeldenNl.validatieAkkoord,
   };
@@ -101,7 +103,7 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
             geboortedatum: parseDatumNl(_geboortedatum.text)!,
             postcode: _postcode.text,
             huisnummer: _huisnummer.text,
-            ouder: _isMinderjarig ? herkenOuderContact(_ouder.text) : null,
+            ouderEmail: _isMinderjarig ? _ouder.text : null,
           ),
         );
     if (!mounted) return;

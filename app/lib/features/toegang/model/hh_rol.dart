@@ -1,12 +1,12 @@
 import '../../../app/paden.dart';
 import '../../../l10n/teksten_nl.dart';
 
-/// De vier rollen uit hoofdstuk 2 van het app-plan. De [code] is precies
+/// De drie rollen (B3: de familie-rol is weg; een oud account met rol
+/// "familie" kan niet meer inloggen, zie HhGebruiker.vanRecord). De [code] is precies
 /// de keuzewaarde van hh_users.rol op de server.
 enum HhRol {
   hulpvrager('hulpvrager'),
   jongere('jongere'),
-  familie('familie'),
   coordinator('coordinator');
 
   const HhRol(this.code);
@@ -21,21 +21,19 @@ enum HhRol {
     return null;
   }
 
-  /// Alleen deze drie mogen zichzelf registreren (backend OPEN-PUNT 9).
+  /// Alleen bewoner en helper registreren zichzelf (backend OPEN-PUNT 9).
   bool get kanZelfRegistreren => this != HhRol.coordinator;
 
   /// Waar deze rol landt na inloggen.
   String get pad => switch (this) {
     HhRol.hulpvrager => HhPaden.hulpvrager,
     HhRol.jongere => HhPaden.jongere,
-    HhRol.familie => HhPaden.familie,
     HhRol.coordinator => HhPaden.coordinator,
   };
 
   String get naam => switch (this) {
     HhRol.hulpvrager => TekstenNl.rolHulpvrager,
     HhRol.jongere => TekstenNl.rolJongere,
-    HhRol.familie => TekstenNl.rolFamilie,
     HhRol.coordinator => TekstenNl.rolCoordinator,
   };
 }

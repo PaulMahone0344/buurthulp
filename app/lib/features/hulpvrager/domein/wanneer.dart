@@ -1,8 +1,6 @@
+import '../../../l10n/teksten_klus_nl.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../model/hulpvraag_concept.dart';
-
-/// Een begin en een eind, lokale tijd.
-typedef HhTijdvak = ({DateTime van, DateTime tot});
 
 /// Alleen de datum van [moment], om middernacht in lokale tijd.
 DateTime alleenDag(DateTime moment) =>
@@ -21,18 +19,46 @@ DateTime? dagVoorKeuze(HhDagKeuze keuze, DateTime nu) {
   };
 }
 
-/// Dag plus dagdeel wordt wanneer_van en wanneer_tot.
-HhTijdvak tijdvakVoor(DateTime dag, HhDagdeel dagdeel) {
+const _minutenPerUur = 60;
+
+/// De laatste begintijd die het tijdwiel aanbiedt (23:45; kwartieren).
+const laatsteVanafMinuten = 23 * _minutenPerUur + 45;
+
+/// Standaard begintijd op een andere dag dan vandaag.
+const _standaardVanafMinuten = 10 * _minutenPerUur;
+
+/// Hoeveel hele uren na nu het tijdwiel vandaag begint.
+const _urenVooruitVandaag = 2;
+
+/// [dag] om [minuten] na middernacht, lokale tijd.
+DateTime momentOp(DateTime dag, int minuten) {
   final d = alleenDag(dag);
-  return (
-    van: DateTime(d.year, d.month, d.day, dagdeel.vanUur),
-    tot: DateTime(d.year, d.month, d.day, dagdeel.totUur),
+  return DateTime(
+    d.year,
+    d.month,
+    d.day,
+    minuten ~/ _minutenPerUur,
+    minuten % _minutenPerUur,
   );
 }
 
-/// Waar: een dagdeel dat helemaal achter ons ligt heeft geen zin meer.
-bool isVoorbij(DateTime dag, HhDagdeel dagdeel, DateTime nu) =>
-    !tijdvakVoor(dag, dagdeel).tot.isAfter(nu);
+/// Waar het tijdwiel "Vanaf" begint als de dag gekozen wordt: vandaag twee
+/// hele uren na nu (hooguit 23:45), een andere dag 10:00.
+int standaardVanaf(DateTime dag, DateTime nu) {
+  if (alleenDag(dag) != alleenDag(nu)) return _standaardVanafMinuten;
+  final minuten = (nu.hour + _urenVooruitVandaag) * _minutenPerUur;
+  return minuten > laatsteVanafMinuten ? laatsteVanafMinuten : minuten;
+}
+
+/// Een begintijd die al voorbij is heeft geen zin meer.
+bool isVoorbij(DateTime dag, int vanafMinuten, DateTime nu) =>
+    !momentOp(dag, vanafMinuten).isAfter(nu);
+
+/// "14:00" (24-uursklok).
+String tijdTekst(int minuten) {
+  String twee(int n) => n.toString().padLeft(2, '0');
+  return '${twee(minuten ~/ _minutenPerUur)}:${twee(minuten % _minutenPerUur)}';
+}
 
 /// De eerstvolgende [aantal] dagen vanaf vandaag (vandaag meegerekend), voor
 /// de eigen dagkiezer op O3.
@@ -63,16 +89,15 @@ String datumTekst(DateTime dag) {
   return '$weekdag ${dag.day} $maand';
 }
 
-/// "in de ochtend (van 9 tot 12 uur)".
-String dagdeelTekst(HhDagdeel dagdeel) {
-  final woord = switch (dagdeel) {
-    HhDagdeel.ochtend => TekstenHulpvragerNl.inDeOchtend,
-    HhDagdeel.middag => TekstenHulpvragerNl.inDeMiddag,
-    HhDagdeel.avond => TekstenHulpvragerNl.inDeAvond,
-  };
-  return '$woord (${TekstenHulpvragerNl.vanTotUur(dagdeel.vanUur, dagdeel.totUur)})';
+/// "morgen vanaf 14:00" of "vrijdag 18 september van 09:00 tot 11:30".
+String wanneerTekst(DateTime dag, int vanaf, int? tot, DateTime nu) {
+  final welkeDag = dagTekst(dag, nu);
+  if (tot == null || tot <= vanaf) {
+    return TekstenKlusNl.wanneerVanaf(welkeDag, tijdTekst(vanaf));
+  }
+  return TekstenKlusNl.wanneerVanTot(
+    welkeDag,
+    tijdTekst(vanaf),
+    tijdTekst(tot),
+  );
 }
-
-/// "morgen in de ochtend (van 9 tot 12 uur)", voor O5.
-String wanneerTekst(DateTime dag, HhDagdeel dagdeel, DateTime nu) =>
-    '${dagTekst(dag, nu)} ${dagdeelTekst(dagdeel)}';

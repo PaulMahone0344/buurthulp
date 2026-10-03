@@ -38,6 +38,8 @@ HhKlus uitvoerKlus({
   DateTime? wanneerVan,
   String omschrijving = 'Weekboodschappen bij de Jumbo',
   String contactNaam = 'Dochter Jansen',
+  bool wordtNagekeken = false,
+  String afkeurReden = '',
 }) {
   final van = wanneerVan ?? uitvoerNu.add(const Duration(hours: 4));
   return HhKlus(
@@ -57,6 +59,8 @@ HhKlus uitvoerKlus({
     oudereNaam: testOudereNaam,
     oudereContactNaam: contactNaam,
     jongereNaam: metJongere ? testJongereNaam : '',
+    wordtNagekeken: wordtNagekeken,
+    afkeurReden: afkeurReden,
   );
 }
 

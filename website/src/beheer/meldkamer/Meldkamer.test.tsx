@@ -2,7 +2,7 @@ import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { FakeBeheerData } from '../data/fakeBeheerData'
-import { COORDINATOR, incident, klus, NU } from '../testdata'
+import { COORDINATOR, incident, klus, naTeKijken, NU } from '../testdata'
 import { Meldkamer } from './Meldkamer'
 
 function opzet(data: FakeBeheerData, filters: Record<string, string> = {}) {
@@ -211,5 +211,64 @@ describe('telefonische aanmelding', () => {
     await user.click(screen.getByRole('button', { name: 'Hulpvraag plaatsen' }))
     expect(screen.getByRole('alert')).toHaveTextContent('Kies wat voor klus het is.')
     expect(data.aanroepen.some((a) => a.methode === 'maakTelefonischeKlus')).toBe(false)
+  })
+
+  describe('B4 klussen na te kijken', () => {
+    it('toont foto, tekst en de markering van het voorfilter', async () => {
+      const data = new FakeBeheerData(
+        { naTeKijken: [naTeKijken({ id: 'n1', omschrijving: 'Bel 0612345678 voor bier', markering: ['telefoon', 'neelijst'] })] },
+        COORDINATOR,
+      )
+      opzet(data)
+
+      const kaart = await screen.findByRole('article', { name: 'Na te kijken: klus van Mevrouw Jansen' })
+      expect(within(kaart).getByRole('img', { name: 'Foto bij de klus van Mevrouw Jansen' })).toHaveAttribute(
+        'src',
+        'https://api.test/api/files/hh_klussen/n/heg.jpg?token=t',
+      )
+      expect(kaart).toHaveTextContent('Bel 0612345678 voor bier')
+      expect(kaart).toHaveTextContent('vanaf 13 jaar')
+      expect(within(kaart).getByLabelText('Markering van het voorfilter')).toHaveTextContent('Telefoonnummer')
+      expect(within(kaart).getByLabelText('Markering van het voorfilter')).toHaveTextContent('Nee-lijst')
+    })
+
+    it('goedkeuren stuurt het besluit en haalt de klus uit de lijst', async () => {
+      const user = userEvent.setup()
+      const data = new FakeBeheerData({ naTeKijken: [naTeKijken({ id: 'n1' })] }, COORDINATOR)
+      opzet(data)
+
+      const kaart = await screen.findByRole('article', { name: 'Na te kijken: klus van Mevrouw Jansen' })
+      await user.click(within(kaart).getByRole('button', { name: 'Goedkeuren' }))
+
+      expect(data.aanroepen).toContainEqual({ methode: 'keurKlus', args: ['n1', { besluit: 'goedkeuren' }] })
+      expect(await screen.findByText('Er is niets na te kijken.')).toBeInTheDocument()
+      expect(screen.getByText(/is goedgekeurd/)).toBeInTheDocument()
+    })
+
+    it('afkeuren vraagt een reden die de bewoner te zien krijgt', async () => {
+      const user = userEvent.setup()
+      const data = new FakeBeheerData({ naTeKijken: [naTeKijken({ id: 'n1' })] }, COORDINATOR)
+      opzet(data)
+
+      const kaart = await screen.findByRole('article', { name: 'Na te kijken: klus van Mevrouw Jansen' })
+      await user.click(within(kaart).getByRole('button', { name: 'Afkeuren' }))
+      const venster = screen.getByRole('dialog')
+      const bevestig = within(venster).getByRole('button', { name: 'Afkeuren' })
+      expect(bevestig).toBeDisabled()
+
+      await user.type(within(venster).getByLabelText('Reden'), 'Sigaretten halen kan niet.')
+      await user.click(bevestig)
+
+      expect(data.aanroepen).toContainEqual({
+        methode: 'keurKlus',
+        args: ['n1', { besluit: 'afkeuren', reden: 'Sigaretten halen kan niet.' }],
+      })
+      expect(await screen.findByText('Er is niets na te kijken.')).toBeInTheDocument()
+    })
+
+    it('geen klussen: een rustige lege melding', async () => {
+      opzet(new FakeBeheerData({}, COORDINATOR))
+      expect(await screen.findByText('Er is niets na te kijken.')).toBeInTheDocument()
+    })
   })
 })

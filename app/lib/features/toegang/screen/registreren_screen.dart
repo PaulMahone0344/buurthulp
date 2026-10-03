@@ -16,8 +16,7 @@ import '../widget/helper_formulier.dart';
 /// G4 (B2). Aanmelden in één scherm per rol: bewoner of helper. De rol komt
 /// van G2 en gaat verplicht mee naar de server, samen met taal = nl. Na
 /// succes stuurt de router-guard door naar G5 (bevestig je e-mailadres).
-/// Familie en coordinator melden zich hier niet aan (familie staat sinds B0
-/// niet meer in de rolkeuze; opruimen in B3).
+/// De coordinator meldt zich hier niet aan.
 class RegistrerenScreen extends ConsumerWidget {
   const RegistrerenScreen({super.key});
 

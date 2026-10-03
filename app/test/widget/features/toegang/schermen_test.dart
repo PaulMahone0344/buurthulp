@@ -4,7 +4,6 @@ import 'package:heitjehulp_app/core/hh_fout.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_scherm.dart';
 import 'package:heitjehulp_app/features/coordinator/screen/coordinator_stub_screen.dart';
-import 'package:heitjehulp_app/features/rol_landing_scherm.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
@@ -68,28 +67,14 @@ final _gevallen = [
   ),
   const _Geval('G8 hulp zonder rol', HulpScreen(), _uit),
   _Geval(
-    'G8 hulp als familie',
+    'G8 hulp als helper',
     const HulpScreen(),
-    SessieIngelogd(testGebruiker(HhRol.familie)),
-  ),
-  // M4: de hulpvrager-landing is O1 geworden (test/widget/features/
-  // hulpvrager); hier de familie-landing als niet-bevestigd voorbeeld.
-  _Geval(
-    'landing familie (niet bevestigd)',
-    // M9: /familie is nu F1; het algemene landingsscherm blijft getest.
-    const RolLandingScherm(rol: HhRol.familie, icoon: Icons.family_restroom),
-    SessieIngelogd(testGebruiker(HhRol.familie, isBevestigd: false)),
+    SessieIngelogd(testGebruiker(HhRol.jongere)),
   ),
   _Geval(
     'landing jongere',
     const JongereStubScreen(),
     SessieIngelogd(testGebruiker(HhRol.jongere)),
-  ),
-  _Geval(
-    'landing familie',
-    // M9: /familie is nu F1; het algemene landingsscherm blijft getest.
-    const RolLandingScherm(rol: HhRol.familie, icoon: Icons.family_restroom),
-    SessieIngelogd(testGebruiker(HhRol.familie)),
   ),
   _Geval(
     'landing coordinator',
@@ -185,14 +170,11 @@ void main() {
   }
 
   group('teksten', () {
-    testWidgets('G2 toont twee ingangen en de inlog-link, geen familie', (
-      tester,
-    ) async {
+    testWidgets('G2 toont twee ingangen en de inlog-link', (tester) async {
       await _pomp(tester, _gevallen[2], dichtheid: HhDichtheid.normaal);
 
       expect(find.text(TekstenNl.keuzeZoekHulp), findsOneWidget);
       expect(find.text(TekstenNl.keuzeWilHelpen), findsOneWidget);
-      expect(find.text(TekstenNl.keuzeHelpFamilielid), findsNothing);
       expect(find.text(TekstenNl.alEenAccount), findsOneWidget);
     });
 
@@ -208,7 +190,7 @@ void main() {
       );
     });
 
-    testWidgets('G8 zonder rol toont alle vier blokken, met rol een', (
+    testWidgets('G8 zonder rol toont alle drie blokken, met rol een', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[10], dichtheid: HhDichtheid.normaal);
@@ -219,34 +201,19 @@ void main() {
       await _pomp(tester, _gevallen[11], dichtheid: HhDichtheid.normaal);
       expect(find.text(TekstenNl.hulpVeelgesteld), findsOneWidget);
       expect(
-        find.text(TekstenNl.hulpVragenFamilie.first.vraag),
-        findsOneWidget,
-      );
-      expect(find.text(TekstenNl.hulpVragenJongere.first.vraag), findsNothing);
-    });
-
-    testWidgets('landing toont naam, rol, uitloggen en bevestig-banner', (
-      tester,
-    ) async {
-      await _pomp(tester, _gevallen[12], dichtheid: HhDichtheid.groot);
-      final gebruiker = testGebruiker(HhRol.familie);
-
-      expect(
-        find.text(TekstenNl.landingWelkom(gebruiker.naam)),
+        find.text(TekstenNl.hulpVragenJongere.first.vraag),
         findsOneWidget,
       );
       expect(
-        find.text(TekstenNl.landingRol(HhRol.familie.naam)),
-        findsOneWidget,
+        find.text(TekstenNl.hulpVragenHulpvrager.first.vraag),
+        findsNothing,
       );
-      expect(find.text(TekstenNl.uitloggen), findsOneWidget);
-      expect(find.text(TekstenNl.bevestigEmailBanner), findsOneWidget);
     });
 
     testWidgets('landing verbergt de banner als het adres bevestigd is', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[13], dichtheid: HhDichtheid.normaal);
+      await _pomp(tester, _gevallen[12], dichtheid: HhDichtheid.normaal);
 
       expect(find.text(TekstenNl.bevestigEmailBanner), findsNothing);
     });

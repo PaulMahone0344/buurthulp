@@ -1,6 +1,7 @@
 import '../../toegang/domein/aanmelding.dart';
 import '../../toegang/domein/werkgebied.dart';
 import '../model/hh_screening_status.dart';
+import '../ouder/model/hh_ouder_stand.dart';
 import '../model/screening_stap.dart';
 
 /// Waar een helper op wacht voordat hij klussen ziet (B2). De app toont
@@ -24,8 +25,12 @@ enum HelperWacht {
   /// goedgekeurde helper zonder geboortedatum (dat lost de meldkamer op).
   nagekeken,
 
-  /// Onder de 18 en de ouder gaf nog geen toestemming.
+  /// Onder de 18 en de ouder gaf nog geen toestemming (B3: ook tijdens het
+  /// nakijken; eerst de ouder, dan de meldkamer).
   ouder,
+
+  /// B3: de ouder trok zijn toestemming in.
+  ouderIngetrokken,
 
   /// 18 of ouder en de meldkamer zag de VOG nog niet.
   vog,
@@ -42,6 +47,7 @@ enum HelperWacht {
       this == adresOnbekend ||
       this == nagekeken ||
       this == ouder ||
+      this == ouderIngetrokken ||
       this == vog;
 }
 
@@ -61,16 +67,19 @@ HelperWacht helperWacht(ScreeningGegevens gegevens, DateTime vandaag) {
         ? HelperWacht.adresOnbekend
         : HelperWacht.nietInBuurt;
   }
+  final geboren = gegevens.account.geboortedatum;
+  final isJong = geboren != null && isMinderjarig(geboren, vandaag);
+  // B3: onder 18 eerst de ouder (de server kijkt naar ouder_toestemming_op).
+  if (isJong && gegevens.account.ouderToestemmingOp == null) {
+    return gegevens.ouder?.status == HhOuderStatus.ingetrokken
+        ? HelperWacht.ouderIngetrokken
+        : HelperWacht.ouder;
+  }
   if (gegevens.verificatiestatus == HhScreeningStatus.inBehandeling) {
     return HelperWacht.nagekeken;
   }
-  final geboren = gegevens.account.geboortedatum;
   if (geboren == null) return HelperWacht.nagekeken;
-  if (isMinderjarig(geboren, vandaag)) {
-    return gegevens.account.ouderToestemmingOp == null
-        ? HelperWacht.ouder
-        : HelperWacht.klaar;
-  }
+  if (isJong) return HelperWacht.klaar;
   return gegevens.profiel?.vogGezienOp == null
       ? HelperWacht.vog
       : HelperWacht.klaar;

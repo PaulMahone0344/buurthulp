@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../key_value_store.dart';
 import 'auth_gateway.dart';
+import 'ouder_gateway.dart';
 import 'pocketbase_gateway.dart';
 import 'profiel_gateway.dart';
 
@@ -23,4 +24,10 @@ final keyValueStoreProvider = Provider<KeyValueStore>(
 /// M3: screening van de jongere. Tests overriden met [FakeProfielGateway].
 final profielGatewayProvider = Provider<ProfielGateway>(
   (ref) => PocketBaseProfielGateway(ref.watch(pocketBaseGatewayProvider)),
+);
+
+/// B3: ouder-toestemming (helper onder 18). Tests overriden met
+/// [FakeOuderGateway].
+final ouderGatewayProvider = Provider<OuderGateway>(
+  (ref) => PocketBaseOuderGateway(ref.watch(pocketBaseGatewayProvider)),
 );

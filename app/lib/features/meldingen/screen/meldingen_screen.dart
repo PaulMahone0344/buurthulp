@@ -19,8 +19,7 @@ import '../domein/melding_domein.dart';
 import '../model/hh_melding.dart';
 import '../provider/meldingen_providers.dart';
 
-/// Het meldingen-overzicht (/meldingen) voor jongere, familie en
-/// coordinator: nieuwste bovenaan, een stip bij ongelezen. Tik zet de
+/// Het meldingen-overzicht (/meldingen) voor jongere en coordinator: nieuwste bovenaan, een stip bij ongelezen. Tik zet de
 /// melding op gelezen en opent de klus (of het incident). Nieuwe meldingen
 /// komen live binnen; pull-to-refresh haalt alles opnieuw op.
 class MeldingenScreen extends ConsumerWidget {

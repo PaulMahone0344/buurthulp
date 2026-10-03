@@ -1,6 +1,7 @@
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
 import '../../../jongere/klussen/model/hh_klus.dart';
+import '../../../../l10n/teksten_klus_nl.dart';
 
 /// De drie tabbladen van O8. Voor de oudere in gewone woorden: wat nog open
 /// staat, wat gepland is, en wat klaar is.
@@ -54,6 +55,9 @@ Map<HulpvraagTab, List<HhKlus>> deelHulpvragenIn(List<HhKlus> klussen) {
 /// leeg zolang er nog niemand gevonden is.
 String statusZin(HhKlus klus) {
   final naam = klus.jongereVoornaam;
+  // B4: eerst de meldkamer.
+  if (klus.wordtNagekeken) return TekstenKlusNl.wordtNagekeken;
+  if (klus.afkeurReden.isNotEmpty) return TekstenKlusNl.afgekeurd;
   if (naam.isEmpty) {
     return switch (klus.status) {
       HhKlusStatus.concept => TekstenUitvoerenNl.o7Concept,

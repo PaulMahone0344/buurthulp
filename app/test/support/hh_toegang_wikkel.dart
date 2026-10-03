@@ -4,28 +4,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/beoordeling_gateway.dart';
+import 'package:heitjehulp_app/core/pb/chat_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_chat_gateway.dart';
+import 'package:heitjehulp_app/features/chat/provider/chat_providers.dart';
 import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_incident_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
-import 'package:heitjehulp_app/core/pb/fake_familie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_ouder_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_profiel_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
 import 'package:heitjehulp_app/core/pb/incident_gateway.dart';
-import 'package:heitjehulp_app/core/pb/familie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/meldingen_gateway.dart';
+import 'package:heitjehulp_app/core/pb/ouder_gateway.dart';
 import 'package:heitjehulp_app/core/pb/profiel_gateway.dart';
+import 'package:heitjehulp_app/features/jongere/ouder/model/hh_ouder_stand.dart';
 import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/coordinator/provider/coordinator_providers.dart';
 import 'package:heitjehulp_app/features/hulpvrager/veiligheid/provider/veiligheid_providers.dart';
 import 'package:heitjehulp_app/features/meldingen/provider/meldingen_providers.dart';
-import 'package:heitjehulp_app/features/familie/provider/familie_providers.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
 import 'package:heitjehulp_app/features/jongere/reputatie/provider/beoordeling_providers.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/provider/uitvoeren_providers.dart';
@@ -91,6 +94,13 @@ class _VasteRol extends GekozenRolController {
   HhRol? build() => rol;
 }
 
+/// B3: de stand die de standaard-fake teruggeeft (mail is al verstuurd).
+const standaardOuderStand = HhOuderStand(
+  status: HhOuderStatus.verstuurd,
+  ouderEmail: 'ouder@voorbeeld.nl',
+  nogTeSturen: 2,
+);
+
 /// De overrides die elke test deelt: fake gateway, geheugenopslag, een
 /// url-opener die nooit een plugin raakt, en de M3/M5-fakes. Apart van de
 /// container zodat een feature-wikkel er eigen overrides bij kan leggen.
@@ -109,7 +119,8 @@ List<dynamic> toegangOverrides({
   BeoordelingGateway? beoordelingGateway,
   MeldingenGateway? meldingenGateway,
   IncidentGateway? incidentGateway,
-  FamilieGateway? familieGateway,
+  OuderGateway? ouderGateway,
+  ChatGateway? chatGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -150,11 +161,15 @@ List<dynamic> toegangOverrides({
   incidentGatewayProvider.overrideWithValue(
     incidentGateway ?? FakeIncidentGateway(),
   ),
-  // M9: F1 en het blok op O12 vragen meteen de koppelingen op. Standaard
-  // een lege fake zonder netwerk.
-  familieGatewayProvider.overrideWithValue(
-    familieGateway ?? FakeFamilieGateway(),
+  // B3: ouder-toestemming. Standaard staat er al een mail uit (zoals na
+  // B2 + B3), zodat de oude stromen niet eerst langs de stap "Ouder" gaan;
+  // de B3-tests geven hun eigen fake mee.
+  ouderGatewayProvider.overrideWithValue(
+    ouderGateway ?? FakeOuderGateway(stand: standaardOuderStand),
   ),
+  // B6: de Chat-knoppen (J13, J14, O7) tellen meteen de ongelezen
+  // berichten. Standaard een lege fake zonder netwerk.
+  chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
   if (gekozenRol != null)
@@ -173,6 +188,7 @@ ProviderContainer toegangContainer({
   FotoKiezer? fotoKiezer,
   KlussenGateway? klussenGateway,
   UitvoerGateway? uitvoerGateway,
+  OuderGateway? ouderGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -189,6 +205,7 @@ ProviderContainer toegangContainer({
         fotoKiezer: fotoKiezer,
         klussenGateway: klussenGateway,
         uitvoerGateway: uitvoerGateway,
+        ouderGateway: ouderGateway,
       ),
     ],
   );

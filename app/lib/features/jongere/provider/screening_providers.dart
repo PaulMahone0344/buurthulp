@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/hh_fout.dart';
 import '../../../core/pb/gateway_providers.dart';
+import '../../../core/pb/ouder_gateway.dart';
 import '../../../core/result.dart';
 import '../../toegang/model/hh_gebruiker.dart';
 import '../../toegang/model/hh_rol.dart';
@@ -13,6 +14,8 @@ import '../domein/helper_wacht.dart';
 import '../model/hh_profiel.dart';
 import '../model/hh_screening_status.dart';
 import '../model/screening_stap.dart';
+import '../ouder/model/hh_ouder_stand.dart';
+import '../../toegang/domein/aanmelding.dart' show isMinderjarig;
 
 /// Houdt profiel en accountvelden van de ingelogde helper (rol jongere) bij. Laadt zodra
 /// een jongere is ingelogd; voor elke andere rol (of niemand) is de staat
@@ -34,7 +37,7 @@ class ScreeningController extends AsyncNotifier<ScreeningGegevens> {
       gateway.haalProfiel(gebruikerId),
       gateway.haalAccountGegevens(gebruikerId),
     ).wait;
-    return switch ((profiel, account)) {
+    final gegevens = switch ((profiel, account)) {
       (
         Ok<HhProfiel?>(waarde: final p),
         Ok<HhAccountGegevens>(waarde: final a),
@@ -43,6 +46,46 @@ class ScreeningController extends AsyncNotifier<ScreeningGegevens> {
       (Err<HhProfiel?>(:final fout), _) => throw fout,
       (_, Err<HhAccountGegevens>(:final fout)) => throw fout,
     };
+    return ScreeningGegevens(
+      profiel: gegevens.profiel,
+      account: gegevens.account,
+      ouder: await _laadOuder(gegevens.account),
+    );
+  }
+
+  /// B3: alleen onder 18 (zonder toestemming hoeft het niet, maar de stand
+  /// "ingetrokken" of "gegeven" is ook dan nuttig). Lukt het niet (route
+  /// nog niet op de server, geen verbinding), dan null: de app valt terug
+  /// op ouder_toestemming_op, zoals in B2.
+  Future<HhOuderStand?> _laadOuder(HhAccountGegevens account) async {
+    final geboren = account.geboortedatum;
+    if (geboren == null || !isMinderjarig(geboren, ref.read(klokProvider)())) {
+      return null;
+    }
+    final result = await ref.read(ouderGatewayProvider).haalStand();
+    return switch (result) {
+      Ok<HhOuderStand>(:final waarde) => waarde,
+      Err<HhOuderStand>() => null,
+    };
+  }
+
+  /// B3: (opnieuw) een mail met code naar de ouder. Met [ouderEmail] wordt
+  /// dat het nieuwe adres. De stand wordt meteen bijgewerkt.
+  Future<OuderVerstuurUitkomst> stuurOuderMail({String? ouderEmail}) async {
+    final uitkomst = await ref
+        .read(ouderGatewayProvider)
+        .verstuur(ouderEmail: ouderEmail);
+    switch (uitkomst) {
+      case OuderVerstuurd(:final stand):
+        final huidig = state.value;
+        if (huidig != null) state = AsyncData(huidig.copyWith(ouder: stand));
+      case OuderVerstuurFout(:final fout)
+          when fout.soort == HhFoutSoort.nietIngelogd:
+        await ref.read(sessieControllerProvider.notifier).sessieVerlopen();
+      case OuderVerstuurFout() || OuderGeweigerd():
+        break;
+    }
+    return uitkomst;
   }
 
   /// Opnieuw laden, bijvoorbeeld na een fout of na een statuswijziging

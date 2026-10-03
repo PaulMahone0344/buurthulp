@@ -111,16 +111,9 @@ void main() {
       );
     });
 
-    test('zonder klus of zonder scherm: nergens heen', () {
+    test('zonder klus: nergens heen', () {
       expect(
         doelVan(_melding(HhMeldingSoort.onderweg, klus: ''), HhRol.hulpvrager),
-        isNull,
-      );
-      expect(
-        doelVan(
-          _melding(HhMeldingSoort.incident, incident: 'i1'),
-          HhRol.familie,
-        ),
         isNull,
       );
     });

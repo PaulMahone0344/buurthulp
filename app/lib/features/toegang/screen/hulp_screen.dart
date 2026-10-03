@@ -37,7 +37,6 @@ class _HulpScreenState extends ConsumerState<HulpScreen> {
   static List<HhVraag> vragenVoor(HhRol rol) => switch (rol) {
     HhRol.hulpvrager => TekstenNl.hulpVragenHulpvrager,
     HhRol.jongere => TekstenNl.hulpVragenJongere,
-    HhRol.familie => TekstenNl.hulpVragenFamilie,
     HhRol.coordinator => TekstenNl.hulpVragenCoordinator,
   };
 

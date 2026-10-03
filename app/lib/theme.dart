@@ -5,7 +5,7 @@
 // tekstmaat, afstand of radius staat. Staat een waarde ergens
 // anders in de app, dan is dat een fout.
 //
-// Twee dichtheden. Normaal is voor de jongere, de familie en de
+// Twee dichtheden. Normaal is voor de jongere en de
 // coordinator. Groot is voor de hulpvrager: tekst vanaf 20, knoppen
 // 60 hoog, een stap meer ruimte. De radius blijft in beide gelijk;
 // vorm is hier geen signaal, maat en contrast zijn dat.

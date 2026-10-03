@@ -7,7 +7,6 @@ import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/coordinator/screen/coordinator_stub_screen.dart';
-import 'package:heitjehulp_app/features/familie/screen/familie_stub_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_stub_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
@@ -29,7 +28,6 @@ const _tokenSleutel = 'hh_auth_token';
 Type _landingVan(HhRol rol) => switch (rol) {
   HhRol.hulpvrager => HulpvragerStubScreen,
   HhRol.jongere => JongereStubScreen,
-  HhRol.familie => FamilieStubScreen,
   HhRol.coordinator => CoordinatorStubScreen,
 };
 
@@ -210,45 +208,57 @@ void main() {
       });
     });
 
-    testWidgets('onder 18: ouderveld verplicht, herkent een 06-nummer', (
-      tester,
-    ) async {
-      final gateway = fakeMetAlleRollen();
-      await naarHelper(tester, gateway);
+    testWidgets(
+      'onder 18: alleen het e-mailadres van de ouder (geen 06 meer)',
+      (tester) async {
+        final gateway = fakeMetAlleRollen();
+        await naarHelper(tester, gateway);
 
-      await vulBasis(tester, '01-01-2012');
-      expect(
-        find.textContaining(TekstenAanmeldenNl.veldOuder, findRichText: true),
-        findsOneWidget,
-      );
-      expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
-      await _vul(tester, 6, 'wachtwoord1');
-      await _vinkAkkoord(tester);
-      await _tik(tester, TekstenNl.registrerenKnop);
+        await vulBasis(tester, '01-01-2012');
+        expect(
+          find.textContaining(TekstenAanmeldenNl.veldOuder, findRichText: true),
+          findsOneWidget,
+        );
+        expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
+        await _vul(tester, 6, 'wachtwoord1');
+        await _vinkAkkoord(tester);
+        await _tik(tester, TekstenNl.registrerenKnop);
 
-      expect(
-        find.text(TekstenAanmeldenNl.validatieOuderVerplicht),
-        findsOneWidget,
-      );
-      expect(gateway.laatsteRegistratieBody, isNull);
+        expect(
+          find.text(TekstenAanmeldenNl.validatieOuderVerplicht),
+          findsOneWidget,
+        );
+        expect(gateway.laatsteRegistratieBody, isNull);
 
-      await _vul(tester, 5, 'mama');
-      await _tik(tester, TekstenNl.registrerenKnop);
-      expect(
-        find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
-        findsOneWidget,
-      );
-      expect(gateway.laatsteRegistratieBody, isNull);
+        await _vul(tester, 5, 'mama');
+        await _tik(tester, TekstenNl.registrerenKnop);
+        expect(
+          find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
+          findsOneWidget,
+        );
+        expect(gateway.laatsteRegistratieBody, isNull);
 
-      await _vul(tester, 5, '06 12 34 56 78');
-      await _tik(tester, TekstenNl.registrerenKnop);
-      expect(find.byType(BevestigEmailScreen), findsOneWidget);
-      expect(gateway.laatsteRegistratieBody?['ouder_telefoon'], '0612345678');
-      expect(
-        gateway.laatsteRegistratieBody?.containsKey('ouder_email'),
-        isFalse,
-      );
-    });
+        await _vul(tester, 5, '06 12 34 56 78');
+        await _tik(tester, TekstenNl.registrerenKnop);
+        expect(
+          find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
+          findsOneWidget,
+        );
+        expect(gateway.laatsteRegistratieBody, isNull);
+
+        await _vul(tester, 5, 'mama@voorbeeld.nl');
+        await _tik(tester, TekstenNl.registrerenKnop);
+        expect(find.byType(BevestigEmailScreen), findsOneWidget);
+        expect(
+          gateway.laatsteRegistratieBody?['ouder_email'],
+          'mama@voorbeeld.nl',
+        );
+        expect(
+          gateway.laatsteRegistratieBody?.containsKey('ouder_telefoon'),
+          isFalse,
+        );
+      },
+    );
 
     testWidgets('onder de 10: geweigerd met uitleg, geen verzoek', (
       tester,
@@ -344,19 +354,19 @@ void main() {
     tester,
   ) async {
     final opslag = GeheugenKeyValueStore({
-      _tokenSleutel: testToken(HhRol.familie),
+      _tokenSleutel: testToken(HhRol.coordinator),
     });
     final gateway = fakeMetAlleRollen()..isOffline = true;
     await pompApp(tester, gateway: gateway, opslag: opslag);
 
     expect(find.byType(SplashScreen), findsOneWidget);
     expect(find.text(TekstenNl.foutGeenVerbinding), findsOneWidget);
-    expect(opslag.waarden[_tokenSleutel], testToken(HhRol.familie));
+    expect(opslag.waarden[_tokenSleutel], testToken(HhRol.coordinator));
 
     gateway.isOffline = false;
     await _tik(tester, TekstenNl.opnieuwProberen);
 
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
+    expect(find.byType(CoordinatorStubScreen), findsOneWidget);
   });
 
   testWidgets('offline bij inloggen: meldbalk, knop bruikbaar, daarna door', (
@@ -382,25 +392,18 @@ void main() {
 
   testWidgets('verkeerde rolroute gaat naar de eigen rolroute', (tester) async {
     final opslag = GeheugenKeyValueStore({
-      _tokenSleutel: testToken(HhRol.familie),
+      _tokenSleutel: testToken(HhRol.coordinator),
     });
     final container = await pompApp(
       tester,
       gateway: fakeMetAlleRollen(),
       opslag: opslag,
     );
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
+    expect(find.byType(CoordinatorStubScreen), findsOneWidget);
 
     container.read(routerProvider).go(HhPaden.jongere);
     await tester.pumpAndSettle();
     expect(find.byType(JongereStubScreen), findsNothing);
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
-
-    // Instellingen is wel bereikbaar, en de terugknop brengt je terug.
-    await _tik(tester, TekstenNl.landingInstellingen);
-    expect(find.text(TekstenNl.instellingenTitel), findsOneWidget);
-    await tester.tap(find.text(TekstenNl.terug));
-    await tester.pumpAndSettle();
-    expect(find.byType(FamilieStubScreen), findsOneWidget);
+    expect(find.byType(CoordinatorStubScreen), findsOneWidget);
   });
 }

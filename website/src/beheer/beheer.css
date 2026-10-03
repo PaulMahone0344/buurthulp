@@ -280,6 +280,70 @@
   gap: 6px;
 }
 
+/* B4: klussen na te kijken. Foto naast de tekst; op smal scherm eronder. */
+.klus-kaart--nakijken {
+  border-left-color: var(--beheer-wacht-rand);
+}
+
+.klus-nakijken {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.klus-nakijken__foto,
+.klus-nakijken__geen-foto {
+  width: 160px;
+  height: 120px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--page);
+  object-fit: cover;
+}
+
+.klus-nakijken__geen-foto {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.klus-nakijken__inhoud {
+  display: grid;
+  gap: 10px;
+}
+
+.klus-nakijken__tekst {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--page);
+  color: var(--ink);
+  font-size: 0.94rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.klus-nakijken__markering {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .klus-nakijken {
+    grid-template-columns: 1fr;
+  }
+
+  .klus-nakijken__foto,
+  .klus-nakijken__geen-foto {
+    width: 100%;
+    height: 180px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .klus-kaart {
     transition: none;

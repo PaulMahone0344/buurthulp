@@ -7,6 +7,7 @@ import '../../../design/components/hh_lege_staat.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../design/lijn.dart';
 import '../../../l10n/teksten_aanmelden_nl.dart';
+import '../../../l10n/teksten_ouder_nl.dart';
 import '../../../theme.dart';
 import '../domein/helper_wacht.dart';
 import '../paden_jongere.dart';
@@ -29,6 +30,10 @@ import '../provider/screening_providers.dart';
   HelperWacht.ouder => (
     TekstenAanmeldenNl.wachtOuder,
     TekstenAanmeldenNl.wachtOuderUitleg,
+  ),
+  HelperWacht.ouderIngetrokken => (
+    TekstenOuderNl.ingetrokkenKop,
+    TekstenOuderNl.balkIngetrokkenUitleg,
   ),
   HelperWacht.vog => (
     TekstenAanmeldenNl.wachtVog,
@@ -114,6 +119,17 @@ class HelperWachtStart extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (tekst != null) WachtBalk(kop: tekst.$1, uitleg: tekst.$2),
+        // B3: naar de stap "Ouder" (opnieuw sturen, adres wijzigen). Na
+        // intrekken niet: dan eerst de meldkamer.
+        if (wacht == HelperWacht.ouder) ...[
+          SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+          HhKnop(
+            label: TekstenOuderNl.balkKnop,
+            icoon: Icons.mail_outline,
+            soort: HhKnopSoort.tweedeKeus,
+            onPressed: () => context.push(HhPadenOuder.ouder),
+          ),
+        ],
         if (wacht == HelperWacht.vog) ...[
           SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
           HhKnop(

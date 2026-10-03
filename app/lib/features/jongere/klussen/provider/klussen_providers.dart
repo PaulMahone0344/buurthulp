@@ -6,7 +6,7 @@ import '../../../../core/pb/fake_klussen_gateway.dart';
 import '../../../../core/pb/gateway_providers.dart';
 import '../../../../core/pb/klussen_gateway.dart';
 import '../../../../core/result.dart';
-import '../../../hulpvrager/model/hulpvraag_concept.dart';
+import '../domein/dagdeel.dart';
 import '../../../toegang/model/hh_rol.dart';
 import '../../../toegang/provider/sessie_providers.dart';
 import '../../model/screening_stap.dart';

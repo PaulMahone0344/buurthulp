@@ -61,6 +61,9 @@ function profiel(overschrijf: Partial<Profiel>): Profiel {
     screeningNotitie: '',
     bijgewerktOp: '2026-09-19T10:00:00.000Z',
     documentFotoUrl: '',
+    ouderToestemmingOp: '',
+    ouderAvp: null,
+    ouderStatus: '',
     ...overschrijf,
   }
 }

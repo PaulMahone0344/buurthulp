@@ -12,10 +12,13 @@ import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_meld_balk.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_klus_nl.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
+import '../../../../l10n/teksten_chat_nl.dart';
+import '../../../chat/widget/chat_knop.dart';
 import '../../../hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
 import '../../../toegang/provider/sessie_providers.dart';
@@ -279,9 +282,7 @@ class _Detail extends StatelessWidget {
           HhKaart(
             kop: TekstenKlussenNl.j13VergoedingKop,
             child: Text(
-              TekstenKlussenNl.vergoeding(
-                euroTekst(klus.vergoedingJongereCenten),
-              ),
+              vergoedingVoorHelper(klus.vergoedingJongereCenten),
               style: tekst.bodyLarge,
             ),
           ),
@@ -295,6 +296,30 @@ class _Detail extends StatelessWidget {
               style: tekst.bodyLarge,
             ),
           ),
+          // B4: de foto die de bewoner bij de klus zette (beschermd; de
+          // URL heeft een kortlevend bestandstoken).
+          if (klus.klusFotoUrl.isNotEmpty) ...[
+            SizedBox(height: tussen),
+            HhKaart(
+              kop: TekstenKlusNl.helperFotoKop,
+              child: Semantics(
+                image: true,
+                label: TekstenKlusNl.helperFotoSemantiek,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(HhRadius.groot),
+                  child: Image.network(
+                    klus.klusFotoUrl,
+                    fit: BoxFit.cover,
+                    excludeFromSemantics: true,
+                    errorBuilder: (context, error, stack) => Text(
+                      TekstenKlusNl.helperFotoLuktNiet,
+                      style: tekst.bodyMedium,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           if (isMijn || isAangenomen) ...[
             Text(TekstenKlussenNl.j13AangenomenUitleg, style: tekst.bodyMedium),
@@ -304,6 +329,14 @@ class _Detail extends StatelessWidget {
               icoon: Icons.play_circle_outline,
               onPressed: () =>
                   context.push(HhPadenUitvoeren.uitvoeren(klus.id)),
+            ),
+            SizedBox(height: tussen),
+            // B6: "Open de chat" waar de klus een helper krijgt (de echte
+            // match-sheet is B5).
+            ChatKnop(
+              klusId: klus.id,
+              naam: klus.oudereNaam.split(' ').first,
+              label: TekstenChatNl.openDeChat,
             ),
             SizedBox(height: tussen),
             HhKnop(

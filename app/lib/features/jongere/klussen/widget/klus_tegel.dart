@@ -43,9 +43,7 @@ class KlusTegel extends StatelessWidget {
     final afstandLabel = afstand == null
         ? TekstenKlussenNl.zonderLocatie
         : afstandTekst(afstand);
-    final vergoeding = TekstenKlussenNl.vergoeding(
-      euroTekst(klus.vergoedingJongereCenten),
-    );
+    final vergoeding = vergoedingVoorHelper(klus.vergoedingJongereCenten);
     final vorm = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(HhRadius.groot),
       side: BorderSide(color: schema.outline, width: HhLijn.dun(context)),

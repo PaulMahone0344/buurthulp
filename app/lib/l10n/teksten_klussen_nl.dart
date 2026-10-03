@@ -42,6 +42,10 @@ abstract final class TekstenKlussenNl {
   static String afstandKm(String km) => 'ca. $km km';
   static String afstandMeter(int m) => 'ca. $m m';
   static String vergoeding(String euro) => 'Je verdient $euro';
+
+  /// Antwoord Ibrahim 4 okt: zolang de vergoeding 0 is (prijzen komen in
+  /// B7) ziet de helper dit in plaats van "€ 0,00".
+  static const vergoedingVolgt = 'Vergoeding volgt';
   static String klusTegelSemantiek({
     required String soort,
     required String wanneer,

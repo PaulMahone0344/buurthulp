@@ -1,0 +1,212 @@
+HeitjeHulp — GECOMBINEERDE UITROL B3 + B4 + B6 naar prod (4 okt 2026)
+=====================================================================
+Branch integratie/b3-b4-b6 (worktree ~/flutter-builds/hh-int). Merges:
+b3/ouder, b4/klus, b6/chat + de antwoorden van Ibrahim (feat(int)-commits).
+NOG NIETS OP PROD. Uitrol alleen na JA van Ibrahim, één milestone tegelijk,
+in deze volgorde: B3 -> B4 -> B6 -> website -> app.
+
+Lokaal bewezen (PocketBase 0.25.9, prod-schema van 4 okt alleen-lezen
+geëxporteerd, seed zoals prod na B1+B2 (03, 81, 84), hooks van main als
+startpunt, nep-SMTP en nep-Nominatim) met PRECIES deze lijst, zonder de
+backup-stappen. Uitkomst per check staat hieronder bij "verwacht".
+
+Details per milestone: proefrit-b3.txt, proefrit-b4.txt, proefrit-b6.txt,
+SCHEMA.txt (secties B3, B4, B6 + INTEGRATIE).
+
+---------------------------------------------------------------------
+0. VOORAF
+---------------------------------------------------------------------
+  cd "<repo>/backend"          (de branch integratie/b3-b4-b6, of main na de merge)
+  set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  Auto-mode UIT voor de hook-deploys (93, 103, 113): stap 2/2b nalezen.
+
+  Hook-deploy en "echo y |": 93, 103 en 113 zijn gecontroleerd. Elke ssh gaat
+  via ssh_() = ssh -n (leest geen stdin), scp heeft < /dev/null, en het
+  deploy-pad heeft precies één read ("zetten? (y/N)"). Dus
+      echo y | ./scripts/93-hook-deploy.sh
+  werkt, maar lees liever eerst de lijst (stap 2) en het verschil (2b) en
+  tik dan zelf y. Elk script stuurt ALLEEN zijn eigen bestanden mee:
+      93  hh_ouder_hulp.js, hh_ouder.pb.js                       (2 nieuw)
+      103 hh_klusplaatsen_hulp.js, hh_klusplaatsen.pb.js (nieuw),
+          hh_klussen.pb.js (bestaat: 2b toont alleen B4-regels)
+      113 hh_chat_hulp.js, hh_chat.pb.js                          (2 nieuw)
+  Elk script heeft een eigen backupmap (/root/hh_hook_backups/b3, b4, b6),
+  dus --rollback van de één raakt de ander niet.
+
+UITROLVOLGORDE VAN DE RULES (vraag B4: "herschrijft B3 later de
+hh_klussen-rules, draai daarna 101 opnieuw")
+  Nagekeken: B3 raakt de hh_klussen-rules NIET. 90 maakt alleen de eigen
+  collectie hh_ouder_toestemming (met eigen rules), 91 zet alleen het veld
+  regio op 2 rijen van hh_wijken, 93 stuurt 2 nieuwe hookbestanden.
+  B6 (110/111) raakt alleen hh_berichten en voegt de keuze "bericht" toe aan
+  hh_meldingen.soort. Dus: B3 -> B4 -> B6 in deze volgorde, 101 hoeft niet
+  opnieuw. Draait er ooit weer een script dat de hh_klussen-rules opnieuw
+  zet (bv. 80-b2-rules.mjs), draai daarna 101 opnieuw (idempotent).
+
+---------------------------------------------------------------------
+1. B3 — OUDER-TOESTEMMING
+---------------------------------------------------------------------
+  1.1 node scripts/00-backup.mjs
+        verwacht: pad van backups/<datum>.json (bewaren voor rollback)
+  1.2 node scripts/94-b3-mailcheck.mjs
+        verwacht: "SMTP staat aan (smtp.transip.email:587)", ouder-mail van
+        "HeitjeHulp" <info@bovexa.nl>. Alleen lezen.
+  1.3 node scripts/90-b3-collectie.mjs
+        verwacht: "+ ZOU aanmaken: hh_ouder_toestemming (base, 21 velden)"
+      node scripts/90-b3-collectie.mjs --apply
+        verwacht: "hh_ouder_toestemming aangemaakt met 22 velden, 3 index(en)"
+        (22 = met id)
+  1.4 node scripts/91-b3-wijken.mjs
+        verwacht: 2 wijken (Tiel-West, Passewaaij) regio nee -> ja
+      node scripts/91-b3-wijken.mjs --apply
+        verwacht: "2 wijk(en) bijgewerkt"
+  1.5 ./scripts/93-hook-deploy.sh
+        verwacht: stap 2 twee NIEUW, 2b geen diff, stap 6 alleen deze 2 erbij
+  1.6 node scripts/92-b3check.mjs --apply
+        verwacht: 89 groen, 0 rood (lokaal: 89/0). Stuurt GEEN mail
+        (.invalid). ~22 publieke verzoeken: niet twee keer binnen een uur
+        vanaf hetzelfde adres (429).
+  1.7 B3 ROLLBACK (als 1.5/1.6 rood):
+        ./scripts/93-hook-deploy.sh --rollback      (haalt de 2 bestanden weg)
+        node scripts/91-b3-wijken.mjs --terug --apply
+        hh_ouder_toestemming mag blijven staan (doet niets zonder hooks);
+        verwijderen alleen met een apart besluit.
+
+---------------------------------------------------------------------
+2. B4 — KLUS PLAATSEN (+ integratie: 10 t/m 14 jaar om 18:00 klaar)
+---------------------------------------------------------------------
+  !! WAARSCHUWING: na 2.3 (103) kan de OUDE app geen klus meer plaatsen
+     (geen foto -> 400 "Voeg een foto van de klus toe ... Werk de app dan
+     bij."). Plan de nieuwe app DIRECT erna, of draai B4 pas als de nieuwe
+     app klaarstaat. Tot de nieuwe app er is toont de oude app 19 tegels.
+  !! 2.3 -> 2.4 -> 2.5 achter elkaar: tussen 103 en 104 zien helpers de
+     seed-klussen nog maar kunnen ze niet accepteren (409 nietgekeurd).
+
+  2.1 node scripts/00-backup.mjs
+  2.2 node scripts/100-b4-velden.mjs
+        verwacht: 12 velden, 13 nieuwe categorieën, 6 oude types met leeftijd
+      node scripts/100-b4-velden.mjs --apply
+        verwacht: "12 veld(en) en 19 klustype-wijziging(en)"
+  2.3 ./scripts/103-hook-deploy.sh
+        verwacht: 2 NIEUW (hh_klusplaatsen*), 2b diff van hh_klussen.pb.js
+        met alleen B4-regels (keuring + leeftijd in de accepteer-route)
+  2.4 node scripts/101-b4-rules.mjs
+        verwacht: 4 rules (list/view aangevuld, create/update gewikkeld)
+      node scripts/101-b4-rules.mjs --apply
+        verwacht: "4 rule(s) bijgewerkt"
+  2.5 node scripts/104-b4-seed-keuren.mjs
+        verwacht: 12 seed-klussen; 2 andere open klussen NIET aangeraakt
+      node scripts/104-b4-seed-keuren.mjs --apply
+        verwacht: "12 seed-klus(sen) bijgewerkt" (leeftijd met de 18:00-regel)
+  2.6 node scripts/102-b4check.mjs --apply
+        verwacht: 144 groen, 0 rood (lokaal: 144/0; was 124, nu met de
+        18:00-gevallen: 17:30-18:30 = 15+, 16:30 zonder eind = 15+, 16:00 zonder
+        eind en 16:30-18:00 = iedereen; helper van 14 krijgt 403 "15 jaar")
+  2.7 Paneel: de 2 oude open test-klussen goedkeuren of afkeuren.
+  2.8 B4 ROLLBACK:
+        ./scripts/103-hook-deploy.sh --rollback     (hh_klussen.pb.js terug,
+                                                     2 nieuwe weg)
+        rules van hh_klussen terug uit de backup van 2.1
+        (node scripts/00-backup.mjs --vergelijk backups/<datum>.json toont het
+        verschil). Velden, categorieën en de goedkeuring van 104 mogen blijven
+        (additief). LET OP: na een rollback van B4 werkt de NIEUWE app (die
+        een foto meestuurt) niet meer goed -> app niet uitrollen.
+
+---------------------------------------------------------------------
+3. B6 — CHAT (+ integratie: gesprek verwijderen en AVG)
+---------------------------------------------------------------------
+  De AVG-velden (verborgen_bewoner, verborgen_helper, gewist,
+  wissen_na_incident) en "afzender/tekst niet verplicht" zitten IN 110 en 111
+  (prod had nog geen hh_berichten); er is geen apart script 114.
+
+  3.1 node scripts/00-backup.mjs
+  3.2 node scripts/110-b6-berichten.mjs
+        verwacht: "+ ZOU aanmaken: hh_berichten (base, 14 velden)" en de
+        keuze "bericht" erbij in hh_meldingen.soort
+      node scripts/110-b6-berichten.mjs --apply
+  3.3 node scripts/111-b6-rules.mjs
+        verwacht: de 5 rules (lezen met verborgen_* = false per kant)
+      node scripts/111-b6-rules.mjs --apply
+  3.4 ./scripts/113-hook-deploy.sh
+        verwacht: 2 NIEUW, geen diff
+  3.5 node --experimental-eventsource scripts/112-b6check.mjs --apply
+        verwacht: 124 groen, 0 rood (lokaal: 124/0, met een afgelopen
+        seed-klus van > 72 uur; op prod is dat 7aql34djq1yc8n6). Zonder zo'n
+        klus: 119 groen + 1 overgeslagen.
+        !! 112 maakt KORT DRIE incidenten op eigen [b6check]-klussen (secties
+        E, M, N): elke coordinator (ook Ibrahim) krijgt even "Probleem
+        gemeld"; alles wordt opgeruimd. Niet tijdens een dienst draaien.
+        112 sectie N verwijdert een EIGEN tijdelijk helper-account
+        (b6check-helper-weg-...@heitjehulp.invalid) om de AVG-wis te bewijzen.
+  3.6 B6 ROLLBACK:
+        ./scripts/113-hook-deploy.sh --rollback     (haalt de 2 bestanden weg)
+        hh_berichten en de soort "bericht" mogen blijven (additief). Chat dicht
+        zonder hook: de rules van hh_berichten op null (alleen superuser).
+        ZONDER hook geen filter en geen AVG-wis: dan ook de rules op null.
+        Collectie VERWIJDEREN = berichten weg: alleen op woord van Ibrahim.
+
+---------------------------------------------------------------------
+4. ALLE CHECKS NA DE DRIE (in deze volgorde; lokaal allemaal groen)
+---------------------------------------------------------------------
+  node scripts/92-b3check.mjs --apply                          verwacht  89 groen
+  node scripts/102-b4check.mjs --apply                         verwacht 144 groen
+  node --experimental-eventsource scripts/112-b6check.mjs --apply   verwacht 124 groen
+  node scripts/82-b2check.mjs --apply                          verwacht  80 groen
+  node scripts/72-b1check.mjs --apply                          verwacht  54 groen
+  node scripts/62-beheercheck.mjs --apply                      verwacht 118 groen
+  node scripts/04-rulecheck.mjs --apply                        verwacht 223 groen
+  node scripts/50-koppelcheck.mjs --apply                      verwacht  60 groen
+  LET OP: 92 niet binnen een uur na 1.6 opnieuw vanaf hetzelfde adres (429).
+  Dan eerst de rest en 92 als laatste, of een uur wachten.
+  Daarna ter controle (alleen lezen, moeten "Niets te doen" zeggen):
+    node scripts/90-b3-collectie.mjs ; node scripts/91-b3-wijken.mjs
+    node scripts/100-b4-velden.mjs ; node scripts/101-b4-rules.mjs
+    node scripts/104-b4-seed-keuren.mjs ; node scripts/110-b6-berichten.mjs
+    node scripts/111-b6-rules.mjs   ("regels al up-to-date")
+
+---------------------------------------------------------------------
+5. WEBSITE EN APP
+---------------------------------------------------------------------
+  5.1 Website (ouder-pagina's #/ouder + beheerpaneel met ouder-toestemming
+      en "Klussen na te kijken"), VITE_POCKETBASE_URL=https://api.qawayahbase.com.
+      De link in de ouder-mail wijst naar https://heitjehulp.nl/#/ouder: die
+      werkt pas als de site online is (~17 okt). Tot dan geen echte helpers
+      onder 18 laten aanmelden (of de mail later opnieuw laten sturen).
+  5.2 App: ÉÉN build met B3 + B4 + B6 (EAS; OTA alleen bij gelijke
+      runtimeVersion). Pas uitrollen als 1 t/m 4 groen zijn: de nieuwe app
+      stuurt een klusfoto mee (B4), praat met hh_berichten en de
+      verberg-route (B6) en de ouder-routes (B3).
+
+---------------------------------------------------------------------
+6. NIET NU (aparte stap, alleen met JA) — B3 stap 9
+---------------------------------------------------------------------
+  HH_MAIL_AFZENDER=info@heitjehulp.nl NIET bij deze uitrol zetten. Eerst moet
+  info@heitjehulp.nl als mailbox bestaan en de SMTP van TransIP ervan mogen
+  versturen (SPF/DKIM). Pas dan de Environment= in de systemd-unit van
+  pocketbase + daemon-reload + restart (raakt ALLE apps op de server: rustig
+  moment). Controle: HH_MAIL_AFZENDER=info@heitjehulp.nl node
+  scripts/94-b3-mailcheck.mjs + een proefmail naar een eigen adres. Tot dan
+  komt de ouder-mail van "HeitjeHulp" <info@bovexa.nl>.
+
+---------------------------------------------------------------------
+7. WAT DE INTEGRATIE TOEVOEGT (antwoorden Ibrahim 4 okt)
+---------------------------------------------------------------------
+  B4  Helpers van 10 t/m 14: klus om 18:00 klaar (zonder eindtijd: uiterlijk
+      16:00 begonnen); anders min_leeftijd 15. 15-17 blijft 19:00, 18+ geen
+      grens. Zelfde mechanisme (server zet min_leeftijd/geboren_uiterlijk,
+      accepteer-route rekent opnieuw): hh_klusplaatsen_hulp.js
+      (tijdMinLeeftijd). App waarschuwt "pas vanaf 15".
+  B4  Tip bij "Foto van de klus": "Zet geen mensen of je huisnummer op de
+      foto." Foto blijft zichtbaar voor helpers die de klus mogen zien.
+  B4  Helper ziet "Vergoeding volgt" i.p.v. € 0,00 (lijst + klusdetail);
+      bewoner-prijsblok blijft "€ 0,00 (voorbeeld)".
+  B6  "Gesprek verwijderen" (knop in het chatscherm, met vraag): alleen voor
+      jezelf; de ander houdt zijn kopie; een nieuw bericht is weer zichtbaar.
+      Bij een lopend incident: geweigerd met uitleg (409) tot de meldkamer
+      het afhandelt.
+  B6  Account verwijderd: eigen berichten gewist (tekst leeg + gewist; de
+      ander ziet "Bericht verwijderd"); berichten blokkeren het verwijderen
+      niet meer. Bij een lopend incident: account gaat meteen weg, het wissen
+      wacht tot de afhandeling (wissen_na_incident) en gebeurt dan vanzelf.
+      Origineel van gefilterde berichten blijft NIET bewaard; meldkamer leest
+      alleen bij een incident, ook na afhandelen (ongewijzigd).

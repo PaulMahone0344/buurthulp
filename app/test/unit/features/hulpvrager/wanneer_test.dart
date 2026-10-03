@@ -34,47 +34,58 @@ void main() {
     });
   });
 
-  group('tijdvakVoor', () {
-    test('ochtend is 9 tot 12', () {
-      final vak = tijdvakVoor(DateTime(2026, 9, 16), HhDagdeel.ochtend);
-      expect(vak.van, DateTime(2026, 9, 16, 9));
-      expect(vak.tot, DateTime(2026, 9, 16, 12));
-    });
-
-    test('middag is 13 tot 17, avond 18 tot 20', () {
-      final dag = DateTime(2026, 9, 16);
-      expect(tijdvakVoor(dag, HhDagdeel.middag).van.hour, 13);
-      expect(tijdvakVoor(dag, HhDagdeel.middag).tot.hour, 17);
-      expect(tijdvakVoor(dag, HhDagdeel.avond).van.hour, 18);
-      expect(tijdvakVoor(dag, HhDagdeel.avond).tot.hour, 20);
+  group('momentOp', () {
+    test('dag plus minuten na middernacht, lokale tijd', () {
+      expect(
+        momentOp(DateTime(2026, 9, 16), 14 * 60 + 15),
+        DateTime(2026, 9, 16, 14, 15),
+      );
     });
 
     test('een dag met tijd erin wordt eerst op middernacht gezet', () {
-      final vak = tijdvakVoor(DateTime(2026, 9, 16, 15, 45), HhDagdeel.avond);
-      expect(vak.van, DateTime(2026, 9, 16, 18));
+      expect(
+        momentOp(DateTime(2026, 9, 16, 15, 45), 18 * 60),
+        DateTime(2026, 9, 16, 18),
+      );
     });
   });
 
   group('isVoorbij', () {
-    test('de ochtend van vandaag om half elf is nog niet voorbij', () {
-      expect(isVoorbij(DateTime(2026, 9, 15), HhDagdeel.ochtend, nu), isFalse);
+    test('vandaag om 11:00 is om half elf nog niet voorbij', () {
+      expect(isVoorbij(DateTime(2026, 9, 15), 11 * 60, nu), isFalse);
     });
 
-    test('de ochtend van vandaag is om twaalf uur voorbij', () {
-      expect(
-        isVoorbij(
-          DateTime(2026, 9, 15),
-          HhDagdeel.ochtend,
-          DateTime(2026, 9, 15, 12),
-        ),
-        isTrue,
-      );
+    test('vandaag om 10:30 is om half elf voorbij', () {
+      expect(isVoorbij(DateTime(2026, 9, 15), 10 * 60 + 30, nu), isTrue);
     });
 
     test('gisteren is altijd voorbij, morgen nooit', () {
-      expect(isVoorbij(DateTime(2026, 9, 14), HhDagdeel.avond, nu), isTrue);
-      expect(isVoorbij(DateTime(2026, 9, 16), HhDagdeel.ochtend, nu), isFalse);
+      expect(isVoorbij(DateTime(2026, 9, 14), 23 * 60, nu), isTrue);
+      expect(isVoorbij(DateTime(2026, 9, 16), 7 * 60, nu), isFalse);
     });
+  });
+
+  group('standaardVanaf', () {
+    test('vandaag: twee hele uren na nu', () {
+      expect(standaardVanaf(DateTime(2026, 9, 15), nu), 12 * 60);
+    });
+
+    test('vandaag laat op de avond: niet over middernacht heen', () {
+      expect(
+        standaardVanaf(DateTime(2026, 9, 15), DateTime(2026, 9, 15, 23, 10)),
+        laatsteVanafMinuten,
+      );
+    });
+
+    test('een andere dag: 10:00', () {
+      expect(standaardVanaf(DateTime(2026, 9, 16), nu), 10 * 60);
+    });
+  });
+
+  test('tijdTekst schrijft 24-uursklok met twee cijfers', () {
+    expect(tijdTekst(14 * 60), '14:00');
+    expect(tijdTekst(9 * 60 + 5), '09:05');
+    expect(tijdTekst(23 * 60 + 45), '23:45');
   });
 
   group('komendeDagen', () {
@@ -101,14 +112,14 @@ void main() {
       expect(datumTekst(DateTime(2026, 12, 27)), 'zondag 27 december');
     });
 
-    test('wanneerTekst combineert dag en dagdeel met de uren', () {
+    test('wanneerTekst: dag met begintijd, en een eindtijd als die er is', () {
       expect(
-        wanneerTekst(DateTime(2026, 9, 16), HhDagdeel.ochtend, nu),
-        'morgen in de ochtend (van 9 tot 12 uur)',
+        wanneerTekst(DateTime(2026, 9, 16), 14 * 60, null, nu),
+        'morgen vanaf 14:00',
       );
       expect(
-        wanneerTekst(DateTime(2026, 9, 18), HhDagdeel.avond, nu),
-        'vrijdag 18 september in de avond (van 18 tot 20 uur)',
+        wanneerTekst(DateTime(2026, 9, 18), 9 * 60, 11 * 60 + 30, nu),
+        'vrijdag 18 september van 09:00 tot 11:30',
       );
     });
   });

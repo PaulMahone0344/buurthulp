@@ -12,13 +12,16 @@ export type Klusstatus =
   | 'geannuleerd'
   | 'probleem'
 
-export type Rol = 'hulpvrager' | 'jongere' | 'familie' | 'coordinator'
+// B3 (K5): de familie-rol is weg uit de code. Oude accounts met rol
+// "familie" kunnen op de server nog bestaan; die komen hier binnen als ''.
+export type Rol = 'hulpvrager' | 'jongere' | 'coordinator'
+export const ROLLEN: Rol[] = ['hulpvrager', 'jongere', 'coordinator']
 
 export type Screeningstatus = 'nieuw' | 'in_behandeling' | 'goedgekeurd' | 'afgewezen'
 
 export type Betaalstatus = 'open' | 'betaald' | 'mislukt' | 'terugbetaald'
 
-export type Klusbron = 'app' | 'telefoon' | 'familie'
+export type Klusbron = 'app' | 'telefoon'
 
 /** De ingelogde beheerder. Alleen rol coordinator komt hier ooit terecht. */
 export type Coordinator = {
@@ -81,6 +84,12 @@ export type Profiel = {
   bijgewerktOp: string
   /** Kant-en-klare url met bestandstoken; leeg als er geen bestand is. */
   documentFotoUrl: string
+  /** B3: hh_users.ouder_toestemming_op (ISO); leeg = geen toestemming. */
+  ouderToestemmingOp: string
+  /** B3: AVP-vinkje van de ouder (hh_ouder_toestemming); null = geen rij. */
+  ouderAvp: boolean | null
+  /** B3: status in hh_ouder_toestemming ('' = geen rij). */
+  ouderStatus: string
 }
 
 export type Wijk = {
@@ -189,3 +198,27 @@ export type Screeningbesluit = {
 }
 
 export type Auditactie = 'aanmaken' | 'wijzigen' | 'verwijderen'
+
+// ---- B4: klussen nakijken (meldkamer keurt elke klus) ------------------
+
+/** Wat het voorfilter van de server in de tekst vond (blokkeert niets). */
+export type Markering = 'telefoon' | 'email' | 'link' | 'neelijst'
+
+/** Een open klus die de meldkamer nog niet keurde. */
+export type KlusNaTeKijken = {
+  id: string
+  aangemaaktOp: string
+  bron: Klusbron | ''
+  hulpvragerNaam: string
+  klustypeNaam: string
+  /** Vanaf welke leeftijd een helper hem mag doen (categorie of tijdregel). */
+  minLeeftijd: number
+  wanneerVan: string
+  wanneerTot: string
+  omschrijving: string
+  markering: Markering[]
+  /** Kant-en-klare url met bestandstoken; leeg als er geen foto is. */
+  fotoUrl: string
+}
+
+export type Klusbesluit = { besluit: 'goedkeuren' } | { besluit: 'afkeuren'; reden: string }

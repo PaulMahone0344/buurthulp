@@ -8,7 +8,6 @@ import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
-import 'package:heitjehulp_app/features/familie/screen/familie_stub_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/hulpvrager_routes.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
@@ -84,10 +83,6 @@ Widget hhMeldingenWikkel(
       GoRoute(
         path: HhPaden.hulpvrager,
         builder: (context, state) => const HulpvragerStubScreen(),
-      ),
-      GoRoute(
-        path: HhPaden.familie,
-        builder: (context, state) => const FamilieStubScreen(),
       ),
       ...hulpvragerRoutes(),
       ...klussenRoutes(),

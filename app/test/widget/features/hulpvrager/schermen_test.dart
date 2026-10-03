@@ -1,3 +1,6 @@
+import 'dart:ui' show Tristate;
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,9 +14,9 @@ import 'package:heitjehulp_app/design/components/hh_scherm.dart';
 import 'package:heitjehulp_app/design/components/hh_stapbalk.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hulpvraag_concept.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/concept_controller.dart';
+import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_verstuurd_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_screen.dart';
-import 'package:heitjehulp_app/features/hulpvrager/widget/hulpvraag_samenvatting.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_home_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_gegevens_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/veiligheid/screen/bel_ons_screen.dart';
@@ -23,6 +26,7 @@ import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_meldingen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -43,8 +47,8 @@ class _Geval {
 
 const _gevallen = [
   _Geval('O1 home', HulpvragerHomeScreen()),
-  _Geval('hulp vragen', HulpVragenScreen()),
-  _Geval('hulp vragen met invoer', HulpVragenScreen(), vulConcept: true),
+  _Geval('klus plaatsen', HulpVragenScreen()),
+  _Geval('klus plaatsen met invoer', HulpVragenScreen(), vulConcept: true),
   _Geval('O6 verstuurd', HulpVragenVerstuurdScreen()),
   _Geval('O12 mijn gegevens', MijnGegevensScreen()),
 ];
@@ -64,18 +68,7 @@ Future<void> _pomp(
     klusGateway: klusGateway,
     sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
   );
-  if (geval.vulConcept) {
-    container.read(conceptProvider.notifier)
-      ..kiesKlustype(testKlustypes.first)
-      ..kiesDagKeuze(HhDagKeuze.morgen)
-      ..kiesDagdeel(HhDagdeel.ochtend)
-      ..zetWaar(
-        adres: 'Kerkstraat 1',
-        postcode: '4001 AA',
-        plaats: 'Tiel',
-        toelichting: 'Twee tassen.',
-      );
-  }
+  if (geval.vulConcept) _vulCompleet(container);
   await tester.pumpWidget(
     hhHulpvragerWikkel(
       geval.scherm,
@@ -85,6 +78,61 @@ Future<void> _pomp(
       tekstschaal: tekstschaal,
     ),
   );
+  await tester.pumpAndSettle();
+}
+
+/// De pagina met een eigen container (voor de state) en een vaste klok.
+Future<ProviderContainer> _pompMetContainer(
+  WidgetTester tester, {
+  FakeFotoKiezer? fotoKiezer,
+  DateTime? nu,
+}) async {
+  final klusGateway = fakeKlusGateway();
+  final container = hulpvragerContainer(
+    klusGateway: klusGateway,
+    sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
+    fotoKiezer: fotoKiezer,
+    nu: nu,
+  );
+  await tester.pumpWidget(
+    hhHulpvragerWikkel(
+      const HulpVragenScreen(),
+      klusGateway: klusGateway,
+      container: container,
+    ),
+  );
+  await tester.pumpAndSettle();
+  return container;
+}
+
+/// Een compleet concept met eindtijd, zoals na het invullen van de pagina.
+void _vulCompleet(ProviderContainer container) {
+  container.read(conceptProvider.notifier)
+    ..kiesKlustype(testKlustypes.first)
+    ..zetOmschrijving('Twee tassen boodschappen.')
+    ..zetFoto(testKlusFoto)
+    ..kiesDagKeuze(HhDagKeuze.morgen)
+    ..zetEindtijd(true)
+    ..zetNeeLijstAkkoord(true)
+    ..zetWaar(adres: 'Kerkstraat 1', postcode: '4001 AA', plaats: 'Tiel');
+}
+
+Future<void> _tikTekst(WidgetTester tester, String tekst) async {
+  final doel = find.text(tekst);
+  await tester.ensureVisible(doel);
+  await tester.tap(doel);
+  await tester.pumpAndSettle();
+}
+
+final _omschrijvingVeld = find.byWidgetPredicate(
+  (w) => w is HhInvoer && w.label == TekstenKlusNl.omschrijvingTitel,
+);
+
+/// "Klus plaatsen" staat ook in de titel: tik op de knop.
+Future<void> _tikPlaatsen(WidgetTester tester) async {
+  final knop = find.widgetWithText(HhKnop, TekstenKlusNl.plaatsen);
+  await tester.ensureVisible(knop);
+  await tester.tap(knop);
   await tester.pumpAndSettle();
 }
 
@@ -220,57 +268,54 @@ void main() {
   });
 
   group('wat', () {
-    testWidgets('één pagina: wat, wanneer en waar met eigen kop', (
+    testWidgets('één pagina met de koppen uit de mockup, geen stapbalk', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[1]);
 
       expect(find.byType(HhStapbalk), findsNothing);
+      expect(find.text(TekstenKlusNl.paginaTitel), findsWidgets);
       for (final kop in [
-        TekstenHulpvragerNl.watTitel,
-        TekstenHulpvragerNl.wanneerTitel,
-        TekstenHulpvragerNl.waarTitel,
+        TekstenKlusNl.watTitel,
+        TekstenKlusNl.fotoTitel,
+        TekstenKlusNl.wanneerTitel,
+        TekstenKlusNl.herhalenTitel,
+        TekstenKlusNl.waarTitel,
+        TekstenKlusNl.neeLijstTitel,
+        TekstenKlusNl.prijsJijBetaalt,
       ]) {
-        expect(find.text(kop), findsOneWidget);
+        expect(find.text(kop), findsWidgets, reason: kop);
       }
-      // Zonder alles ingevuld nog geen samenvatting.
-      expect(find.text(TekstenHulpvragerNl.bevestigenKaart), findsNothing);
+      expect(find.text(TekstenKlusNl.fotoVerplicht), findsOneWidget);
+      // Antwoord Ibrahim 4 okt: een korte tip bij de foto.
+      expect(find.text(TekstenKlusNl.fotoTip), findsOneWidget);
+      expect(_omschrijvingVeld, findsOneWidget);
     });
 
-    testWidgets('zes soorten in twee rijen van drie, geen knop meer', (
-      tester,
-    ) async {
+    testWidgets('dertien categorieën op volgorde, in rijen van drie; '
+        'een oud klustype staat er niet bij', (tester) async {
       await _pomp(tester, _gevallen[1]);
 
-      expect(find.byType(HhKeuzerij<String>), findsNWidgets(2));
-      expect(find.text(TekstenHulpvragerNl.watMeer), findsNothing);
-      for (final type in testKlustypes) {
+      // 13 = 4 rijen van drie + 1.
+      expect(find.byType(HhKeuzerij<String>), findsNWidgets(5));
+      final actief = testKlustypes.where((t) => t.isActief).toList();
+      expect(actief, hasLength(13));
+      for (final type in actief) {
         expect(find.text(type.naam), findsOneWidget);
       }
-    });
-
-    testWidgets('zeven soorten: eerst zes, na meer alle zeven', (tester) async {
-      final klusGateway = fakeKlusGateway(
-        klustypes: [...testKlustypes, testExtraKlustype],
+      expect(find.text('vervoer'), findsNothing);
+      final eerste = tester.widget<HhKeuzerij<String>>(
+        find.byType(HhKeuzerij<String>).first,
       );
-      await tester.pumpWidget(
-        hhHulpvragerWikkel(const HulpVragenScreen(), klusGateway: klusGateway),
-      );
-      await tester.pumpAndSettle();
-
-      // Op naam gesorteerd valt de laatste ("wandelen/gezelschap") buiten
-      // de eerste zes; "huisdier" staat er wel bij.
-      expect(find.text('wandelen/gezelschap'), findsNothing);
-      expect(find.text(testExtraKlustype.naam), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.watMeer), findsOneWidget);
-
-      await tester.ensureVisible(find.text(TekstenHulpvragerNl.watMeer));
-      await tester.tap(find.text(TekstenHulpvragerNl.watMeer));
-      await tester.pumpAndSettle();
-
-      expect(find.text('wandelen/gezelschap'), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.watMinder), findsOneWidget);
-      expect(find.byType(HhKeuzerij<String>), findsNWidgets(3));
+      expect(eerste.keuzes.map((k) => k.label), [
+        'Tuin',
+        'Auto & fiets',
+        'Schoonmaak',
+      ]);
+      // De laatste tegel blijft even breed als de rest (raster van drie).
+      final tuin = tester.getSize(find.text('Tuin'));
+      final overig = tester.getSize(find.text('Overig'));
+      expect(overig.width, lessThan(tuin.width * 2));
     });
 
     testWidgets('fout bij laden toont de melding en opnieuw proberen', (
@@ -292,7 +337,7 @@ void main() {
       expect(find.text(testKlustypes.first.naam), findsOneWidget);
     });
 
-    testWidgets('geen soorten: lege staat', (tester) async {
+    testWidgets('geen categorieën: lege staat', (tester) async {
       await tester.pumpWidget(
         hhHulpvragerWikkel(
           const HulpVragenScreen(),
@@ -305,23 +350,124 @@ void main() {
     });
   });
 
-  group('wanneer', () {
-    testWidgets('dagdeel verschijnt pas na een dag; vandaag wordt gemeld', (
-      tester,
-    ) async {
+  group('vertel wat je wilt', () {
+    testWidgets('teller loopt mee en het veld is meerregelig', (tester) async {
       await _pomp(tester, _gevallen[1]);
 
-      expect(find.text(TekstenHulpvragerNl.dagdeelOchtend), findsNothing);
+      final invoer = tester.widget<HhInvoer>(_omschrijvingVeld);
+      expect(invoer.maxRegels, greaterThan(1));
+      expect(invoer.isVerplicht, isTrue);
+      expect(find.text(TekstenKlusNl.omschrijvingTeller(0)), findsOneWidget);
 
-      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagVandaag));
-      await tester.tap(find.text(TekstenHulpvragerNl.dagVandaag));
+      await tester.enterText(find.byType(TextField).first, 'Heg knippen');
       await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.omschrijvingTeller(11)), findsOneWidget);
+    });
+
+    testWidgets('meer dan 300 tekens wordt afgeknipt', (tester) async {
+      final container = await _pompMetContainer(tester);
+      await tester.enterText(find.byType(TextField).first, 'a' * 320);
+      await tester.pumpAndSettle();
+
+      expect(container.read(conceptProvider).omschrijving.length, 300);
+      expect(find.text(TekstenKlusNl.omschrijvingTeller(300)), findsOneWidget);
+    });
+  });
+
+  group('foto', () {
+    testWidgets('kiezen toont het voorbeeld en een knop om te verwijderen', (
+      tester,
+    ) async {
+      final container = await _pompMetContainer(tester);
+
+      await _tikTekst(tester, TekstenKlusNl.fotoKiezen);
+      expect(container.read(conceptProvider).foto, same(testKlusFoto));
+      expect(find.text(TekstenKlusNl.fotoGekozen), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(TekstenKlusNl.fotoVoorbeeldSemantiek),
+        findsOneWidget,
+      );
+
+      await _tikTekst(tester, TekstenKlusNl.fotoVerwijderen);
+      expect(container.read(conceptProvider).foto, isNull);
+      expect(find.text(TekstenKlusNl.fotoMaken), findsOneWidget);
+    });
+
+    testWidgets('maken gebruikt de camera; mislukt toont een melding', (
+      tester,
+    ) async {
+      final kiezer = FakeFotoKiezer(volgende: testKlusFoto)
+        ..volgendeFout = const HhFout(HhFoutSoort.onbekend);
+      await _pompMetContainer(tester, fotoKiezer: kiezer);
+
+      await _tikTekst(tester, TekstenKlusNl.fotoMaken);
+      expect(kiezer.aanroepen, [HhFotoBron.camera]);
+      expect(find.text(TekstenKlusNl.fotoLuktNiet), findsOneWidget);
+    });
+
+    testWidgets('annuleren laat de foto leeg', (tester) async {
+      final container = await _pompMetContainer(
+        tester,
+        fotoKiezer: FakeFotoKiezer(),
+      );
+
+      await _tikTekst(tester, TekstenKlusNl.fotoKiezen);
+      expect(container.read(conceptProvider).foto, isNull);
+      expect(find.text(TekstenKlusNl.fotoLuktNiet), findsNothing);
+    });
+  });
+
+  group('wanneer', () {
+    testWidgets('het tijdwiel verschijnt pas na een dag', (tester) async {
+      await _pomp(tester, _gevallen[1]);
+
+      expect(find.byType(CupertinoDatePicker), findsNothing);
+
+      await _tikTekst(tester, TekstenHulpvragerNl.dagVandaag);
 
       expect(
         find.text(TekstenHulpvragerNl.dagGekozen(TekstenHulpvragerNl.vandaag)),
         findsOneWidget,
       );
-      expect(find.text(TekstenHulpvragerNl.dagdeelOchtend), findsOneWidget);
+      expect(find.byType(CupertinoDatePicker), findsOneWidget);
+      // testNu is 10:00: het wiel begint op 12:00.
+      expect(
+        find.text(TekstenKlusNl.tijdGekozen(TekstenKlusNl.vanaf, '12:00')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('eindtijd aan geeft een tweede wiel, een uur later', (
+      tester,
+    ) async {
+      final container = await _pompMetContainer(tester);
+      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+
+      await _tikTekst(tester, TekstenKlusNl.eindtijd);
+
+      expect(find.byType(CupertinoDatePicker), findsNWidgets(2));
+      expect(
+        find.text(TekstenKlusNl.tijdGekozen(TekstenKlusNl.tot, '11:00')),
+        findsOneWidget,
+      );
+      expect(container.read(conceptProvider).eindMinuten, 11 * 60);
+    });
+
+    testWidgets('het wiel draaien zet de begintijd in het concept', (
+      tester,
+    ) async {
+      final container = await _pompMetContainer(tester);
+      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+
+      final wiel = tester.widget<CupertinoDatePicker>(
+        find.byType(CupertinoDatePicker),
+      );
+      wiel.onDateTimeChanged(DateTime(2000, 1, 1, 14, 30));
+      await tester.pumpAndSettle();
+
+      expect(container.read(conceptProvider).vanafMinuten, 14 * 60 + 30);
+      expect(wiel.use24hFormat, isTrue);
+      expect(wiel.minuteInterval, 15);
     });
 
     testWidgets('kies een dag opent een lijst met grote dagknoppen', (
@@ -329,15 +475,11 @@ void main() {
     ) async {
       await _pomp(tester, _gevallen[1]);
 
-      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagAndere));
-      await tester.tap(find.text(TekstenHulpvragerNl.dagAndere));
-      await tester.pumpAndSettle();
+      await _tikTekst(tester, TekstenHulpvragerNl.dagAndere);
 
       expect(find.text(TekstenHulpvragerNl.dagKiezerTitel), findsOneWidget);
       // testNu is dinsdag 15 september; donderdag 17 september staat erbij.
-      await tester.ensureVisible(find.text('donderdag 17 september'));
-      await tester.tap(find.text('donderdag 17 september'));
-      await tester.pumpAndSettle();
+      await _tikTekst(tester, 'donderdag 17 september');
 
       expect(
         find.text(TekstenHulpvragerNl.dagGekozen('donderdag 17 september')),
@@ -345,54 +487,123 @@ void main() {
       );
     });
 
-    testWidgets('een dagdeel dat al voorbij is wordt geweigerd', (
-      tester,
-    ) async {
-      // testNu is 10:00; de ochtend van vandaag loopt nog, dus we testen met
-      // een klok om 15:00.
-      final klusGateway = fakeKlusGateway();
-      final container = hulpvragerContainer(
-        klusGateway: klusGateway,
-        sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
+    testWidgets('een tijd die al voorbij is wordt gemeld', (tester) async {
+      final container = await _pompMetContainer(
+        tester,
         nu: DateTime(2026, 9, 15, 15),
       );
-      await tester.pumpWidget(
-        hhHulpvragerWikkel(
-          const HulpVragenScreen(),
-          klusGateway: klusGateway,
-          container: container,
+      await _tikTekst(tester, TekstenHulpvragerNl.dagVandaag);
+      container.read(conceptProvider.notifier).zetVanaf(9 * 60);
+      await tester.pumpAndSettle();
+
+      expect(find.text(TekstenKlusNl.ontbreektTijdVoorbij), findsOneWidget);
+    });
+
+    testWidgets('avond of langer dan 2 uur: waarschuwing alleen 18+', (
+      tester,
+    ) async {
+      final container = await _pompMetContainer(tester);
+      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      expect(find.text(TekstenKlusNl.alleen18Plus), findsNothing);
+
+      container.read(conceptProvider.notifier).zetVanaf(20 * 60);
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.alleen18Plus), findsOneWidget);
+
+      container.read(conceptProvider.notifier)
+        ..zetVanaf(13 * 60)
+        ..zetEindtijd(true)
+        ..zetTot(16 * 60);
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.alleen18Plus), findsOneWidget);
+
+      container.read(conceptProvider.notifier).zetTot(14 * 60);
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.alleen18Plus), findsNothing);
+    });
+
+    testWidgets('eindigt na 18:00: waarschuwing pas vanaf 15 jaar', (
+      tester,
+    ) async {
+      final container = await _pompMetContainer(tester);
+      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      container.read(conceptProvider.notifier)
+        ..zetVanaf(17 * 60)
+        ..zetEindtijd(true)
+        ..zetTot(18 * 60 + 30);
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.alleen15Plus), findsOneWidget);
+      expect(find.text(TekstenKlusNl.alleen18Plus), findsNothing);
+
+      container.read(conceptProvider.notifier).zetTot(18 * 60);
+      await tester.pumpAndSettle();
+      expect(find.text(TekstenKlusNl.alleen15Plus), findsNothing);
+    });
+
+    testWidgets('eindtijd voor de begintijd wordt gemeld', (tester) async {
+      final container = await _pompMetContainer(tester);
+      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      container.read(conceptProvider.notifier)
+        ..zetEindtijd(true)
+        ..zetTot(9 * 60);
+      await tester.pumpAndSettle();
+
+      expect(find.text(TekstenKlusNl.ontbreektTot), findsOneWidget);
+    });
+  });
+
+  group('herhalen, nee-lijst en prijs', () {
+    testWidgets('alleen eenmalig; de rest op slot met Plus', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _pomp(tester, _gevallen[1]);
+
+      expect(find.text(TekstenKlusNl.plus), findsNWidgets(3));
+      expect(find.text(TekstenKlusNl.herhalenUitleg), findsOneWidget);
+      final wekelijks = tester.getSemantics(
+        find.bySemanticsLabel(
+          TekstenKlusNl.herhalenSlotSemantiek(TekstenKlusNl.wekelijks),
         ),
       );
-      await tester.pumpAndSettle();
+      expect(
+        wekelijks.getSemanticsData().flagsCollection.isEnabled,
+        Tristate.isFalse,
+      );
+      handle.dispose();
+    });
 
-      container
-          .read(conceptProvider.notifier)
-          .kiesKlustype(testKlustypes.first);
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagVandaag));
-      await tester.tap(find.text(TekstenHulpvragerNl.dagVandaag));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagdeelOchtend));
-      await tester.tap(find.text(TekstenHulpvragerNl.dagdeelOchtend));
-      await tester.pumpAndSettle();
-      final akkoord = find.text(TekstenHulpvragerNl.bevestigenAkkoord);
-      await tester.ensureVisible(akkoord);
-      await tester.tap(akkoord);
-      await tester.pumpAndSettle();
+    testWidgets('de nee-lijst staat er helemaal; het vinkje gaat in het '
+        'concept', (tester) async {
+      final container = await _pompMetContainer(tester);
 
-      expect(find.text(TekstenHulpvragerNl.wanneerVoorbij), findsOneWidget);
+      for (final regel in TekstenKlusNl.neeLijst) {
+        expect(find.text(regel), findsOneWidget);
+      }
+      await _tikTekst(tester, TekstenKlusNl.neeLijstAkkoord);
+      expect(container.read(conceptProvider).isNeeLijstAkkoord, isTrue);
+    });
+
+    testWidgets('jij betaalt € 0,00, een voorbeeld', (tester) async {
+      await _pomp(tester, _gevallen[1]);
+
+      expect(find.text('€ 0,00'), findsOneWidget);
+      expect(find.text(TekstenKlusNl.prijsVoorbeeld), findsOneWidget);
     });
   });
 
   group('waar', () {
-    testWidgets('adres bekend uit mijn gegevens: geen adresvelden', (
+    testWidgets('adres bekend uit mijn gegevens: één regel, geen velden', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[1]);
 
-      // Alleen de toelichting; het adres gaat stil mee in het concept.
+      // Alleen "Vertel wat je wilt"; het adres wordt niet opnieuw gevraagd.
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.waarBekendUitleg), findsOneWidget);
+      expect(
+        find.text(
+          TekstenKlusNl.waarAdres('Prins Bernhardlaan 12, 4003 AB Tiel'),
+        ),
+        findsOneWidget,
+      );
       final container = ProviderScope.containerOf(
         tester.element(find.byType(HulpVragenScreen)),
       );
@@ -408,10 +619,13 @@ void main() {
       await _pomp(tester, _gevallen[2]);
 
       expect(
-        tester.widget<TextField>(find.byType(TextField)).controller?.text,
-        'Twee tassen.',
+        find.text(TekstenKlusNl.waarAdres('Kerkstraat 1, 4001 AA Tiel')),
+        findsOneWidget,
       );
-      expect(find.text('Kerkstraat 1, 4001 AA Tiel'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
+        'Twee tassen boodschappen.',
+      );
     });
 
     testWidgets('zonder bekend adres: eerst mijn gegevens invullen', (
@@ -421,20 +635,18 @@ void main() {
 
       expect(find.text(TekstenHulpvragerNl.waarGeenAdresTitel), findsOneWidget);
       expect(find.text(TekstenHulpvragerNl.waarGeenAdresKnop), findsOneWidget);
-      expect(find.byType(TextField), findsNothing);
     });
 
-    testWidgets('leeg adres geeft veldfouten; microfoon is uitgeschakeld', (
+    testWidgets('half adres in het concept: velden met veldfouten', (
       tester,
     ) async {
-      // Een half adres in het concept: dan staan de adresvelden er wel.
       await _pomp(tester, _gevallen[1]);
       final container = ProviderScope.containerOf(
         tester.element(find.byType(HulpVragenScreen)),
       );
       container
           .read(conceptProvider.notifier)
-          .zetWaar(adres: '', postcode: ' ', plaats: 'Tiel', toelichting: '');
+          .zetWaar(adres: '', postcode: ' ', plaats: 'Tiel');
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(
         hhHulpvragerWikkel(
@@ -444,55 +656,52 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      // Omschrijving plus straat, postcode en plaats.
       expect(find.byType(TextField), findsNWidgets(4));
 
-      final akkoord = find.text(TekstenHulpvragerNl.bevestigenAkkoord);
-      await tester.ensureVisible(akkoord);
-      await tester.tap(akkoord);
-      await tester.pumpAndSettle();
+      await _tikPlaatsen(tester);
 
       expect(find.text(TekstenHulpvragerNl.validatieAdres), findsOneWidget);
       expect(find.text(TekstenHulpvragerNl.validatiePostcode), findsOneWidget);
       expect(find.text(TekstenHulpvragerNl.validatiePlaats), findsNothing);
-
-      final mic = tester.widget<HhKnop>(
-        find.widgetWithText(HhKnop, TekstenHulpvragerNl.waarInspreken),
-      );
-      expect(mic.isActief, isFalse);
-      expect(
-        tester.getSemantics(find.byWidget(mic)).label,
-        TekstenHulpvragerNl.waarInsprekenSemantiek,
-      );
-    });
-
-    testWidgets('de toelichting is meerregelig', (tester) async {
-      await _pomp(tester, _gevallen[1]);
-
-      final invoer = tester.widget<HhInvoer>(
-        find.widgetWithText(HhInvoer, TekstenHulpvragerNl.veldToelichting),
-      );
-      expect(invoer.maxRegels, greaterThan(1));
     });
   });
 
-  group('samenvatting en plaatsen', () {
-    testWidgets('toont wat, wanneer, waar, duur en vergoeding in gewone taal', (
+  group('plaatsen', () {
+    testWidgets('leeg: zegt wat er ontbreekt, in de volgorde van de pagina', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[2]);
+      final klusGateway = fakeKlusGateway();
+      final container = hulpvragerContainer(
+        klusGateway: klusGateway,
+        sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
+      );
+      await tester.pumpWidget(
+        hhHulpvragerWikkel(
+          const HulpVragenScreen(),
+          klusGateway: klusGateway,
+          container: container,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final controller = container.read(conceptProvider.notifier);
 
-      Finder inKaart(String tekst) => find.descendant(
-        of: find.byType(HulpvraagSamenvatting),
-        matching: find.text(tekst),
-      );
-      expect(inKaart('boodschappen'), findsOneWidget);
-      expect(
-        inKaart('morgen in de ochtend (van 9 tot 12 uur)'),
-        findsOneWidget,
-      );
-      expect(inKaart('Kerkstraat 1, 4001 AA Tiel'), findsOneWidget);
-      expect(inKaart('ongeveer 1 uur'), findsOneWidget);
-      expect(inKaart('€ 10,00'), findsOneWidget);
+      Future<void> verwacht(String melding) async {
+        await _tikPlaatsen(tester);
+        expect(find.text(melding), findsWidgets, reason: melding);
+      }
+
+      await verwacht(TekstenKlusNl.ontbreektWat);
+      controller.kiesKlustype(testKlustypes.first);
+      await verwacht(TekstenKlusNl.ontbreektOmschrijving);
+      controller.zetOmschrijving('Heg knippen');
+      await verwacht(TekstenKlusNl.ontbreektFoto);
+      controller.zetFoto(testKlusFoto);
+      await verwacht(TekstenKlusNl.ontbreektWanneer);
+      controller.kiesDagKeuze(HhDagKeuze.morgen);
+      await verwacht(TekstenKlusNl.ontbreektNeeLijst);
+      // Plaatsen zelf (en de stap naar O6) staat in de flowtest.
+      expect(klusGateway.aangemaakteKlussen, isEmpty);
     });
 
     testWidgets('mislukt plaatsen toont de fout en houdt de knop bruikbaar', (
@@ -503,16 +712,7 @@ void main() {
         klusGateway: klusGateway,
         sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
       );
-      container.read(conceptProvider.notifier)
-        ..kiesKlustype(testKlustypes.first)
-        ..kiesDagKeuze(HhDagKeuze.morgen)
-        ..kiesDagdeel(HhDagdeel.ochtend)
-        ..zetWaar(
-          adres: 'Kerkstraat 1',
-          postcode: '4001 AA',
-          plaats: 'Tiel',
-          toelichting: '',
-        );
+      _vulCompleet(container);
       await tester.pumpWidget(
         hhHulpvragerWikkel(
           const HulpVragenScreen(),
@@ -524,16 +724,12 @@ void main() {
       // Pas nu: de pagina laadt eerst zelf de eigen gegevens.
       klusGateway.volgendeFout = const HhFout(HhFoutSoort.server);
 
-      await tester.ensureVisible(
-        find.text(TekstenHulpvragerNl.bevestigenAkkoord),
-      );
-      await tester.tap(find.text(TekstenHulpvragerNl.bevestigenAkkoord));
-      await tester.pumpAndSettle();
+      await _tikPlaatsen(tester);
 
       expect(find.text(TekstenNl.foutServer), findsOneWidget);
       expect(klusGateway.aangemaakteKlussen, isEmpty);
       final knop = tester.widget<HhKnop>(
-        find.widgetWithText(HhKnop, TekstenHulpvragerNl.bevestigenAkkoord),
+        find.widgetWithText(HhKnop, TekstenKlusNl.plaatsen),
       );
       expect(knop.isActief, isTrue);
     });
@@ -677,7 +873,7 @@ void main() {
       expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsNothing);
     });
 
-    testWidgets('hulp vragen zonder wijk plaatst niets', (tester) async {
+    testWidgets('klus plaatsen zonder wijk plaatst niets', (tester) async {
       final klusGateway = fakeKlusGateway();
       await tester.pumpWidget(
         hhHulpvragerWikkel(

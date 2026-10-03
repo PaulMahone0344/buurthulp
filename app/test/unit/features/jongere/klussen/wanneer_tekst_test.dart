@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/domein/wanneer_tekst.dart';
+import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 
 void main() {
   final nu = DateTime(2026, 9, 15, 10); // dinsdag
@@ -72,5 +73,11 @@ void main() {
     expect(euroTekst(1250), '€ 12,50');
     expect(euroTekst(5), '€ 0,05');
     expect(euroTekst(0), '€ 0,00');
+  });
+
+  test('vergoedingVoorHelper: 0 = "Vergoeding volgt", anders het bedrag', () {
+    expect(vergoedingVoorHelper(0), TekstenKlussenNl.vergoedingVolgt);
+    expect(vergoedingVoorHelper(-5), TekstenKlussenNl.vergoedingVolgt);
+    expect(vergoedingVoorHelper(1000), TekstenKlussenNl.vergoeding('€ 10,00'));
   });
 }
