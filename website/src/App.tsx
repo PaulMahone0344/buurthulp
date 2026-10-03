@@ -9,24 +9,22 @@ const BeheerIngang = lazy(() => import('./beheer/BeheerIngang'))
 // B3: de ouder-pagina's (toestemming met code) pas op #/ouder.
 const OuderIngang = lazy(() => import('./ouder/OuderIngang'))
 
-type Pagina = 'voorpagina' | 'beheer' | 'ouder'
-
-function paginaVan(hash: string): Pagina {
-  if (isBeheerHash(hash)) return 'beheer'
-  if (isOuderHash(hash)) return 'ouder'
-  return 'voorpagina'
-}
-
 function App() {
-  const [pagina, setPagina] = useState(() => paginaVan(window.location.hash))
+  const [beheer, setBeheer] = useState(() => isBeheerHash(window.location.hash))
+  // B3
+  const [ouder, setOuder] = useState(() => isOuderHash(window.location.hash))
 
   useEffect(() => {
-    const opWissel = () => setPagina(paginaVan(window.location.hash))
+    const opWissel = () => {
+      setBeheer(isBeheerHash(window.location.hash))
+      setOuder(isOuderHash(window.location.hash)) // B3
+    }
     window.addEventListener('hashchange', opWissel)
     return () => window.removeEventListener('hashchange', opWissel)
   }, [])
 
-  if (pagina === 'ouder') {
+  // B3: ouder-pagina's
+  if (ouder) {
     return (
       <Suspense fallback={<p className="empty-note">Laden…</p>}>
         <OuderIngang />
@@ -34,7 +32,7 @@ function App() {
     )
   }
 
-  if (pagina === 'beheer') {
+  if (beheer) {
     return (
       <Suspense fallback={<p className="empty-note">Beheerpaneel laden…</p>}>
         <BeheerIngang />
