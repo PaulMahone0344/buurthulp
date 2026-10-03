@@ -13,6 +13,8 @@ import type {
   Incident,
   Instelling,
   Klus,
+  Klusbesluit,
+  KlusNaTeKijken,
   Klustype,
   Koppelkandidaat,
   NieuweKlus,
@@ -58,6 +60,12 @@ export interface BeheerData {
   koppelen(klusId: string, jongereId: string): Promise<{ andereWijk: boolean }>
   vrijgeven(klusId: string, reden: string): Promise<void>
   annuleren(klusId: string, reden: string): Promise<void>
+
+  // ---- B4 klussen nakijken --------------------------------------------
+  /** Open klussen die nog niet gekeurd zijn, oudste eerst, foto met token. */
+  klussenNaTeKijken(): Promise<KlusNaTeKijken[]>
+  /** POST /api/hh/klussen/{id}/keuren (hh_klusplaatsen.pb.js). */
+  keurKlus(klusId: string, besluit: Klusbesluit): Promise<void>
 
   // ---- D2 screening ---------------------------------------------------
   /** Profielen van alle jongeren, met bestandstoken in de foto-url's. */

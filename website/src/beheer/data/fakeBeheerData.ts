@@ -15,6 +15,8 @@ import type {
   Incident,
   Instelling,
   Klus,
+  Klusbesluit,
+  KlusNaTeKijken,
   Klustype,
   Koppelkandidaat,
   NieuweKlus,
@@ -41,6 +43,7 @@ export type FakeStand = {
   instellingen: Instelling[]
   betalingen: Betaling[]
   auditlog: Auditregel[]
+  naTeKijken: KlusNaTeKijken[]
 }
 
 export type Aanroep = { methode: string; args: unknown[] }
@@ -59,6 +62,7 @@ export function legeStand(): FakeStand {
     instellingen: [],
     betalingen: [],
     auditlog: [],
+    naTeKijken: [],
   }
 }
 
@@ -238,6 +242,21 @@ export class FakeBeheerData implements BeheerData {
     const klus = this.stand.klussen.find((k) => k.id === klusId)
     if (!klus) throw new BeheerFout('Deze klus bestaat niet meer.')
     klus.status = 'geannuleerd'
+  }
+
+  klussenNaTeKijken() {
+    return this.lees(this.stand.naTeKijken)
+  }
+
+  /** Zoals de keur-route: alleen een open, ongekeurde klus; afkeuren met een reden. */
+  async keurKlus(klusId: string, besluit: Klusbesluit) {
+    this.schrijf('keurKlus', klusId, besluit)
+    const klus = this.stand.naTeKijken.find((k) => k.id === klusId)
+    if (!klus) throw new BeheerFout('Deze klus staat niet meer open; keuren kan niet meer.')
+    if (besluit.besluit === 'afkeuren' && besluit.reden.trim().length < 5) {
+      throw new BeheerFout('Vul een reden in van 5 tot 300 tekens; de bewoner krijgt hem te zien.')
+    }
+    this.stand.naTeKijken = this.stand.naTeKijken.filter((k) => k.id !== klusId)
   }
 
   profielen() {

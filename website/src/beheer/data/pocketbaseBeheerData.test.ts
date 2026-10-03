@@ -5,6 +5,7 @@ import {
   naarAuditregel,
   naarInstelling,
   naarKlus,
+  naarKlusNaTeKijken,
   naarProfiel,
 } from './pocketbaseBeheerData'
 
@@ -235,5 +236,69 @@ describe('omzetten', () => {
         detail: { velden: ['rol'] },
       }).detail,
     ).toBe('{"velden":["rol"]}')
+  })
+})
+
+describe('B4 klussen nakijken', () => {
+  it('keurt goed en af via de keur-route, met de reden erbij', async () => {
+    const aanroepen = nepServer(
+      { status: 200, body: { klus: 'k1', besluit: 'goedkeuren', status: 'open' } },
+      { status: 200, body: { klus: 'k2', besluit: 'afkeuren', status: 'geannuleerd' } },
+    )
+    const data = maakPocketbaseBeheerData(new PocketBase('http://pb.test'))
+
+    await data.keurKlus('k1', { besluit: 'goedkeuren' })
+    await data.keurKlus('k2', { besluit: 'afkeuren', reden: '  Sigaretten kan niet.  ' })
+
+    expect(aanroepen[0]).toMatchObject({
+      url: 'http://pb.test/api/hh/klussen/k1/keuren',
+      methode: 'POST',
+      body: { besluit: 'goedkeuren' },
+    })
+    expect(aanroepen[1]).toMatchObject({
+      url: 'http://pb.test/api/hh/klussen/k2/keuren',
+      body: { besluit: 'afkeuren', reden: 'Sigaretten kan niet.' },
+    })
+  })
+
+  it('toont de Nederlandse melding als de server weigert', async () => {
+    nepServer({ status: 409, body: { melding: 'Deze klus is al goedgekeurd.', reden: 'algoedgekeurd' } })
+    const data = maakPocketbaseBeheerData(new PocketBase('http://pb.test'))
+
+    await expect(data.keurKlus('k1', { besluit: 'goedkeuren' })).rejects.toThrow('Deze klus is al goedgekeurd.')
+  })
+
+  it('zet een ongekeurde klus om: foto met token, alleen bekende markeringen', () => {
+    const klus = naarKlusNaTeKijken(
+      {
+        id: 'k1',
+        collectionId: 'c',
+        collectionName: 'hh_klussen',
+        created: '2026-10-04 08:00:00.000Z',
+        bron: 'app',
+        omschrijving: 'Bel 0612345678',
+        min_leeftijd: 13,
+        wanneer_van: '2026-10-05 12:00:00.000Z',
+        wanneer_tot: '',
+        foto: ['heg_abc.jpg'],
+        controle_markering: ['neelijst', 'telefoon', 'onbekend'],
+        expand: {
+          hulpvrager: { id: 'o1', collectionId: 'u', collectionName: 'hh_users', naam: 'Mevrouw Jansen' },
+          klustype: { id: 't1', collectionId: 't', collectionName: 'hh_klustypes', naam: 'Tuin' },
+        },
+      },
+      (bestand) => `https://pb/${bestand}?token=t`,
+    )
+
+    expect(klus).toMatchObject({
+      id: 'k1',
+      hulpvragerNaam: 'Mevrouw Jansen',
+      klustypeNaam: 'Tuin',
+      minLeeftijd: 13,
+      omschrijving: 'Bel 0612345678',
+      markering: ['telefoon', 'neelijst'],
+      fotoUrl: 'https://pb/heg_abc.jpg?token=t',
+    })
+    expect(naarKlusNaTeKijken({ id: 'k2', collectionId: 'c', collectionName: 'hh_klussen' }, () => 'x').fotoUrl).toBe('')
   })
 })
