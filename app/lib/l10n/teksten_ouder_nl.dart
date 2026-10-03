@@ -43,9 +43,12 @@ abstract final class TekstenOuderNl {
   static const gegevenUitleg = 'Daarna kijkt de meldkamer je aanmelding na.';
 
   static const ingetrokkenKop = 'Je ouder heeft de toestemming ingetrokken.';
+
+  /// Antwoord Ibrahim 4 okt: na intrekken eerst de meldkamer (de server
+  /// weigert opnieuw mailen met dezelfde zin).
   static const ingetrokkenUitleg =
-      'Je kunt nu geen klussen aannemen. Praat erover met je ouder. Wil je '
-      'ouder het opnieuw bekijken? Stuur dan een nieuwe mail.';
+      'De meldkamer neemt contact met je op. Tot die tijd kun je geen '
+      'klussen aannemen.';
 
   static const verderAanmelding = 'Verder met je aanmelding';
   static const naarStart = 'Naar de start';
@@ -53,6 +56,7 @@ abstract final class TekstenOuderNl {
 
   // Gele balk op Start
   static const balkIngetrokkenUitleg =
-      'Je kunt geen klussen aannemen. Praat erover met je ouder.';
+      'De meldkamer neemt contact met je op. Tot die tijd kun je geen '
+      'klussen aannemen.';
   static const balkKnop = 'Mail aan je ouder';
 }

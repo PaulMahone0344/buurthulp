@@ -38,6 +38,12 @@ class FakeOuderGateway implements OuderGateway {
       weigerMet = null;
       return weiger;
     }
+    if (_stand.status == HhOuderStatus.ingetrokken) {
+      return const OuderGeweigerd(
+        'ingetrokken',
+        'Je ouder heeft de toestemming ingetrokken. De meldkamer neemt contact met je op.',
+      );
+    }
     final email = (ouderEmail ?? '').trim().isNotEmpty
         ? ouderEmail!.trim().toLowerCase()
         : _stand.ouderEmail;

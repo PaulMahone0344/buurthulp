@@ -208,45 +208,57 @@ void main() {
       });
     });
 
-    testWidgets('onder 18: ouderveld verplicht, herkent een 06-nummer', (
-      tester,
-    ) async {
-      final gateway = fakeMetAlleRollen();
-      await naarHelper(tester, gateway);
+    testWidgets(
+      'onder 18: alleen het e-mailadres van de ouder (geen 06 meer)',
+      (tester) async {
+        final gateway = fakeMetAlleRollen();
+        await naarHelper(tester, gateway);
 
-      await vulBasis(tester, '01-01-2012');
-      expect(
-        find.textContaining(TekstenAanmeldenNl.veldOuder, findRichText: true),
-        findsOneWidget,
-      );
-      expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
-      await _vul(tester, 6, 'wachtwoord1');
-      await _vinkAkkoord(tester);
-      await _tik(tester, TekstenNl.registrerenKnop);
+        await vulBasis(tester, '01-01-2012');
+        expect(
+          find.textContaining(TekstenAanmeldenNl.veldOuder, findRichText: true),
+          findsOneWidget,
+        );
+        expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
+        await _vul(tester, 6, 'wachtwoord1');
+        await _vinkAkkoord(tester);
+        await _tik(tester, TekstenNl.registrerenKnop);
 
-      expect(
-        find.text(TekstenAanmeldenNl.validatieOuderVerplicht),
-        findsOneWidget,
-      );
-      expect(gateway.laatsteRegistratieBody, isNull);
+        expect(
+          find.text(TekstenAanmeldenNl.validatieOuderVerplicht),
+          findsOneWidget,
+        );
+        expect(gateway.laatsteRegistratieBody, isNull);
 
-      await _vul(tester, 5, 'mama');
-      await _tik(tester, TekstenNl.registrerenKnop);
-      expect(
-        find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
-        findsOneWidget,
-      );
-      expect(gateway.laatsteRegistratieBody, isNull);
+        await _vul(tester, 5, 'mama');
+        await _tik(tester, TekstenNl.registrerenKnop);
+        expect(
+          find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
+          findsOneWidget,
+        );
+        expect(gateway.laatsteRegistratieBody, isNull);
 
-      await _vul(tester, 5, '06 12 34 56 78');
-      await _tik(tester, TekstenNl.registrerenKnop);
-      expect(find.byType(BevestigEmailScreen), findsOneWidget);
-      expect(gateway.laatsteRegistratieBody?['ouder_telefoon'], '0612345678');
-      expect(
-        gateway.laatsteRegistratieBody?.containsKey('ouder_email'),
-        isFalse,
-      );
-    });
+        await _vul(tester, 5, '06 12 34 56 78');
+        await _tik(tester, TekstenNl.registrerenKnop);
+        expect(
+          find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
+          findsOneWidget,
+        );
+        expect(gateway.laatsteRegistratieBody, isNull);
+
+        await _vul(tester, 5, 'mama@voorbeeld.nl');
+        await _tik(tester, TekstenNl.registrerenKnop);
+        expect(find.byType(BevestigEmailScreen), findsOneWidget);
+        expect(
+          gateway.laatsteRegistratieBody?['ouder_email'],
+          'mama@voorbeeld.nl',
+        );
+        expect(
+          gateway.laatsteRegistratieBody?.containsKey('ouder_telefoon'),
+          isFalse,
+        );
+      },
+    );
 
     testWidgets('onder de 10: geweigerd met uitleg, geen verzoek', (
       tester,

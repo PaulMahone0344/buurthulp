@@ -26,6 +26,12 @@ import '../model/hh_ouder_stand.dart';
 /// wijzigen". Staat er nog geen mail uit en is het adres bekend, dan gaat
 /// hij bij het openen meteen (eenmalig). Alleen een telefoonnummer bij
 /// aanmelden (K1): eerst "Vul ook het e-mailadres van je ouder in".
+/// Mag het kind zelf (opnieuw) mailen? Niet na toestemming, en niet na
+/// intrekken: dan eerst de meldkamer (antwoord Ibrahim 4 okt).
+bool magZelfMailen(HhOuderStand stand) =>
+    stand.status != HhOuderStatus.gegeven &&
+    stand.status != HhOuderStatus.ingetrokken;
+
 class OuderScreen extends ConsumerStatefulWidget {
   const OuderScreen({super.key});
 
@@ -166,7 +172,7 @@ class _OuderScreenState extends ConsumerState<OuderScreen> {
                     }),
             ),
         ],
-        if (!toonFormulier && stand.status != HhOuderStatus.gegeven) ...[
+        if (!toonFormulier && magZelfMailen(stand)) ...[
           SizedBox(height: tussen),
           HhKnop(
             label: TekstenOuderNl.opnieuw,
@@ -188,7 +194,7 @@ class _OuderScreenState extends ConsumerState<OuderScreen> {
                 : () => setState(() => _wijzigt = true),
           ),
         ],
-        if (!toonFormulier && stand.status != HhOuderStatus.gegeven) ...[
+        if (!toonFormulier && magZelfMailen(stand)) ...[
           SizedBox(height: klein),
           Text(
             stand.kanOpnieuw

@@ -35,9 +35,10 @@ abstract final class TekstenAanmeldenNl {
   static const veldGeboortedatum = 'Geboortedatum';
   static const veldGeboortedatumHulp =
       'Dag-maand-jaar, bijvoorbeeld 14-05-2012.';
-  static const veldOuder = 'E-mail of mobiel van je ouder';
+  static const veldOuder = 'E-mailadres van je ouder';
   static const veldOuderHulp =
-      'Je bent onder de 18. Je ouder geeft één keer toestemming.';
+      'Je bent onder de 18. Je ouder krijgt een mail en geeft één keer '
+      'toestemming.';
   static const postcodeUitleg =
       'Met je postcode zoeken we klussen bij jou in de buurt.';
 
@@ -66,10 +67,10 @@ abstract final class TekstenAanmeldenNl {
   static const validatieTeJong =
       'Je moet minstens 10 jaar zijn om helper te worden. Kom terug als je '
       '10 bent.';
-  static const validatieOuderVerplicht =
-      'Vul het e-mailadres of mobiele nummer van je ouder in.';
-  static const validatieOuderOngeldig =
-      'Vul een e-mailadres in, of een mobiel nummer dat begint met 06.';
+  static const validatieOuderVerplicht = 'Vul het e-mailadres van je ouder in.';
+  static const validatieOuderOngeldig = 'Vul een geldig e-mailadres in.';
+  static const validatieOuderEigen =
+      'Vul het e-mailadres van je ouder in, niet je eigen adres.';
   static const validatieAkkoord =
       'Zet het vinkje om akkoord te gaan met de voorwaarden.';
 

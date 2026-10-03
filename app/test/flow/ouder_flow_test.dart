@@ -173,18 +173,35 @@ void main() {
       expect(_tekstVanMeldBalken(tester), contains(TekstenOuderNl.verlopenKop));
     });
 
-    testWidgets('ingetrokken: duidelijke melding en opnieuw vragen kan', (
-      tester,
-    ) async {
-      final ouder = _ouder(HhOuderStatus.ingetrokken);
-      await _pompScherm(tester, ouder);
-      expect(
-        _tekstVanMeldBalken(tester),
-        contains(TekstenOuderNl.ingetrokkenKop),
-      );
-      await tikKnop(tester, TekstenOuderNl.opnieuw);
-      expect(ouder.verstuurd, hasLength(1));
-    });
+    testWidgets(
+      'ingetrokken: melding "meldkamer neemt contact op", geen knoppen',
+      (tester) async {
+        final ouder = _ouder(HhOuderStatus.ingetrokken);
+        await _pompScherm(tester, ouder);
+        final tekst = _tekstVanMeldBalken(tester);
+        expect(tekst, contains(TekstenOuderNl.ingetrokkenKop));
+        expect(tekst, contains('De meldkamer neemt contact met je op.'));
+        expect(
+          find.widgetWithText(HhKnop, TekstenOuderNl.opnieuw),
+          findsNothing,
+        );
+        expect(
+          find.widgetWithText(HhKnop, TekstenOuderNl.wijzig),
+          findsNothing,
+        );
+        expect(find.text(TekstenOuderNl.nogVandaag(3)), findsNothing);
+        expect(ouder.verstuurd, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'na vrijgeven door de meldkamer (status geen): mail gaat weer',
+      (tester) async {
+        final ouder = _ouder(HhOuderStatus.geen);
+        await _pompScherm(tester, ouder);
+        expect(ouder.verstuurd, hasLength(1));
+      },
+    );
 
     testWidgets('gegeven: geen "Stuur opnieuw" meer', (tester) async {
       await _pompScherm(tester, _ouder(HhOuderStatus.gegeven));
@@ -291,7 +308,8 @@ void main() {
       );
       expect(find.text(TekstenOuderNl.ingetrokkenKop), findsOneWidget);
       expect(_klussenLijst, findsNothing);
-      expect(find.text(TekstenOuderNl.balkKnop), findsOneWidget);
+      // Eerst de meldkamer: geen knop om zelf opnieuw te mailen.
+      expect(find.text(TekstenOuderNl.balkKnop), findsNothing);
     });
 
     testWidgets('onder 18 in behandeling: eerst de ouder-balk', (tester) async {

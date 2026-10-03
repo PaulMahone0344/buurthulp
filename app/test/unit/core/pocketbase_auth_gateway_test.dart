@@ -97,7 +97,7 @@ void main() {
           geboortedatum: DateTime.utc(2012, 5, 14),
           postcode: '4003ab',
           huisnummer: '7',
-          ouder: const OuderEmail('ouder@voorbeeld.nl'),
+          ouderEmail: 'ouder@voorbeeld.nl',
         ),
       );
 

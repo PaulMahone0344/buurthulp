@@ -119,9 +119,9 @@ class HelperWachtStart extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (tekst != null) WachtBalk(kop: tekst.$1, uitleg: tekst.$2),
-        // B3: naar de stap "Ouder" (opnieuw sturen, adres wijzigen).
-        if (wacht == HelperWacht.ouder ||
-            wacht == HelperWacht.ouderIngetrokken) ...[
+        // B3: naar de stap "Ouder" (opnieuw sturen, adres wijzigen). Na
+        // intrekken niet: dan eerst de meldkamer.
+        if (wacht == HelperWacht.ouder) ...[
           SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
           HhKnop(
             label: TekstenOuderNl.balkKnop,
