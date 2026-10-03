@@ -53,14 +53,15 @@ void main() {
   });
 
   testWidgets(
-    'registreren als hulpvrager: G2 -> G4 groot -> G5 -> /hulpvrager groot',
+    'registreren als hulpvrager: G2 -> G4 -> G5 -> /hulpvrager, letters normaal',
     (tester) async {
       final gateway = fakeMetAlleRollen();
       await pompApp(tester, gateway: gateway);
 
       await _tik(tester, TekstenNl.keuzeZoekHulp);
       expect(find.byType(RegistrerenScreen), findsOneWidget);
-      expect(_dichtheid(tester), HhDichtheid.groot);
+      // Sinds 3 okt geen verschil per rol: grote letters is een schakelaar.
+      expect(_dichtheid(tester), HhDichtheid.normaal);
 
       await _vul(tester, 0, 'Mevrouw Jansen');
       await _vul(tester, 1, 'jansen@voorbeeld.nl');
@@ -74,7 +75,7 @@ void main() {
       await _tik(tester, TekstenNl.verder);
 
       expect(find.byType(HulpvragerStubScreen), findsOneWidget);
-      expect(_dichtheid(tester), HhDichtheid.groot);
+      expect(_dichtheid(tester), HhDichtheid.normaal);
       expect(
         find.text(TekstenNl.landingWelkom('Mevrouw Jansen')),
         findsOneWidget,
@@ -95,7 +96,7 @@ void main() {
       await _tik(tester, TekstenNl.inloggenKnop);
 
       expect(find.byType(_landingVan(rol)), findsOneWidget);
-      expect(_dichtheid(tester), rol.dichtheid);
+      expect(_dichtheid(tester), HhDichtheid.normaal);
       expect(opslag.waarden[_tokenSleutel], testToken(rol));
     });
   }

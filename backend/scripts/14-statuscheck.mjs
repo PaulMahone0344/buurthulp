@@ -342,6 +342,21 @@ async function main() {
     const vreemd = await klusOp('geaccepteerd', 'annuleren door een vreemde');
     r = await annuleer(j3, vreemd.id, 'Ik ken deze klus helemaal niet.');
     check(`een vreemde annuleert -> 403 (kreeg ${r.status})`, r.status === 403 && r.body?.reden === 'geendeelnemer', JSON.stringify(r.body));
+
+    // M14: de meldkamer annuleert ook een klus die de oudere zelf in de app zette.
+    for (const status of ['open', 'geaccepteerd', 'onderweg']) {
+      const k = await klusOp(status, `annuleren coordinator bij ${status}`);
+      const reden = `Oudere belde de meldkamer af (${status}).`;
+      const rc = await annuleer(co, k.id, reden);
+      check(`coordinator annuleert bij ${status} -> 200 geannuleerd (kreeg ${rc.status})`, rc.status === 200 && rc.body?.status === 'geannuleerd', JSON.stringify(rc.body));
+      const logs = await logsVan(su, k.id);
+      const laatste = logs[logs.length - 1];
+      check(`  de laatste logregel is ${status} -> geannuleerd, door de coordinator, met de reden`, laatste?.van === status && laatste?.naar === 'geannuleerd' && laatste?.door === U.coordinator1 && laatste?.toelichting === reden, `${laatste?.van}->${laatste?.naar} door=${laatste?.door} "${laatste?.toelichting}"`);
+    }
+    const coBezig = await klusOp('bezig', 'annuleren coordinator bij bezig');
+    r = await annuleer(co, coBezig.id, 'Meldkamer wil toch stoppen.');
+    check(`coordinator annuleert bij bezig -> 409 (kreeg ${r.status})`, r.status === 409 && r.body?.reden === 'bezig', JSON.stringify(r.body));
+
     r = await annuleer(hv1, vreemd.id, 'kort');
     check(`reden te kort (4 tekens) -> 400 (kreeg ${r.status})`, r.status === 400 && r.body?.reden === 'reden', JSON.stringify(r.body));
     r = await annuleer(hv1, vreemd.id, 'x'.repeat(301));

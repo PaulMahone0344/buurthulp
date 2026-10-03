@@ -5,6 +5,7 @@ import 'screen/coordinator_klus_detail_screen.dart';
 import 'screen/coordinator_klussen_screen.dart';
 import 'screen/coordinator_tab_schermen.dart';
 import 'screen/incident_detail_screen.dart';
+import '../../design/components/hh_tabbalk.dart';
 
 /// Routes van de coordinator in de app (M10: C1-detail, C2, C2-detail en het
 /// tabblad Instellingen). C1 zelf zit op de landing /coordinator in
@@ -13,11 +14,13 @@ import 'screen/incident_detail_screen.dart';
 List<RouteBase> coordinatorRoutes() => [
   GoRoute(
     path: HhPadenCoordinator.klussen,
-    builder: (context, state) => const CoordinatorKlussenScreen(),
+    pageBuilder: (context, state) =>
+        hhTabPagina(state, const CoordinatorKlussenScreen()),
   ),
   GoRoute(
     path: HhPadenCoordinator.instellingen,
-    builder: (context, state) => const CoordinatorInstellingenScreen(),
+    pageBuilder: (context, state) =>
+        hhTabPagina(state, const CoordinatorInstellingenScreen()),
   ),
   GoRoute(
     path: HhPadenCoordinator.incidentPatroon,

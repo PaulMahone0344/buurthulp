@@ -161,12 +161,26 @@ class _PulsState extends State<_Puls> with SingleTickerProviderStateMixin {
   late final AnimationController _besturing = AnimationController(
     vsync: this,
     duration: _duur,
-  )..repeat(reverse: true);
+  );
 
   late final Animation<double> _dekking = Tween<double>(
     begin: 1,
     end: _laagsteDekking,
   ).animate(CurvedAnimation(parent: _besturing, curve: Curves.easeInOut));
+
+  /// "Verminder beweging" van het toestel (M12): dan staat het skelet
+  /// stil op volle dekking.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _besturing
+        ..stop()
+        ..value = 0;
+    } else if (!_besturing.isAnimating) {
+      _besturing.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {

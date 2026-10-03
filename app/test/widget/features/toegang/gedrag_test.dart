@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:heitjehulp_app/app/dichtheid_controller.dart';
 import 'package:heitjehulp_app/core/config.dart';
 import 'package:heitjehulp_app/core/hh_fout.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
@@ -200,13 +201,34 @@ void main() {
         opslag: opslag,
       );
 
-      await _tik(tester, find.byType(Switch));
+      await _tik(tester, find.byType(Switch).at(1));
 
       expect(opslag.waarden['hh_meldingen_aan'], 'false');
       final container = ProviderScope.containerOf(
         tester.element(find.byType(InstellingenScreen)),
       );
       expect(container.read(meldingenVoorkeurProvider), isFalse);
+    });
+
+    testWidgets('grotere-letters-schakelaar maakt de app groot en bewaart', (
+      tester,
+    ) async {
+      final opslag = GeheugenKeyValueStore();
+      await _pomp(
+        tester,
+        const InstellingenScreen(),
+        gateway: fakeMetAlleRollen(),
+        sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
+        opslag: opslag,
+      );
+
+      await _tik(tester, find.byType(Switch).first);
+
+      expect(opslag.waarden['hh_grote_letters'], 'true');
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(InstellingenScreen)),
+      );
+      expect(container.read(dichtheidProvider), HhDichtheid.groot);
     });
 
     testWidgets('account wissen vraagt bevestiging; annuleren doet niets', (

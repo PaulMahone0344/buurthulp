@@ -742,3 +742,142 @@ vóór 42)
   Hook hh_meldingen_hulp.js: noodmelding alleen aan een ACTIEF familielid;
     koppelt de coordinator (door != jongere), dan krijgt de jongere ook
     "toegewezen" ("Je hebt een klus").
+M14 - BEHEERPANEEL OP HET WEB (19 sep 2026, afgemaakt 1 okt 2026)
+================================================================
+
+De website (website/, #/beheer) praat rechtstreeks met de hh_-collecties
+als ingelogde hh_users-coordinator. De rechten zitten in de API-rules; het
+paneel verbergt niets "voor de zekerheid".
+
+VELDEN (scripts/60-beheer-velden.mjs, additief)
+  hh_profielen  screening_notitie  tekst, max 1000 (notitie bij goedkeuren/afkeuren)
+                vog_geldig_tot     datum (signaal "VOG verloopt binnen 60 dagen")
+                intake_op          datum (intakegesprek gehad op; leeg = nog niet)
+  hh_users      geblokkeerd        ja/nee
+
+hh_instellingen  NIEUW (2 velden + created/updated)
+  sleutel   tekst, verplicht, max 100; index idx_hh_instellingen_sleutel UNIEK
+  waarde    json
+  Sleutels uit het paneel: commissiepercentage, straal_km, annuleertermijn_uren.
+  Alleen opgeslagen; er hangt nog geen gedrag aan.
+  Regels: alles alleen coordinator.
+
+hh_auditlog  NIEUW (5 velden + created/updated)
+  door            verwijzing naar hh_users (niet verplicht, geen cascade)
+  actie           keuze, verplicht: aanmaken | wijzigen | verwijderen
+  doel_collectie  tekst, verplicht
+  doel_id         tekst
+  detail          json: {velden, waarden} of {velden, van, naar}; geheime
+                  velden (wachtwoord, iban, document_foto, selfie) alleen bij naam
+  Indexen: door; created.
+  Regels: lezen alleen coordinator; aanmaken/bijwerken/verwijderen niemand
+  (null); de hook schrijft via $app.
+
+RULES (scripts/61-beheer-rules.mjs)
+  Nieuwe collecties: gezet zoals hierboven.
+  Bestaande: GEWIKKELD (de rule op de server blijft letterlijk staan):
+    hh_users.createRule/updateRule      (huidig) && ((coordinator) || (@request.body.geblokkeerd:isset = false))
+    hh_profielen.createRule/updateRule  (huidig) && ((coordinator) || (screening_notitie, vog_geldig_tot en intake_op niet in de body))
+  Draai 02, 06, 13 of 21 daarna niet meer met --apply zonder 61 opnieuw.
+
+HOOK (backend/pb_hooks/hh_beheer.pb.js + hh_beheer_hulp.js, deploy met
+scripts/63-hook-deploy.sh; 10-hook-deploy.sh kent alleen hh_klussen.pb.js)
+  - onRecordAuthWithPasswordRequest hh_users: geblokkeerd -> 400 "Dit account
+    is geblokkeerd. Neem contact op met de meldkamer."
+  - routerUse: een geldig token van een geblokkeerde hh_users-gebruiker op
+    /api/hh/*, /api/collections/hh_* (ook auth-refresh) of /api/realtime
+    -> 403 met dezelfde melding. Andere paden en andere projecten: ongemoeid.
+    Fail-open bij een fout in het nakijken.
+  - onRecordCreate/Update/DeleteRequest op hh_wijken, hh_klustypes, hh_users,
+    hh_profielen, hh_instellingen, hh_incidenten: na e.next(), alleen als de
+    aanvrager een coordinator is, een regel in hh_auditlog (in try/catch;
+    breekt de handeling nooit). Request-hooks i.p.v. after-success: die
+    laatste kennen in PB 0.25 geen auth.
+  Test zonder server: node --test backend/tests/*.test.mjs.
+
+GEBRUIKTE ROUTES (niets nieuws): koppelen/vrijgeven (M10, hh_coordinator.pb.js),
+annuleren (M6, hh_klussen.pb.js; laat de coordinator alleen toe bij een klus die
+hij zelf plaatste, zie website/OPEN-PUNTEN-M14.txt).
+
+BEHEERCHECK (scripts/62-beheercheck.mjs, dry-run standaard)
+  Zonder --apply: velden, collecties, rules, slot, anoniem ziet niets. Met
+  --apply, met eigen tijdelijke accounts per rol en records "[beheercheck]":
+  keuze 2 (andere rollen en anoniem krijgen niets, ook op de nieuwe
+  collecties en routes), nieuwe velden alleen coordinator, blokkeren (inloggen,
+  oud token, verversen, deblokkeren), een auditregel per beheerhandeling,
+  telefonische klus doorloopt accepteren -> afgerond, alles opgeruimd.
+
+================================================================
+B1 - MODEL B: VELDEN, RULES, ID-WISSEN (3 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b1.txt)
+================================================================
+
+Besluit 3 okt: de rolcodes BLIJVEN (hulpvrager, jongere, familie,
+coordinator); in zichtbare tekst heten ze bewoner en helper. Velden
+verwijderen (selfie, intake_op, telefoon, vog_status) gebeurt NIET in B1:
+de app gebruikt ze nog; dat volgt na B2. B1 is additief + hooks.
+
+VELDEN (scripts/70-b1-velden.mjs, additief, idempotent)
+  hh_users      ouder_email           e-mail (helper <18)
+                ouder_telefoon        tekst, max 20 (helper <18)
+                ouder_toestemming_op  datum   (alleen coordinator/server)
+                ouder_iban_ok         ja/nee  (alleen coordinator/server)
+                huisnummer            tekst, max 10
+                (al aanwezig, overgeslagen: geboortedatum (M1), adres,
+                postcode, plaats (M4))
+  hh_profielen  id_gecontroleerd_op   datum   (alleen coordinator; hook)
+                id_gecontroleerd_door verwijzing naar hh_users, 1, geen
+                                      cascade (alleen coordinator; hook)
+                vog_gezien_op         datum, helper 18+; alleen de datum,
+                                      niet het document (alleen coordinator)
+
+RULES (scripts/71-b1-rules.mjs, GEWIKKELD zoals 61; list/view/delete
+ongemoeid)
+  hh_users.createRule/updateRule      (huidig) && ((coordinator) ||
+    (@request.body.ouder_toestemming_op:isset = false &&
+     @request.body.ouder_iban_ok:isset = false))
+  hh_profielen.createRule/updateRule  (huidig) && ((coordinator) ||
+    (@request.body.id_gecontroleerd_op:isset = false &&
+     @request.body.id_gecontroleerd_door:isset = false &&
+     @request.body.vog_gezien_op:isset = false))
+  ouder_email, ouder_telefoon en huisnummer mag de eigenaar zelf meesturen
+  (ook bij anoniem registreren); daarvoor verandert geen rule.
+  hh_profielen lezen blijft: eigen profiel of coordinator. Een bewoner kan
+  het profiel van een helper dus niet lezen en document_foto (PROTECTED)
+  niet ophalen, ook niet met een eigen bestandstoken.
+  VOLGORDE: 70 --apply vóór 71 --apply (71 weigert anders). Draai 02, 06,
+  13, 21 of 61 daarna niet meer met --apply zonder 71 opnieuw.
+
+HOOK (backend/pb_hooks/hh_beheer.pb.js punt 3 + hh_beheer_hulp.js
+isGoedkeuring; deploy met scripts/73-hook-deploy.sh)
+  onRecordUpdateRequest hh_profielen: zet een COORDINATOR via de API
+  verificatiestatus van iets anders naar "goedgekeurd", dan VOOR het
+  opslaan: document_foto leeg (PocketBase verwijdert het bestand),
+  id_gecontroleerd_op = nu, id_gecontroleerd_door = de coordinator.
+  Nogmaals goedgekeurd opslaan doet niets; afwijzen wist niet. Superuser
+  of $app (scripts, andere hooks) valt er niet onder. De M14-auditregel
+  noemt document_foto alleen bij naam.
+
+TEKSTEN (hooks, zichtbaar voor gebruikers; rolcodes en veldnamen NIET
+veranderd)
+  hh_familie_hulp.js   "krijgt uw familielid" -> "krijgt je familielid";
+                       "U heeft vandaag al vaak" -> "Je hebt vandaag al vaak"
+  hh_meldingen_hulp.js "uw familielid" -> "je familielid"; "uw hulpvraag"
+                       -> "je hulpvraag" (2x); "Onderweg naar u" ->
+                       "Onderweg naar jou" (titel + tekst); "voor u." ->
+                       "voor jou." (2x)
+  hh_coordinator.pb.js "jongere" -> "helper" in 5 meldingen
+  hh_klussen.pb.js     "Alleen een jongere kan" -> "Alleen een helper kan"
+
+B1CHECK (scripts/72-b1check.mjs, dry-run standaard)
+  Zonder --apply: velden en slot (alleen lezen). Met --apply, met eigen
+  tijdelijke accounts "b1check-...@heitjehulp.invalid": eigenaar zet de
+  vrije velden wel en de server-velden niet (ook niet bij registreren of
+  profiel aanmaken), coordinator wel; bewoner kan profiel en ID-foto van
+  een helper niet ophalen; goedkeuren wist het bestand op de server en
+  zet id_gecontroleerd_*; afwijzen wist niet; alles opgeruimd.
+  Test zonder server: node --test backend/tests/*.test.mjs (64 tests).
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 70 --apply -> 71 --apply -> 73-hook-deploy.sh ->
+  72-b1check.mjs --apply

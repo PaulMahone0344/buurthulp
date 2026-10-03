@@ -18,7 +18,8 @@
 //    Antwoorden:
 //      200 { klus, status: "geaccepteerd", toegewezen_jongere }
 //      401 anoniem ($apis.requireAuth)
-//      403 geen jongere, niet goedgekeurd, of geen wijk ingesteld
+//      403 geen jongere, niet goedgekeurd, geen wijk ingesteld, of
+//          { melding, reden: "vogverlopen" } (vog_geldig_tot vóór vandaag)
 //      404 klus bestaat niet
 //      409 { melding, reden: "bezet" | "wijk" } — al aangenomen, niet meer
 //          open, of de oudere woont in een andere wijk
@@ -102,11 +103,13 @@ routerAdd(
   (e) => {
     const MELDING_BEZET = "Deze klus is net door iemand anders aangenomen.";
     const MELDING_WIJK = "Deze klus ligt niet in jouw wijk.";
-    const MELDING_GEEN_JONGERE = "Alleen een jongere kan een klus aannemen.";
+    const MELDING_GEEN_JONGERE = "Alleen een helper kan een klus aannemen.";
     const MELDING_NIET_GOEDGEKEURD =
       "Je aanmelding is nog niet goedgekeurd. Je kunt nog geen klussen aannemen.";
     const MELDING_GEEN_WIJK = "Stel eerst je werkgebied in.";
     const MELDING_NIET_GEVONDEN = "Deze klus bestaat niet meer.";
+    const MELDING_VOG_VERLOPEN =
+      "Je VOG is verlopen. Vraag de coördinator naar een nieuwe VOG; tot die tijd kun je geen klussen aannemen.";
 
     const klusId = String(e.request.pathValue("id") || "").trim();
     if (!klusId) {
@@ -125,6 +128,9 @@ routerAdd(
     }
     if (!isGoedgekeurd(jongereId)) {
       return e.json(403, { melding: MELDING_NIET_GOEDGEKEURD, reden: "nietgoedgekeurd" });
+    }
+    if (isVogVerlopen(jongereId)) {
+      return e.json(403, { melding: MELDING_VOG_VERLOPEN, reden: "vogverlopen" });
     }
 
     // --- De toewijzing: alles in één transactie ----------------------------
@@ -198,6 +204,29 @@ routerAdd(
         { gebruiker: gebruikerId }
       );
       return rijen.length > 0;
+    }
+
+    /// Zelfde regel als hh_coordinator (M14): verlopen = vog_geldig_tot ligt
+    /// vóór vandaag (UTC); de dag zelf telt nog mee. Leeg veld = niet verlopen.
+    function isVogVerlopen(gebruikerId) {
+      const rijen = $app.findRecordsByFilter(
+        "hh_profielen",
+        "gebruiker = {:gebruiker}",
+        "",
+        1,
+        0,
+        { gebruiker: gebruikerId }
+      );
+      if (rijen.length === 0) return false;
+      const geldigTot = String(rijen[0].get("vog_geldig_tot") || "").slice(0, 10);
+      if (!geldigTot) return false;
+      const nu = new Date();
+      const vandaag = new Date(
+        Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), nu.getUTCDate())
+      )
+        .toISOString()
+        .slice(0, 10);
+      return geldigTot < vandaag;
     }
   },
   $apis.requireAuth("hh_users")
@@ -311,6 +340,8 @@ routerAdd(
 // --------------------------------------------------------------------------
 // M6 — POST /api/hh/klussen/{id}/annuleren   body {reden}
 // De oudere annuleert de klus; de jongere geeft hem terug aan de buurt.
+// M14: een coordinator (meldkamer) annuleert net als de oudere, ook bij een
+// klus die de oudere zelf in de app zette.
 // --------------------------------------------------------------------------
 routerAdd(
   "POST",
@@ -346,6 +377,7 @@ routerAdd(
     }
 
     const authId = e.auth.id;
+    const isCoordinator = String(e.auth.get("rol") || "") === "coordinator";
 
     let uitkomst = "";
     let nieuweStatus = "";
@@ -360,8 +392,9 @@ routerAdd(
       const hulpvrager = String(klus.get("hulpvrager") || "").trim();
       const geplaatstDoor = String(klus.get("geplaatst_door") || "").trim();
       const toegewezen = String(klus.get("toegewezen_jongere") || "").trim();
-      const isOudere = authId === hulpvrager || authId === geplaatstDoor;
-      const isJongere = toegewezen !== "" && authId === toegewezen;
+      // De coordinator annuleert namens de oudere: zelfde regels, zelfde uitkomst.
+      const isOudere = authId === hulpvrager || authId === geplaatstDoor || isCoordinator;
+      const isJongere = !isOudere && toegewezen !== "" && authId === toegewezen;
       if (!isOudere && !isJongere) {
         uitkomst = "geendeelnemer";
         return;

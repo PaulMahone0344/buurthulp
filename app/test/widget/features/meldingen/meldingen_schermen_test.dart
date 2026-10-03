@@ -333,9 +333,7 @@ void main() {
   });
 
   group('aanhaakpunten', () {
-    testWidgets('O1: nog steeds drie grote knoppen, Bel ons opent O10', (
-      tester,
-    ) async {
+    testWidgets('O1: één grote knop, de tab Bel ons opent O10', (tester) async {
       await tester.pumpWidget(
         hhMeldingenWikkel(
           HhPaden.hulpvrager,
@@ -350,9 +348,9 @@ void main() {
             .evaluate()
             .where((e) => (e.widget as HhKnop).soort != HhKnopSoort.tekst)
             .length,
-        3,
+        1,
       );
-      await tikKnop(tester, TekstenHulpvragerNl.homeBelOns);
+      await tikTekst(tester, TekstenHulpvragerNl.tabBelOns);
       expect(find.text(TekstenMeldingenNl.o10Bellen), findsOneWidget);
     });
 

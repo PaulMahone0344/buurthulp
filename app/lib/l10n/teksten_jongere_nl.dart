@@ -1,4 +1,4 @@
-// Schermteksten van de screeningstroom van de jongere (M3, J1-J9). Eigen
+// Schermteksten van de screeningstroom van de helper (M3, J1-J9). Eigen
 // bestand naast teksten_nl.dart; nergens een losse string in een widget.
 
 abstract final class TekstenJongereNl {
@@ -33,7 +33,7 @@ abstract final class TekstenJongereNl {
   // J1 Profiel
   static const j1Titel = 'Je profiel';
   static const j1Uitleg =
-      'Ouderen zien je foto en een korte tekst over jou voordat ze je '
+      'Bewoners zien je foto en een korte tekst over jou voordat ze je '
       'binnenlaten. Maak het persoonlijk.';
   static const j1FotoKop = 'Je foto';
   static const j1FotoHulp = 'Een duidelijke foto van je gezicht.';
@@ -73,7 +73,7 @@ abstract final class TekstenJongereNl {
   static const j4Titel = 'VOG';
   static const j4Uitleg =
       'Een Verklaring Omtrent het Gedrag (VOG) laat zien dat je te '
-      'vertrouwen bent bij ouderen thuis. Je vraagt hem aan bij Justis; de '
+      'vertrouwen bent bij mensen thuis. Je vraagt hem aan bij Justis; de '
       'meldkamer zet daarna de status op goedgekeurd.';
   static const j4Aanvragen = 'VOG aanvragen';
   static const j4AanvragenLuktNiet =

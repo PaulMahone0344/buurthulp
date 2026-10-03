@@ -1,16 +1,41 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/toegang/provider/sessie_providers.dart';
+import '../core/pb/gateway_providers.dart';
 import '../theme.dart';
 
-/// De dichtheid volgt de rol (app OPEN-PUNT 10, opgelost in M2):
-/// ingelogd als hulpvrager = groot, elke andere rol normaal. Voor het
-/// inloggen geldt de rol die op G2 is gekozen: groot zodra "Ik zoek hulp"
-/// is gekozen, anders normaal. Niemand zet de dichtheid nog met de hand;
-/// een instelbare maat (G9) komt later.
-final dichtheidProvider = Provider<HhDichtheid>((ref) {
-  final gebruiker = ref.watch(huidigeGebruikerProvider);
-  if (gebruiker != null) return gebruiker.rol.dichtheid;
-  final gekozen = ref.watch(gekozenRolProvider);
-  return gekozen?.dichtheid ?? HhDichtheid.normaal;
-});
+const _groteLettersSleutel = 'hh_grote_letters';
+
+/// De schakelaar "Grotere letters" in Instellingen (3 okt, G9). Geen
+/// verschil meer per rol: iedereen begint normaal en kiest zelf. Lokaal
+/// bewaard, zoals de meldingen-schakelaar.
+class GroteLettersController extends Notifier<bool> {
+  @override
+  bool build() {
+    unawaited(_laad());
+    return false;
+  }
+
+  Future<void> _laad() async {
+    final bewaard = await ref
+        .read(keyValueStoreProvider)
+        .lees(_groteLettersSleutel);
+    if (bewaard != null) state = bewaard == 'true';
+  }
+
+  Future<void> zet(bool aan) async {
+    state = aan;
+    await ref.read(keyValueStoreProvider).schrijf(_groteLettersSleutel, '$aan');
+  }
+}
+
+final groteLettersProvider = NotifierProvider<GroteLettersController, bool>(
+  GroteLettersController.new,
+);
+
+/// De dichtheid van de hele app: groot als "Grotere letters" aan staat.
+final dichtheidProvider = Provider<HhDichtheid>(
+  (ref) =>
+      ref.watch(groteLettersProvider) ? HhDichtheid.groot : HhDichtheid.normaal,
+);

@@ -105,7 +105,7 @@ void main() {
   });
 
   group('statusZin', () {
-    test('zonder jongere: we zoeken iemand voor u', () {
+    test('zonder helper: we zoeken iemand voor je', () {
       expect(
         statusZin(uitvoerKlus(status: HhKlusStatus.open, metJongere: false)),
         TekstenUitvoerenNl.o7GeenJongere,
@@ -115,15 +115,15 @@ void main() {
     test('met jongere: de voornaam staat in de zin', () {
       expect(
         statusZin(uitvoerKlus(status: HhKlusStatus.onderweg)),
-        'Sanne is onderweg naar u.',
+        'Sanne is onderweg naar je.',
       );
       expect(
         statusZin(uitvoerKlus(status: HhKlusStatus.bezig)),
-        'Sanne is bij u aan het werk.',
+        'Sanne is bij je aan het werk.',
       );
       expect(
         statusZin(uitvoerKlus(status: HhKlusStatus.geaccepteerd)),
-        'Sanne komt u helpen.',
+        'Sanne komt je helpen.',
       );
       expect(
         statusZin(uitvoerKlus(status: HhKlusStatus.afgerond)),

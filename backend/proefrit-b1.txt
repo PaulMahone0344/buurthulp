@@ -1,0 +1,46 @@
+HeitjeHulp B1 — proefrit (DRY-RUN, niets geschreven) 2026-10-03T19:56:39Z
+Branch b1/server. NOG NIET OP PROD.
+
+=== node scripts/70-b1-velden.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+  ✓ bestaat al (eerdere milestone): hh_users.geboortedatum
+  ✓ bestaat al (eerdere milestone): hh_users.adres
+  ✓ bestaat al (eerdere milestone): hh_users.postcode
+  ✓ bestaat al (eerdere milestone): hh_users.plaats
+  + ZOU toevoegen: hh_users.ouder_email (email)
+  + ZOU toevoegen: hh_users.ouder_telefoon (text, max 20)
+  + ZOU toevoegen: hh_users.ouder_toestemming_op (date)
+  + ZOU toevoegen: hh_users.ouder_iban_ok (bool)
+  + ZOU toevoegen: hh_users.huisnummer (text, max 10)
+  + ZOU toevoegen: hh_profielen.id_gecontroleerd_op (date)
+  + ZOU toevoegen: hh_profielen.id_gecontroleerd_door (relation, -> hh_users, 1, geen cascade)
+  + ZOU toevoegen: hh_profielen.vog_gezien_op (date)
+
+DRY-RUN: 8 veld(en) zouden worden toegevoegd. Draai met --apply.
+
+=== node scripts/71-b1-rules.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+! hh_users: velden ontbreken nog (ouder_toestemming_op, ouder_iban_ok) — draai eerst 70 --apply; PocketBase weigert een rule op een onbekend veld.
++ ZOU hh_users.createRule wikkelen — dry-run
+  - oud:   "(((@request.body.rol = \"hulpvrager\" || @request.body.rol = \"jongere\" || @request.body.rol = \"familie\") || (@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\")) && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.geblokkeerd:isset = false))"
+  + nieuw: "((((@request.body.rol = \"hulpvrager\" || @request.body.rol = \"jongere\" || @request.body.rol = \"familie\") || (@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\")) && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.geblokkeerd:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.ouder_toestemming_op:isset = false && @request.body.ouder_iban_ok:isset = false))"
+  = erbij: (OUD) && ((@request.auth.collectionName = "hh_users" && @request.auth.rol = "coordinator") || (@request.body.ouder_toestemming_op:isset = false && @request.body.ouder_iban_ok:isset = false))
++ ZOU hh_users.updateRule wikkelen — dry-run
+  - oud:   "((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((id = @request.auth.id && @request.body.rol:isset = false) || @request.auth.rol = \"coordinator\")) && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.geblokkeerd:isset = false))"
+  + nieuw: "(((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((id = @request.auth.id && @request.body.rol:isset = false) || @request.auth.rol = \"coordinator\")) && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.geblokkeerd:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.ouder_toestemming_op:isset = false && @request.body.ouder_iban_ok:isset = false))"
+  = erbij: (OUD) && ((@request.auth.collectionName = "hh_users" && @request.auth.rol = "coordinator") || (@request.body.ouder_toestemming_op:isset = false && @request.body.ouder_iban_ok:isset = false))
+! hh_profielen: velden ontbreken nog (id_gecontroleerd_op, id_gecontroleerd_door, vog_gezien_op) — draai eerst 70 --apply; PocketBase weigert een rule op een onbekend veld.
++ ZOU hh_profielen.createRule wikkelen — dry-run
+  - oud:   "(@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((@request.body.gebruiker = @request.auth.id && @request.body.verificatiestatus:isset = false && @request.body.vog_status:isset = false && @request.body.iban_geverifieerd:isset = false && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false && @request.body.intake_op:isset = false))"
+  + nieuw: "((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((@request.body.gebruiker = @request.auth.id && @request.body.verificatiestatus:isset = false && @request.body.vog_status:isset = false && @request.body.iban_geverifieerd:isset = false && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false && @request.body.intake_op:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.id_gecontroleerd_op:isset = false && @request.body.id_gecontroleerd_door:isset = false && @request.body.vog_gezien_op:isset = false))"
+  = erbij: (OUD) && ((@request.auth.collectionName = "hh_users" && @request.auth.rol = "coordinator") || (@request.body.id_gecontroleerd_op:isset = false && @request.body.id_gecontroleerd_door:isset = false && @request.body.vog_gezien_op:isset = false))
++ ZOU hh_profielen.updateRule wikkelen — dry-run
+  - oud:   "(@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((gebruiker = @request.auth.id && @request.body.gebruiker:isset = false && @request.body.vog_status:isset = false && @request.body.iban_geverifieerd:isset = false && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false && (@request.body.verificatiestatus:isset = false || ((verificatiestatus = \"nieuw\" || verificatiestatus = \"\") && @request.body.verificatiestatus = \"in_behandeling\"))) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false && @request.body.intake_op:isset = false))"
+  + nieuw: "((@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((gebruiker = @request.auth.id && @request.body.gebruiker:isset = false && @request.body.vog_status:isset = false && @request.body.iban_geverifieerd:isset = false && @request.body.sterren_gemiddeld:isset = false && @request.body.klussen_aantal:isset = false && (@request.body.verificatiestatus:isset = false || ((verificatiestatus = \"nieuw\" || verificatiestatus = \"\") && @request.body.verificatiestatus = \"in_behandeling\"))) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.screening_notitie:isset = false && @request.body.vog_geldig_tot:isset = false && @request.body.intake_op:isset = false))) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.id_gecontroleerd_op:isset = false && @request.body.id_gecontroleerd_door:isset = false && @request.body.vog_gezien_op:isset = false))"
+  = erbij: (OUD) && ((@request.auth.collectionName = "hh_users" && @request.auth.rol = "coordinator") || (@request.body.id_gecontroleerd_op:isset = false && @request.body.id_gecontroleerd_door:isset = false && @request.body.vog_gezien_op:isset = false))
+
+Vrij voor de eigenaar (geen rule-wijziging nodig): hh_users: ouder_email, ouder_telefoon, huisnummer
+
+DRY-RUN: 4 regel(s) zouden veranderen. Draai met --apply.

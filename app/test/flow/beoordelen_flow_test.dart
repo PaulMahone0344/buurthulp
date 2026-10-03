@@ -174,7 +174,7 @@ void main() {
       expect(find.byType(SterrenKiezer), findsNothing);
     });
 
-    testWidgets('dubbel -> "U heeft al een beoordeling gegeven."', (
+    testWidgets('dubbel -> "Je hebt al een beoordeling gegeven."', (
       tester,
     ) async {
       final beoordeling = fakeBeoordeling(ikBen: oudereId)
@@ -194,7 +194,7 @@ void main() {
       await tester.pumpAndSettle();
       await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmlaag);
       await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
-      expect(find.text('U heeft al een beoordeling gegeven.'), findsOneWidget);
+      expect(find.text('Je hebt al een beoordeling gegeven.'), findsOneWidget);
       expect(find.text(TekstenBeoordelenNl.o9Bedankt), findsNothing);
     });
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/core/config.dart';
 import 'package:heitjehulp_app/core/hh_fout.dart';
@@ -10,11 +11,9 @@ import 'package:heitjehulp_app/design/components/hh_scherm.dart';
 import 'package:heitjehulp_app/design/components/hh_stapbalk.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hulpvraag_concept.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/concept_controller.dart';
-import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_bevestigen_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_verstuurd_screen.dart';
-import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_waar_screen.dart';
-import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wanneer_screen.dart';
-import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_wat_screen.dart';
+import 'package:heitjehulp_app/features/hulpvrager/screen/hulp_vragen_screen.dart';
+import 'package:heitjehulp_app/features/hulpvrager/widget/hulpvraag_samenvatting.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_home_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/mijn_gegevens_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/veiligheid/screen/bel_ons_screen.dart';
@@ -35,17 +34,14 @@ class _Geval {
   final String naam;
   final Widget scherm;
 
-  /// Vooraf een compleet concept in de state, voor O4 en O5.
+  /// Vooraf een compleet concept in de state.
   final bool vulConcept;
 }
 
 const _gevallen = [
   _Geval('O1 home', HulpvragerHomeScreen()),
-  _Geval('O2 wat', HulpVragenWatScreen()),
-  _Geval('O3 wanneer', HulpVragenWanneerScreen()),
-  _Geval('O4 waar', HulpVragenWaarScreen()),
-  _Geval('O4 waar met invoer', HulpVragenWaarScreen(), vulConcept: true),
-  _Geval('O5 bevestigen', HulpVragenBevestigenScreen(), vulConcept: true),
+  _Geval('hulp vragen', HulpVragenScreen()),
+  _Geval('hulp vragen met invoer', HulpVragenScreen(), vulConcept: true),
   _Geval('O6 verstuurd', HulpVragenVerstuurdScreen()),
   _Geval('O12 mijn gegevens', MijnGegevensScreen()),
 ];
@@ -161,7 +157,7 @@ void main() {
   }
 
   group('O1', () {
-    testWidgets('toont naam, drie grote knoppen, instellingen en gegevens', (
+    testWidgets('toont naam, de knop hulp vragen en de tabbalk', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[0]);
@@ -171,10 +167,17 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(TekstenHulpvragerNl.homeHulpVragen), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeMijnHulpvragen), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeBelOns), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeInstellingen), findsOneWidget);
-      expect(find.text(TekstenHulpvragerNl.homeMijnGegevens), findsOneWidget);
+      // Sinds 3 okt tabs onderin; instellingen en gegevens zitten in Meer.
+      for (final tab in [
+        TekstenHulpvragerNl.tabStart,
+        TekstenHulpvragerNl.tabMijnHulpvragen,
+        TekstenHulpvragerNl.tabBelOns,
+        TekstenHulpvragerNl.tabMeer,
+      ]) {
+        expect(find.text(tab), findsOneWidget);
+      }
+      expect(find.text(TekstenHulpvragerNl.homeInstellingen), findsNothing);
+      expect(find.text(TekstenHulpvragerNl.homeMijnGegevens), findsNothing);
       expect(find.text(TekstenNl.uitloggen), findsNothing);
     });
 
@@ -213,22 +216,22 @@ void main() {
     });
   });
 
-  group('O2', () {
-    testWidgets('stapbalk zegt stap 1 van 4 en verder is uit zonder keuze', (
+  group('wat', () {
+    testWidgets('één pagina: wat, wanneer en waar met eigen kop', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[1]);
 
-      final stapbalk = tester.widget<HhStapbalk>(find.byType(HhStapbalk));
-      expect(stapbalk.zin, 'Stap 1 van 4');
-      expect(
-        tester.getSemantics(find.byType(HhStapbalk)).label,
-        contains('Stap 1 van 4'),
-      );
-      final verder = tester.widget<HhKnop>(
-        find.widgetWithText(HhKnop, TekstenNl.verder),
-      );
-      expect(verder.isActief, isFalse);
+      expect(find.byType(HhStapbalk), findsNothing);
+      for (final kop in [
+        TekstenHulpvragerNl.watTitel,
+        TekstenHulpvragerNl.wanneerTitel,
+        TekstenHulpvragerNl.waarTitel,
+      ]) {
+        expect(find.text(kop), findsOneWidget);
+      }
+      // Zonder alles ingevuld nog geen samenvatting.
+      expect(find.text(TekstenHulpvragerNl.bevestigenKaart), findsNothing);
     });
 
     testWidgets('zes soorten in twee rijen van drie, geen knop meer', (
@@ -248,10 +251,7 @@ void main() {
         klustypes: [...testKlustypes, testExtraKlustype],
       );
       await tester.pumpWidget(
-        hhHulpvragerWikkel(
-          const HulpVragenWatScreen(),
-          klusGateway: klusGateway,
-        ),
+        hhHulpvragerWikkel(const HulpVragenScreen(), klusGateway: klusGateway),
       );
       await tester.pumpAndSettle();
 
@@ -275,17 +275,15 @@ void main() {
     ) async {
       final klusGateway = fakeKlusGateway()..isOffline = true;
       await tester.pumpWidget(
-        hhHulpvragerWikkel(
-          const HulpVragenWatScreen(),
-          klusGateway: klusGateway,
-        ),
+        hhHulpvragerWikkel(const HulpVragenScreen(), klusGateway: klusGateway),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text(TekstenNl.foutGeenVerbinding), findsOneWidget);
+      // Wat en waar laden allebei; allebei melden ze de fout.
+      expect(find.text(TekstenNl.foutGeenVerbinding), findsWidgets);
 
       klusGateway.isOffline = false;
-      await tester.tap(find.text(TekstenNl.opnieuwProberen));
+      await tester.tap(find.text(TekstenNl.opnieuwProberen).first);
       await tester.pumpAndSettle();
 
       expect(find.text(testKlustypes.first.naam), findsOneWidget);
@@ -294,7 +292,7 @@ void main() {
     testWidgets('geen soorten: lege staat', (tester) async {
       await tester.pumpWidget(
         hhHulpvragerWikkel(
-          const HulpVragenWatScreen(),
+          const HulpVragenScreen(),
           klusGateway: fakeKlusGateway(klustypes: const []),
         ),
       );
@@ -304,14 +302,15 @@ void main() {
     });
   });
 
-  group('O3', () {
+  group('wanneer', () {
     testWidgets('dagdeel verschijnt pas na een dag; vandaag wordt gemeld', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[2]);
+      await _pomp(tester, _gevallen[1]);
 
       expect(find.text(TekstenHulpvragerNl.dagdeelOchtend), findsNothing);
 
+      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagVandaag));
       await tester.tap(find.text(TekstenHulpvragerNl.dagVandaag));
       await tester.pumpAndSettle();
 
@@ -325,13 +324,15 @@ void main() {
     testWidgets('kies een dag opent een lijst met grote dagknoppen', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[2]);
+      await _pomp(tester, _gevallen[1]);
 
+      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagAndere));
       await tester.tap(find.text(TekstenHulpvragerNl.dagAndere));
       await tester.pumpAndSettle();
 
       expect(find.text(TekstenHulpvragerNl.dagKiezerTitel), findsOneWidget);
       // testNu is dinsdag 15 september; donderdag 17 september staat erbij.
+      await tester.ensureVisible(find.text('donderdag 17 september'));
       await tester.tap(find.text('donderdag 17 september'));
       await tester.pumpAndSettle();
 
@@ -354,61 +355,66 @@ void main() {
       );
       await tester.pumpWidget(
         hhHulpvragerWikkel(
-          const HulpVragenWanneerScreen(),
+          const HulpVragenScreen(),
           klusGateway: klusGateway,
           container: container,
         ),
       );
       await tester.pumpAndSettle();
 
+      container
+          .read(conceptProvider.notifier)
+          .kiesKlustype(testKlustypes.first);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagVandaag));
       await tester.tap(find.text(TekstenHulpvragerNl.dagVandaag));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text(TekstenHulpvragerNl.dagdeelOchtend));
       await tester.tap(find.text(TekstenHulpvragerNl.dagdeelOchtend));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text(TekstenNl.verder));
-      await tester.tap(find.text(TekstenNl.verder));
+      final akkoord = find.text(TekstenHulpvragerNl.bevestigenAkkoord);
+      await tester.ensureVisible(akkoord);
+      await tester.tap(akkoord);
       await tester.pumpAndSettle();
 
       expect(find.text(TekstenHulpvragerNl.wanneerVoorbij), findsOneWidget);
     });
   });
 
-  group('O4', () {
-    testWidgets('adres is voorgevuld uit de eigen gegevens', (tester) async {
-      await _pomp(tester, _gevallen[3]);
+  group('waar', () {
+    testWidgets('adres bekend uit mijn gegevens: geen adresvelden', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[1]);
 
-      final velden = find.byType(TextField);
-      expect(
-        tester.widget<TextField>(velden.at(0)).controller?.text,
-        'Prins Bernhardlaan 12',
+      // Alleen de toelichting; het adres gaat stil mee in het concept.
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text(TekstenHulpvragerNl.waarBekendUitleg), findsOneWidget);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(HulpVragenScreen)),
       );
-      expect(
-        tester.widget<TextField>(velden.at(1)).controller?.text,
-        '4003 AB',
-      );
-      expect(tester.widget<TextField>(velden.at(2)).controller?.text, 'Tiel');
+      final concept = container.read(conceptProvider);
+      expect(concept.adres, 'Prins Bernhardlaan 12');
+      expect(concept.postcode, '4003 AB');
+      expect(concept.plaats, 'Tiel');
     });
 
     testWidgets('eerder ingevuld adres uit het concept wint van de gegevens', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[4]);
+      await _pomp(tester, _gevallen[2]);
 
-      final velden = find.byType(TextField);
       expect(
-        tester.widget<TextField>(velden.at(0)).controller?.text,
-        'Kerkstraat 1',
-      );
-      expect(
-        tester.widget<TextField>(velden.at(3)).controller?.text,
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
         'Twee tassen.',
       );
+      expect(find.text('Kerkstraat 1, 4001 AA Tiel'), findsOneWidget);
     });
 
     testWidgets('zonder bekend adres: eerst mijn gegevens invullen', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[3], metAdres: false);
+      await _pomp(tester, _gevallen[1], metAdres: false);
 
       expect(find.text(TekstenHulpvragerNl.waarGeenAdresTitel), findsOneWidget);
       expect(find.text(TekstenHulpvragerNl.waarGeenAdresKnop), findsOneWidget);
@@ -418,12 +424,28 @@ void main() {
     testWidgets('leeg adres geeft veldfouten; microfoon is uitgeschakeld', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[3]);
-      await tester.enterText(find.byType(TextField).at(0), '');
-      await tester.enterText(find.byType(TextField).at(1), ' ');
+      // Een half adres in het concept: dan staan de adresvelden er wel.
+      await _pomp(tester, _gevallen[1]);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(HulpVragenScreen)),
+      );
+      container
+          .read(conceptProvider.notifier)
+          .zetWaar(adres: '', postcode: ' ', plaats: 'Tiel', toelichting: '');
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        hhHulpvragerWikkel(
+          const HulpVragenScreen(),
+          klusGateway: fakeKlusGateway(),
+          container: container,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsNWidgets(4));
 
-      await tester.ensureVisible(find.text(TekstenNl.verder));
-      await tester.tap(find.text(TekstenNl.verder));
+      final akkoord = find.text(TekstenHulpvragerNl.bevestigenAkkoord);
+      await tester.ensureVisible(akkoord);
+      await tester.tap(akkoord);
       await tester.pumpAndSettle();
 
       expect(find.text(TekstenHulpvragerNl.validatieAdres), findsOneWidget);
@@ -441,7 +463,7 @@ void main() {
     });
 
     testWidgets('de toelichting is meerregelig', (tester) async {
-      await _pomp(tester, _gevallen[3]);
+      await _pomp(tester, _gevallen[1]);
 
       final invoer = tester.widget<HhInvoer>(
         find.widgetWithText(HhInvoer, TekstenHulpvragerNl.veldToelichting),
@@ -450,30 +472,30 @@ void main() {
     });
   });
 
-  group('O5', () {
+  group('samenvatting en plaatsen', () {
     testWidgets('toont wat, wanneer, waar, duur en vergoeding in gewone taal', (
       tester,
     ) async {
-      await _pomp(tester, _gevallen[5]);
+      await _pomp(tester, _gevallen[2]);
 
-      expect(find.text('boodschappen'), findsOneWidget);
+      Finder inKaart(String tekst) => find.descendant(
+        of: find.byType(HulpvraagSamenvatting),
+        matching: find.text(tekst),
+      );
+      expect(inKaart('boodschappen'), findsOneWidget);
       expect(
-        find.text('morgen in de ochtend (van 9 tot 12 uur)'),
+        inKaart('morgen in de ochtend (van 9 tot 12 uur)'),
         findsOneWidget,
       );
-      expect(find.text('Kerkstraat 1, 4001 AA Tiel'), findsOneWidget);
-      expect(find.text('ongeveer 1 uur'), findsOneWidget);
-      expect(find.text('€ 10,00'), findsOneWidget);
-      expect(find.text('Twee tassen.'), findsOneWidget);
-      final stapbalk = tester.widget<HhStapbalk>(find.byType(HhStapbalk));
-      expect(stapbalk.zin, 'Stap 4 van 4');
+      expect(inKaart('Kerkstraat 1, 4001 AA Tiel'), findsOneWidget);
+      expect(inKaart('ongeveer 1 uur'), findsOneWidget);
+      expect(inKaart('€ 10,00'), findsOneWidget);
     });
 
     testWidgets('mislukt plaatsen toont de fout en houdt de knop bruikbaar', (
       tester,
     ) async {
-      final klusGateway = fakeKlusGateway()
-        ..volgendeFout = const HhFout(HhFoutSoort.server);
+      final klusGateway = fakeKlusGateway();
       final container = hulpvragerContainer(
         klusGateway: klusGateway,
         sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
@@ -490,12 +512,14 @@ void main() {
         );
       await tester.pumpWidget(
         hhHulpvragerWikkel(
-          const HulpVragenBevestigenScreen(),
+          const HulpVragenScreen(),
           klusGateway: klusGateway,
           container: container,
         ),
       );
       await tester.pumpAndSettle();
+      // Pas nu: de pagina laadt eerst zelf de eigen gegevens.
+      klusGateway.volgendeFout = const HhFout(HhFoutSoort.server);
 
       await tester.ensureVisible(
         find.text(TekstenHulpvragerNl.bevestigenAkkoord),
@@ -514,7 +538,7 @@ void main() {
 
   group('O6', () {
     testWidgets('geen cijfers, een knop', (tester) async {
-      await _pomp(tester, _gevallen[6]);
+      await _pomp(tester, _gevallen[3]);
 
       expect(find.byType(HhKnop), findsOneWidget);
       for (final tekst in find.byType(Text).evaluate()) {

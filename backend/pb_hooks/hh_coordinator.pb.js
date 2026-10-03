@@ -23,7 +23,8 @@
 //      403 { melding, reden: "rol" } — ingelogd, maar geen coordinator
 //      404 { melding, reden: "nietgevonden" } — klus bestaat niet
 //      409 { melding, reden: "bezet" } — klus niet meer open of al toegewezen
-//      409 { melding, reden: "jongeronbekend" | "geenjongere" | "nietgoedgekeurd" }
+//      409 { melding, reden: "jongeronbekend" | "geenjongere" | "nietgoedgekeurd"
+//                            | "vogverlopen" }  (vog_geldig_tot vóór vandaag; M14)
 //
 // 2. POST /api/hh/klussen/{id}/vrijgeven   body { reden }
 //    Doorzetten: de coordinator haalt de jongere van een klus die geaccepteerd
@@ -72,13 +73,15 @@ routerAdd(
     const MELDING_GEEN_COORDINATOR =
       "Alleen een coordinator kan een klus handmatig koppelen.";
     const MELDING_NIET_GEVONDEN = "Deze klus bestaat niet meer.";
-    const MELDING_GEEN_JONGERE_MEE = "Kies eerst een jongere.";
+    const MELDING_GEEN_JONGERE_MEE = "Kies eerst een helper.";
     const MELDING_BEZET =
       "Deze klus is niet meer open; hij is al aan iemand toegewezen.";
-    const MELDING_JONGERE_ONBEKEND = "Deze jongere bestaat niet.";
-    const MELDING_GEEN_JONGERE = "Deze gebruiker is geen jongere.";
+    const MELDING_JONGERE_ONBEKEND = "Deze helper bestaat niet.";
+    const MELDING_GEEN_JONGERE = "Deze gebruiker is geen helper.";
     const MELDING_NIET_GOEDGEKEURD =
-      "Deze jongere is nog niet goedgekeurd en kan geen klussen doen.";
+      "Deze helper is nog niet goedgekeurd en kan geen klussen doen.";
+    const MELDING_VOG_VERLOPEN =
+      "De VOG van deze helper is verlopen. Eerst een nieuwe VOG, dan koppelen.";
 
     const klusId = String(e.request.pathValue("id") || "").trim();
     if (!klusId) {
@@ -140,6 +143,10 @@ routerAdd(
         uitkomst = "nietgoedgekeurd";
         return;
       }
+      if (isVogVerlopen(txApp, jongereId)) {
+        uitkomst = "vogverlopen";
+        return;
+      }
 
       // Alleen ter informatie voor de app; koppelen mag over de wijkgrens.
       andereWijk = heeftAndereWijk(txApp, klus, jongere);
@@ -189,9 +196,35 @@ routerAdd(
         reden: "nietgoedgekeurd",
       });
     }
+    if (uitkomst === "vogverlopen") {
+      return e.json(409, { melding: MELDING_VOG_VERLOPEN, reden: "vogverlopen" });
+    }
     return e.json(409, { melding: MELDING_BEZET, reden: "bezet" });
 
     // ---- helpers, BINNEN de handler (pool-runtime deelt geen scope) ----
+
+    /// Verlopen = vog_geldig_tot ligt vóór vandaag (UTC). De dag zelf telt nog
+    /// mee. Leeg veld = geen datum bekend = niet verlopen (seed, oude profielen).
+    function isVogVerlopen(txApp, gebruikerId) {
+      const rijen = txApp.findRecordsByFilter(
+        "hh_profielen",
+        "gebruiker = {:gebruiker}",
+        "",
+        1,
+        0,
+        { gebruiker: gebruikerId }
+      );
+      if (rijen.length === 0) return false;
+      const geldigTot = String(rijen[0].get("vog_geldig_tot") || "").slice(0, 10);
+      if (!geldigTot) return false;
+      const nu = new Date();
+      const vandaag = new Date(
+        Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), nu.getUTCDate())
+      )
+        .toISOString()
+        .slice(0, 10);
+      return geldigTot < vandaag;
+    }
 
     function isGoedgekeurd(txApp, gebruikerId) {
       const rijen = txApp.findRecordsByFilter(

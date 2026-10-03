@@ -131,27 +131,6 @@ class _HulpvragenLijstScreenState extends ConsumerState<HulpvragenLijstScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: rand),
-            child: HhKeuzerij<HulpvraagTab>(
-              semantiekLabel: TekstenUitvoerenNl.o8TabbladenLabel,
-              keuzes: [
-                for (final tab in HulpvraagTab.values)
-                  HhKeuze(
-                    waarde: tab,
-                    label: tab.naam,
-                    icoon: switch (tab) {
-                      HulpvraagTab.open => Icons.inbox_outlined,
-                      HulpvraagTab.gepland => Icons.event_outlined,
-                      HulpvraagTab.afgerond => Icons.check_circle_outline,
-                    },
-                  ),
-              ],
-              geselecteerd: {_tab},
-              onGewijzigd: (keuze) => setState(() => _tab = keuze.first),
-            ),
-          ),
-          SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _vernieuw,
@@ -166,7 +145,31 @@ class _HulpvragenLijstScreenState extends ConsumerState<HulpvragenLijstScreen> {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: inhoud,
+                  children: [
+                    // M12: de tabkeuze scrollt mee; bij 200% tekst paste hij
+                    // anders niet.
+                    HhKeuzerij<HulpvraagTab>(
+                      semantiekLabel: TekstenUitvoerenNl.o8TabbladenLabel,
+                      keuzes: [
+                        for (final tab in HulpvraagTab.values)
+                          HhKeuze(
+                            waarde: tab,
+                            label: tab.naam,
+                            icoon: switch (tab) {
+                              HulpvraagTab.open => Icons.inbox_outlined,
+                              HulpvraagTab.gepland => Icons.event_outlined,
+                              HulpvraagTab.afgerond =>
+                                Icons.check_circle_outline,
+                            },
+                          ),
+                      ],
+                      geselecteerd: {_tab},
+                      onGewijzigd: (keuze) =>
+                          setState(() => _tab = keuze.first),
+                    ),
+                    SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
+                    ...inhoud,
+                  ],
                 ),
               ),
             ),

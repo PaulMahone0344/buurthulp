@@ -32,6 +32,7 @@ import '../features/toegang/screen/wachtwoord_vergeten_screen.dart';
 import '../features/toegang/screen/welkom_screen.dart';
 import 'paden.dart';
 import 'screens/dev_screen.dart';
+import '../design/components/hh_tabbalk.dart';
 
 /// De guard. Sessie onbekend: iedereen blijft op de splash. Uitgelogd:
 /// alleen de toegangsschermen, anders naar G2 (of G3 na een verlopen
@@ -133,11 +134,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: HhPaden.hulpvrager,
-        builder: (context, state) => const HulpvragerStubScreen(),
+        pageBuilder: (context, state) =>
+            hhTabPagina(state, const HulpvragerStubScreen()),
       ),
       GoRoute(
         path: HhPaden.jongere,
-        builder: (context, state) => const JongereStubScreen(),
+        pageBuilder: (context, state) =>
+            hhTabPagina(state, const JongereStubScreen()),
       ),
       GoRoute(
         path: HhPaden.familie,
@@ -145,7 +148,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: HhPaden.coordinator,
-        builder: (context, state) => const CoordinatorStubScreen(),
+        pageBuilder: (context, state) =>
+            hhTabPagina(state, const CoordinatorStubScreen()),
       ),
       ...hulpvragerRoutes(),
       ...jongereRoutes(),

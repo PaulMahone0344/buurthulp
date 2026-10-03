@@ -16,7 +16,7 @@ import '../../../l10n/teksten_nl.dart';
 import '../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../theme.dart';
 import '../../hulpvrager/provider/hulpvrager_providers.dart' show klokProvider;
-import '../../hulpvrager/status/domein/hulpvraag_indeling.dart';
+import '../domein/status_zin_familie.dart';
 import '../../hulpvrager/status/widget/oudere_annuleer_dialoog.dart';
 import '../../jongere/klussen/domein/wanneer_tekst.dart';
 import '../../jongere/klussen/model/hh_klus.dart';
@@ -136,7 +136,7 @@ class _FamilieHulpvraagScreenState
             HhMeldBalk(soort: _meldSoort, tekst: _melding!),
             SizedBox(height: tussen),
           ],
-          Text(statusZin(klus), style: tekst.headlineMedium),
+          Text(statusZinVoorFamilie(klus), style: tekst.headlineMedium),
           if (doorMij) ...[
             SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
             Text(TekstenFamilieNl.f3DoorMij, style: tekst.bodyMedium),
@@ -144,11 +144,11 @@ class _FamilieHulpvraagScreenState
           SizedBox(height: tussen),
           if (klus.jongereVoornaam.isNotEmpty) ...[
             HhKaart(
-              semantiekLabel: TekstenUitvoerenNl.o7Helper,
+              semantiekLabel: TekstenFamilieNl.f3Helper,
               child: PersoonRegel(
                 naam: klus.jongereVoornaam,
                 fotoUrl: klus.jongereFotoUrl,
-                onderregel: TekstenUitvoerenNl.o7Helper,
+                onderregel: TekstenFamilieNl.f3Helper,
               ),
             ),
             SizedBox(height: tussen),

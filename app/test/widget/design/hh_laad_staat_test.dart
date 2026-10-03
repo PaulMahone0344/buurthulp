@@ -22,6 +22,24 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
+    testWidgets('skelet staat stil bij "verminder beweging" (M12)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: hhWikkel(const HhLaadStaat.skelet(regels: 2)),
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.hasRunningAnimations, isFalse);
+      final dekking = tester
+          .widgetList<FadeTransition>(find.byType(FadeTransition))
+          .map((f) => f.opacity.value);
+      expect(dekking, everyElement(1.0));
+    });
+
     testWidgets('semantiek: alleen het label, als live-region', (tester) async {
       await tester.pumpWidget(
         hhWikkel(const HhLaadStaat.skelet(label: 'Klussen worden geladen')),

@@ -136,27 +136,6 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: rand),
-              child: HhKeuzerij<MijnKlussenTab>(
-                semantiekLabel: TekstenKlussenNl.j14TabbladenLabel,
-                keuzes: [
-                  for (final tab in MijnKlussenTab.values)
-                    HhKeuze(
-                      waarde: tab,
-                      label: tab.naam,
-                      icoon: switch (tab) {
-                        MijnKlussenTab.vandaag => Icons.today_outlined,
-                        MijnKlussenTab.gepland => Icons.event_outlined,
-                        MijnKlussenTab.historie => Icons.history,
-                      },
-                    ),
-                ],
-                geselecteerd: {_tab},
-                onGewijzigd: (keuze) => setState(() => _tab = keuze.first),
-              ),
-            ),
-            SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _vernieuw,
@@ -171,7 +150,30 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: inhoud,
+                    children: [
+                      // M12: de tabkeuze scrollt mee; bij 200% tekst paste hij
+                      // anders niet.
+                      HhKeuzerij<MijnKlussenTab>(
+                        semantiekLabel: TekstenKlussenNl.j14TabbladenLabel,
+                        keuzes: [
+                          for (final tab in MijnKlussenTab.values)
+                            HhKeuze(
+                              waarde: tab,
+                              label: tab.naam,
+                              icoon: switch (tab) {
+                                MijnKlussenTab.vandaag => Icons.today_outlined,
+                                MijnKlussenTab.gepland => Icons.event_outlined,
+                                MijnKlussenTab.historie => Icons.history,
+                              },
+                            ),
+                        ],
+                        geselecteerd: {_tab},
+                        onGewijzigd: (keuze) =>
+                            setState(() => _tab = keuze.first),
+                      ),
+                      SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
+                      ...inhoud,
+                    ],
                   ),
                 ),
               ),

@@ -32,7 +32,7 @@ class DevScreen extends ConsumerWidget {
     ('G7 Instellingen', HhPaden.instellingen),
     ('G8 Hulp', HhPaden.hulp),
     ('Hulpvrager', HhPaden.hulpvrager),
-    ('Jongere', HhPaden.jongere),
+    ('Helper', HhPaden.jongere),
     ('Familie', HhPaden.familie),
     ('Coordinator', HhPaden.coordinator),
   ];
