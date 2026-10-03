@@ -5,7 +5,7 @@ import 'familie_gateway.dart';
 
 /// Het vaste bericht van de hook (hh_familie_hulp.js), letterlijk.
 const fakeVastBericht =
-    'Als dit adres bij ons bekend is, krijgt uw familielid een vraag om toestemming.';
+    'Als dit adres bij ons bekend is, krijgt je familielid een vraag om toestemming.';
 
 /// Fake voor tests: nooit een verzoek naar de server. Speelt de hook en de
 /// rules na: een aanvraag voor een bekend adres maakt een koppeling

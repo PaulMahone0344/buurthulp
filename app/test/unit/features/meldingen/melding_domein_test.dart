@@ -43,7 +43,7 @@ void main() {
       expect(titelVan(m, HhRol.hulpvrager), 'Onderweg naar u');
     });
 
-    test('de oudere krijgt u, de jongere je', () {
+    test('bewoner en helper krijgen allebei je', () {
       expect(
         titelVan(_melding(HhMeldingSoort.toegewezen), HhRol.hulpvrager),
         TekstenMeldingenNl.soortToegewezenOudere,
@@ -52,7 +52,7 @@ void main() {
         titelVan(_melding(HhMeldingSoort.toegewezen), HhRol.jongere),
         TekstenMeldingenNl.soortToegewezenJongere,
       );
-      expect(TekstenMeldingenNl.soortToegewezenOudere, contains('u'));
+      expect(TekstenMeldingenNl.soortToegewezenOudere, contains('je'));
       expect(
         titelVan(_melding(HhMeldingSoort.nieuweKlus), HhRol.jongere),
         TekstenMeldingenNl.soortNieuweKlus,

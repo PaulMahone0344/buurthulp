@@ -248,7 +248,7 @@ void main() {
 
     testWidgets('zegt in gewone taal waar de klus staat', (tester) async {
       await _pomp(tester, _gevallen[6], dichtheid: HhDichtheid.groot);
-      expect(find.text('Sanne is onderweg naar u.'), findsOneWidget);
+      expect(find.text('Sanne is onderweg naar je.'), findsOneWidget);
       expect(find.text(TekstenUitvoerenNl.o7Helper), findsOneWidget);
     });
 
@@ -310,7 +310,7 @@ void main() {
       await _pomp(tester, _gevallen[8], dichtheid: HhDichtheid.groot);
       await tikTekst(tester, TekstenUitvoerenNl.o8TabGepland);
       expect(find.byType(HulpvraagTegel), findsOneWidget);
-      expect(find.text('Sanne is onderweg naar u.'), findsOneWidget);
+      expect(find.text('Sanne is onderweg naar je.'), findsOneWidget);
     });
 
     testWidgets('afgerond toont de afgeronde hulpvraag', (tester) async {

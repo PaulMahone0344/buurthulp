@@ -178,12 +178,14 @@ void main() {
   }
 
   group('teksten', () {
-    testWidgets('G2 toont de drie ingangen en de inlog-link', (tester) async {
+    testWidgets('G2 toont twee ingangen en de inlog-link, geen familie', (
+      tester,
+    ) async {
       await _pomp(tester, _gevallen[2], dichtheid: HhDichtheid.normaal);
 
       expect(find.text(TekstenNl.keuzeZoekHulp), findsOneWidget);
       expect(find.text(TekstenNl.keuzeWilHelpen), findsOneWidget);
-      expect(find.text(TekstenNl.keuzeHelpFamilielid), findsOneWidget);
+      expect(find.text(TekstenNl.keuzeHelpFamilielid), findsNothing);
       expect(find.text(TekstenNl.alEenAccount), findsOneWidget);
     });
 

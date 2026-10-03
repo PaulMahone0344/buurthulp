@@ -252,7 +252,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Sanne komt u helpen.'), findsOneWidget);
+      expect(find.text('Sanne komt je helpen.'), findsOneWidget);
 
       // De jongere zet zijn klus op onderweg; dat komt via realtime binnen.
       fake.zendUit(
@@ -260,8 +260,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Sanne is onderweg naar u.'), findsOneWidget);
-      expect(find.text('Sanne komt u helpen.'), findsNothing);
+      expect(find.text('Sanne is onderweg naar je.'), findsOneWidget);
+      expect(find.text('Sanne komt je helpen.'), findsNothing);
     });
 
     testWidgets('annuleren met een vaste reden, zonder typen', (tester) async {
@@ -332,7 +332,7 @@ void main() {
       await tikTekst(tester, TekstenUitvoerenNl.o8TabGepland);
       await tester.tap(find.byType(HulpvraagTegel).first);
       await tester.pumpAndSettle();
-      expect(find.text('Sanne is onderweg naar u.'), findsOneWidget);
+      expect(find.text('Sanne is onderweg naar je.'), findsOneWidget);
 
       await tikTekst(tester, TekstenNl.terug);
       expect(find.text(TekstenUitvoerenNl.o8Titel), findsOneWidget);

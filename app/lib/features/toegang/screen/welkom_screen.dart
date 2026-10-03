@@ -11,8 +11,9 @@ import '../../../theme.dart';
 import '../model/hh_rol.dart';
 import '../provider/sessie_providers.dart';
 
-/// G2. Twee grote keuzes (hulp zoeken, helpen) en een kleinere derde
-/// ingang voor familie. De coordinator registreert niet en logt in via
+/// G2. Twee grote keuzes: hulp zoeken (bewoner) en helpen (helper).
+/// Familie staat sinds B0 niet meer in de rolkeuze; de familie-code
+/// blijft tot B4 bestaan. De coordinator registreert niet en logt in via
 /// "Ik heb al een account". De keuze zet de dichtheid: "Ik zoek hulp"
 /// maakt alles groot voordat er een account is.
 class WelkomScreen extends ConsumerWidget {
@@ -52,13 +53,6 @@ class WelkomScreen extends ConsumerWidget {
             icoon: Icons.volunteer_activism_outlined,
             maat: HhDichtheid.groot,
             onPressed: () => _kies(context, ref, HhRol.jongere),
-          ),
-          SizedBox(height: tussen),
-          HhKnop(
-            label: TekstenNl.keuzeHelpFamilielid,
-            icoon: Icons.family_restroom_outlined,
-            soort: HhKnopSoort.tweedeKeus,
-            onPressed: () => _kies(context, ref, HhRol.familie),
           ),
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           const Divider(),

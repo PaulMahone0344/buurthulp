@@ -23,20 +23,20 @@ abstract final class TekstenNl {
   static const hulpNodig = 'Hulp nodig?';
 
   // Rollen
-  static const rolHulpvrager = 'Hulpvrager';
+  static const rolHulpvrager = 'Bewoner';
   static const rolJongere = 'Helper';
   static const rolFamilie = 'Familie';
   static const rolCoordinator = 'Coordinator';
 
   // G1 Splash
-  static const splashOndertitel = 'Hulp uit je eigen buurt';
+  static const splashOndertitel = 'Heitje voor een karweitje, in jouw buurt.';
   static const splashBezig = 'De app wordt gestart';
 
   // G2 Welkom en rolkeuze
   static const welkomTitel = 'Welkom bij HeitjeHulp';
   static const welkomUitleg =
-      'Buurtgenoten helpen elkaar met boodschappen, de tuin en meer. '
-      'Kies wat bij jou past.';
+      'Heitje voor een karweitje, in jouw buurt. Bewoners plaatsen een '
+      'klus, helpers uit de buurt helpen. Kies wat bij jou past.';
   static const keuzeZoekHulp = 'Ik zoek hulp';
   static const keuzeWilHelpen = 'Ik wil helpen';
   static const keuzeHelpFamilielid = 'Ik help een familielid';
@@ -136,7 +136,7 @@ abstract final class TekstenNl {
     ),
     HhVraag(
       'Wie komt er bij mij thuis?',
-      'Alleen jongeren die door de meldkamer zijn gecontroleerd. Je ziet '
+      'Alleen helpers die door de meldkamer zijn gecontroleerd. Je ziet '
           'vooraf hun naam en foto.',
     ),
     HhVraag(
@@ -169,11 +169,11 @@ abstract final class TekstenNl {
     HhVraag(
       'Wat is een VOG?',
       'Een Verklaring Omtrent het Gedrag. Die laat zien dat je te '
-          'vertrouwen bent bij ouderen thuis. We helpen je met aanvragen.',
+          'vertrouwen bent bij mensen thuis. We helpen je met aanvragen.',
     ),
     HhVraag(
       'Kan ik een klus afzeggen?',
-      'Ja, maar doe het op tijd en zeg waarom. Zo blijft de oudere niet '
+      'Ja, maar doe het op tijd en zeg waarom. Zo blijft de bewoner niet '
           'wachten.',
     ),
     HhVraag(

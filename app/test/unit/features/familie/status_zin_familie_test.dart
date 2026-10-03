@@ -54,13 +54,13 @@ void main() {
       }
     });
 
-    test('zonder naam van de oudere: "uw familielid"', () {
+    test('zonder naam van de bewoner: "je familielid"', () {
       final klus = uitvoerKlus(
         status: HhKlusStatus.onderweg,
       ).copyWith(oudereNaam: '');
       expect(
         statusZinVoorFamilie(klus),
-        'Sanne is onderweg naar uw familielid.',
+        'Sanne is onderweg naar je familielid.',
       );
     });
   });

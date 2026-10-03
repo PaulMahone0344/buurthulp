@@ -27,7 +27,7 @@ void main() {
         await pompApp(tester, gateway: fakeMetAlleRollen());
 
         final normaal = tester
-            .getSize(find.widgetWithText(HhKnop, TekstenNl.keuzeHelpFamilielid))
+            .getSize(find.widgetWithText(HhKnop, TekstenNl.alEenAccount))
             .height;
         expect(
           normaal,

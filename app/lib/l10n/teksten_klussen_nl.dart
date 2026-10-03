@@ -1,9 +1,9 @@
 // Schermteksten van klussen vinden en accepteren (M5, J11-J14) en de
-// tabbalk van de jongere. Eigen bestand naast teksten_nl.dart en
+// tabbalk van de helper. Eigen bestand naast teksten_nl.dart en
 // teksten_jongere_nl.dart; nergens een losse string in een widget.
 
 abstract final class TekstenKlussenNl {
-  // Tabbalk jongere
+  // Tabbalk helper
   static const tabKlussen = 'Klussen';
   static const tabMijnKlussen = 'Mijn klussen';
   static const tabProfiel = 'Profiel';

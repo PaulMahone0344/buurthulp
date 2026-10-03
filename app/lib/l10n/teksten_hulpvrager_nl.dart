@@ -1,5 +1,5 @@
 // Alle schermteksten van de hulpvrager-stroom (M4: O1-O6, O12), in het
-// Nederlands en in de u-vorm: de oudere wordt aangesproken met "u".
+// Nederlands en in de je-vorm: de bewoner krijgt "je", net als iedereen.
 // Nergens een losse string in een widget. De gedeelde teksten (Terug,
 // Verder, foutmeldingen) blijven in teksten_nl.dart.
 
@@ -13,11 +13,11 @@ abstract final class TekstenHulpvragerNl {
 
   // Hulp vragen op één pagina (3 okt, indeling naar BuurtHeld).
   static const paginaTitel = 'Hulp vragen';
-  static const paginaKiesWat = 'Kies eerst wat u nodig heeft.';
+  static const paginaKiesWat = 'Kies eerst wat je nodig hebt.';
   static const paginaKiesWanneer = 'Kies nog een dag en een deel van de dag.';
-  static const paginaVulWaarIn = 'Vul uw adres helemaal in.';
+  static const paginaVulWaarIn = 'Vul je adres helemaal in.';
 
-  // Tabbalk van de oudere (3 okt, indeling naar BuurtHeld).
+  // Tabbalk van de bewoner (3 okt, indeling naar BuurtHeld).
   static const tabStart = 'Start';
   static const tabMijnHulpvragen = 'Hulpvragen';
   static const tabMijnHulpvragenSemantiek = 'Mijn hulpvragen';
@@ -27,7 +27,7 @@ abstract final class TekstenHulpvragerNl {
 
   // Meer
   static const meerTitel = 'Meer';
-  static const meerGegevensUitleg = 'Uw naam, adres en contactpersoon';
+  static const meerGegevensUitleg = 'Je naam, adres en contactpersoon';
   static const meerInstellingenUitleg = 'Taal, meldingen en account';
   static const meerHulpTitel = 'Hulp en uitleg';
   static const meerHulpUitleg = 'Hoe HeitjeHulp werkt';
@@ -36,7 +36,7 @@ abstract final class TekstenHulpvragerNl {
   // de teksten daarvan staan in teksten_uitvoeren_nl.dart.
 
   // O2 Wat
-  static const watTitel = 'Wat heeft u nodig?';
+  static const watTitel = 'Wat heb je nodig?';
   static const watUitleg = 'Kies een soort hulp.';
   static const watKeuzerij = 'Soort hulp';
   static String watKiesSemantiek(String naam) => 'Kies $naam';
@@ -46,11 +46,11 @@ abstract final class TekstenHulpvragerNl {
   static const watMinderSemantiek = 'Verberg de extra soorten hulp';
   static const watGeenKlustypes =
       'Er zijn nu geen soorten hulp om uit te kiezen. Bel ons, dan helpen '
-      'wij u verder.';
+      'wij je verder.';
   static const watLaden = 'De soorten hulp worden geladen';
 
   // O3 Wanneer
-  static const wanneerTitel = 'Wanneer wilt u hulp?';
+  static const wanneerTitel = 'Wanneer wil je hulp?';
   static const wanneerDagKeuzerij = 'Welke dag';
   static const dagVandaag = 'Vandaag';
   static const dagMorgen = 'Morgen';
@@ -77,9 +77,9 @@ abstract final class TekstenHulpvragerNl {
 
   // O4 Waar
   static const waarTitel = 'Waar en wat nog meer?';
-  static const waarUitleg = 'Controleer uw adres en vertel kort wat u wilt.';
+  static const waarUitleg = 'Controleer je adres en vertel kort wat je wilt.';
   static const waarBekendUitleg =
-      'Vertel kort wat u wilt. Wij komen naar het adres uit Mijn gegevens.';
+      'Vertel kort wat je wilt. Wij komen naar het adres uit Mijn gegevens.';
   static const veldAdres = 'Straat en huisnummer';
   static const veldPostcode = 'Postcode';
   static const veldPlaats = 'Plaats';
@@ -88,17 +88,17 @@ abstract final class TekstenHulpvragerNl {
       'Bijvoorbeeld: twee tassen boodschappen, ik heb een lijstje klaar.';
   static const waarInspreken = 'Inspreken';
   static const waarInsprekenSemantiek = 'Spraakinvoer komt later';
-  static const waarGeenAdresTitel = 'We kennen uw adres nog niet';
+  static const waarGeenAdresTitel = 'We kennen je adres nog niet';
   static const waarGeenAdresUitleg =
-      'Vul eerst uw adres in bij Mijn gegevens. Daarna gaat u verder.';
+      'Vul eerst je adres in bij Mijn gegevens. Daarna ga je verder.';
   static const waarGeenAdresKnop = 'Mijn gegevens invullen';
-  static const waarLaden = 'Uw gegevens worden geladen';
-  static const validatieAdres = 'Vul uw straat en huisnummer in.';
-  static const validatiePostcode = 'Vul uw postcode in.';
-  static const validatiePlaats = 'Vul uw plaats in.';
+  static const waarLaden = 'Je gegevens worden geladen';
+  static const validatieAdres = 'Vul je straat en huisnummer in.';
+  static const validatiePostcode = 'Vul je postcode in.';
+  static const validatiePlaats = 'Vul je plaats in.';
 
   // O5 Bevestigen
-  static const bevestigenKaart = 'Uw hulpvraag';
+  static const bevestigenKaart = 'Jouw hulpvraag';
   static const overzichtWat = 'Wat';
   static const overzichtWanneer = 'Wanneer';
   static const overzichtWaar = 'Waar';
@@ -112,9 +112,9 @@ abstract final class TekstenHulpvragerNl {
       'De hulpvraag is nog niet compleet. Ga terug en kijk wat er mist.';
 
   // O6 Verstuurd
-  static const verstuurdTitel = 'Uw hulpvraag is verstuurd';
+  static const verstuurdTitel = 'Je hulpvraag is verstuurd';
   static const verstuurdUitleg =
-      'Wij zoeken iemand voor u. U hoort van ons zodra een helper de '
+      'Wij zoeken iemand voor je. Je hoort van ons zodra een helper de '
       'hulpvraag heeft aangenomen.';
   static const verstuurdNaarBegin = 'Naar het begin';
   static const verstuurdNaarBeginSemantiek = 'Ga naar het begin';
@@ -122,24 +122,24 @@ abstract final class TekstenHulpvragerNl {
   // O12 Mijn gegevens
   static const gegevensTitel = 'Mijn gegevens';
   static const gegevensUitleg =
-      'Deze gegevens gebruiken we om de helper naar u toe te sturen en om '
+      'Deze gegevens gebruiken we om de helper naar je toe te sturen en om '
       'iemand te bellen als dat nodig is.';
-  static const gegevensKaartAdres = 'Uw adres';
+  static const gegevensKaartAdres = 'Je adres';
   static const gegevensKaartContact = 'Contactpersoon';
   static const gegevensContactUitleg =
-      'Iemand die we mogen bellen als we u niet bereiken, bijvoorbeeld een '
-      'kind of een buurvrouw.';
+      'Iemand die we mogen bellen als we jou niet bereiken, bijvoorbeeld '
+      'een familielid of een buurvrouw.';
   static const veldContactNaam = 'Naam contactpersoon';
   static const veldContactTelefoon = 'Telefoon contactpersoon';
-  static const gegevensOpgeslagen = 'Uw gegevens zijn opgeslagen.';
+  static const gegevensOpgeslagen = 'Je gegevens zijn opgeslagen.';
   static const gegevensNietsGewijzigd = 'Er is niets gewijzigd.';
-  static const gegevensLaden = 'Uw gegevens worden geladen';
-  static const gegevensNaamVerplicht = 'Vul uw naam in.';
+  static const gegevensLaden = 'Je gegevens worden geladen';
+  static const gegevensNaamVerplicht = 'Vul je naam in.';
 
   // Stroom verlaten
-  static const verlatenVraag = 'Weet u het zeker?';
+  static const verlatenVraag = 'Weet je het zeker?';
   static const verlatenUitleg =
-      'Uw hulpvraag is nog niet verstuurd. Als u stopt, gaat uw invoer '
+      'Je hulpvraag is nog niet verstuurd. Als je stopt, gaat je invoer '
       'verloren.';
   static const verlatenNee = 'Nee, verder gaan';
   static const verlatenJa = 'Ja, stoppen';
