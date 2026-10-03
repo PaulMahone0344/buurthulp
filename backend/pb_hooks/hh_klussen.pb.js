@@ -25,7 +25,8 @@
 //          vandaag, oude data). Rekenwerk: hh_aanmelden_hulp.js.
 //      404 klus bestaat niet
 //      409 { melding, reden: "bezet" | "wijk" } — al aangenomen, niet meer
-//          open, of de oudere woont in een andere wijk
+//          open, of de oudere woont in een andere wijk (B2: een regio-wijk
+//          als "Tiel en omstreken" past bij elke wijk in dezelfde gemeente)
 //
 // 1b. M6 — POST /api/hh/klussen/{id}/status  body {naar}
 //    De statusmachine, alleen voor de TOEGEWEZEN jongere:
@@ -161,7 +162,9 @@ routerAdd(
         uitkomst = "bezet";
         return;
       }
-      if (String(oudere.get("wijk") || "").trim() !== wijk) {
+      // B2: zelfde wijk, of een regio-wijk ("Tiel en omstreken") in dezelfde
+      // gemeente (hh_aanmelden_hulp.js wijkenPassen).
+      if (!wijkenPassenVoor(txApp, String(oudere.get("wijk") || "").trim(), wijk)) {
         uitkomst = "wijk";
         return;
       }
@@ -209,6 +212,21 @@ routerAdd(
         { gebruiker: gebruikerId }
       );
       return rijen.length > 0;
+    }
+
+    /// B2: { id, gemeente, regio } van twee wijk-ids, en of ze passen.
+    function wijkenPassenVoor(app, oudereWijkId, helperWijkId) {
+      const hulp = require(`${__hooks}/hh_aanmelden_hulp.js`);
+      const lees = (id) => {
+        if (!id) return null;
+        try {
+          const w = app.findRecordById("hh_wijken", id);
+          return { id: w.id, gemeente: String(w.get("gemeente") || ""), regio: w.getBool("regio") };
+        } catch (_) {
+          return null;
+        }
+      };
+      return hulp.wijkenPassen(lees(oudereWijkId), lees(helperWijkId));
     }
 
     /// B2: waarom mag deze goedgekeurde helper nog niet? null = mag.

@@ -9,12 +9,17 @@
 //       "Je moet minstens 10 jaar zijn om helper te worden." Ook bij het
 //       bijwerken van de geboortedatum (die mag de eigenaar sinds 80 niet
 //       meer zelf, maar de coordinator wel).
-//    b. Wijk uit de postcode (keuze K4: geen werkgebied-stap meer). Komt er
-//       een postcode mee bij aanmaken, dan zet de server wijk = de actieve
-//       hh_wijken waar de 4 cijfers bij horen, of leeg. Bij bijwerken met
-//       een andere postcode alleen als er een wijk bij hoort (een bestaande
-//       wijk wordt nooit gewist). Stuurt een coordinator zelf een wijk mee,
-//       dan blijft die staan.
+//    b. Werkgebied uit de postcode (K4 + besluit 3 okt: Tiel en 20 km
+//       eromheen). Komt er een postcode mee (aanmaken, of een andere bij
+//       bijwerken), dan vraagt de server Nominatim om het punt (zoals de
+//       M5-hook: User-Agent, timeout 5 s, hooguit 1 verzoek per seconde)
+//       en zet werkgebied_status:
+//         binnen   -> wijk = "Tiel en omstreken" (regio-wijk, script 81)
+//         buiten   -> wijk leeg (bij bijwerken: gewist)
+//         onbekend -> geocoding mislukt of geen resultaat: aanmelden gaat
+//                     door, wijk leeg (bij bijwerken: blijft staan); de
+//                     meldkamer ziet de markering
+//       Stuurt een coordinator zelf een wijk mee, dan blijft die staan.
 //
 // 2. hh_profielen GOEDKEUREN WIST HET ID-DOCUMENT (B1-gat 2)
 //    onRecordUpdate (model-hook): draait bij ELKE opslag, ook via de
@@ -59,10 +64,28 @@ onRecordCreateRequest((e) => {
     !!e.auth && e.auth.collection().name === "hh_users" && String(e.auth.get("rol") || "") === "coordinator";
   const wijkGestuurd = String(e.record.get("wijk") || "") !== "";
   if (postcode && !(isCoordinator && wijkGestuurd)) {
-    e.record.set("wijk", hulp.wijkUitDatabase($app, toString, postcode));
+    const uit = hulp.bepaalWerkgebied(omgeving(), postcode);
+    const wijk = uit.werkgebied ? hulp.wijkIdVoor($app, uit.werkgebied) : "";
+    // Binnen, maar de regio-wijk bestaat nog niet (81 niet gedraaid): dan
+    // telt het als onbekend, zodat de meldkamer het ziet.
+    e.record.set("werkgebied_status", uit.status === "binnen" && !wijk ? "onbekend" : uit.status);
+    e.record.set("wijk", wijk);
   }
 
   e.next();
+
+  /// Echte omgeving voor bepaalWerkgebied (de tests geven een nep mee).
+  /// HH_NOMINATIM_URL alleen voor een lokale proef; op prod leeg.
+  function omgeving() {
+    return {
+      url: $os.getenv("HH_NOMINATIM_URL") || "",
+      http: (req) => $http.send(req),
+      nu: () => Date.now(),
+      sleep: (ms) => sleep(ms),
+      store: $app.store(),
+      log: (...a) => console.log(...a),
+    };
+  }
 }, "hh_users");
 
 // --------------------------------------------------------------------------
@@ -85,13 +108,35 @@ onRecordUpdateRequest((e) => {
     !!e.auth && e.auth.collection().name === "hh_users" && String(e.auth.get("rol") || "") === "coordinator";
   const wijkGestuurd = String(e.record.get("wijk") || "") !== String(oud.get("wijk") || "");
   if (postcode && postcode !== pcOud && !(isCoordinator && wijkGestuurd)) {
-    // Bij bijwerken alleen een GEVONDEN wijk zetten: een postcode buiten de
-    // wijken wist een bestaande wijk niet (bestaande accounts, M4-data).
-    const wijk = hulp.wijkUitDatabase($app, toString, postcode);
-    if (wijk) e.record.set("wijk", wijk);
+    const uit = hulp.bepaalWerkgebied(omgeving(), postcode);
+    if (uit.status === "binnen") {
+      const wijk = hulp.wijkIdVoor($app, uit.werkgebied);
+      e.record.set("werkgebied_status", wijk ? "binnen" : "onbekend");
+      if (wijk) e.record.set("wijk", wijk);
+    } else if (uit.status === "buiten") {
+      // Verhuisd buiten het werkgebied: geen wijk meer.
+      e.record.set("werkgebied_status", "buiten");
+      e.record.set("wijk", "");
+    } else {
+      // Onbekend (geen internet, geen resultaat): de wijk blijft staan.
+      e.record.set("werkgebied_status", "onbekend");
+    }
   }
 
   e.next();
+
+  /// Echte omgeving voor bepaalWerkgebied (de tests geven een nep mee).
+  /// HH_NOMINATIM_URL alleen voor een lokale proef; op prod leeg.
+  function omgeving() {
+    return {
+      url: $os.getenv("HH_NOMINATIM_URL") || "",
+      http: (req) => $http.send(req),
+      nu: () => Date.now(),
+      sleep: (ms) => sleep(ms),
+      store: $app.store(),
+      log: (...a) => console.log(...a),
+    };
+  }
 }, "hh_users");
 
 // --------------------------------------------------------------------------

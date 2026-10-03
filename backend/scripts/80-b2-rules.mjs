@@ -21,13 +21,27 @@
 //     één join, dus hetzelfde profiel (bewezen in 82).
 // (c) De leeftijd telt: alleen de coordinator wijzigt geboortedatum na het
 //     aanmaken (hh_users.updateRule). Registreren (createRule) blijft vrij.
+// (d) Werkgebied (besluit 3 okt): wijk en werkgebied_status zet alleen de
+//     server (hh_aanmelden.pb.js, uit de postcode) of de coordinator, bij
+//     aanmaken en bijwerken (hh_users.createRule/updateRule).
+// (e) De wijk-vergelijking in de helper-tak van hh_klussen.listRule/viewRule
+//     wordt ruimer: zelfde wijk OF dezelfde gemeente als een van de twee een
+//     regio-wijk is ("Tiel en omstreken", 81):
+//       hulpvrager.wijk = @request.auth.wijk
+//     wordt
+//       (hulpvrager.wijk = @request.auth.wijk || (hulpvrager.wijk.gemeente =
+//        @request.auth.wijk.gemeente && (hulpvrager.wijk.regio = true ||
+//        @request.auth.wijk.regio = true)))
+//     Tiel-West en Passewaaij blijven elk apart (oud gedrag, 04 en 50 blijven
+//     kloppen); nieuwe aanmeldingen (regio) passen bij beide. Geen
+//     datamigratie. De accepteer-hook doet hetzelfde (wijkenPassen).
 //
 // Werkwijze zoals 61/71: de LIVE rule wordt GEWIKKELD (a, c) of GERICHT
 // aangevuld (b, zoals 41), nooit herschreven. Idempotent. null blijft null;
 // een lege rule ("" = publiek) wordt geweigerd. Staat het anker van (b) er
 // niet precies één keer, dan stopt het script (prod wijkt af van git).
 //
-// VOLGORDE: na B1 (70/71, staat op prod). Draai 02, 06, 13, 21, 61 of 71
+// VOLGORDE: na B1 (70/71, staat op prod) en na 81-b2-werkgebied.mjs --apply. Draai 02, 06, 13, 21, 61 of 71
 // daarna niet meer met --apply zonder 80 opnieuw.
 //
 // DRAAIEN:
@@ -42,6 +56,13 @@ import { COORD } from './61-beheer-rules.mjs';
 
 export const ID_SLOT = `((${COORD}) || (verificatiestatus != "goedgekeurd" || @request.body.document_foto:isset = false))`;
 export const GEBOORTEDATUM_SLOT = `((${COORD}) || (@request.body.geboortedatum:isset = false))`;
+
+export const WERKGEBIED_SLOT = `((${COORD}) || (@request.body.wijk:isset = false && @request.body.werkgebied_status:isset = false))`;
+
+export const WIJK_ANKER = 'hulpvrager.wijk = @request.auth.wijk';
+export const WIJK_RUIM =
+  '(hulpvrager.wijk = @request.auth.wijk || (hulpvrager.wijk.gemeente = @request.auth.wijk.gemeente && ' +
+  '(hulpvrager.wijk.regio = true || @request.auth.wijk.regio = true)))';
 
 export const KLUS_ANKER = '@collection.hh_profielen.verificatiestatus ?= "goedgekeurd"';
 export const KLUS_VOORWAARDE =
@@ -70,19 +91,38 @@ export function metKlusVoorwaarde(huidig) {
   return regel.replace(KLUS_ANKER, aangevuld);
 }
 
+/// Vervangt [WIJK_ANKER] precies één keer door [WIJK_RUIM]. Idempotent.
+export function metRuimeWijk(huidig) {
+  if (huidig === null || huidig === undefined) return null;
+  const regel = String(huidig);
+  if (regel.includes(WIJK_RUIM)) return regel;
+  const aantal = regel.split(WIJK_ANKER).length - 1;
+  if (aantal !== 1) {
+    throw new Error(`Anker "${WIJK_ANKER}" staat ${aantal}x in de rule (verwacht 1) — prod wijkt af, niets veranderd.`);
+  }
+  return regel.replace(WIJK_ANKER, WIJK_RUIM);
+}
+
 /// Wat 80 per collectie en rule doet.
 export const B2_WIJZIGINGEN = [
   { collectie: 'hh_profielen', rule: 'updateRule', nieuw: (r) => metExtra(r, ID_SLOT), velden: ['document_foto', 'verificatiestatus'] },
-  { collectie: 'hh_klussen', rule: 'listRule', nieuw: metKlusVoorwaarde, velden: [] },
-  { collectie: 'hh_klussen', rule: 'viewRule', nieuw: metKlusVoorwaarde, velden: [] },
-  { collectie: 'hh_users', rule: 'updateRule', nieuw: (r) => metExtra(r, GEBOORTEDATUM_SLOT), velden: ['geboortedatum', 'ouder_toestemming_op'] },
+  { collectie: 'hh_klussen', rule: 'listRule', nieuw: (r) => metRuimeWijk(metKlusVoorwaarde(r)), velden: [] },
+  { collectie: 'hh_klussen', rule: 'viewRule', nieuw: (r) => metRuimeWijk(metKlusVoorwaarde(r)), velden: [] },
+  { collectie: 'hh_users', rule: 'createRule', nieuw: (r) => metExtra(r, WERKGEBIED_SLOT), velden: [] },
+  {
+    collectie: 'hh_users',
+    rule: 'updateRule',
+    nieuw: (r) => metExtra(metExtra(r, GEBOORTEDATUM_SLOT), WERKGEBIED_SLOT),
+    velden: [],
+  },
 ];
 
 /// Velden waar de nieuwe rules op leunen (PocketBase weigert een rule op een
 /// onbekend veld).
 const NODIG = {
   hh_profielen: ['document_foto', 'verificatiestatus', 'vog_gezien_op'],
-  hh_users: ['geboortedatum', 'ouder_toestemming_op'],
+  hh_users: ['geboortedatum', 'ouder_toestemming_op', 'wijk', 'werkgebied_status'],
+  hh_wijken: ['gemeente', 'regio'],
 };
 
 async function main() {
@@ -92,7 +132,11 @@ async function main() {
   for (const [naam, velden] of Object.entries(NODIG)) {
     const col = await pb.collections.getOne(assertHh(naam));
     const mist = velden.filter((v) => !col.fields.some((f) => f.name === v));
-    if (mist.length) throw new Error(`${naam}: velden ontbreken (${mist.join(', ')}) — eerst B1 (70) uitrollen.`);
+    if (mist.length) {
+      const melding = `${naam}: velden ontbreken (${mist.join(', ')}) — eerst B1 (70) en 81-b2-werkgebied.mjs --apply.`;
+      if (APPLY) throw new Error(melding);
+      console.log(`! ${melding} (dry-run gaat door)`);
+    }
   }
 
   let totaal = 0;
