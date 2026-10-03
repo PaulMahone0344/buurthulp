@@ -19,8 +19,8 @@ import '../provider/concept_controller.dart';
 import '../provider/hulpvrager_providers.dart';
 
 /// Deel "Waar" van de hulpvraag-pagina (was O4). Het adres komt uit de
-/// eigen gegevens (hh_users) en is te bewerken; de toelichting is
-/// meerregelig. Elke wijziging gaat meteen in het concept. Zonder bekend
+/// eigen gegevens (hh_users); staat het daar compleet, dan zijn er geen
+/// adresvelden meer (3 okt), alleen de meerregelige toelichting. Elke wijziging gaat meteen in het concept. Zonder bekend
 /// adres eerst naar Mijn gegevens. De microfoonknop staat er al, maar
 /// uitgeschakeld: spraakinvoer komt later (OPEN-PUNTEN-M4).
 class HulpvraagWaarSectie extends ConsumerStatefulWidget {
@@ -43,6 +43,10 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
   final _toelichting = TextEditingController();
   bool _isVoorgevuld = false;
 
+  /// Het adres staat al compleet in Mijn gegevens (of in het concept):
+  /// dan geen adresvelden, alleen de toelichting (3 okt).
+  bool _adresBekend = false;
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +57,7 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
       _postcode.text = concept.postcode ?? '';
       _plaats.text = concept.plaats ?? '';
       _isVoorgevuld = true;
+      _adresBekend = concept.heeftWaar;
     }
   }
 
@@ -72,6 +77,7 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
     _adres.text = gegevens.adres;
     _postcode.text = gegevens.postcode;
     _plaats.text = gegevens.plaats;
+    _adresBekend = gegevens.heeftAdres;
     // Na de build: een provider wijzigen tijdens het bouwen mag niet.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _bewaar();
@@ -145,38 +151,14 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(TekstenHulpvragerNl.waarUitleg, style: tekst.bodyLarge),
-        SizedBox(height: tussen),
-        HhInvoer(
-          label: TekstenHulpvragerNl.veldAdres,
-          controller: _adres,
-          isVerplicht: true,
-          fouttekst: _fout(_adres, TekstenHulpvragerNl.validatieAdres),
-          autofillHints: const [AutofillHints.streetAddressLine1],
-          textInputAction: TextInputAction.next,
-          onChanged: _bewaar,
+        Text(
+          _adresBekend
+              ? TekstenHulpvragerNl.waarBekendUitleg
+              : TekstenHulpvragerNl.waarUitleg,
+          style: tekst.bodyLarge,
         ),
         SizedBox(height: tussen),
-        HhInvoer(
-          label: TekstenHulpvragerNl.veldPostcode,
-          controller: _postcode,
-          isVerplicht: true,
-          fouttekst: _fout(_postcode, TekstenHulpvragerNl.validatiePostcode),
-          autofillHints: const [AutofillHints.postalCode],
-          textInputAction: TextInputAction.next,
-          onChanged: _bewaar,
-        ),
-        SizedBox(height: tussen),
-        HhInvoer(
-          label: TekstenHulpvragerNl.veldPlaats,
-          controller: _plaats,
-          isVerplicht: true,
-          fouttekst: _fout(_plaats, TekstenHulpvragerNl.validatiePlaats),
-          autofillHints: const [AutofillHints.addressCity],
-          textInputAction: TextInputAction.next,
-          onChanged: _bewaar,
-        ),
-        SizedBox(height: tussen),
+        if (!_adresBekend) ..._adresVelden(tussen),
         HhInvoer(
           label: TekstenHulpvragerNl.veldToelichting,
           controller: _toelichting,
@@ -196,4 +178,38 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
       ],
     );
   }
+
+  /// Straat, postcode en plaats; alleen als het adres nog niet bekend is.
+  List<Widget> _adresVelden(double tussen) => [
+    HhInvoer(
+      label: TekstenHulpvragerNl.veldAdres,
+      controller: _adres,
+      isVerplicht: true,
+      fouttekst: _fout(_adres, TekstenHulpvragerNl.validatieAdres),
+      autofillHints: const [AutofillHints.streetAddressLine1],
+      textInputAction: TextInputAction.next,
+      onChanged: _bewaar,
+    ),
+    SizedBox(height: tussen),
+    HhInvoer(
+      label: TekstenHulpvragerNl.veldPostcode,
+      controller: _postcode,
+      isVerplicht: true,
+      fouttekst: _fout(_postcode, TekstenHulpvragerNl.validatiePostcode),
+      autofillHints: const [AutofillHints.postalCode],
+      textInputAction: TextInputAction.next,
+      onChanged: _bewaar,
+    ),
+    SizedBox(height: tussen),
+    HhInvoer(
+      label: TekstenHulpvragerNl.veldPlaats,
+      controller: _plaats,
+      isVerplicht: true,
+      fouttekst: _fout(_plaats, TekstenHulpvragerNl.validatiePlaats),
+      autofillHints: const [AutofillHints.addressCity],
+      textInputAction: TextInputAction.next,
+      onChanged: _bewaar,
+    ),
+    SizedBox(height: tussen),
+  ];
 }

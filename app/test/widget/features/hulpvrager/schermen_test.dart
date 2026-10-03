@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/core/config.dart';
 import 'package:heitjehulp_app/core/hh_fout.dart';
@@ -381,19 +382,21 @@ void main() {
   });
 
   group('waar', () {
-    testWidgets('adres is voorgevuld uit de eigen gegevens', (tester) async {
+    testWidgets('adres bekend uit mijn gegevens: geen adresvelden', (
+      tester,
+    ) async {
       await _pomp(tester, _gevallen[1]);
 
-      final velden = find.byType(TextField);
-      expect(
-        tester.widget<TextField>(velden.at(0)).controller?.text,
-        'Prins Bernhardlaan 12',
+      // Alleen de toelichting; het adres gaat stil mee in het concept.
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text(TekstenHulpvragerNl.waarBekendUitleg), findsOneWidget);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(HulpVragenScreen)),
       );
-      expect(
-        tester.widget<TextField>(velden.at(1)).controller?.text,
-        '4003 AB',
-      );
-      expect(tester.widget<TextField>(velden.at(2)).controller?.text, 'Tiel');
+      final concept = container.read(conceptProvider);
+      expect(concept.adres, 'Prins Bernhardlaan 12');
+      expect(concept.postcode, '4003 AB');
+      expect(concept.plaats, 'Tiel');
     });
 
     testWidgets('eerder ingevuld adres uit het concept wint van de gegevens', (
@@ -401,15 +404,11 @@ void main() {
     ) async {
       await _pomp(tester, _gevallen[2]);
 
-      final velden = find.byType(TextField);
       expect(
-        tester.widget<TextField>(velden.at(0)).controller?.text,
-        'Kerkstraat 1',
-      );
-      expect(
-        tester.widget<TextField>(velden.at(3)).controller?.text,
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
         'Twee tassen.',
       );
+      expect(find.text('Kerkstraat 1, 4001 AA Tiel'), findsOneWidget);
     });
 
     testWidgets('zonder bekend adres: eerst mijn gegevens invullen', (
@@ -425,9 +424,24 @@ void main() {
     testWidgets('leeg adres geeft veldfouten; microfoon is uitgeschakeld', (
       tester,
     ) async {
+      // Een half adres in het concept: dan staan de adresvelden er wel.
       await _pomp(tester, _gevallen[1]);
-      await tester.enterText(find.byType(TextField).at(0), '');
-      await tester.enterText(find.byType(TextField).at(1), ' ');
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(HulpVragenScreen)),
+      );
+      container
+          .read(conceptProvider.notifier)
+          .zetWaar(adres: '', postcode: ' ', plaats: 'Tiel', toelichting: '');
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        hhHulpvragerWikkel(
+          const HulpVragenScreen(),
+          klusGateway: fakeKlusGateway(),
+          container: container,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsNWidgets(4));
 
       final akkoord = find.text(TekstenHulpvragerNl.bevestigenAkkoord);
       await tester.ensureVisible(akkoord);

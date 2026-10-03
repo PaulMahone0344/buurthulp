@@ -166,8 +166,8 @@ void main() {
       await tikTekst(tester, 'klusje in huis');
       await tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
       await tikTekst(tester, TekstenHulpvragerNl.dagdeelMiddag);
-      // O4: het adres van de OUDERE staat al ingevuld.
-      expect(find.text('Prins Bernhardlaan 12'), findsOneWidget);
+      // Het adres van de OUDERE is bekend: het staat in de samenvatting.
+      expect(find.text('Prins Bernhardlaan 12, 4003 AB Tiel'), findsOneWidget);
       await tikKnop(tester, TekstenHulpvragerNl.bevestigenAkkoord);
 
       final body = klusGateway.aangemaakteKlussen.single.alsBody;

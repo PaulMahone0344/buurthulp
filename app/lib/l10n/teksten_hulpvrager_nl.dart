@@ -78,6 +78,8 @@ abstract final class TekstenHulpvragerNl {
   // O4 Waar
   static const waarTitel = 'Waar en wat nog meer?';
   static const waarUitleg = 'Controleer uw adres en vertel kort wat u wilt.';
+  static const waarBekendUitleg =
+      'Vertel kort wat u wilt. Wij komen naar het adres uit Mijn gegevens.';
   static const veldAdres = 'Straat en huisnummer';
   static const veldPostcode = 'Postcode';
   static const veldPlaats = 'Plaats';

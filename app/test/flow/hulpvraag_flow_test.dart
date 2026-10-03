@@ -91,8 +91,8 @@ void main() {
       await _tik(tester, 'klusje in huis');
       await _tik(tester, TekstenHulpvragerNl.dagMorgen);
       await _tik(tester, TekstenHulpvragerNl.dagdeelMiddag);
-      // Adres voorgevuld, toelichting erbij.
-      await tester.enterText(find.byType(TextField).at(3), 'Lamp ophangen.');
+      // Adres bekend uit mijn gegevens: alleen de toelichting.
+      await tester.enterText(find.byType(TextField), 'Lamp ophangen.');
       await tester.pumpAndSettle();
       _controleerSchermlezer(tester);
 
@@ -144,13 +144,6 @@ void main() {
     expect(find.text(TekstenHulpvragerNl.paginaKiesWanneer), findsOneWidget);
 
     await _tik(tester, TekstenHulpvragerNl.dagMorgen);
-    await _tik(tester, TekstenHulpvragerNl.dagdeelOchtend);
-    await tester.enterText(find.byType(TextField).at(0), '');
-    await tester.pumpAndSettle();
-    await _tik(tester, TekstenHulpvragerNl.bevestigenAkkoord);
-    expect(find.text(TekstenHulpvragerNl.paginaVulWaarIn), findsOneWidget);
-    expect(find.text(TekstenHulpvragerNl.validatieAdres), findsOneWidget);
-
     expect(klusGateway.aangemaakteKlussen, isEmpty);
   });
 
@@ -164,8 +157,7 @@ void main() {
     await _tik(tester, 'tuin');
     await _tik(tester, TekstenHulpvragerNl.dagVandaag);
     await _tik(tester, TekstenHulpvragerNl.dagdeelAvond);
-    await tester.enterText(find.byType(TextField).at(0), 'Kerkstraat 9');
-    await tester.enterText(find.byType(TextField).at(3), 'Heg knippen');
+    await tester.enterText(find.byType(TextField), 'Heg knippen');
     await tester.pumpAndSettle();
 
     expect(
@@ -174,7 +166,7 @@ void main() {
     );
     final concept = container.read(conceptProvider);
     expect(concept.klustype?.naam, 'tuin');
-    expect(concept.adres, 'Kerkstraat 9');
+    expect(concept.adres, 'Prins Bernhardlaan 12');
     expect(concept.toelichting, 'Heg knippen');
   });
 
@@ -203,11 +195,11 @@ void main() {
     expect(container.read(conceptProvider).isLeeg, isTrue);
   });
 
-  testWidgets('zonder adres: naar Mijn gegevens, na opslaan is Waar gevuld', (
+  testWidgets('zonder adres: naar Mijn gegevens, daarna is het adres bekend', (
     tester,
   ) async {
     final klusGateway = fakeKlusGateway(metAdres: false);
-    await pompHulpvragerApp(tester, klusGateway: klusGateway);
+    final container = await pompHulpvragerApp(tester, klusGateway: klusGateway);
 
     await _tik(tester, TekstenHulpvragerNl.homeHulpVragen);
     expect(find.text(TekstenHulpvragerNl.waarGeenAdresTitel), findsOneWidget);
@@ -226,10 +218,9 @@ void main() {
 
     await _terug(tester);
     expect(find.byType(HulpVragenScreen), findsOneWidget);
-    expect(
-      tester.widget<TextField>(find.byType(TextField).at(0)).controller?.text,
-      'Kerkstraat 3',
-    );
+    // Nu bekend: geen adresvelden meer, het adres zit in het concept.
+    expect(find.text(TekstenHulpvragerNl.waarBekendUitleg), findsOneWidget);
+    expect(container.read(conceptProvider).adres, 'Kerkstraat 3');
   });
 
   testWidgets(
