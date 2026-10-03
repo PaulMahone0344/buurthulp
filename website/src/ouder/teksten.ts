@@ -65,7 +65,7 @@ export const T = {
 
   ingetrokkenKop: 'Je toestemming is ingetrokken',
   ingetrokkenTekst: (n: string) =>
-    `${hoofdletter(n)} kan geen klussen meer aannemen. Wil je later toch toestemming geven? Dan kan ${n} je in de app een nieuwe code sturen.`,
+    `${hoofdletter(n)} kan geen klussen meer aannemen. Een klus die nog niet begonnen was, gaat naar iemand anders. Wil je later toch toestemming geven? Neem dan contact op met de meldkamer van HeitjeHulp.`,
   verlopenKop: 'Deze code is verlopen',
   verlopenTekst: (n: string) => `Een code is 24 uur geldig. Vraag ${n} om in de app een nieuwe code te sturen.`,
   laden: 'Laden…',

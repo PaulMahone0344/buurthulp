@@ -126,6 +126,7 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     documentFotoUrl: document ? bestandUrl(document) : '',
     ouderToestemmingOp: naarIso(gebruiker?.ouder_toestemming_op),
     ouderAvp: ouderRij ? ouderRij.avp_verklaard === true : null,
+    ouderStatus: tekst(ouderRij?.status),
   }
 }
 
@@ -391,6 +392,12 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
         // document_foto is PROTECTED: zonder bestandstoken 404.
         const token = records.length ? await pb.files.getToken() : ''
         return records.map((r) => naarProfiel(r, (bestand) => pb.files.getURL(r, bestand, { token })))
+      }),
+
+    // B3: na intrekken mag het kind pas weer mailen als de meldkamer dit doet.
+    ouderVrijgeven: (helperId) =>
+      metFout(async () => {
+        await pb.send('/api/hh/ouder/vrijgeven', { method: 'POST', body: { helper: helperId } })
       }),
 
     beoordeel: (profielId, besluit) =>

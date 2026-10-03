@@ -163,6 +163,9 @@ describe('ouder-pagina met de link uit de mail', () => {
   it('ingetrokken link: dat staat er', async () => {
     opzet(new NepOuderApi({ code: GOEDE_CODE, token: 'tok', status: 'ingetrokken' }), 'tok')
     expect(await screen.findByRole('heading', { name: 'Je toestemming is ingetrokken' })).toBeInTheDocument()
+    // Antwoord Ibrahim: opnieuw gaat via de meldkamer, niet via een nieuwe code van het kind.
+    expect(screen.getByText(/neem dan contact op met de meldkamer van HeitjeHulp/i)).toBeInTheDocument()
+    expect(screen.queryByText(/nieuwe code/)).not.toBeInTheDocument()
   })
 
   it('onbekende of oude link: melding en de code-stap', async () => {

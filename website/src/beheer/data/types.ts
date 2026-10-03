@@ -88,6 +88,8 @@ export type Profiel = {
   ouderToestemmingOp: string
   /** B3: AVP-vinkje van de ouder (hh_ouder_toestemming); null = geen rij. */
   ouderAvp: boolean | null
+  /** B3: status in hh_ouder_toestemming ('' = geen rij). */
+  ouderStatus: string
 }
 
 export type Wijk = {

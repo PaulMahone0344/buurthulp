@@ -142,4 +142,25 @@ describe('D2 screening', () => {
     expect(within(detail).getByText(/Geen toestemming van een ouder/)).toBeInTheDocument()
     expect(within(detail).queryByText(/AVP/)).not.toBeInTheDocument()
   })
+
+  it('B3: ouder trok in -> de meldkamer laat het kind opnieuw mailen (alleen dan een knop)', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      { profielen: [profiel({ id: 'p1', gebruikerId: 'j1', naam: 'Daan', ouderStatus: 'ingetrokken', ouderAvp: true })] },
+      COORDINATOR,
+    )
+    opzet(data, { jongere: 'p1' })
+    const detail = await screen.findByRole('region', { name: 'Screening van Daan' })
+    expect(within(detail).getByText(/Ouder trok de toestemming in/)).toBeInTheDocument()
+    await user.click(within(detail).getByRole('button', { name: 'Kind mag ouder opnieuw mailen' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'ouderVrijgeven', args: ['j1'] })
+    expect(await within(detail).findByText(/Daan kan de ouder weer een mail sturen/)).toBeInTheDocument()
+  })
+
+  it('B3: zonder intrekken geen vrijgeef-knop', async () => {
+    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', naam: 'Daan', ouderStatus: 'gegeven' })] }, COORDINATOR)
+    opzet(data, { jongere: 'p1' })
+    const detail = await screen.findByRole('region', { name: 'Screening van Daan' })
+    expect(within(detail).queryByRole('button', { name: 'Kind mag ouder opnieuw mailen' })).not.toBeInTheDocument()
+  })
 })

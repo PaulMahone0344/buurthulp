@@ -63,6 +63,7 @@ function profiel(overschrijf: Partial<Profiel>): Profiel {
     documentFotoUrl: '',
     ouderToestemmingOp: '',
     ouderAvp: null,
+    ouderStatus: '',
     ...overschrijf,
   }
 }

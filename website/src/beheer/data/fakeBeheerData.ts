@@ -257,6 +257,15 @@ export class FakeBeheerData implements BeheerData {
     profiel.bijgewerktOp = new Date().toISOString()
   }
 
+  async ouderVrijgeven(helperId: string) {
+    this.schrijf('ouderVrijgeven', helperId)
+    const profiel = this.stand.profielen.find((p) => p.gebruikerId === helperId)
+    if (!profiel || profiel.ouderStatus !== 'ingetrokken') {
+      throw new BeheerFout('De toestemming is niet ingetrokken; er is niets vrij te geven.')
+    }
+    profiel.ouderStatus = 'vrijgegeven'
+  }
+
   wijken() {
     return this.lees(this.stand.wijken)
   }

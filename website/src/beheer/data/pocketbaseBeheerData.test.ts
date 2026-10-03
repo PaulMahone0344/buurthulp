@@ -232,7 +232,7 @@ describe('omzetten', () => {
       naam: 'Daan',
       ouder_toestemming_op: '2026-10-04 10:00:00.000Z',
       expand: {
-        hh_ouder_toestemming_via_helper: { id: 't1', collectionId: 't', collectionName: 'hh_ouder_toestemming', avp_verklaard: true },
+        hh_ouder_toestemming_via_helper: { id: 't1', collectionId: 't', collectionName: 'hh_ouder_toestemming', avp_verklaard: true, status: 'ingetrokken' },
       },
     }
     const met = naarProfiel(
@@ -241,10 +241,12 @@ describe('omzetten', () => {
     )
     expect(met.ouderToestemmingOp).toBe('2026-10-04T10:00:00.000Z')
     expect(met.ouderAvp).toBe(true)
+    expect(met.ouderStatus).toBe('ingetrokken')
 
     const zonder = naarProfiel({ id: 'p2', collectionId: 'c', collectionName: 'hh_profielen' }, (b) => b)
     expect(zonder.ouderToestemmingOp).toBe('')
     expect(zonder.ouderAvp).toBeNull()
+    expect(zonder.ouderStatus).toBe('')
   })
 
   it('maakt van een json-waarde leesbare tekst', () => {

@@ -65,6 +65,7 @@ export function profiel(o: Partial<Profiel>): Profiel {
     documentFotoUrl: 'https://pb.test/id.jpg?token=t',
     ouderToestemmingOp: '',
     ouderAvp: null,
+    ouderStatus: '',
     ...o,
   }
 }
