@@ -27,6 +27,12 @@
 //      (bewoner en helper, via impersonate; er wordt niets geschreven)
 //   J. wissel van helper: de oude helper leest niets meer, de nieuwe leest
 //      het oude gesprek niet; de bewoner ziet alles
+//   M. (integratie) gesprek verwijderen: alleen voor jezelf, de ander houdt
+//      zijn kopie, een nieuw bericht is weer zichtbaar; een ander 403; bij een
+//      lopend incident 409 tot de meldkamer het afhandelt
+//   N. (integratie) account verwijderen: berichten blokkeren het niet; eigen
+//      berichten gewist ("Bericht verwijderd"), de ander houdt de zijne; bij
+//      een lopend incident uitgesteld tot de afhandeling
 //   K. realtime: de bewoner krijgt het bericht van de helper binnen 5 s, een
 //      vreemde en de coordinator (zonder incident) krijgen niets
 //      (draai met node --experimental-eventsource; anders overgeslagen)
@@ -89,6 +95,15 @@ async function magNiet(label, fn, codes = WEIGER) {
   }
 }
 const wacht = (ms) => new Promise((r) => setTimeout(r, ms));
+/// Een eigen route (POST, geen body) als { status, body }.
+async function route(client, pad) {
+  try {
+    const body = await client.send(pad, { method: 'POST' });
+    return { status: 200, body };
+  } catch (e) {
+    return { status: e?.status ?? 0, body: e?.response ?? {} };
+  }
+}
 const lijst = (client, klusId) =>
   client.collection(COLLECTIE).getFullList({ filter: client.filter('klus = {:k}', { k: klusId }), sort: 'created' });
 
@@ -200,6 +215,7 @@ async function main() {
     console.log(`  · eigen klussen "${MERK}" (geaccepteerd, open, afgerond) en berichten daarin; één incident (meldt de coordinatoren kort, wordt opgeruimd);`);
     console.log('  · per rol nameten wie leest en schrijft, filter, meldingen, open/dicht, wissel van helper, realtime;');
     console.log('  · de oude seed-klus: een bericht proberen als bewoner en helper (impersonate) — moet 403 geven, niets geschreven;');
+    console.log('  · (integratie) gesprek verwijderen en een eigen tijdelijk helper-account verwijderen (AVG); twee korte incidenten op eigen klussen;');
     console.log('  · alles opruimen en nameten.');
     console.log(`\n${groen} groen, ${rood} rood (leescontroles).`);
     if (rood > 0) console.log('Rood is verwacht zolang 110 en 111 nog niet uitgerold zijn.');
@@ -312,6 +328,13 @@ async function main() {
   await magNiet('bewoner verwijdert een bericht', () => b.client.collection(COLLECTIE).delete(m1.id), [400, 403, 404]);
   await magNiet('coordinator verwijdert een bericht', () => c.client.collection(COLLECTIE).delete(m1.id), [400, 403, 404]);
   await magNiet('bericht van 501 tekens', () => schrijf(b, k1.id, 'a'.repeat(501)));
+  // Integratie: tekst is niet meer verplicht in het schema (gewist = leeg), de hook weigert een leeg bericht.
+  await magNiet('leeg bericht', () => schrijf(b, k1.id, '   '), [400]);
+  for (const veld of [{ verborgen_bewoner: true }, { verborgen_helper: true }, { gewist: true }, { wissen_na_incident: true }]) {
+    await magNiet(`bewoner stuurt ${Object.keys(veld)[0]} zelf mee`, () => schrijf(b, k1.id, 'Hoi', veld));
+  }
+  await magNiet('bewoner zet verborgen_helper op een bericht van de helper', () =>
+    b.client.collection(COLLECTIE).update(m2.id, { verborgen_helper: true }));
 
   // ---- G -------------------------------------------------------------------
   kop('G. Filter: nummers, mail en links worden •••');
@@ -388,6 +411,70 @@ async function main() {
   check('het nieuwe bericht hoort bij helper 2', n2?.helper === h2.id);
   check('helper 2 leest alleen zijn eigen gesprek (1)', (await lijst(h2.client, kW.id)).length === 1);
   check('bewoner leest alles (3)', (await lijst(b.client, kW.id)).length === 3);
+
+  // ---- M -------------------------------------------------------------------
+  kop('M. Gesprek verwijderen (alleen voor jezelf)');
+  const kV = await klus(b, h, 'geaccepteerd');
+  await mag('bewoner schrijft', () => schrijf(b, kV.id, 'Hoi Daan'));
+  await mag('helper schrijft', () => schrijf(h, kV.id, 'Hoi Bea'));
+  let rv = await route(vb.client, `/api/hh/chat/${kV.id}/verbergen`);
+  check(`vreemde bewoner kan het gesprek niet verwijderen (403, kreeg ${rv.status})`, rv.status === 403 && rv.body?.reden === 'geendeelnemer');
+  rv = await route(c.client, `/api/hh/chat/${kV.id}/verbergen`);
+  check(`coordinator kan het gesprek niet verwijderen (403, kreeg ${rv.status})`, rv.status === 403);
+  rv = await route(b.client, `/api/hh/chat/${kV.id}/verbergen`);
+  check(`bewoner verwijdert het gesprek (200, 2 berichten, kreeg ${rv.status} ${JSON.stringify(rv.body)})`, rv.status === 200 && rv.body?.verborgen === 2);
+  check('bewoner ziet 0 berichten', (await lijst(b.client, kV.id)).length === 0);
+  check('helper houdt zijn kopie (2)', (await lijst(h.client, kV.id)).length === 2);
+  const naVerbergen = await mag('helper schrijft daarna nog', () => schrijf(h, kV.id, 'Ben je er nog?'));
+  check('bewoner ziet alleen het nieuwe bericht (1)', (await lijst(b.client, kV.id)).length === 1);
+  const doorBewoner = naVerbergen ? await b.client.collection(COLLECTIE).getOne(naVerbergen.id) : {};
+  check('verborgen-velden zijn niet zichtbaar voor de deelnemers', !('verborgen_helper' in doorBewoner) && !('verborgen_bewoner' in doorBewoner) && !('wissen_na_incident' in doorBewoner));
+  rv = await route(h.client, `/api/hh/chat/${kV.id}/verbergen`);
+  check(`helper verwijdert het gesprek (200, 3, kreeg ${rv.status} ${JSON.stringify(rv.body)})`, rv.status === 200 && rv.body?.verborgen === 3);
+  check('helper ziet 0', (await lijst(h.client, kV.id)).length === 0);
+  check('bewoner ziet nog 1', (await lijst(b.client, kV.id)).length === 1);
+  const opServer = await su.collection(COLLECTIE).getFullList({ filter: su.filter('klus = {:k}', { k: kV.id }) });
+  check('op de server staan nog alle 3 berichten, niets gewist', opServer.length === 3 && opServer.every((r) => r.tekst && !r.gewist));
+
+  const kI = await klus(b, h, 'onderweg');
+  await mag('bewoner schrijft (incident-klus)', () => schrijf(b, kI.id, 'Waar blijf je?'));
+  const incI = await mag('bewoner meldt een probleem', () =>
+    b.client.collection('hh_incidenten').create({ klus: kI.id, melder: b.id, soort: 'probleem', omschrijving: `${MERK} chat` }));
+  rv = await route(b.client, `/api/hh/chat/${kI.id}/verbergen`);
+  check(`incident loopt: bewoner kan het gesprek niet verwijderen (409, kreeg ${rv.status})`, rv.status === 409 && rv.body?.reden === 'incident');
+  check('  bewoner ziet het gesprek nog (1)', (await lijst(b.client, kI.id)).length === 1);
+  if (incI) await mag('coordinator handelt het incident af', () => c.client.collection('hh_incidenten').update(incI.id, { afhandeling: 'Gebeld, opgelost.' }));
+  rv = await route(b.client, `/api/hh/chat/${kI.id}/verbergen`);
+  check(`na de afhandeling mag het wel (200, kreeg ${rv.status})`, rv.status === 200 && rv.body?.verborgen === 1);
+  check('coordinator leest na de afhandeling nog mee (incident bestaat)', (await lijst(c.client, kI.id)).length === 1);
+
+  // ---- N -------------------------------------------------------------------
+  kop('N. Account verwijderen (AVG)');
+  const hx = await account('helper-weg', 'jongere', 'Xander Weg');
+  const kA = await klus(b, hx, 'geaccepteerd');
+  await mag('helper (weg) schrijft 2 berichten', async () => {
+    await schrijf(hx, kA.id, 'Ik kom om 3 uur');
+    return schrijf(hx, kA.id, 'Tot zo');
+  });
+  const vanBewoner = await mag('bewoner antwoordt', () => schrijf(b, kA.id, 'Prima'));
+  const kX = await klus(b, hx, 'onderweg');
+  const geheim = await mag('helper (weg) schrijft op een klus met incident', () => schrijf(hx, kX.id, 'Ik sta voor de deur'));
+  const incX = await mag('bewoner meldt een probleem op die klus', () =>
+    b.client.collection('hh_incidenten').create({ klus: kX.id, melder: b.id, soort: 'probleem', omschrijving: `${MERK} chat` }));
+  await mag('helper verwijdert zijn eigen account (berichten blokkeren niet)', () => hx.client.collection('hh_users').delete(hx.id));
+  const weg = await su.collection('hh_users').getFullList({ filter: su.filter('id = {:id}', { id: hx.id }) });
+  check('account bestaat niet meer', weg.length === 0);
+  const naA = await lijst(b.client, kA.id);
+  const gewistA = naA.filter((r) => r.gewist === true);
+  check('bewoner ziet nog 3 berichten op de klus', naA.length === 3, `aantal=${naA.length}`);
+  check('de 2 berichten van de helper: tekst leeg + gewist', gewistA.length === 2 && gewistA.every((r) => r.tekst === '' && r.afzender === ''), JSON.stringify(gewistA.map((r) => [r.tekst, r.afzender])));
+  check('het bericht van de bewoner blijft', naA.some((r) => r.id === vanBewoner?.id && r.tekst === 'Prima' && !r.gewist));
+  const xVoor = geheim ? await su.collection(COLLECTIE).getOne(geheim.id) : {};
+  check('incident loopt: het bericht is NOG niet gewist (uitgesteld)', xVoor.tekst === 'Ik sta voor de deur' && xVoor.gewist === false && xVoor.wissen_na_incident === true, JSON.stringify([xVoor.tekst, xVoor.gewist, xVoor.wissen_na_incident]));
+  check('de meldkamer leest het nog (incident)', (await lijst(c.client, kX.id)).some((r) => r.tekst === 'Ik sta voor de deur'));
+  if (incX) await mag('coordinator handelt het incident af', () => c.client.collection('hh_incidenten').update(incX.id, { afhandeling: 'Afgehandeld.' }));
+  const xNa = geheim ? await su.collection(COLLECTIE).getOne(geheim.id) : {};
+  check('na de afhandeling: tekst leeg + gewist', xNa.tekst === '' && xNa.gewist === true && xNa.wissen_na_incident === false, JSON.stringify([xNa.tekst, xNa.gewist, xNa.wissen_na_incident]));
 
   // ---- K -------------------------------------------------------------------
   kop('K. Realtime');

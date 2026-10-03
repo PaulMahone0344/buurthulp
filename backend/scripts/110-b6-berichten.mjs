@@ -57,13 +57,26 @@ const AUTODATES = [
 export function berichtVelden(ids) {
   return [
     { name: 'klus', type: 'relation', collectionId: ids.hh_klussen, maxSelect: 1, required: true, cascadeDelete: true },
-    { name: 'afzender', type: 'relation', collectionId: ids.hh_users, maxSelect: 1, required: true, cascadeDelete: false },
+    // Integratie (AVG): NIET verplicht, zodat een account met berichten
+    // gewoon verwijderd kan worden (PocketBase maakt de relatie dan leeg;
+    // hh_chat.pb.js wist de tekst). De createRule eist nog steeds afzender = ik.
+    { name: 'afzender', type: 'relation', collectionId: ids.hh_users, maxSelect: 1, required: false, cascadeDelete: false },
     { name: 'helper', type: 'relation', collectionId: ids.hh_users, maxSelect: 1, required: false, cascadeDelete: false },
-    { name: 'tekst', type: 'text', required: true, min: 1, max: MAX_TEKST },
+    // Integratie (AVG): een gewist bericht heeft een lege tekst; een NIEUW
+    // bericht zonder tekst weigert de hook (400 "Typ eerst een bericht.").
+    { name: 'tekst', type: 'text', required: false, min: 0, max: MAX_TEKST },
     { name: 'soort', type: 'select', values: BERICHT_SOORTEN, maxSelect: 1, required: true },
     { name: 'gelezen_op', type: 'date' },
     { name: 'gefilterd', type: 'bool' },
     { name: 'contactverzoek', type: 'bool' },
+    // Integratie (antwoorden Ibrahim 4 okt): "Gesprek verwijderen" verbergt
+    // het gesprek alleen voor die kant; gewist = tekst leeg na het
+    // verwijderen van het account van de afzender; wissen_na_incident = dat
+    // wissen wacht tot de meldkamer het incident op die klus afhandelt.
+    { name: 'verborgen_bewoner', type: 'bool' },
+    { name: 'verborgen_helper', type: 'bool' },
+    { name: 'gewist', type: 'bool' },
+    { name: 'wissen_na_incident', type: 'bool' },
     ...AUTODATES,
   ];
 }
@@ -123,6 +136,14 @@ async function berichten(pb) {
 
   const aanwezig = new Set(bestaand.fields.map((f) => f.name));
   const ontbreekt = gewenst.filter((f) => !aanwezig.has(f.name));
+  // Integratie: afzender en tekst niet meer verplicht (AVG). Een collectie
+  // van vóór die wijziging (alleen lokaal; prod had nog geen hh_berichten)
+  // wordt gelijkgetrokken.
+  const losser = bestaand.fields.filter((f) => {
+    const g = gewenst.find((x) => x.name === f.name);
+    return g && (f.name === 'afzender' || f.name === 'tekst') && f.required && !g.required;
+  });
+  for (const f of losser) console.log(`  ${APPLY ? '↻ zet' : '~ ZOU zetten'}: ${COLLECTIE}.${f.name} niet verplicht`);
   for (const f of gewenst) {
     if (aanwezig.has(f.name)) console.log(`  ✓ bestaat al: ${COLLECTIE}.${f.name}`);
     else console.log(`  ${APPLY ? '＋ voeg toe' : '+ ZOU toevoegen'}: ${COLLECTIE}.${f.name} (${f.type})`);
@@ -130,14 +151,16 @@ async function berichten(pb) {
   const huidig = bestaand.indexes || [];
   const nieuweIdx = BERICHT_INDEXEN.filter((idx) => !huidig.some((h) => h.replace(/\s+/g, ' ') === idx));
   for (const idx of nieuweIdx) console.log(`  ${APPLY ? '＋ index' : '+ ZOU index'}: ${idx}`);
-  if (!ontbreekt.length && !nieuweIdx.length) return 0;
-  if (!APPLY) return ontbreekt.length + nieuweIdx.length;
+  if (!ontbreekt.length && !nieuweIdx.length && !losser.length) return 0;
+  if (!APPLY) return ontbreekt.length + nieuweIdx.length + losser.length;
+  const velden = bestaand.fields.map((f) =>
+    losser.some((l) => l.name === f.name) ? { ...f, required: false, ...(f.name === 'tekst' ? { min: 0 } : {}) } : f);
   await pb.collections.update(bestaand.id, {
-    fields: [...bestaand.fields, ...ontbreekt],
+    fields: [...velden, ...ontbreekt],
     indexes: [...huidig, ...nieuweIdx],
   });
   console.log(`  ✓ ${COLLECTIE} bijgewerkt.`);
-  return ontbreekt.length + nieuweIdx.length;
+  return ontbreekt.length + nieuweIdx.length + losser.length;
 }
 
 async function meldingSoort(pb) {

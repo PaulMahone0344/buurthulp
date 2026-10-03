@@ -20,11 +20,11 @@ test('velden: klus (cascade), afzender, helper, tekst max 500, soort, gelezen_op
   assert.equal(velden.klus.cascadeDelete, true, 'verdwijnt mee met de klus');
   assert.equal(velden.klus.required, true);
   assert.equal(velden.afzender.collectionId, 'u');
-  assert.equal(velden.afzender.required, true);
+  assert.equal(velden.afzender.required, false, 'integratie: berichten blokkeren accountverwijdering niet');
   assert.equal(velden.afzender.cascadeDelete, false);
   assert.equal(velden.helper.collectionId, 'u');
   assert.equal(velden.tekst.max, 500);
-  assert.equal(velden.tekst.required, true);
+  assert.equal(velden.tekst.required, false, 'integratie: een gewist bericht heeft een lege tekst');
   assert.deepEqual(velden.soort.values, ['tekst', 'snel']);
   assert.deepEqual(BERICHT_SOORTEN, ['tekst', 'snel']);
   assert.equal(velden.gelezen_op.type, 'date');
@@ -49,7 +49,8 @@ test('lezen: bewoner, de HUIDIGE helper van deze chat, coordinator alleen bij ee
   assert.equal(r, BERICHTEN_RULES.viewRule);
   assert.ok(r.startsWith('@request.auth.id != "" && @request.auth.collectionName = "hh_users"'));
   assert.ok(r.includes('klus.hulpvrager = @request.auth.id'));
-  assert.ok(r.includes('(helper = @request.auth.id && klus.toegewezen_jongere = @request.auth.id)'));
+  // Integratie: met 'verborgen_helper = false' erbij (zie de AVG-test).
+  assert.ok(r.includes('(helper = @request.auth.id && klus.toegewezen_jongere = @request.auth.id'));
   assert.ok(r.includes(COORDINATOR_INZAGE));
   assert.ok(COORDINATOR_INZAGE.includes('@collection.hh_incidenten.klus ?= klus'));
   assert.ok(COORDINATOR_INZAGE.includes('@request.auth.rol = "coordinator"'));
@@ -89,4 +90,35 @@ test('verwijderen: niemand via de API (verdwijnt mee met de klus)', () => {
 
 test('geen enkele rule is leeg ("" = publiek)', () => {
   for (const [k, v] of Object.entries(BERICHTEN_RULES)) assert.notEqual(v, '', k);
+});
+
+// ---- Integratie (antwoorden Ibrahim 4 okt): gesprek verwijderen + AVG ----------
+
+test('AVG-velden: verborgen per kant, gewist, wissen_na_incident; afzender en tekst niet verplicht', () => {
+  const velden = Object.fromEntries(berichtVelden(IDS).map((v) => [v.name, v]));
+  for (const v of ['verborgen_bewoner', 'verborgen_helper', 'gewist', 'wissen_na_incident']) {
+    assert.equal(velden[v]?.type, 'bool', v);
+  }
+  // Berichten blokkeren het verwijderen van een account niet meer: PocketBase
+  // maakt een niet-verplichte relatie leeg; de hook wist de tekst.
+  assert.equal(velden.afzender.required, false);
+  assert.equal(velden.afzender.cascadeDelete, false);
+  // Een gewist bericht heeft een lege tekst; een NIEUW bericht moet tekst hebben (hook).
+  assert.equal(velden.tekst.required, false);
+});
+
+test('lezen: wie het gesprek verborg ziet het niet meer, de ander wel; de meldkamer bij een incident altijd', () => {
+  const r = BERICHTEN_RULES.listRule;
+  assert.ok(r.includes('(klus.hulpvrager = @request.auth.id && verborgen_bewoner = false)'));
+  assert.ok(r.includes('(helper = @request.auth.id && klus.toegewezen_jongere = @request.auth.id && verborgen_helper = false)'));
+  assert.ok(r.includes(COORDINATOR_INZAGE));
+  assert.ok(!COORDINATOR_INZAGE.includes('verborgen'));
+});
+
+test('de AVG-velden zet nooit een gebruiker (aanmaken en bijwerken)', () => {
+  for (const k of ['createRule', 'updateRule']) {
+    for (const v of ['verborgen_bewoner', 'verborgen_helper', 'gewist', 'wissen_na_incident']) {
+      assert.ok(BERICHTEN_RULES[k].includes(`@request.body.${v}:isset = false`), `${k} ${v}`);
+    }
+  }
 });

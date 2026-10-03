@@ -1289,14 +1289,17 @@ is B11; de rule staat klaar.
 
 hh_berichten  NIEUW (8 eigen velden + created/updated; scripts/110-b6-berichten.mjs)
   klus            verwijzing naar hh_klussen, verplicht; verdwijnt mee met de klus
-  afzender        verwijzing naar hh_users, verplicht; GEEN cascade (zoals
-                  hh_klussen.hulpvrager: berichten blijven als bewijs; een
-                  account met berichten kan dus niet zomaar weg)
+  afzender        verwijzing naar hh_users, GEEN cascade. INTEGRATIE: NIET
+                  verplicht, zodat een account met berichten wel weg kan
+                  (PocketBase maakt de relatie leeg; de hook wist de tekst,
+                  zie AVG hieronder). De createRule eist afzender = jijzelf.
   helper          verwijzing naar hh_users: de helper van DIT gesprek. De hook
                   zet hem bij aanmaken op klus.toegewezen_jongere. Een nieuwe
                   helper (na teruggeven) begint een nieuw gesprek en leest het
                   oude niet.
-  tekst           tekst, verplicht, 1-500 (na het filter)
+  tekst           tekst, 0-500 (na het filter). INTEGRATIE: niet verplicht
+                  in het schema (een gewist bericht is leeg); een NIEUW leeg
+                  bericht weigert de hook (400 "Typ eerst een bericht.").
   soort           keuze: tekst | snel (snelknop: gewoon bericht, NOOIT een
                   statuswissel; die loopt via de M6-routes)
   gelezen_op      datum (leeg = ongelezen); alleen de ontvanger zet hem
@@ -1371,6 +1374,34 @@ B6CHECK (scripts/112-b6check.mjs, dry-run standaard)
   afgelopen SEED-klus van > 72 uur: 403 voor bewoner en helper via
   impersonate, niets geschreven), wissel van helper, realtime; alles
   opgeruimd. Lokaal bewezen (PB 0.25.9, prod-schema): 84 groen, 0 rood.
+
+INTEGRATIE B3+B4+B6 (antwoorden Ibrahim 4 okt): GESPREK VERWIJDEREN EN AVG
+  Velden (110, nog vóór de eerste uitrol erbij): verborgen_bewoner,
+  verborgen_helper, gewist, wissen_na_incident (bool). Zet nooit een
+  gebruiker (create/updateRule isset = false + de hook zet ze terug).
+  Lezen (111): bewoner alleen waar verborgen_bewoner = nee, helper alleen
+  waar verborgen_helper = nee; de meldkamer (incident) ziet alles.
+  "Gesprek verwijderen" (POST /api/hh/chat/{klus}/verbergen, knop in het
+  chatscherm met een vraag ervoor): alleen voor jezelf; de ander houdt zijn
+  kopie; een nieuw bericht daarna is weer zichtbaar. Bewaard tot iemand zo
+  verwijdert (geen automatische termijn).
+  Account verwijderd: zijn berichten -> tekst leeg + gewist (de ander ziet
+  "Bericht verwijderd"); berichten blokkeren het verwijderen niet meer.
+  Lopend incident (afhandeling leeg) op de klus:
+    - gesprek verwijderen: GEWEIGERD (409 "Er loopt een melding ...").
+      Waarom: verbergen is geen recht dat haast heeft; na de afhandeling
+      kan het meteen. De meldkamer leest tot dan alles.
+    - account verwijderen: het account gaat WEL meteen weg (AVG-recht, niet
+      blokkeren), alleen het wissen van de tekst wordt UITGESTELD
+      (wissen_na_incident = ja). Zodra de meldkamer de afhandeling invult
+      (of het incident verwijdert) en er geen ander open incident op de klus
+      is, wist hh_chat.pb.js die berichten alsnog.
+  Origineel van gefilterde berichten: blijft NIET bewaard (ongewijzigd).
+  Meldkamer leest alleen bij een incident, ook na afhandelen (ongewijzigd).
+  Bekend: het wissen hangt aan een API-verwijdering (onRecordDeleteRequest);
+  een account dat iemand op de server zelf met $app/sqlite verwijdert, wordt
+  niet gewist (dat doet niemand; beheerpaneel en app gaan via de API).
+  112 secties M en N bewijzen dit.
 
 UITROLLEN (volgorde)
   00-backup.mjs -> 110 --apply -> 111 --apply -> 113-hook-deploy.sh ->

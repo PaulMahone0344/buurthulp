@@ -46,6 +46,19 @@ const STATUS_AFGELOPEN = ["afgerond", "geannuleerd"];
 const MELDING_DICHT = "Deze chat is gesloten.";
 
 // --------------------------------------------------------------------------
+// INTEGRATIE (antwoorden Ibrahim 4 okt): gesprek verwijderen en AVG
+// --------------------------------------------------------------------------
+
+/// Wat een gewist bericht wordt (account verwijderd): tekst leeg + markering;
+/// de app toont "Bericht verwijderd". Geen filter-sporen meer.
+const GEWIST = { tekst: "", gewist: true, gefilterd: false, contactverzoek: false, wissen_na_incident: false };
+
+const MELDING_INCIDENT =
+  "Er loopt een melding over deze klus. Je kunt het gesprek verwijderen zodra de meldkamer die heeft afgehandeld.";
+const MELDING_GEEN_DEELNEMER = "Dit gesprek is niet van jou.";
+const MELDING_LEEG = "Typ eerst een bericht.";
+
+// --------------------------------------------------------------------------
 // PUUR: filter
 // --------------------------------------------------------------------------
 
@@ -227,6 +240,23 @@ function meldingTekst(afzenderNaam, klussoort) {
   };
 }
 
+/// Wie ben ik in het gesprek van deze klus? "bewoner", "helper" (alleen de
+/// HUIDIGE helper; een vorige helper leest al niets meer) of "".
+function rolInGesprek(ik, klus) {
+  const id = String(ik || "");
+  if (!id) return "";
+  if (id === String(klus.hulpvrager || "")) return "bewoner";
+  if (id === String(klus.toegewezen_jongere || "")) return "helper";
+  return "";
+}
+
+/// Het veld dat het gesprek voor deze kant verbergt.
+function verbergVeld(rol) {
+  if (rol === "bewoner") return "verborgen_bewoner";
+  if (rol === "helper") return "verborgen_helper";
+  return "";
+}
+
 // --------------------------------------------------------------------------
 // MET app
 // --------------------------------------------------------------------------
@@ -309,7 +339,103 @@ function verwerkNieuwBericht(env, bericht, nu) {
   return true;
 }
 
+/// Loopt er een incident (zonder afhandeling) op deze klus?
+function heeftOpenIncident(app, klusId) {
+  if (!klusId) return false;
+  const rijen = app.findRecordsByFilter("hh_incidenten", "klus = {:klus} && afhandeling = ''", "", 1, 0, { klus: klusId });
+  return rijen.length > 0;
+}
+
+/// "Gesprek verwijderen": verbergt het gesprek ALLEEN voor mij (de ander
+/// houdt zijn kopie). Bewoner: alle berichten van de klus; helper: de
+/// berichten van zijn gesprek. Een nieuw bericht daarna is weer zichtbaar.
+/// Loopt er een incident, dan niets (409): de meldkamer moet alles kunnen
+/// lezen tot ze het afhandelt. Geeft { status, body } voor de route.
+function verbergGesprek(app, klus, ik) {
+  const rol = rolInGesprek(ik, { hulpvrager: klus.get("hulpvrager"), toegewezen_jongere: klus.get("toegewezen_jongere") });
+  const veld = verbergVeld(rol);
+  if (!veld) return { status: 403, body: { melding: MELDING_GEEN_DEELNEMER, reden: "geendeelnemer" } };
+  if (heeftOpenIncident(app, klus.id)) return { status: 409, body: { melding: MELDING_INCIDENT, reden: "incident" } };
+  const rijen =
+    rol === "bewoner"
+      ? app.findRecordsByFilter("hh_berichten", "klus = {:klus}", "", 0, 0, { klus: klus.id })
+      : app.findRecordsByFilter("hh_berichten", "klus = {:klus} && helper = {:helper}", "", 0, 0, { klus: klus.id, helper: ik });
+  let aantal = 0;
+  for (let i = 0; i < rijen.length; i++) {
+    if (rijen[i].get(veld) === true) continue;
+    rijen[i].set(veld, true);
+    app.save(rijen[i]);
+    aantal++;
+  }
+  return { status: 200, body: { verborgen: aantal } };
+}
+
+/// De ids van alle berichten die [afzender] schreef (vóór het verwijderen
+/// van het account: daarna maakt PocketBase de relatie leeg).
+function berichtenVan(app, afzender) {
+  if (!afzender) return [];
+  const rijen = app.findRecordsByFilter("hh_berichten", "afzender = {:afzender}", "", 0, 0, { afzender: afzender });
+  const uit = [];
+  for (let i = 0; i < rijen.length; i++) uit.push(rijen[i].id);
+  return uit;
+}
+
+function zetGewist(record) {
+  const velden = Object.keys(GEWIST);
+  for (let i = 0; i < velden.length; i++) record.set(velden[i], GEWIST[velden[i]]);
+}
+
+/// Na het verwijderen van een account: zijn berichten gewist (tekst leeg +
+/// markering). Loopt er een incident op die klus, dan UITGESTELD
+/// (wissen_na_incident = ja; tekst blijft voor de meldkamer) tot het
+/// incident is afgehandeld (wisNaIncident). Geeft { gewist, uitgesteld }.
+function wisBerichten(app, ids) {
+  const uit = { gewist: 0, uitgesteld: 0 };
+  const incident = {};
+  for (let i = 0; i < ids.length; i++) {
+    const r = zoekId(app, "hh_berichten", ids[i]);
+    if (!r) continue;
+    const klusId = String(r.get("klus") || "");
+    if (!(klusId in incident)) incident[klusId] = heeftOpenIncident(app, klusId);
+    if (incident[klusId]) {
+      if (r.get("wissen_na_incident") !== true) {
+        r.set("wissen_na_incident", true);
+        app.save(r);
+      }
+      uit.uitgesteld++;
+    } else {
+      zetGewist(r);
+      app.save(r);
+      uit.gewist++;
+    }
+  }
+  return uit;
+}
+
+/// Een incident is afgehandeld (of weg): uitgestelde berichten nu wissen,
+/// maar alleen als er op die klus geen ander open incident meer is.
+function wisNaIncident(app, klusId) {
+  if (!klusId || heeftOpenIncident(app, klusId)) return 0;
+  const rijen = app.findRecordsByFilter("hh_berichten", "klus = {:klus} && wissen_na_incident = true", "", 0, 0, { klus: klusId });
+  for (let i = 0; i < rijen.length; i++) {
+    zetGewist(rijen[i]);
+    app.save(rijen[i]);
+  }
+  return rijen.length;
+}
+
 module.exports = {
+  GEWIST: GEWIST,
+  MELDING_INCIDENT: MELDING_INCIDENT,
+  MELDING_GEEN_DEELNEMER: MELDING_GEEN_DEELNEMER,
+  MELDING_LEEG: MELDING_LEEG,
+  rolInGesprek: rolInGesprek,
+  verbergVeld: verbergVeld,
+  heeftOpenIncident: heeftOpenIncident,
+  verbergGesprek: verbergGesprek,
+  berichtenVan: berichtenVan,
+  wisBerichten: wisBerichten,
+  wisNaIncident: wisNaIncident,
   CHAT_DICHT_NA_UREN: CHAT_DICHT_NA_UREN,
   MELDING_INTERVAL_MINUTEN: MELDING_INTERVAL_MINUTEN,
   MAX_TEKST: MAX_TEKST,

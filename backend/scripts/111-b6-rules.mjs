@@ -25,6 +25,12 @@
 //   verwijderen
 //     - niemand via de API (null). Berichten verdwijnen mee met de klus.
 //
+// INTEGRATIE (antwoorden Ibrahim 4 okt)
+//   - "Gesprek verwijderen" (route POST /api/hh/chat/{klus}/verbergen in
+//     hh_chat.pb.js) zet verborgen_bewoner of verborgen_helper: die kant
+//     leest het niet meer, de ander wel. De meldkamer (incident) blijft lezen.
+//   - verborgen_*, gewist en wissen_na_incident zet nooit een gebruiker.
+//
 // Let op: "" zou PUBLIEK betekenen, null is superuser-only. De guard weigert
 // een lege string.
 //
@@ -49,7 +55,12 @@ export const COORDINATOR_INZAGE = '(@request.auth.rol = "coordinator" && @collec
 /// Statussen waarin schrijven mag (de hook doet de 72 uur na afloop).
 export const STATUS_SCHRIJVEN = ['geaccepteerd', 'onderweg', 'bezig', 'probleem', 'afgerond', 'geannuleerd'];
 
-export const LEZEN = `${AUTH} && (${BEWONER} || ${HELPER_NU} || ${COORDINATOR_INZAGE})`;
+/// Integratie: elke kant kan het gesprek voor zichzelf verbergen.
+const BEWONER_ZIET = `(${BEWONER} && verborgen_bewoner = false)`;
+const HELPER_ZIET = '(helper = @request.auth.id && klus.toegewezen_jongere = @request.auth.id && verborgen_helper = false)';
+export const AVG_VELDEN = ['verborgen_bewoner', 'verborgen_helper', 'gewist', 'wissen_na_incident'];
+
+export const LEZEN = `${AUTH} && (${BEWONER_ZIET} || ${HELPER_ZIET} || ${COORDINATOR_INZAGE})`;
 
 const nietMeesturen = (velden) => velden.map((v) => `@request.body.${v}:isset = false`).join(' && ');
 
@@ -59,14 +70,14 @@ const SCHRIJVEN = [
   DEELNEMER_KLUS,
   'klus.toegewezen_jongere != ""',
   `(${STATUS_SCHRIJVEN.map((s) => `klus.status = "${s}"`).join(' || ')})`,
-  nietMeesturen(['helper', 'gelezen_op', 'gefilterd', 'contactverzoek']),
+  nietMeesturen(['helper', 'gelezen_op', 'gefilterd', 'contactverzoek', ...AVG_VELDEN]),
 ].join(' && ');
 
 const GELEZEN_ZETTEN = [
   AUTH,
   `(${BEWONER} || ${HELPER_NU})`,
   'afzender != @request.auth.id',
-  nietMeesturen(['klus', 'afzender', 'helper', 'tekst', 'soort', 'gefilterd', 'contactverzoek']),
+  nietMeesturen(['klus', 'afzender', 'helper', 'tekst', 'soort', 'gefilterd', 'contactverzoek', ...AVG_VELDEN]),
 ].join(' && ');
 
 export const BERICHTEN_RULES = {

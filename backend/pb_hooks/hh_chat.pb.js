@@ -31,6 +31,29 @@
 //    de meldkamer; voor iedereen behalve coordinator en superuser weg.
 //    gefilterd blijft zichtbaar (de app zegt "nummer of link verborgen").
 //
+// 5. INTEGRATIE (antwoorden Ibrahim 4 okt): gesprek verwijderen en AVG
+//    a. POST /api/hh/chat/{klus}/verbergen ("Gesprek verwijderen"): zet
+//       verborgen_bewoner (bewoner: alle berichten van de klus) of
+//       verborgen_helper (huidige helper: zijn gesprek). Alleen voor die
+//       kant; de ander houdt zijn kopie, de meldkamer leest bij een incident.
+//       Een nieuw bericht daarna is weer zichtbaar. 200 {verborgen: n};
+//       403 {reden: "geendeelnemer"}; 404; 409 {reden: "incident"} zolang er
+//       een incident zonder afhandeling op de klus loopt (KEUZE: weigeren;
+//       de gebruiker kan het na de afhandeling opnieuw doen).
+//    b. Account verwijderen (onRecordDeleteRequest op hh_users): de ids van
+//       zijn berichten worden VOOR het verwijderen opgehaald; NA een gelukt
+//       verwijderen: tekst leeg + gewist (de ander ziet "Bericht
+//       verwijderd"). afzender is niet verplicht: PocketBase maakt hem leeg
+//       en blokkeert het verwijderen niet meer. Loopt er een incident op die
+//       klus: UITGESTELD (wissen_na_incident = ja, tekst blijft voor de
+//       meldkamer) - KEUZE: het account gaat wel meteen weg (AVG-recht), alleen
+//       het wissen van de tekst wacht.
+//    c. Incident afgehandeld (afhandeling ingevuld) of verwijderd: de
+//       uitgestelde berichten van die klus worden nu gewist, als er geen
+//       ander open incident op de klus meer is.
+//    d. Aanmaken zonder tekst (na het filter leeg): 400 "Typ eerst een
+//       bericht." (tekst is niet meer verplicht in het schema, voor b).
+//
 // Gotchas (PB 0.25 JSVM): helpers BINNEN de handler via require(); $app en
 // niet e.app; e.next() op elk pad (een throw is een bewuste weigering).
 //
@@ -44,6 +67,12 @@ onRecordCreateRequest((e) => {
   e.record.set("tekst", uit.tekst);
   e.record.set("gefilterd", uit.gefilterd);
   e.record.set("contactverzoek", uit.contactverzoek);
+  if (!String(uit.tekst || "").trim()) throw new BadRequestError(hulp.MELDING_LEEG);
+  // Tweede sluis naast de rule (111): deze velden zet nooit een gebruiker.
+  e.record.set("verborgen_bewoner", false);
+  e.record.set("verborgen_helper", false);
+  e.record.set("gewist", false);
+  e.record.set("wissen_na_incident", false);
 
   let klus = null;
   try {
@@ -82,7 +111,10 @@ onRecordAfterCreateSuccess((e) => {
 }, "hh_berichten");
 
 onRecordUpdateRequest((e) => {
-  const VASTE_VELDEN = ["klus", "afzender", "helper", "tekst", "soort", "gefilterd", "contactverzoek"];
+  const VASTE_VELDEN = [
+    "klus", "afzender", "helper", "tekst", "soort", "gefilterd", "contactverzoek",
+    "verborgen_bewoner", "verborgen_helper", "gewist", "wissen_na_incident",
+  ];
   const isSuperuser = !!(e.hasSuperuserAuth && e.hasSuperuserAuth());
   if (!isSuperuser) {
     try {
@@ -104,6 +136,84 @@ onRecordEnrich((e) => {
     const naam = kijker.collection().name;
     magZien = naam === "_superusers" || (naam === "hh_users" && String(kijker.get("rol") || "") === "coordinator");
   }
-  if (!magZien) e.record.hide("contactverzoek");
+  if (!magZien) {
+    e.record.hide("contactverzoek");
+    // Integratie: wie wat verborg en wat nog gewist wordt, is niet voor de ander.
+    e.record.hide("verborgen_bewoner", "verborgen_helper", "wissen_na_incident");
+  }
   return e.next();
 }, "hh_berichten");
+
+// --------------------------------------------------------------------------
+// 5a. Gesprek verwijderen (alleen voor mezelf)
+// --------------------------------------------------------------------------
+routerAdd(
+  "POST",
+  "/api/hh/chat/{klus}/verbergen",
+  (e) => {
+    const hulp = require(`${__hooks}/hh_chat_hulp.js`);
+    const klusId = String(e.request.pathValue("klus") || "").trim();
+    let klus = null;
+    try {
+      klus = klusId ? $app.findRecordById("hh_klussen", klusId) : null;
+    } catch (_) {
+      klus = null;
+    }
+    if (!klus) return e.json(404, { melding: "Deze klus bestaat niet meer.", reden: "nietgevonden" });
+    const uit = hulp.verbergGesprek($app, klus, e.auth.id);
+    if (uit.status === 200) console.log(`[hh_chat] ${e.auth.id} verborg het gesprek van klus ${klus.id} (${uit.body.verborgen})`);
+    return e.json(uit.status, uit.body);
+  },
+  $apis.requireAuth("hh_users")
+);
+
+// --------------------------------------------------------------------------
+// 5b. Account verwijderen: eigen berichten wissen (of uitstellen)
+// --------------------------------------------------------------------------
+onRecordDeleteRequest((e) => {
+  let ids = [];
+  try {
+    const hulp = require(`${__hooks}/hh_chat_hulp.js`);
+    ids = hulp.berichtenVan($app, e.record.id);
+  } catch (err) {
+    console.log("[hh_chat] berichten van het account ophalen mislukt:", String(err));
+    ids = [];
+  }
+
+  e.next(); // gooit als het verwijderen mislukt: dan wordt er niets gewist
+
+  if (!ids.length) return;
+  try {
+    const hulp = require(`${__hooks}/hh_chat_hulp.js`);
+    const uit = hulp.wisBerichten($app, ids);
+    console.log(`[hh_chat] account ${e.record.id} weg: ${uit.gewist} bericht(en) gewist, ${uit.uitgesteld} uitgesteld (incident)`);
+  } catch (err) {
+    console.log("[hh_chat] berichten wissen mislukt:", String(err));
+  }
+}, "hh_users");
+
+// --------------------------------------------------------------------------
+// 5c. Incident afgehandeld of weg: uitgestelde berichten nu wissen
+// --------------------------------------------------------------------------
+onRecordAfterUpdateSuccess((e) => {
+  e.next();
+  try {
+    if (!String(e.record.get("afhandeling") || "").trim()) return;
+    const hulp = require(`${__hooks}/hh_chat_hulp.js`);
+    const n = hulp.wisNaIncident($app, String(e.record.get("klus") || ""));
+    if (n) console.log(`[hh_chat] incident ${e.record.id} afgehandeld: ${n} uitgesteld(e) bericht(en) gewist`);
+  } catch (err) {
+    console.log("[hh_chat] wissen na incident mislukt:", String(err));
+  }
+}, "hh_incidenten");
+
+onRecordAfterDeleteSuccess((e) => {
+  e.next();
+  try {
+    const hulp = require(`${__hooks}/hh_chat_hulp.js`);
+    const n = hulp.wisNaIncident($app, String(e.record.get("klus") || ""));
+    if (n) console.log(`[hh_chat] incident ${e.record.id} weg: ${n} uitgesteld(e) bericht(en) gewist`);
+  } catch (err) {
+    console.log("[hh_chat] wissen na incident mislukt:", String(err));
+  }
+}, "hh_incidenten");
