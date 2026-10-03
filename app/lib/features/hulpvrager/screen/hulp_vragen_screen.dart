@@ -10,6 +10,7 @@ import '../../../design/components/hh_meld_balk.dart';
 import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
+import '../../../l10n/teksten_klus_nl.dart';
 import '../../../theme.dart';
 import '../../toegang/domein/werkgebied.dart';
 import '../../toegang/model/hh_rol.dart';
@@ -20,17 +21,23 @@ import '../paden_hulpvrager.dart';
 import '../provider/concept_controller.dart';
 import '../provider/hulpvraag_plaatser.dart';
 import '../provider/hulpvrager_providers.dart';
-import '../widget/hulpvraag_samenvatting.dart';
 import '../widget/hulpvraag_waar_sectie.dart';
 import '../widget/hulpvraag_wanneer_sectie.dart';
 import '../widget/hulpvraag_wat_sectie.dart';
+import '../widget/klus_foto_sectie.dart';
+import '../widget/klus_herhalen_sectie.dart';
+import '../widget/klus_nee_lijst_kaart.dart';
+import '../widget/klus_omschrijving_sectie.dart';
+import '../widget/klus_prijs_blok.dart';
 import 'stroom_verlaten_dialoog.dart';
 
-/// Hulp vragen op één pagina (3 okt, indeling naar BuurtHeld; was O2-O5
-/// in vier stappen): wat, wanneer, waar, de samenvatting en één grote
-/// knop. Ontbreekt er iets, dan zegt een meldbalk wat. Plaatst de klus
-/// (status open) en gaat naar O6. Terug vraagt "Weet u het zeker?" zodra
-/// er al iets is ingevuld.
+/// "Klus plaatsen" op één pagina (B4, mockup KlusPlaatsen): categorie,
+/// vertel wat je wilt, foto (verplicht), wanneer met tijdwiel, herhalen
+/// (Plus, nog op slot), waar (uit Mijn gegevens), de nee-lijst met het
+/// verplichte vinkje, de prijs (voorbeeld) en één grote knop. Ontbreekt er
+/// iets, dan zegt een meldbalk wat. Plaatst de klus (status open; de
+/// meldkamer keurt hem eerst) en gaat naar O6. Terug vraagt "Weet je het
+/// zeker?" zodra er al iets is ingevuld.
 class HulpVragenScreen extends ConsumerStatefulWidget {
   const HulpVragenScreen({super.key});
 
@@ -55,12 +62,18 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
   /// Wat er nog ontbreekt, in de volgorde van de pagina; null = compleet.
   String? _watOntbreekt() {
     final concept = ref.read(conceptProvider);
-    if (!concept.heeftWat) return TekstenHulpvragerNl.paginaKiesWat;
-    if (!concept.heeftWanneer) return TekstenHulpvragerNl.paginaKiesWanneer;
-    if (isVoorbij(concept.dag!, concept.dagdeel!, ref.read(klokProvider)())) {
-      return TekstenHulpvragerNl.wanneerVoorbij;
+    final dag = concept.dag;
+    final vanaf = concept.vanafMinuten;
+    if (!concept.heeftWat) return TekstenKlusNl.ontbreektWat;
+    if (!concept.heeftOmschrijving) return TekstenKlusNl.ontbreektOmschrijving;
+    if (!concept.heeftFoto) return TekstenKlusNl.ontbreektFoto;
+    if (dag == null || vanaf == null) return TekstenKlusNl.ontbreektWanneer;
+    if (isVoorbij(dag, vanaf, ref.read(klokProvider)())) {
+      return TekstenKlusNl.ontbreektTijdVoorbij;
     }
-    if (!concept.heeftWaar) return TekstenHulpvragerNl.paginaVulWaarIn;
+    if (!concept.heeftGeldigeEindtijd) return TekstenKlusNl.ontbreektTot;
+    if (!concept.heeftWaar) return TekstenKlusNl.ontbreektWaar;
+    if (!concept.isNeeLijstAkkoord) return TekstenKlusNl.ontbreektNeeLijst;
     return null;
   }
 
@@ -115,32 +128,47 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
         if (!heeftGepopt) _verlaten();
       },
       child: HhScherm(
-        titel: TekstenHulpvragerNl.paginaTitel,
+        titel: TekstenKlusNl.paginaTitel,
         onTerug: _verlaten,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _Kop(TekstenHulpvragerNl.watTitel),
+            const _Kop(TekstenKlusNl.watTitel),
             SizedBox(height: tussen),
             const HulpvraagWatSectie(),
             SizedBox(height: blok),
-            const _Kop(TekstenHulpvragerNl.wanneerTitel),
+            KlusOmschrijvingSectie(toonFout: _toonFouten),
+            SizedBox(height: blok),
+            const _Kop(
+              TekstenKlusNl.fotoTitel,
+              label: TekstenKlusNl.fotoVerplicht,
+            ),
+            SizedBox(height: tussen),
+            KlusFotoSectie(toonFout: _toonFouten),
+            SizedBox(height: blok),
+            const _Kop(TekstenKlusNl.wanneerTitel),
             SizedBox(height: tussen),
             const HulpvraagWanneerSectie(),
             SizedBox(height: blok),
-            const _Kop(TekstenHulpvragerNl.waarTitel),
+            const _Kop(TekstenKlusNl.herhalenTitel),
+            SizedBox(height: tussen),
+            const KlusHerhalenSectie(),
+            SizedBox(height: blok),
+            const _Kop(TekstenKlusNl.waarTitel),
             SizedBox(height: tussen),
             HulpvraagWaarSectie(toonFouten: _toonFouten),
             SizedBox(height: blok),
-            const HulpvraagSamenvatting(),
+            KlusNeeLijstKaart(toonFout: _toonFouten),
+            SizedBox(height: blok),
+            const KlusPrijsBlok(),
             if (_melding != null) ...[
               SizedBox(height: tussen),
               HhMeldBalk(soort: HhMeldSoort.waarschuwing, tekst: _melding!),
             ],
             SizedBox(height: tussen),
             HhKnop(
-              label: TekstenHulpvragerNl.bevestigenAkkoord,
-              semantiekLabel: TekstenHulpvragerNl.bevestigenAkkoordSemantiek,
+              label: TekstenKlusNl.plaatsen,
+              semantiekLabel: TekstenKlusNl.plaatsenSemantiek,
               icoon: Icons.check,
               isBezig: _isBezig,
               onPressed: _plaats,
@@ -152,22 +180,52 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
   }
 }
 
-/// Kop van een deel van de pagina: vet en primair groen, zoals BuurtHeld.
+/// Kop van een deel van de pagina: vet en primair groen (mockup). Met
+/// [label] een grijs pilletje erachter, zoals "verplicht" bij de foto.
 class _Kop extends StatelessWidget {
-  const _Kop(this.tekst);
+  const _Kop(this.tekst, {this.label});
 
   final String tekst;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
+    final stijl = Theme.of(context).textTheme;
+    final extra = label;
     return Semantics(
       header: true,
-      child: Text(
-        tekst,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: HhKleuren.primair,
-          fontWeight: FontWeight.w700,
-        ),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: HhRuimte.s,
+        children: [
+          Text(
+            tekst,
+            style: stijl.titleLarge?.copyWith(
+              color: HhKleuren.primair,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (extra != null)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: HhKleuren.oppervlak,
+                borderRadius: BorderRadius.circular(HhRadius.groot),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: HhRuimte.s,
+                  vertical: 2,
+                ),
+                child: Text(
+                  extra,
+                  style: stijl.bodySmall?.copyWith(
+                    color: HhKleuren.tekstGedempt,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

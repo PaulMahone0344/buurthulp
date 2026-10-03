@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:heitjehulp_app/features/hulpvrager/model/hulpvraag_concept.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/domein/dagdeel.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 

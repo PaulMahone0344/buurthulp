@@ -1,0 +1,67 @@
+OPEN PUNTEN B4 — KLUS PLAATSEN (4 okt 2026, branch b4/klus)
+===========================================================
+
+VRAGEN VOOR IBRAHIM (max 5)
+  1. Leeftijd per categorie (punt 6) staat nu als VOORSTEL:
+       10: Boodschappen, Dieren, Kleine klusjes, Helpende hand, Rondom huis
+       13: Tuin, Opruimen, Auto & fiets, Computer, Creatief, Hulp & kennis, Overig
+       16: Schoonmaak
+     Klopt dit, of schuif je er een? (Eén regel in
+     backend/pb_hooks/hh_klusplaatsen_hulp.js + een update van het klustype;
+     de app hoeft niet mee.)
+  2. Tijdregel (punt 7): nu voor ALLE helpers onder 18 hetzelfde venster
+     07:00-19:00, max 2 uur, zonder eindtijd niet na 17:00. Wil je voor
+     10-14 jaar al een eerdere grens (18:00), of wachten op de jurist?
+  3. De leeftijd telt op de KLUSDAG: wie overmorgen 13 wordt, ziet nu al
+     een tuinklus van overmorgen. Goed zo, of moet hij vandaag al 13 zijn?
+  4. Foto: helpers die de goedgekeurde klus in hun lijst mogen zien, zien
+     ook de foto (zo kunnen ze beslissen; mockup HKlusBekijken). Of alleen
+     de gekozen helper (dan pas na accepteren/kiezen, B5)?
+  5. Prijzen: de 13 categorieën hebben richtvergoeding 0 (B7). Een helper
+     ziet tot B7 dus "€ 0,00" bij een nieuwe klus. Zet de meldkamer tot
+     B7 per categorie een bedrag, of laten we het zo?
+
+KEUZES (gemaakt, uitleg in backend/SCHEMA.txt sectie B4)
+  - "Wordt nagekeken" is GEEN nieuwe status: open + lege
+    klus_goedgekeurd_op. Afkeuren = status geannuleerd + klus_afgekeurd_op
+    en de reden (de 8-statusmachine blijft gelijk).
+  - Een rule kan geen leeftijd uitrekenen: de server zet per klus
+    geboren_uiterlijk; de rule vergelijkt de geboortedatum van de helper.
+    De accepteer-route rekent het zelf opnieuw uit (reden "leeftijd").
+  - Meldingen "nieuwe klus" gaan pas uit bij goedkeuren en alleen naar
+    helpers die oud genoeg zijn; het filter zit in hh_klusplaatsen.pb.js
+    (model-hook op hh_meldingen), hh_meldingen_hulp.js bleef ongemoeid.
+  - Wijzigt de bewoner de inhoud van een goedgekeurde klus, dan kijkt de
+    meldkamer opnieuw (anders: goedkeuren, daarna een telefoonnummer erin).
+  - Telefonische ingang (punt 9): een coordinator plaatst via de server
+    zonder foto en de klus is meteen goedgekeurd. UI in het paneel bestaat
+    al (M14 "Telefonische aanmelding"); de B11-meldkamer-app komt later.
+  - Oude klustypes: niet weggegooid, niet omgezet; niet-actief met een
+    leeftijd (klusje in huis 16, vervoer 18). Geen datamigratie.
+  - Voorfilter markeert telefoonnummer, e-mail, link en een korte
+    nee-lijst-woordenlijst (bier, wijn, sigaret, tabak, ladder, dakgoot,
+    kettingzaag, medicijnen, oppassen, ...). Blokkeert niets.
+  - Omschrijving minstens 5 tekens (server en app), hooguit 300.
+  - Herhalen: alleen de knoppen (slotje + "Plus"), uitgeschakeld (B7).
+  - Prijsblok: "€ 0,00, voorbeeld" (B7).
+  - Adres: één regel uit Mijn gegevens, niet opnieuw gevraagd. Toelichting
+    en de (uitgeschakelde) microfoon zijn weg; "Vertel wat je wilt" is nu
+    het enige tekstveld. Samenvattingskaart is weg (mockup heeft hem niet).
+  - Eén foto in de app; de server staat er 3 toe (voor later).
+  - Tijdwiel: CupertinoDatePicker, kwartieren, 24-uursklok; vandaag
+    begint hij twee hele uren na nu, een andere dag op 10:00.
+  - HhDagdeel (ochtend/middag/avond) bleef alleen voor het filter van de
+    helper (J11) en staat nu in jongere/klussen/domein/dagdeel.dart.
+
+NIET GEBOUWD / LATER
+  - Koppelen door de coordinator (hh_coordinator.pb.js, niet van B4) kijkt
+    niet naar leeftijd of keuring. Het paneel waarschuwt nog niet als de
+    meldkamer een te jonge helper koppelt (B11).
+  - Systeembeheer > Klustypes in het paneel kent min_leeftijd, actief en
+    volgorde nog niet: een NIEUW klustype uit het paneel is niet-actief en
+    telt als 18+. Tot B11 nieuwe categorieën via een script.
+  - Helper-flow (reageren/kiezen) is B5; de helper ziet nu alleen de foto
+    in het klusdetail (J13).
+  - Tijdregel voor 10-14 jaar met 18:00 (zie vraag 2).
+  - De app waarschuwt bij 18+-tijden; hij weet niet hoe oud de helpers in
+    de buurt zijn (een avondklus kan dus lang blijven staan).

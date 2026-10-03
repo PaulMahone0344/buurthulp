@@ -14,7 +14,6 @@ import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../theme.dart';
 import '../../../hulpvrager/domein/klustype_icoon.dart';
-import '../../../hulpvrager/model/hulpvraag_concept.dart';
 import '../../../hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
 import '../../../toegang/model/hh_rol.dart';

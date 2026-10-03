@@ -198,3 +198,27 @@ export type Screeningbesluit = {
 }
 
 export type Auditactie = 'aanmaken' | 'wijzigen' | 'verwijderen'
+
+// ---- B4: klussen nakijken (meldkamer keurt elke klus) ------------------
+
+/** Wat het voorfilter van de server in de tekst vond (blokkeert niets). */
+export type Markering = 'telefoon' | 'email' | 'link' | 'neelijst'
+
+/** Een open klus die de meldkamer nog niet keurde. */
+export type KlusNaTeKijken = {
+  id: string
+  aangemaaktOp: string
+  bron: Klusbron | ''
+  hulpvragerNaam: string
+  klustypeNaam: string
+  /** Vanaf welke leeftijd een helper hem mag doen (categorie of tijdregel). */
+  minLeeftijd: number
+  wanneerVan: string
+  wanneerTot: string
+  omschrijving: string
+  markering: Markering[]
+  /** Kant-en-klare url met bestandstoken; leeg als er geen foto is. */
+  fotoUrl: string
+}
+
+export type Klusbesluit = { besluit: 'goedkeuren' } | { besluit: 'afkeuren'; reden: string }

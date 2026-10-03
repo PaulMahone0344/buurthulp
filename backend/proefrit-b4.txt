@@ -1,0 +1,201 @@
+HeitjeHulp B4 — proefrit (DRY-RUN tegen prod, niets geschreven) 4 okt 2026
+Branch b4/klus (worktree ~/flutter-builds/hh-b4). NOG NIET OP PROD.
+Gebouwd naast B3 (ouder) en B6 (chat); zie app-plan/_GEDEELD-B3-B4-B6.txt.
+
+WAT VERANDERT ER OP PROD (na JA)
+  Velden (100, additief): hh_klussen foto (protected), nee_lijst_akkoord,
+    klus_goedgekeurd_op/_door, klus_afgekeurd_op, klus_afkeur_reden,
+    controle_markering, min_leeftijd, geboren_uiterlijk; hh_klustypes
+    min_leeftijd, actief, volgorde.
+  Rijen (100): 13 nieuwe categorieën (actief). De 6 oude klustypes blijven
+    staan, worden NIET actief (nieuw veld = nee) en krijgen alleen een
+    min_leeftijd. Geen klus wordt omgezet of verwijderd.
+  Rules (101, gericht/gewikkeld; de live rule blijft letterlijk staan):
+    hh_klussen.list/viewRule  helper ziet een open klus pas na keuring door
+                              de meldkamer EN als hij op de klusdag oud
+                              genoeg is (geboortedatum <= geboren_uiterlijk)
+    hh_klussen.create/update  keur- en rekenvelden alleen coordinator/server
+  Hooks (103): NIEUW hh_klusplaatsen.pb.js + hh_klusplaatsen_hulp.js; BIJ
+    hh_klussen.pb.js (accepteren: 409 nietgekeurd, 403 leeftijd).
+  Data (104): de 12 seed-klussen ([seed kNN]) goedgekeurd + leeftijdsgrens.
+    De 2 andere open klussen op prod (een [m4-smoke] en een lege van 30 sep)
+    blijven ONGEKEURD: die staan na de uitrol in het paneel bij "Klussen na
+    te kijken"; de meldkamer beslist (goedkeuren of afkeuren met reden).
+  Nieuw gedrag: elke nieuwe klus van een bewoner is eerst "wordt nagekeken"
+  en vraagt een foto, een begintijd en het nee-lijst-vinkje; de meldkamer
+  plaatst telefonisch zonder foto en keurt daarmee meteen.
+
+LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie; schema = export van de 16
+hh_-collecties van prod (alleen gelezen); seed met 03 (GEHEIMEN-pad
+omgeleid naar een lokaal bestand), 81 en 84 zoals prod na B2; hooks uit deze
+branch; Nominatim naar een nep-server op 127.0.0.1)
+  100 --apply: 12 velden, 13 categorieën, 6 oude types met leeftijd;
+    tweede keer "Niets te doen".
+  103 = hooks gekopieerd; 101 --apply: 4 rules, PocketBase accepteert de
+    vergelijking @request.auth.geboortedatum <= geboren_uiterlijk.
+  104 --apply: 12 seed-klussen; tweede keer "Niets te doen".
+  102 --apply: 124 groen, 0 rood.
+  82 --apply: 80 groen. 72 --apply: 54 groen. 62 --apply: 118 groen.
+  04 --apply: 223 groen (na de aanpassing, zie hieronder). 50 --apply: 60
+    groen. Na 04 en 50: 104 zegt "Niets te doen" (seed staat nog goed).
+  Klus plaatsen zoals de Flutter-app het doet (pocketbase-dart: velden in
+    @jsonPayload + bestand): 200, foto opgeslagen, min_leeftijd 13,
+    markering telefoon, ongekeurd; zonder foto 400 met de melding.
+  Vóór B4 lokaal: 04 223 groen, 50 60 groen (zelfde uitgangspunt).
+
+AANGEPASTE BESTAANDE CHECK
+  04-rulecheck: (1) oudere en familielid plaatsen een open klus nu met een
+  testfoto (1x1 png), nee_lijst_akkoord en een begintijd morgen (anders
+  terecht 400). (2) De tests "omschrijving wijzigen" (k02) en "familielid
+  wijzigt adres" (k11) laten de goedkeuring vervallen; 04 zet daarna
+  omschrijving, adres en klus_goedgekeurd_op terug zoals de seed ze had
+  (anders ziet 50 k02/k11 niet). Aantal checks blijft 223.
+  82, 72, 62, 50: ongewijzigd en groen (superuser/coordinator-klussen zijn
+  meteen goedgekeurd).
+
+HeitjeHulp B4 — dry-runs tegen prod (alleen lezen) 2026-10-03T22:45:45Z
+
+=== node scripts/100-b4-velden.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+  + ZOU toevoegen: hh_klussen.foto (file, protected)
+  + ZOU toevoegen: hh_klussen.nee_lijst_akkoord (bool)
+  + ZOU toevoegen: hh_klussen.klus_goedgekeurd_op (date)
+  + ZOU toevoegen: hh_klussen.klus_goedgekeurd_door (relation)
+  + ZOU toevoegen: hh_klussen.klus_afgekeurd_op (date)
+  + ZOU toevoegen: hh_klussen.klus_afkeur_reden (text)
+  + ZOU toevoegen: hh_klussen.controle_markering (select: telefoon | email | link | neelijst)
+  + ZOU toevoegen: hh_klussen.min_leeftijd (number)
+  + ZOU toevoegen: hh_klussen.geboren_uiterlijk (date)
+  + ZOU toevoegen: hh_klustypes.min_leeftijd (number)
+  + ZOU toevoegen: hh_klustypes.actief (bool)
+  + ZOU toevoegen: hh_klustypes.volgorde (number)
+  + ZOU aanmaken: klustype "Tuin" (vanaf 13, icoon yard, volgorde 1)
+  + ZOU aanmaken: klustype "Auto & fiets" (vanaf 13, icoon pedal_bike, volgorde 2)
+  + ZOU aanmaken: klustype "Schoonmaak" (vanaf 16, icoon cleaning_services, volgorde 3)
+  + ZOU aanmaken: klustype "Opruimen" (vanaf 13, icoon inventory_2, volgorde 4)
+  + ZOU aanmaken: klustype "Boodschappen" (vanaf 10, icoon shopping_cart, volgorde 5)
+  + ZOU aanmaken: klustype "Dieren" (vanaf 10, icoon pets, volgorde 6)
+  + ZOU aanmaken: klustype "Computer" (vanaf 13, icoon computer, volgorde 7)
+  + ZOU aanmaken: klustype "Rondom huis" (vanaf 10, icoon fence, volgorde 8)
+  + ZOU aanmaken: klustype "Helpende hand" (vanaf 10, icoon favorite_border, volgorde 9)
+  + ZOU aanmaken: klustype "Creatief" (vanaf 13, icoon brush, volgorde 10)
+  + ZOU aanmaken: klustype "Kleine klusjes" (vanaf 10, icoon handyman, volgorde 11)
+  + ZOU aanmaken: klustype "Hulp & kennis" (vanaf 13, icoon lightbulb, volgorde 12)
+  + ZOU aanmaken: klustype "Overig" (vanaf 13, icoon more_horiz, volgorde 13)
+  ~ ZOU zetten: oud klustype "boodschappen" min_leeftijd = 10 (blijft niet-actief; 6 klus(sen) verwijzen ernaar, die blijven ongemoeid)
+  ~ ZOU zetten: oud klustype "klusje in huis" min_leeftijd = 16 (blijft niet-actief; 1 klus(sen) verwijzen ernaar, die blijven ongemoeid)
+  ~ ZOU zetten: oud klustype "telefoon/tablet-hulp" min_leeftijd = 13 (blijft niet-actief; 2 klus(sen) verwijzen ernaar, die blijven ongemoeid)
+  ~ ZOU zetten: oud klustype "tuin" min_leeftijd = 13 (blijft niet-actief; 2 klus(sen) verwijzen ernaar, die blijven ongemoeid)
+  ~ ZOU zetten: oud klustype "vervoer" min_leeftijd = 18 (blijft niet-actief; 1 klus(sen) verwijzen ernaar, die blijven ongemoeid)
+  ~ ZOU zetten: oud klustype "wandelen/gezelschap" min_leeftijd = 10 (blijft niet-actief; 2 klus(sen) verwijzen ernaar, die blijven ongemoeid)
+
+DRY-RUN: 12 veld(en) en 19 klustype-wijziging(en). Draai met --apply.
+
+=== node scripts/101-b4-rules.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+! hh_klussen: velden ontbreken (foto, nee_lijst_akkoord, klus_goedgekeurd_op, klus_goedgekeurd_door, klus_afgekeurd_op, klus_afkeur_reden, controle_markering, min_leeftijd, geboren_uiterlijk) — eerst 100-b4-velden.mjs --apply. (dry-run gaat door)
++ ZOU hh_klussen.listRule aanvullen — dry-run
+  - oud:   "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && (hulpvrager.wijk = @request.auth.wijk || (hulpvrager.wijk.gemeente = @request.auth.wijk.gemeente && (hulpvrager.wijk.regio = true || @request.auth.wijk.regio = true))) && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\" && (@request.auth.ouder_toestemming_op != \"\" || @collection.hh_profielen.vog_gezien_op ?!= \"\")) || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
+  + nieuw: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && (hulpvrager.wijk = @request.auth.wijk || (hulpvrager.wijk.gemeente = @request.auth.wijk.gemeente && (hulpvrager.wijk.regio = true || @request.auth.wijk.regio = true))) && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\" && (@request.auth.ouder_toestemming_op != \"\" || @collection.hh_profielen.vog_gezien_op ?!= \"\") && klus_goedgekeurd_op != \"\" && geboren_uiterlijk != \"\" && @request.auth.geboortedatum != \"\" && @request.auth.geboortedatum <= geboren_uiterlijk) || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
++ ZOU hh_klussen.viewRule aanvullen — dry-run
+  - oud:   "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && (hulpvrager.wijk = @request.auth.wijk || (hulpvrager.wijk.gemeente = @request.auth.wijk.gemeente && (hulpvrager.wijk.regio = true || @request.auth.wijk.regio = true))) && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\" && (@request.auth.ouder_toestemming_op != \"\" || @collection.hh_profielen.vog_gezien_op ?!= \"\")) || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
+  + nieuw: "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (hulpvrager = @request.auth.id || toegewezen_jongere = @request.auth.id || (@request.auth.rol = \"jongere\" && status = \"open\" && @request.auth.wijk != \"\" && (hulpvrager.wijk = @request.auth.wijk || (hulpvrager.wijk.gemeente = @request.auth.wijk.gemeente && (hulpvrager.wijk.regio = true || @request.auth.wijk.regio = true))) && @collection.hh_profielen.gebruiker ?= @request.auth.id && @collection.hh_profielen.verificatiestatus ?= \"goedgekeurd\" && (@request.auth.ouder_toestemming_op != \"\" || @collection.hh_profielen.vog_gezien_op ?!= \"\") && klus_goedgekeurd_op != \"\" && geboren_uiterlijk != \"\" && @request.auth.geboortedatum != \"\" && @request.auth.geboortedatum <= geboren_uiterlijk) || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"meekijken\") || @request.auth.rol = \"coordinator\")"
++ ZOU hh_klussen.createRule aanvullen — dry-run
+  - oud:   "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((@request.auth.rol = \"hulpvrager\" && @request.body.hulpvrager = @request.auth.id && @request.body.geplaatst_door = @request.auth.id && @request.body.bron = \"app\" && (@request.body.status = \"concept\" || @request.body.status = \"open\") && @request.body.toegewezen_jongere:isset = false) || (@request.auth.rol = \"familie\" && @request.body.geplaatst_door = @request.auth.id && @request.body.bron = \"familie\" && @collection.hh_koppelingen.oudere ?= @request.body.hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"plaatsen\" && (@request.body.status = \"concept\" || @request.body.status = \"open\") && @request.body.toegewezen_jongere:isset = false) || @request.auth.rol = \"coordinator\")"
+  + nieuw: "(@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && ((@request.auth.rol = \"hulpvrager\" && @request.body.hulpvrager = @request.auth.id && @request.body.geplaatst_door = @request.auth.id && @request.body.bron = \"app\" && (@request.body.status = \"concept\" || @request.body.status = \"open\") && @request.body.toegewezen_jongere:isset = false) || (@request.auth.rol = \"familie\" && @request.body.geplaatst_door = @request.auth.id && @request.body.bron = \"familie\" && @collection.hh_koppelingen.oudere ?= @request.body.hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"plaatsen\" && (@request.body.status = \"concept\" || @request.body.status = \"open\") && @request.body.toegewezen_jongere:isset = false) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.klus_goedgekeurd_op:isset = false && @request.body.klus_goedgekeurd_door:isset = false && @request.body.klus_afgekeurd_op:isset = false && @request.body.klus_afkeur_reden:isset = false && @request.body.controle_markering:isset = false && @request.body.min_leeftijd:isset = false && @request.body.geboren_uiterlijk:isset = false))"
++ ZOU hh_klussen.updateRule aanvullen — dry-run
+  - oud:   "@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (((hulpvrager = @request.auth.id || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"plaatsen\")) && @request.body.hulpvrager:isset = false && @request.body.geplaatst_door:isset = false) || @request.auth.rol = \"coordinator\")"
+  + nieuw: "(@request.auth.id != \"\" && @request.auth.collectionName = \"hh_users\" && (((hulpvrager = @request.auth.id || (@request.auth.rol = \"familie\" && @collection.hh_koppelingen.oudere ?= hulpvrager && @collection.hh_koppelingen.familielid ?= @request.auth.id && @collection.hh_koppelingen.status ?= \"actief\" && @collection.hh_koppelingen.rechten ?~ \"plaatsen\")) && @request.body.hulpvrager:isset = false && @request.body.geplaatst_door:isset = false) || @request.auth.rol = \"coordinator\")) && ((@request.auth.collectionName = \"hh_users\" && @request.auth.rol = \"coordinator\") || (@request.body.klus_goedgekeurd_op:isset = false && @request.body.klus_goedgekeurd_door:isset = false && @request.body.klus_afgekeurd_op:isset = false && @request.body.klus_afkeur_reden:isset = false && @request.body.controle_markering:isset = false && @request.body.min_leeftijd:isset = false && @request.body.geboren_uiterlijk:isset = false))"
+
+DRY-RUN: 4 rule(s) zouden veranderen. Draai met --apply.
+
+=== node scripts/104-b4-seed-keuren.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+! hh_klussen.geboren_uiterlijk ontbreekt — eerst 100-b4-velden.mjs --apply. (dry-run gaat door)
+  ~ ZOU [seed k01] (concept, boodschappen): klus_goedgekeurd_op = 2026-10-03T22:45:47.256Z, min_leeftijd = 10, geboren_uiterlijk = 2016-09-13 23:59:59.999Z
+  ~ ZOU [seed k02] (open, tuin): klus_goedgekeurd_op = 2026-10-03T22:45:47.258Z, min_leeftijd = 13, geboren_uiterlijk = 2013-09-14 23:59:59.999Z
+  ~ ZOU [seed k03] (open, boodschappen): klus_goedgekeurd_op = 2026-10-03T22:45:47.258Z, min_leeftijd = 10, geboren_uiterlijk = 2016-09-13 23:59:59.999Z
+  ~ ZOU [seed k04] (geaccepteerd, klusje in huis): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 16, geboren_uiterlijk = 2010-09-15 23:59:59.999Z
+  ~ ZOU [seed k05] (onderweg, boodschappen): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 10, geboren_uiterlijk = 2016-09-12 23:59:59.999Z
+  ~ ZOU [seed k06] (bezig, wandelen/gezelschap): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 10, geboren_uiterlijk = 2016-09-12 23:59:59.999Z
+  ~ ZOU [seed k07] (afgerond, boodschappen): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 10, geboren_uiterlijk = 2016-09-09 23:59:59.999Z
+  ~ ZOU [seed k08] (afgerond, tuin): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 13, geboren_uiterlijk = 2013-09-07 23:59:59.999Z
+  ~ ZOU [seed k09] (geannuleerd, vervoer): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 18, geboren_uiterlijk = 2008-09-11 23:59:59.999Z
+  ~ ZOU [seed k10] (probleem, telefoon/tablet-hulp): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 18, geboren_uiterlijk = 2008-09-11 23:59:59.999Z
+  ~ ZOU [seed k11] (open, telefoon/tablet-hulp): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 13, geboren_uiterlijk = 2013-09-16 23:59:59.999Z
+  ~ ZOU [seed k12] (afgerond, wandelen/gezelschap): klus_goedgekeurd_op = 2026-10-03T22:45:47.259Z, min_leeftijd = 10, geboren_uiterlijk = 2016-09-05 23:59:59.999Z
+  · NIET aangeraakt (open, ongekeurd; de meldkamer beslist): pe1m2o02y83pm79 "[m4-smoke] boodschappen via de app-code, 2026-09-1"
+  · NIET aangeraakt (open, ongekeurd; de meldkamer beslist): 99cl7e8363ybmhg ""
+
+DRY-RUN: 12 seed-klus(sen) zouden goedgekeurd/bijgewerkt worden. Draai met --apply.
+
+=== node scripts/102-b4check.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+DRY-RUN: er wordt NIETS geschreven.
+
+B. Voorwaarden op de server (alleen lezen)
+  ✗ hh_klussen: B4-velden bestaan — ontbreekt: foto, nee_lijst_akkoord, klus_goedgekeurd_op, klus_goedgekeurd_door, klus_afgekeurd_op, klus_afkeur_reden, controle_markering, min_leeftijd, geboren_uiterlijk — draai 100 --apply
+  ✗ hh_klustypes: B4-velden bestaan — ontbreekt: min_leeftijd, actief, volgorde — draai 100 --apply
+  ✗ hh_klussen.foto is protected
+  ✗ hh_klussen.listRule heeft de B4-voorwaarde — draai 101 --apply
+  ✗ hh_klussen.viewRule heeft de B4-voorwaarde — draai 101 --apply
+  ✗ hh_klussen.createRule heeft het keur-slot — draai 101 --apply
+  ✗ hh_klussen.updateRule heeft het keur-slot — draai 101 --apply
+  ✗ de 13 categorieën bestaan (actief, leeftijd, volgorde) — draai 100 --apply
+  ✗ oude klustypes (6) niet actief en met een leeftijd — boodschappen:undefined tuin:undefined klusje in huis:undefined telefoon/tablet-hulp:undefined wandelen/gezelschap:undefined vervoer:undefined
+  ✗ keur-route bestaat (anoniem 401, kreeg 404) — draai 103-hook-deploy.sh
+  ✗ alle seed-klussen zijn goedgekeurd (104) — veld ontbreekt — draai 100 en 104 --apply
+
+Wat --apply ZOU doen:
+  · tijdelijke accounts maken (b4check-...@heitjehulp.invalid): coordinator, 2 bewoners, helpers van 11, 14, 17 en 25;
+  · ±12 eigen klussen met een testfoto (1x1 png), keuren/afkeuren, accepteren, meldingen en foto-toegang nameten;
+  · alles opruimen en nameten. Geen Nominatim: elke klus krijgt lat/lon mee.
+
+0 groen, 11 rood (leescontroles).
+Rood is verwacht zolang 100, 103, 101 en 104 nog niet uitgerold zijn.
+
+LET OP VOOR DE UITROL
+  1. Eerst backend, dan website en app. Na 103 kan een OUDE app geen klus
+     meer plaatsen: geen foto -> 400 "Voeg een foto van de klus toe. Zie je
+     geen fotoknop? Werk de app dan bij." Plan de app-release direct na de
+     backend, of draai de backend pas als de nieuwe app klaarstaat.
+  2. Tot de nieuwe app er is toont de oude app 19 tegels (13 nieuw + 6 oud):
+     hij filtert niet op actief.
+  3. 103 heeft ssh -n (les B1). Auto-mode uit, stap 2b (diff) nalezen: in
+     hh_klussen.pb.js mag alleen B4 staan. Twee bestanden zijn NIEUW.
+  4. Rule-volgorde met B3/B6: 101 ankert op de B2-voorwaarde in de helper-
+     tak en wikkelt create/update. Draait B3 (familie opruimen) een script
+     dat de hh_klussen-rules herschrijft, draai daarna 101 opnieuw
+     (idempotent; staat de aanvulling er al, dan "Niets te doen").
+  5. Volgorde 100 -> 103 -> 101 -> 104 is belangrijk: tussen 103 en 104
+     zien helpers de seed-klussen nog (oude rule) maar kunnen ze niet
+     accepteren (409 nietgekeurd). Kort venster; 104 direct na 101.
+  6. Meldingen "nieuwe klus" gaan pas uit bij goedkeuren en alleen naar
+     helpers die oud genoeg zijn (filter in hh_klusplaatsen.pb.js).
+
+UITROLLIJST (vanuit backend/, .env laden: set -a; . /Users/h/Desktop/qawayhabase/.env; set +a)
+  1. node scripts/00-backup.mjs
+  2. node scripts/100-b4-velden.mjs              (dry-run, lees na)
+     node scripts/100-b4-velden.mjs --apply
+  3. ./scripts/103-hook-deploy.sh                (stap 2b nalezen, dan y)
+  4. node scripts/101-b4-rules.mjs               (dry-run, lees na)
+     node scripts/101-b4-rules.mjs --apply
+  5. node scripts/104-b4-seed-keuren.mjs         (dry-run: 12 seed-klussen)
+     node scripts/104-b4-seed-keuren.mjs --apply
+  6. node scripts/102-b4check.mjs --apply        (verwacht: 124 groen, 0 rood)
+  7. node scripts/82-b2check.mjs --apply         (verwacht: 80 groen; 8
+     node scripts/72-b1check.mjs --apply          Nominatim-verzoeken, zie B2)
+     node scripts/62-beheercheck.mjs --apply     (verwacht: alles groen)
+     node scripts/04-rulecheck.mjs --apply       (verwacht: 223 groen)
+     node scripts/50-koppelcheck.mjs --apply     (verwacht: 60 groen)
+  8. Website (beheerpaneel: "Klussen na te kijken") en app daarna uitrollen.
+     In het paneel de 2 oude open test-klussen goedkeuren of afkeuren.
+  ROLLBACK: ./scripts/103-hook-deploy.sh --rollback (zet hh_klussen.pb.js
+  terug, haalt de 2 nieuwe weg); rules terug uit de backup van stap 1
+  (00-backup.mjs --vergelijk toont het verschil). Velden en categorieën uit
+  100 en de goedkeuring uit 104 mogen blijven staan (additief; zonder de
+  B4-rules doen ze niets, behalve dat de oude app 19 tegels toont).

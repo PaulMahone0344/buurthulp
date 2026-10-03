@@ -113,7 +113,18 @@ class PocketBaseKlussenGateway implements KlussenGateway {
       final record = await client
           .collection(hhKlussenCollectieJongere)
           .getOne(id, expand: HhKlus.expand);
-      return _klusVan(client, record);
+      // B4: de klusfoto is beschermd; alleen met een bestandstoken (een
+      // paar minuten geldig) van wie de klus mag zien. Alleen bij het
+      // detail, niet in de lijst.
+      final heeftFoto = record.getListValue<String>('foto').isNotEmpty;
+      final token = heeftFoto ? await client.files.getToken() : '';
+      return HhKlus.vanRecord(
+        record,
+        fotoUrl: (oudere, bestand) =>
+            client.files.getURL(oudere, bestand, thumb: _miniatuur).toString(),
+        klusFotoUrl: (klus, bestand) =>
+            client.files.getURL(klus, bestand, token: token).toString(),
+      );
     });
   }
 

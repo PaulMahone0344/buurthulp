@@ -1,3 +1,5 @@
+import 'package:http/http.dart' as http;
+
 import '../../features/hulpvrager/model/hh_gegevens.dart';
 import '../../features/hulpvrager/model/hh_klustype.dart';
 import '../../features/hulpvrager/model/nieuwe_klus.dart';
@@ -18,7 +20,8 @@ const hhUsersCollectieVoorGegevens = 'hh_users';
 /// OPEN-PUNT 16, app OPEN-PUNT M4:32); hh_klus_status.createRule staat
 /// alleen nog open voor de coordinator.
 abstract interface class KlusGateway {
-  /// Alle hh_klustypes, op naam gesorteerd.
+  /// De categorieën die een bewoner kan kiezen (actief), in de volgorde
+  /// van de tegels.
   Future<Result<List<HhKlustype>>> klustypes();
 
   /// De eigen hh_users-rij met adres en contactpersoon.
@@ -30,7 +33,8 @@ abstract interface class KlusGateway {
     Map<String, dynamic> velden,
   );
 
-  /// Maakt de klus aan en geeft het nieuwe id terug.
+  /// Maakt de klus aan, met de foto als bestand, en geeft het nieuwe id
+  /// terug.
   Future<Result<String>> klusAanmaken(NieuweKlus klus);
 }
 
@@ -44,7 +48,7 @@ class PocketBaseKlusGateway implements KlusGateway {
     return _gateway.voerUit((client) async {
       final records = await client
           .collection(hhKlustypesCollectie)
-          .getFullList(sort: 'naam');
+          .getFullList(filter: 'actief = true', sort: 'volgorde,naam');
       return [for (final record in records) HhKlustype.vanRecord(record)];
     });
   }
@@ -78,7 +82,16 @@ class PocketBaseKlusGateway implements KlusGateway {
     return _gateway.voerUit((client) async {
       final record = await client
           .collection(hhKlussenCollectie)
-          .create(body: klus.alsBody);
+          .create(
+            body: klus.alsBody,
+            files: [
+              http.MultipartFile.fromBytes(
+                NieuweKlus.veldFoto,
+                klus.foto.bytes,
+                filename: klus.foto.bestandsnaam,
+              ),
+            ],
+          );
       return record.id;
     });
   }

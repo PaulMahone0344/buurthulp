@@ -10,25 +10,24 @@ import '../../../design/components/hh_lege_staat.dart';
 import '../../../design/components/hh_meld_balk.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
+import '../../../l10n/teksten_klus_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../domein/adres.dart';
 import '../model/hh_gegevens.dart';
 import '../paden_hulpvrager.dart';
 import '../provider/concept_controller.dart';
 import '../provider/hulpvrager_providers.dart';
 
-/// Deel "Waar" van de hulpvraag-pagina (was O4). Het adres komt uit de
-/// eigen gegevens (hh_users); staat het daar compleet, dan zijn er geen
-/// adresvelden meer (3 okt), alleen de meerregelige toelichting. Elke wijziging gaat meteen in het concept. Zonder bekend
-/// adres eerst naar Mijn gegevens. De microfoonknop staat er al, maar
-/// uitgeschakeld: spraakinvoer komt later (OPEN-PUNTEN-M4).
+/// "Waar?" op "Klus plaatsen". Het adres komt uit Mijn gegevens (B2) en
+/// wordt niet opnieuw gevraagd (B4): staat het daar compleet, dan alleen
+/// één regel "Bij jou thuis: ...". Zonder bekend adres eerst naar Mijn
+/// gegevens. Elke wijziging gaat meteen in het concept.
 class HulpvraagWaarSectie extends ConsumerStatefulWidget {
   const HulpvraagWaarSectie({required this.toonFouten, super.key});
 
   /// True na een tik op de plaatsknop: lege verplichte velden kleuren rood.
   final bool toonFouten;
-
-  static const toelichtingRegels = 4;
 
   @override
   ConsumerState<HulpvraagWaarSectie> createState() =>
@@ -39,7 +38,6 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
   final _adres = TextEditingController();
   final _postcode = TextEditingController();
   final _plaats = TextEditingController();
-  final _toelichting = TextEditingController();
   bool _isVoorgevuld = false;
 
   /// Het adres staat al compleet in Mijn gegevens (of in het concept):
@@ -50,7 +48,6 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
   void initState() {
     super.initState();
     final concept = ref.read(conceptProvider);
-    _toelichting.text = concept.toelichting;
     if (concept.adres != null) {
       _adres.text = concept.adres!;
       _postcode.text = concept.postcode ?? '';
@@ -65,7 +62,6 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
     _adres.dispose();
     _postcode.dispose();
     _plaats.dispose();
-    _toelichting.dispose();
     super.dispose();
   }
 
@@ -90,7 +86,6 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
           adres: _adres.text,
           postcode: _postcode.text,
           plaats: _plaats.text,
-          toelichting: _toelichting.text,
         );
   }
 
@@ -141,35 +136,31 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
     final dichtheid = HhDichtheidScope.van(context);
     final tekst = Theme.of(context).textTheme;
     final tussen = HhRuimte.voor(HhRuimte.l, dichtheid);
-    final klein = HhRuimte.voor(HhRuimte.s, dichtheid);
 
+    if (_adresBekend) {
+      final adres = stelAdresSamen(
+        adres: _adres.text,
+        postcode: _postcode.text,
+        plaats: _plaats.text,
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            TekstenKlusNl.waarAdres(adres),
+            style: tekst.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
+          Text(TekstenKlusNl.waarAnders, style: tekst.bodyMedium),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          _adresBekend
-              ? TekstenHulpvragerNl.waarBekendUitleg
-              : TekstenHulpvragerNl.waarUitleg,
-          style: tekst.bodyLarge,
-        ),
+        Text(TekstenKlusNl.waarUitleg, style: tekst.bodyLarge),
         SizedBox(height: tussen),
-        if (!_adresBekend) ..._adresVelden(tussen),
-        HhInvoer(
-          label: TekstenHulpvragerNl.veldToelichting,
-          controller: _toelichting,
-          hulptekst: TekstenHulpvragerNl.veldToelichtingHulp,
-          maxRegels: HulpvraagWaarSectie.toelichtingRegels,
-          onChanged: _bewaar,
-        ),
-        SizedBox(height: klein),
-        // Uitgeschakeld tot spraakinvoer er is; de schermlezer hoort waarom.
-        const HhKnop(
-          label: TekstenHulpvragerNl.waarInspreken,
-          semantiekLabel: TekstenHulpvragerNl.waarInsprekenSemantiek,
-          icoon: Icons.mic_none_outlined,
-          soort: HhKnopSoort.tweedeKeus,
-          onPressed: null,
-        ),
+        ..._adresVelden(tussen),
       ],
     );
   }
@@ -202,9 +193,8 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
       isVerplicht: true,
       fouttekst: _fout(_plaats, TekstenHulpvragerNl.validatiePlaats),
       autofillHints: const [AutofillHints.addressCity],
-      textInputAction: TextInputAction.next,
+      textInputAction: TextInputAction.done,
       onChanged: _bewaar,
     ),
-    SizedBox(height: tussen),
   ];
 }

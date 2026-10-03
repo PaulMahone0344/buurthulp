@@ -99,6 +99,7 @@ async function main() {
   const beoordelingHv1 = await su.collection('hh_beoordelingen').getFirstListItem(`klus = "${K.k07}" && van_gebruiker = "${U.hulpvrager1}"`);
   const logK04 = await su.collection('hh_klus_status').getFirstListItem(`klus = "${K.k04}" && naar = "geaccepteerd"`);
   const seedK02 = await su.collection('hh_klussen').getOne(K.k02);
+  const seedK11 = await su.collection('hh_klussen').getOne(K.k11);
   const profielJ1 = await su.collection('hh_profielen').getFirstListItem(`gebruiker = "${U.jongere1}"`);
   const profielJ2 = await su.collection('hh_profielen').getFirstListItem(`gebruiker = "${U.jongere2}"`);
 
@@ -253,7 +254,13 @@ async function main() {
   check('coordinator ziet alle 12 klussen', Object.values(K).every((id) => heeft(klussenCo, id)));
 
   kop('E. hh_klussen — aanmaken');
-  const basisKlus = { klustype: klustypes[0].id, omschrijving: `${MERK} testklus`, adres: 'Teststraat 1', status: 'open', bedrag_bruto: 1000, vergoeding_jongere: 800, commissie: 200 };
+  // B4 (hh_klusplaatsen.pb.js): een bewoner of familielid plaatst een open
+  // klus alleen met foto, nee-lijst-vinkje en een begintijd in de toekomst.
+  // Zonder die drie geeft de server 400; dat bewijst 102-b4check.
+  const morgen = new Date(Date.now() + 24 * 3600 * 1000);
+  morgen.setUTCHours(12, 0, 0, 0);
+  const testFoto = () => new File([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=', 'base64')], 'klus.png', { type: 'image/png' });
+  const basisKlus = { klustype: klustypes[0].id, omschrijving: `${MERK} testklus`, adres: 'Teststraat 1', status: 'open', bedrag_bruto: 1000, vergoeding_jongere: 800, commissie: 200, nee_lijst_akkoord: true, wanneer_van: morgen.toISOString(), get foto() { return testFoto(); } };
   const k = await mag('oudere 1 kan eigen klus aanmaken (bron app)', () => hv1.collection('hh_klussen').create({ ...basisKlus, hulpvrager: U.hulpvrager1, geplaatst_door: U.hulpvrager1, bron: 'app' }));
   if (k) opruimen.push(['hh_klussen', k.id]);
   await magNiet('oudere 1 kan geen klus voor oudere 2 aanmaken', () => hv1.collection('hh_klussen').create({ ...basisKlus, hulpvrager: U.hulpvrager2, geplaatst_door: U.hulpvrager1, bron: 'app' }));
@@ -275,7 +282,9 @@ async function main() {
   // POST /api/hh/klussen/{id}/annuleren.
   await magNiet('oudere 1 kan status van eigen klus niet via record-update wijzigen (M6-hook)', () => hv1.collection('hh_klussen').update(K.k02, { status: 'geannuleerd' }));
   const u1 = await mag('oudere 1 kan omschrijving van eigen klus wel wijzigen', () => hv1.collection('hh_klussen').update(K.k02, { omschrijving: `${MERK} bijgewerkt` }));
-  if (u1) await su.collection('hh_klussen').update(K.k02, { omschrijving: seedK02.omschrijving });
+  // B4: een inhoudelijke wijziging door de bewoner laat de goedkeuring
+  // vervallen; zet hem terug zoals de seed hem had (anders ziet 50 k02 niet).
+  if (u1) await su.collection('hh_klussen').update(K.k02, { omschrijving: seedK02.omschrijving, klus_goedgekeurd_op: seedK02.klus_goedgekeurd_op ?? '' });
   const u0 = await mag('oudere 1 kan eigen concept k01 op open zetten (de ene toegestane wissel)', () => hv1.collection('hh_klussen').update(K.k01, { status: 'open' }));
   if (u0) {
     const logsK01 = await su.collection('hh_klus_status').getFullList({ filter: `klus = "${K.k01}" && van = "concept" && naar = "open"` });
@@ -286,7 +295,8 @@ async function main() {
   await magNiet('oudere 1 kan hulpvrager van eigen klus niet wijzigen', () => hv1.collection('hh_klussen').update(K.k02, { hulpvrager: U.hulpvrager2 }));
   await magNiet('oudere 1 kan klus van oudere 2 niet wijzigen', () => hv1.collection('hh_klussen').update(K.k03, { omschrijving: MERK }));
   const u2 = await mag('familielid kan klus van gekoppelde oudere bijwerken', () => fam.collection('hh_klussen').update(K.k11, { adres: 'Prins Bernhardlaan 12, 4003 AB Tiel' }));
-  void u2;
+  // B4: ook het adres telt als inhoud; goedkeuring en adres terug zoals de seed.
+  if (u2) await su.collection('hh_klussen').update(K.k11, { adres: seedK11.adres, klus_goedgekeurd_op: seedK11.klus_goedgekeurd_op ?? '' });
   await magNiet('familielid kan klus van ongekoppelde oudere niet wijzigen', () => fam.collection('hh_klussen').update(K.k03, { adres: MERK }));
   await magNiet('oudere 1 kan open klus niet verwijderen (nooit stil verdwijnen)', () => hv1.collection('hh_klussen').delete(K.k02));
   await magNiet('jongere 1 kan toegewezen klus niet verwijderen', () => j1.collection('hh_klussen').delete(K.k04));

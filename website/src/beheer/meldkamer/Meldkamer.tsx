@@ -7,12 +7,13 @@ import { PhoneCall } from 'lucide-react'
 import type { BeheerData } from '../data/beheerData'
 import { isHulpvraagfilter, isIncidentfilter } from '../data/filters'
 import { meldkamerTegels } from '../data/tegels'
-import type { Incident, Klus } from '../data/types'
+import type { Incident, Klus, KlusNaTeKijken } from '../data/types'
 import { Foutmelding, Gelukt } from '../gedeeld/Meldbalk'
 import { Tegel } from '../gedeeld/Tegel'
 import { useLaden } from '../gedeeld/useLaden'
 import { HulpvragenTabel } from './HulpvragenTabel'
 import { IncidentenLijst } from './IncidentenLijst'
+import { NaTeKijken } from './NaTeKijken'
 import { TelefonischeAanmelding } from './TelefonischeAanmelding'
 
 type Props = {
@@ -24,21 +25,27 @@ type Props = {
 
 const GEEN_KLUSSEN: Klus[] = []
 const GEEN_INCIDENTEN: Incident[] = []
+const NIETS_NA_TE_KIJKEN: KlusNaTeKijken[] = []
 
 export function Meldkamer({ data, filters, zetFilters, nu }: Props) {
   const laadKlussen = useCallback(() => data.klussen(), [data])
   const laadIncidenten = useCallback(() => data.incidenten(), [data])
+  const laadNaTeKijken = useCallback(() => data.klussenNaTeKijken(), [data])
   const klussen = useLaden(laadKlussen, GEEN_KLUSSEN)
   const incidenten = useLaden(laadIncidenten, GEEN_INCIDENTEN)
+  // B4: elke nieuwe klus eerst langs de meldkamer.
+  const naTeKijken = useLaden(laadNaTeKijken, NIETS_NA_TE_KIJKEN)
   const [aanmelden, setAanmelden] = useState(false)
   const [gelukt, setGelukt] = useState('')
 
   const herlaadKlussen = klussen.herlaad
   const herlaadIncidenten = incidenten.herlaad
+  const herlaadNaTeKijken = naTeKijken.herlaad
   const herlaadAlles = useCallback(() => {
     void herlaadKlussen()
     void herlaadIncidenten()
-  }, [herlaadKlussen, herlaadIncidenten])
+    void herlaadNaTeKijken()
+  }, [herlaadKlussen, herlaadIncidenten, herlaadNaTeKijken])
 
   useEffect(() => data.abonneer(herlaadAlles), [data, herlaadAlles])
 
@@ -68,6 +75,9 @@ export function Meldkamer({ data, filters, zetFilters, nu }: Props) {
         <Tegel label="Nu bezig" waarde={tegels.nuBezig} />
         <Tegel label="Incidenten open" waarde={tegels.incidentenOpen} />
       </div>
+
+      <Foutmelding melding={naTeKijken.fout} />
+      <NaTeKijken data={data} klussen={naTeKijken.waarde} opGewijzigd={herlaadAlles} opGelukt={setGelukt} />
 
       <div className="beheer-kolommen">
         <section className="admin-card">

@@ -28,6 +28,7 @@ import '../domein/hulpvraag_indeling.dart';
 import '../paden_status.dart';
 import '../provider/status_providers.dart';
 import '../widget/oudere_annuleer_dialoog.dart';
+import '../../../../l10n/teksten_klus_nl.dart';
 
 /// O7. Waar de hulpvraag staat, in gewone taal: "Sanne is onderweg naar u."
 /// Ouderenregel: hooguit drie acties (bellen, stoppen, vernieuwen), grote
@@ -184,7 +185,20 @@ class _Inhoud extends StatelessWidget {
               ],
               // De ene zin die telt, groot en zonder cijfers.
               Text(statusZin(klus), style: tekst.headlineMedium),
-              if (!heeftJongere) ...[
+              // B4: eerst kijkt de meldkamer; een afkeuring met de reden.
+              if (klus.wordtNagekeken) ...[
+                SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+                const HhMeldBalk(
+                  soort: HhMeldSoort.waarschuwing,
+                  tekst: TekstenKlusNl.wordtNagekekenUitleg,
+                ),
+              ] else if (klus.afkeurReden.isNotEmpty) ...[
+                SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+                HhMeldBalk(
+                  soort: HhMeldSoort.waarschuwing,
+                  tekst: TekstenKlusNl.afgekeurdReden(klus.afkeurReden),
+                ),
+              ] else if (!heeftJongere) ...[
                 SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
                 Text(
                   TekstenUitvoerenNl.o7GeenJongereUitleg,

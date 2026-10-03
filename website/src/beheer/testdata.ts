@@ -1,6 +1,6 @@
 // M14 — vaste testdata voor de componenttests van het beheerpaneel.
 
-import type { Incident, Klus, Profiel } from './data/types'
+import type { Incident, Klus, KlusNaTeKijken, Profiel } from './data/types'
 
 export const NU = new Date('2026-09-19T14:00:00.000Z')
 export const COORDINATOR = { id: 'c1', naam: 'Coordinator Een', email: 'coord@heitjehulp.nl' }
@@ -66,6 +66,23 @@ export function profiel(o: Partial<Profiel>): Profiel {
     ouderToestemmingOp: '',
     ouderAvp: null,
     ouderStatus: '',
+    ...o,
+  }
+}
+
+export function naTeKijken(o: Partial<KlusNaTeKijken>): KlusNaTeKijken {
+  return {
+    id: 'n',
+    aangemaaktOp: '2026-09-19T12:30:00.000Z',
+    bron: 'app',
+    hulpvragerNaam: 'Mevrouw Jansen',
+    klustypeNaam: 'Tuin',
+    minLeeftijd: 13,
+    wanneerVan: '2026-09-20T12:00:00.000Z',
+    wanneerTot: '',
+    omschrijving: 'De heg aan de voorkant knippen.',
+    markering: [],
+    fotoUrl: 'https://api.test/api/files/hh_klussen/n/heg.jpg?token=t',
     ...o,
   }
 }

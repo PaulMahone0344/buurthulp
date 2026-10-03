@@ -1,9 +1,12 @@
-import '../../../hulpvrager/model/hulpvraag_concept.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 
+/// De drie dagdelen waarop een helper zijn klussenlijst filtert (J11). Tot
+/// B4 koos de bewoner ook een dagdeel; sinds het tijdwiel (B4) staat het
+/// enum hier, bij de enige plek die het nog gebruikt.
+enum HhDagdeel { ochtend, middag, avond }
+
 /// Grens tussen ochtend en middag, en tussen middag en avond (lokale
-/// wandkloktijd). De oudere kiest op O3 uit 9-12, 13-17 en 18-20; een klus
-/// die de meldkamer om 12:30 plant valt hier onder de middag.
+/// wandkloktijd). Een klus die om 12:30 begint valt onder de middag.
 const _middagVanaf = 12;
 const _avondVanaf = 18;
 

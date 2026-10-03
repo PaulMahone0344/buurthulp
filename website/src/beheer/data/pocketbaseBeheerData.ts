@@ -19,8 +19,10 @@ import type {
   Incident,
   Instelling,
   Klus,
+  KlusNaTeKijken,
   Klustype,
   Koppelkandidaat,
+  Markering,
   Oudere,
   Profiel,
   Rol,
@@ -230,6 +232,29 @@ async function metFout<T>(werk: () => Promise<T>): Promise<T> {
   }
 }
 
+const MARKERINGEN: Markering[] = ['telefoon', 'email', 'link', 'neelijst']
+
+/** B4: een ongekeurde klus; [fotoUrl] maakt van een bestandsnaam een url met token. */
+export function naarKlusNaTeKijken(r: Uitgebreid, fotoUrl: (bestand: string) => string): KlusNaTeKijken {
+  const oudere = uitgebreid(r, 'hulpvrager')
+  const klustype = uitgebreid(r, 'klustype')
+  const fotos = Array.isArray(r.foto) ? r.foto.map(tekst).filter(Boolean) : []
+  const markering = Array.isArray(r.controle_markering) ? r.controle_markering.map(tekst) : []
+  return {
+    id: r.id,
+    aangemaaktOp: naarIso(r.created),
+    bron: tekst(r.bron) as KlusNaTeKijken['bron'],
+    hulpvragerNaam: tekst(oudere?.naam),
+    klustypeNaam: tekst(klustype?.naam),
+    minLeeftijd: getal(r.min_leeftijd),
+    wanneerVan: naarIso(r.wanneer_van),
+    wanneerTot: naarIso(r.wanneer_tot),
+    omschrijving: tekst(r.omschrijving),
+    markering: MARKERINGEN.filter((m) => markering.includes(m)),
+    fotoUrl: fotos.length ? fotoUrl(fotos[0]) : '',
+  }
+}
+
 export function naarCoordinator(r: RecordModel | null | undefined): Coordinator | null {
   if (!r || r.collectionName !== 'hh_users' || r.rol !== 'coordinator') return null
   return { id: r.id, naam: tekst(r.naam), email: tekst(r.email) }
@@ -377,6 +402,27 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
         await pb.send(`/api/hh/klussen/${encodeURIComponent(klusId)}/annuleren`, {
           method: 'POST',
           body: { reden: reden.trim() },
+        })
+      }),
+
+    klussenNaTeKijken: () =>
+      metFout(async () => {
+        const records = await col('hh_klussen').getFullList({
+          filter: 'status = "open" && klus_goedgekeurd_op = "" && klus_afgekeurd_op = ""',
+          sort: 'created',
+          expand: 'hulpvrager,klustype',
+        })
+        // foto is PROTECTED: zonder bestandstoken 404.
+        const metFoto = records.some((r) => Array.isArray(r.foto) && r.foto.length > 0)
+        const token = metFoto ? await pb.files.getToken() : ''
+        return records.map((r) => naarKlusNaTeKijken(r, (bestand) => pb.files.getURL(r, bestand, { token })))
+      }),
+
+    keurKlus: (klusId, besluit) =>
+      metFout(async () => {
+        await pb.send(`/api/hh/klussen/${encodeURIComponent(klusId)}/keuren`, {
+          method: 'POST',
+          body: besluit.besluit === 'afkeuren' ? { besluit: 'afkeuren', reden: besluit.reden.trim() } : { besluit: 'goedkeuren' },
         })
       }),
 
