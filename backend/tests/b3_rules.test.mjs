@@ -79,3 +79,24 @@ test('94: toont nooit het SMTP-wachtwoord', async () => {
   assert.ok(!JSON.stringify(s).includes('GEHEIM'));
   assert.equal(mailStand({}).smtpAan, false);
 });
+
+test('94: effectieve afzender zonder HH_MAIL_AFZENDER = globaal adres, naam HeitjeHulp', async () => {
+  const { effectieveAfzender } = await import('../scripts/94-b3-mailcheck.mjs');
+  const inst = { smtp: { enabled: true, username: 'info@bovexa.nl' }, meta: { senderAddress: 'info@bovexa.nl', senderName: 'QawayahBase' } };
+  const a = effectieveAfzender(inst, '');
+  assert.equal(a.adres, 'info@bovexa.nl');
+  assert.equal(a.naam, 'HeitjeHulp');
+  assert.equal(a.antwoordAan, '');
+  assert.equal(a.waarschuwing, '');
+});
+
+test('94: HH_MAIL_AFZENDER op een ander domein dan de SMTP-gebruiker geeft een waarschuwing', async () => {
+  const { effectieveAfzender } = await import('../scripts/94-b3-mailcheck.mjs');
+  const inst = { smtp: { enabled: true, username: 'info@bovexa.nl' }, meta: { senderAddress: 'info@bovexa.nl' } };
+  const a = effectieveAfzender(inst, 'info@heitjehulp.nl');
+  assert.equal(a.adres, 'info@heitjehulp.nl');
+  assert.equal(a.antwoordAan, 'info@heitjehulp.nl');
+  assert.match(a.waarschuwing, /heitjehulp\.nl.*bovexa\.nl/);
+  const zelfde = effectieveAfzender({ smtp: { username: 'info@heitjehulp.nl' }, meta: {} }, 'info@heitjehulp.nl');
+  assert.equal(zelfde.waarschuwing, '');
+});

@@ -512,7 +512,7 @@ test('status: na 5 foute codes geblokkeerd, na 24 uur verlopen', () => {
 
 // ---- de echte omgeving ---------------------------------------------------------
 
-test('jsvmOmgeving: mail met de afzender uit de serverinstellingen, verder $security', () => {
+test('jsvmOmgeving: mail met het adres uit de serverinstellingen (naam HeitjeHulp), verder $security', () => {
   const verstuurd = [];
   const app = {
     settings: () => ({ meta: { senderAddress: 'info@bovexa.nl', senderName: 'QawayahBase' } }),
@@ -528,11 +528,62 @@ test('jsvmOmgeving: mail met de afzender uit de serverinstellingen, verder $secu
   const env = hulp.jsvmOmgeving({ app, Record: function () {}, security, MailerMessage });
   env.mail({ aan: 'mama@voorbeeld.nl', onderwerp: 'O', tekst: 'T', html: 'H' });
   assert.equal(verstuurd.length, 1);
-  assert.deepEqual(verstuurd[0].from, { address: 'info@bovexa.nl', name: 'QawayahBase' });
+  assert.deepEqual(verstuurd[0].from, { address: 'info@bovexa.nl', name: 'HeitjeHulp' });
   assert.deepEqual(verstuurd[0].to, [{ address: 'mama@voorbeeld.nl' }]);
   assert.equal(verstuurd[0].subject, 'O');
   assert.equal(verstuurd[0].text, 'T');
   assert.equal(env.willekeurig(6, hulp.CIJFERS), '000000');
   assert.equal(env.sha256('x'), 'sha(x)');
   assert.equal(env.gelijk('a', 'a'), true);
+});
+
+// ---- afzender (besluit Ibrahim: mails komen van HeitjeHulp) ----------------
+
+const META = { senderAddress: 'info@bovexa.nl', senderName: 'QawayahBase' };
+
+test('afzender: HH_MAIL_AFZENDER niet gezet -> globaal adres, naam HeitjeHulp, geen Reply-To', () => {
+  for (const leeg of [undefined, '', '   ']) {
+    assert.deepEqual(hulp.afzenderVoor(leeg, META), {
+      van: { address: 'info@bovexa.nl', name: 'HeitjeHulp' },
+      antwoordAan: '',
+    });
+  }
+});
+
+test('afzender: HH_MAIL_AFZENDER gezet -> dat adres, naam HeitjeHulp, Reply-To ook', () => {
+  assert.deepEqual(hulp.afzenderVoor(' Info@HeitjeHulp.nl ', META), {
+    van: { address: 'info@heitjehulp.nl', name: 'HeitjeHulp' },
+    antwoordAan: 'info@heitjehulp.nl',
+  });
+});
+
+test('afzender: ongeldige HH_MAIL_AFZENDER -> terugval op het globale adres', () => {
+  assert.equal(hulp.afzenderVoor('geen-adres', META).van.address, 'info@bovexa.nl');
+  assert.equal(hulp.afzenderVoor('geen-adres', META).antwoordAan, '');
+});
+
+function jsvmMet(afzender) {
+  const verstuurd = [];
+  const app = {
+    settings: () => ({ meta: META }),
+    newMailClient: () => ({ send: (m) => verstuurd.push(m) }),
+    store: () => ({ get() {}, set() {} }),
+  };
+  function MailerMessage(m) { Object.assign(this, m); }
+  const os = { getenv: (k) => (k === 'HH_MAIL_AFZENDER' ? afzender : '') };
+  const env = hulp.jsvmOmgeving({ app, Record: function () {}, security: {}, MailerMessage, os });
+  env.mail({ aan: 'mama@voorbeeld.nl', onderwerp: 'O', tekst: 'T', html: 'H' });
+  return verstuurd[0];
+}
+
+test('jsvmOmgeving zonder HH_MAIL_AFZENDER: van "HeitjeHulp" <info@bovexa.nl>, geen Reply-To', () => {
+  const m = jsvmMet('');
+  assert.deepEqual(m.from, { address: 'info@bovexa.nl', name: 'HeitjeHulp' });
+  assert.equal(m.headers, undefined);
+});
+
+test('jsvmOmgeving met HH_MAIL_AFZENDER: van "HeitjeHulp" <info@heitjehulp.nl> en Reply-To', () => {
+  const m = jsvmMet('info@heitjehulp.nl');
+  assert.deepEqual(m.from, { address: 'info@heitjehulp.nl', name: 'HeitjeHulp' });
+  assert.deepEqual(m.headers, { 'Reply-To': 'info@heitjehulp.nl' });
 });

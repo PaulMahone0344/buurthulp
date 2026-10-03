@@ -27,8 +27,10 @@
 //        body { token } | { sessie }  ouder-sessie. 200 {status: ingetrokken}
 //
 // MAIL (K4): $app.newMailClient() met de bestaande globale SMTP-instelling
-// van de server (afzender zoals ingesteld). Dit bestand wijzigt GEEN
-// instelling. Adressen op .invalid/.test/.example/.localhost krijgen nooit
+// van de server. Dit bestand wijzigt GEEN instelling. Afzender (besluit 4
+// okt): naam altijd "HeitjeHulp"; adres uit HH_MAIL_AFZENDER (systemd-env
+// van pocketbase, bedoeld info@heitjehulp.nl, dan ook Reply-To), anders het
+// adres uit de globale instelling (hh_ouder_hulp.js afzenderVoor). Adressen op .invalid/.test/.example/.localhost krijgen nooit
 // mail (92-b3check gebruikt ...@heitjehulp.invalid).
 //
 // Gotchas (PB 0.25 JSVM): helpers BINNEN de handler via require(); $app en
@@ -51,7 +53,7 @@ routerAdd(
     }
     const helper = $app.findRecordById("hh_users", e.auth.id);
     const vandaag = new Date().toISOString().slice(0, 10);
-    const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage });
+    const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage, os: $os });
     const uit = hulp.verstuur(env, {
       helper: helper,
       leeftijd: aanmelden.leeftijd(String(helper.get("geboortedatum") || ""), vandaag),
@@ -73,7 +75,7 @@ routerAdd(
       return e.json(403, { melding: hulp.MELDING.rol, reden: "rol" });
     }
     const vandaag = new Date().toISOString().slice(0, 10);
-    const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage });
+    const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage, os: $os });
     const uit = hulp.statusVoorHelper(env, {
       helper: helper,
       leeftijd: aanmelden.leeftijd(String(helper.get("geboortedatum") || ""), vandaag),
@@ -91,7 +93,7 @@ routerAdd("POST", "/api/hh/ouder/code", (e) => {
   } catch (_) {
     // Leeg of onleesbaar: controleerCode geeft dan 400 invoer.
   }
-  const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage });
+  const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage, os: $os });
   const uit = hulp.controleerCode(env, {
     email: String(data.email || ""),
     code: String(data.code || ""),
@@ -109,7 +111,7 @@ routerAdd("POST", "/api/hh/ouder/toestemming", (e) => {
   } catch (_) {
     // Onleesbaar (bv. akkoord als tekst): akkoord blijft false -> 400.
   }
-  const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage });
+  const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage, os: $os });
   const uit = hulp.geefToestemming(env, {
     sessie: String(data.sessie || ""),
     naam: String(data.naam || ""),
@@ -129,7 +131,7 @@ routerAdd("POST", "/api/hh/ouder/intrekken", (e) => {
   } catch (_) {
     // Leeg: trekIn geeft 400.
   }
-  const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage });
+  const env = hulp.jsvmOmgeving({ app: $app, Record: Record, security: $security, MailerMessage: MailerMessage, os: $os });
   const uit = hulp.trekIn(env, {
     token: String(data.token || ""),
     sessie: String(data.sessie || ""),

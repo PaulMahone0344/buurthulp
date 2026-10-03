@@ -556,11 +556,32 @@ function statusVoorHelper(env, invoer) {
   return ok(body);
 }
 
+// ---- afzender (besluit Ibrahim 4 okt: de ouder-mail komt van HeitjeHulp) --------
+var AFZENDER_NAAM = "HeitjeHulp";
+
+/// Wie de ouder-mail verstuurt. De naam is altijd "HeitjeHulp" (per bericht,
+/// NIET de globale PocketBase-instelling, die geldt voor alle apps). Het
+/// adres komt uit de omgevingsvariabele HH_MAIL_AFZENDER (bedoeld:
+/// info@heitjehulp.nl, met Reply-To naar hetzelfde adres). Niet gezet of
+/// ongeldig: het adres uit de globale instelling (nu info@bovexa.nl), zodat
+/// er niets breekt zolang de mailbox en SPF/DKIM nog niet bestaan.
+///   -> { van: {address, name}, antwoordAan: "" | adres }
+function afzenderVoor(omgevingWaarde, meta) {
+  var eigen = normaliseerEmail(omgevingWaarde);
+  if (eigen && isGeldigEmail(eigen)) {
+    return { van: { address: eigen, name: AFZENDER_NAAM }, antwoordAan: eigen };
+  }
+  return {
+    van: { address: String((meta && meta.senderAddress) || ""), name: AFZENDER_NAAM },
+    antwoordAan: "",
+  };
+}
+
 // ---- de echte omgeving (JSVM) -------------------------------------------------------
 /// Bouwt env uit de globals van de JSVM. De hook geeft ze mee:
-///   hulp.jsvmOmgeving({ app: $app, Record, security: $security, MailerMessage })
-/// Mail via $app.newMailClient() met de afzender uit de serverinstellingen
-/// (K4: geen instelling wijzigen).
+///   hulp.jsvmOmgeving({ app: $app, Record, security: $security, MailerMessage, os: $os })
+/// Mail via $app.newMailClient() met de bestaande SMTP-instelling (K4: geen
+/// instelling wijzigen); afzender zie afzenderVoor.
 function jsvmOmgeving(g) {
   return {
     app: g.app,
@@ -578,15 +599,17 @@ function jsvmOmgeving(g) {
       return g.security.equal(a, b);
     },
     mail: function (b) {
-      var meta = g.app.settings().meta;
-      var bericht = new g.MailerMessage({
-        from: { address: meta.senderAddress, name: meta.senderName },
+      var waarde = g.os && g.os.getenv ? g.os.getenv("HH_MAIL_AFZENDER") : "";
+      var afzender = afzenderVoor(waarde, g.app.settings().meta);
+      var velden = {
+        from: afzender.van,
         to: [{ address: b.aan }],
         subject: b.onderwerp,
         html: b.html,
         text: b.tekst,
-      });
-      g.app.newMailClient().send(bericht);
+      };
+      if (afzender.antwoordAan) velden.headers = { "Reply-To": afzender.antwoordAan };
+      g.app.newMailClient().send(new g.MailerMessage(velden));
     },
     store: g.app.store(),
     log: function () {
@@ -597,6 +620,8 @@ function jsvmOmgeving(g) {
 
 module.exports = {
   jsvmOmgeving: jsvmOmgeving,
+  afzenderVoor: afzenderVoor,
+  AFZENDER_NAAM: AFZENDER_NAAM,
   BASIS_URL: BASIS_URL,
   MAX_POGINGEN: MAX_POGINGEN,
   MAX_PER_DAG: MAX_PER_DAG,
