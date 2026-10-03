@@ -56,14 +56,13 @@ export function profiel(o: Partial<Profiel>): Profiel {
     vogStatus: 'in_behandeling',
     vogGeldigTot: '',
     vogAangevraagdOp: '2026-09-10T10:00:00.000Z',
-    intakeOp: '',
+    vogGezienOp: '',
     ibanGeverifieerd: false,
     iban: 'NL91ABNA0417164300',
     overMij: 'Ik help graag.',
     screeningNotitie: '',
     bijgewerktOp: '2026-09-18T10:00:00.000Z',
     documentFotoUrl: 'https://pb.test/id.jpg?token=t',
-    selfieUrl: 'https://pb.test/selfie.jpg?token=t',
     ...o,
   }
 }

@@ -52,14 +52,15 @@ describe('D2 screening', () => {
     expect(screen.queryByRole('button', { name: 'Bekijk Ruim' })).not.toBeInTheDocument()
   })
 
-  it('toont document en selfie naast elkaar en keurt goed met notitie', async () => {
+  it('toont het ID-document (geen selfie meer) en keurt goed met notitie', async () => {
     const user = userEvent.setup()
     const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1' })] }, COORDINATOR)
     opzet(data, { jongere: 'p1' })
 
     const detail = await screen.findByRole('region', { name: 'Screening van Sami' })
     expect(within(detail).getByRole('img', { name: 'Identiteitsbewijs' })).toHaveAttribute('src', 'https://pb.test/id.jpg?token=t')
-    expect(within(detail).getByRole('img', { name: 'Selfie' })).toHaveAttribute('src', 'https://pb.test/selfie.jpg?token=t')
+    expect(within(detail).queryByRole('img', { name: 'Selfie' })).not.toBeInTheDocument()
+    expect(within(detail).queryByLabelText('Intake gehad')).not.toBeInTheDocument()
     expect(within(detail).getByText(/NL91ABNA0417164300/)).toBeInTheDocument()
 
     await user.click(within(detail).getByRole('button', { name: 'Goedkeuren' }))
@@ -69,9 +70,8 @@ describe('D2 screening', () => {
     await user.selectOptions(within(detail).getByLabelText('VOG-status'), 'goedgekeurd')
     await user.type(within(detail).getByLabelText('VOG geldig tot'), '2027-09-01')
     await user.click(within(detail).getByLabelText('IBAN gecontroleerd'))
-    expect(within(detail).queryByLabelText('Intake op')).not.toBeInTheDocument()
-    await user.click(within(detail).getByLabelText('Intake gehad'))
-    expect(within(detail).getByLabelText('Intake op')).toHaveValue('2026-09-19')
+    expect(within(detail).getByLabelText('VOG gezien op')).toHaveValue('')
+    await user.type(within(detail).getByLabelText('VOG gezien op'), '2026-09-19')
     expect(within(detail).getByLabelText('Notitie (verplicht)')).toHaveAccessibleDescription(
       'De jongere kan deze notitie lezen. Schrijf hem zakelijk.',
     )
@@ -89,29 +89,28 @@ describe('D2 screening', () => {
           vog_status: 'goedgekeurd',
           vog_geldig_tot: '2027-09-01 12:00:00.000Z',
           iban_geverifieerd: true,
-          intake_op: '2026-09-19 12:00:00.000Z',
+          vog_gezien_op: '2026-09-19 12:00:00.000Z',
         },
       ],
     })
   })
 
-  it('toont een eerdere intake als aangevinkt met de datum', async () => {
-    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', intakeOp: '2026-09-15' })] }, COORDINATOR)
+  it('toont een eerder gezien VOG met de datum', async () => {
+    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', vogGezienOp: '2026-09-15' })] }, COORDINATOR)
     opzet(data, { jongere: 'p1' })
 
     const detail = await screen.findByRole('region', { name: 'Screening van Sami' })
-    expect(within(detail).getByLabelText('Intake gehad')).toBeChecked()
-    expect(within(detail).getByLabelText('Intake op')).toHaveValue('2026-09-15')
+    expect(within(detail).getByLabelText('VOG gezien op')).toHaveValue('2026-09-15')
   })
 
   it('keurt af met notitie', async () => {
     const user = userEvent.setup()
-    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', selfieUrl: '' })] }, COORDINATOR)
+    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', documentFotoUrl: '' })] }, COORDINATOR)
     opzet(data, { jongere: 'p1' })
 
     const detail = await screen.findByRole('region', { name: 'Screening van Sami' })
-    expect(within(detail).getByText('Geen selfie geüpload.')).toBeInTheDocument()
-    await user.type(within(detail).getByLabelText('Notitie (verplicht)'), 'Selfie ontbreekt.')
+    expect(within(detail).getByText('Geen identiteitsbewijs geüpload.')).toBeInTheDocument()
+    await user.type(within(detail).getByLabelText('Notitie (verplicht)'), 'ID ontbreekt.')
     await user.click(within(detail).getByRole('button', { name: 'Afkeuren' }))
 
     expect(await within(detail).findByRole('status')).toHaveTextContent('Sami is afgewezen.')

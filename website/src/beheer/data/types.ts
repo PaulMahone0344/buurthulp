@@ -72,8 +72,8 @@ export type Profiel = {
   vogStatus: Screeningstatus | ''
   vogGeldigTot: string
   vogAangevraagdOp: string
-  /** Dag van het intakegesprek "JJJJ-MM-DD"; leeg = nog geen intake. */
-  intakeOp: string
+  /** B2: dag waarop de meldkamer de VOG zag "JJJJ-MM-DD"; leeg = nog niet. */
+  vogGezienOp: string
   ibanGeverifieerd: boolean
   iban: string
   overMij: string
@@ -81,7 +81,6 @@ export type Profiel = {
   bijgewerktOp: string
   /** Kant-en-klare url met bestandstoken; leeg als er geen bestand is. */
   documentFotoUrl: string
-  selfieUrl: string
 }
 
 export type Wijk = {
@@ -181,8 +180,8 @@ export type Screeningbesluit = {
   vogStatus: Screeningstatus | ''
   vogGeldigTot: string
   ibanGeverifieerd: boolean
-  /** "JJJJ-MM-DD" of leeg (nog geen intake). */
-  intakeOp: string
+  /** B2: "JJJJ-MM-DD" of leeg (VOG nog niet gezien). */
+  vogGezienOp: string
 }
 
 export type Auditactie = 'aanmaken' | 'wijzigen' | 'verwijderen'

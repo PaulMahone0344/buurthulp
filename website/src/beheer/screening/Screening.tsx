@@ -55,7 +55,7 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
       <header className="dashboard-topbar">
         <div>
           <h1>Screening</h1>
-          <p>Jongeren die gecontroleerd moeten worden: ID, selfie, VOG en IBAN.</p>
+          <p>Helpers die gecontroleerd moeten worden: ID en (vanaf 18) VOG.</p>
         </div>
       </header>
       <div className="admin-stat-grid admin-stat-grid--drie">

@@ -213,17 +213,15 @@ describe('omzetten', () => {
         collectionId: 'c',
         collectionName: 'hh_profielen',
         document_foto: 'id_abc.jpg',
-        selfie: '',
         vog_geldig_tot: '2027-01-01 12:00:00.000Z',
-        intake_op: '2026-10-01 12:00:00.000Z',
+        vog_gezien_op: '2026-10-01 12:00:00.000Z',
       },
       (bestand) => `https://pb/${bestand}?token=t`,
     )
 
     expect(profiel.documentFotoUrl).toBe('https://pb/id_abc.jpg?token=t')
-    expect(profiel.selfieUrl).toBe('')
     expect(profiel.vogGeldigTot).toBe('2027-01-01')
-    expect(profiel.intakeOp).toBe('2026-10-01')
+    expect(profiel.vogGezienOp).toBe('2026-10-01')
   })
 
   it('maakt van een json-waarde leesbare tekst', () => {

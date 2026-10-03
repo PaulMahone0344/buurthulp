@@ -252,7 +252,7 @@ export class FakeBeheerData implements BeheerData {
     profiel.screeningNotitie = besluit.notitie.trim()
     profiel.vogStatus = besluit.vogStatus
     profiel.vogGeldigTot = besluit.vogGeldigTot
-    profiel.intakeOp = besluit.intakeOp
+    profiel.vogGezienOp = besluit.vogGezienOp
     profiel.ibanGeverifieerd = besluit.ibanGeverifieerd
     profiel.bijgewerktOp = new Date().toISOString()
   }
