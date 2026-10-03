@@ -117,3 +117,13 @@ test('plat: leest velden per soort en slaat wachtwoord en systeemvelden over', (
     klustypes: ['a', 'b'],
   });
 });
+
+test('B1 isGoedkeuring: alleen de overgang naar goedgekeurd', () => {
+  assert.equal(hulp.isGoedkeuring('in_behandeling', 'goedgekeurd'), true);
+  assert.equal(hulp.isGoedkeuring('', 'goedgekeurd'), true);
+  assert.equal(hulp.isGoedkeuring('afgewezen', 'goedgekeurd'), true);
+  assert.equal(hulp.isGoedkeuring('goedgekeurd', 'goedgekeurd'), false);
+  assert.equal(hulp.isGoedkeuring('in_behandeling', 'afgewezen'), false);
+  assert.equal(hulp.isGoedkeuring('goedgekeurd', 'in_behandeling'), false);
+  assert.equal(hulp.isGoedkeuring(undefined, undefined), false);
+});

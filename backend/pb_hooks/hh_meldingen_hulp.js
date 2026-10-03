@@ -110,16 +110,16 @@ function tekstVoor(soort, rol, ctx) {
       if (rol === "familie") {
         return {
           titel: "Er komt iemand helpen",
-          tekst: `${wie} helpt ${oudere || "uw familielid"}${wanneer}.`,
+          tekst: `${wie} helpt ${oudere || "je familielid"}${wanneer}.`,
         };
       }
       return {
         titel: "Er komt iemand helpen",
-        tekst: c.wanneer ? `${wie} komt${wanneer}.` : `${wie} heeft uw hulpvraag aangenomen.`,
+        tekst: c.wanneer ? `${wie} komt${wanneer}.` : `${wie} heeft je hulpvraag aangenomen.`,
       };
 
     case "onderweg":
-      return { titel: "Onderweg naar u", tekst: `${wie} is onderweg naar u.` };
+      return { titel: "Onderweg naar jou", tekst: `${wie} is onderweg naar jou.` };
 
     case "afgerond":
       if (rol === "jongere") {
@@ -135,11 +135,11 @@ function tekstVoor(soort, rol, ctx) {
         return {
           titel: "We zoeken iemand anders",
           tekst: jongere
-            ? `${jongere} kan toch niet komen. We zoeken iemand anders voor u.`
-            : "Er kan toch niemand komen. We zoeken iemand anders voor u.",
+            ? `${jongere} kan toch niet komen. We zoeken iemand anders voor jou.`
+            : "Er kan toch niemand komen. We zoeken iemand anders voor jou.",
         };
       }
-      return { titel: "Hulpvraag gestopt", tekst: "Uw hulpvraag gaat niet door." };
+      return { titel: "Hulpvraag gestopt", tekst: "Je hulpvraag gaat niet door." };
 
     case "incident": {
       const melder = c.melder || "Iemand";

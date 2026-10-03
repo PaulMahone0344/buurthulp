@@ -24,10 +24,10 @@ const MAX_PER_DAG = 5;
 const ALLE_RECHTEN = ["meekijken", "plaatsen"];
 
 const VAST_BERICHT =
-  "Als dit adres bij ons bekend is, krijgt uw familielid een vraag om toestemming.";
+  "Als dit adres bij ons bekend is, krijgt je familielid een vraag om toestemming.";
 const MELDING_EMAIL = "Vul een geldig e-mailadres in.";
 const MELDING_LIMIET =
-  "U heeft vandaag al vaak een aanvraag gedaan. Probeer het morgen opnieuw.";
+  "Je hebt vandaag al vaak een aanvraag gedaan. Probeer het morgen opnieuw.";
 const MELDING_ROL = "Alleen een familielid kan een koppeling aanvragen.";
 
 // --------------------------------------------------------------------------

@@ -73,15 +73,15 @@ routerAdd(
     const MELDING_GEEN_COORDINATOR =
       "Alleen een coordinator kan een klus handmatig koppelen.";
     const MELDING_NIET_GEVONDEN = "Deze klus bestaat niet meer.";
-    const MELDING_GEEN_JONGERE_MEE = "Kies eerst een jongere.";
+    const MELDING_GEEN_JONGERE_MEE = "Kies eerst een helper.";
     const MELDING_BEZET =
       "Deze klus is niet meer open; hij is al aan iemand toegewezen.";
-    const MELDING_JONGERE_ONBEKEND = "Deze jongere bestaat niet.";
-    const MELDING_GEEN_JONGERE = "Deze gebruiker is geen jongere.";
+    const MELDING_JONGERE_ONBEKEND = "Deze helper bestaat niet.";
+    const MELDING_GEEN_JONGERE = "Deze gebruiker is geen helper.";
     const MELDING_NIET_GOEDGEKEURD =
-      "Deze jongere is nog niet goedgekeurd en kan geen klussen doen.";
+      "Deze helper is nog niet goedgekeurd en kan geen klussen doen.";
     const MELDING_VOG_VERLOPEN =
-      "De VOG van deze jongere is verlopen. Eerst een nieuwe VOG, dan koppelen.";
+      "De VOG van deze helper is verlopen. Eerst een nieuwe VOG, dan koppelen.";
 
     const klusId = String(e.request.pathValue("id") || "").trim();
     if (!klusId) {

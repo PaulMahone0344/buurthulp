@@ -158,12 +158,20 @@ function plat(record, decodeer) {
   return uit;
 }
 
+/// B1: is dit de overgang naar "goedgekeurd"? Alleen dan wist de hook het
+/// ID-document en zet hij id_gecontroleerd_op/_door. Nogmaals goedgekeurd
+/// opslaan (al goedgekeurd) telt niet: dan is er niets nieuw gecontroleerd.
+function isGoedkeuring(oudeStatus, nieuweStatus) {
+  return String(nieuweStatus || "") === "goedgekeurd" && String(oudeStatus || "") !== "goedgekeurd";
+}
+
 module.exports = {
   AUDIT_COLLECTIES: AUDIT_COLLECTIES,
   GEHEIM: GEHEIM,
   MELDING_GEBLOKKEERD: MELDING_GEBLOKKEERD,
   isHhPad: isHhPad,
   isCoordinator: isCoordinator,
+  isGoedkeuring: isGoedkeuring,
   auditDetail: auditDetail,
   plat: plat,
   kort: kort,

@@ -106,10 +106,10 @@ const CTX = { jongere: 'Sanne', oudere: 'Mevrouw de Vries', klussoort: 'boodscha
 
 test('de oudere krijgt u en de voornaam van de jongere', () => {
   assert.equal(hulp.tekstVoor('toegewezen', 'hulpvrager', CTX).tekst, 'Sanne komt dinsdag 15 september om 10:00.');
-  assert.equal(hulp.tekstVoor('onderweg', 'hulpvrager', CTX).tekst, 'Sanne is onderweg naar u.');
+  assert.equal(hulp.tekstVoor('onderweg', 'hulpvrager', CTX).tekst, 'Sanne is onderweg naar jou.');
   assert.equal(hulp.tekstVoor('afgerond', 'hulpvrager', CTX).tekst, 'Sanne heeft de klus gedaan.');
-  assert.match(hulp.tekstVoor('geannuleerd', 'hulpvrager', { ...CTX, teruggegeven: true }).tekst, /^Sanne kan toch niet komen\. .* voor u\.$/);
-  assert.equal(hulp.tekstVoor('geannuleerd', 'hulpvrager', CTX).tekst, 'Uw hulpvraag gaat niet door.');
+  assert.match(hulp.tekstVoor('geannuleerd', 'hulpvrager', { ...CTX, teruggegeven: true }).tekst, /^Sanne kan toch niet komen\. .* voor jou\.$/);
+  assert.equal(hulp.tekstVoor('geannuleerd', 'hulpvrager', CTX).tekst, 'Je hulpvraag gaat niet door.');
 });
 
 test('de jongere krijgt je', () => {
@@ -136,7 +136,7 @@ test('familie en coordinator bij een incident', () => {
 });
 
 test('zonder naam of datum blijft de zin heel', () => {
-  assert.equal(hulp.tekstVoor('toegewezen', 'hulpvrager', {}).tekst, 'Iemand heeft uw hulpvraag aangenomen.');
+  assert.equal(hulp.tekstVoor('toegewezen', 'hulpvrager', {}).tekst, 'Iemand heeft je hulpvraag aangenomen.');
   assert.equal(hulp.tekstVoor('nieuwe_klus', 'jongere', {}).tekst, 'Een klus.');
   assert.equal(hulp.voornaam('  Sanne  Bakker '), 'Sanne');
 });

@@ -103,7 +103,7 @@ routerAdd(
   (e) => {
     const MELDING_BEZET = "Deze klus is net door iemand anders aangenomen.";
     const MELDING_WIJK = "Deze klus ligt niet in jouw wijk.";
-    const MELDING_GEEN_JONGERE = "Alleen een jongere kan een klus aannemen.";
+    const MELDING_GEEN_JONGERE = "Alleen een helper kan een klus aannemen.";
     const MELDING_NIET_GOEDGEKEURD =
       "Je aanmelding is nog niet goedgekeurd. Je kunt nog geen klussen aannemen.";
     const MELDING_GEEN_WIJK = "Stel eerst je werkgebied in.";

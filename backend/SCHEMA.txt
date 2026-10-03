@@ -806,3 +806,78 @@ BEHEERCHECK (scripts/62-beheercheck.mjs, dry-run standaard)
   collecties en routes), nieuwe velden alleen coordinator, blokkeren (inloggen,
   oud token, verversen, deblokkeren), een auditregel per beheerhandeling,
   telefonische klus doorloopt accepteren -> afgerond, alles opgeruimd.
+
+================================================================
+B1 - MODEL B: VELDEN, RULES, ID-WISSEN (3 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b1.txt)
+================================================================
+
+Besluit 3 okt: de rolcodes BLIJVEN (hulpvrager, jongere, familie,
+coordinator); in zichtbare tekst heten ze bewoner en helper. Velden
+verwijderen (selfie, intake_op, telefoon, vog_status) gebeurt NIET in B1:
+de app gebruikt ze nog; dat volgt na B2. B1 is additief + hooks.
+
+VELDEN (scripts/70-b1-velden.mjs, additief, idempotent)
+  hh_users      ouder_email           e-mail (helper <18)
+                ouder_telefoon        tekst, max 20 (helper <18)
+                ouder_toestemming_op  datum   (alleen coordinator/server)
+                ouder_iban_ok         ja/nee  (alleen coordinator/server)
+                huisnummer            tekst, max 10
+                (al aanwezig, overgeslagen: geboortedatum (M1), adres,
+                postcode, plaats (M4))
+  hh_profielen  id_gecontroleerd_op   datum   (alleen coordinator; hook)
+                id_gecontroleerd_door verwijzing naar hh_users, 1, geen
+                                      cascade (alleen coordinator; hook)
+                vog_gezien_op         datum, helper 18+; alleen de datum,
+                                      niet het document (alleen coordinator)
+
+RULES (scripts/71-b1-rules.mjs, GEWIKKELD zoals 61; list/view/delete
+ongemoeid)
+  hh_users.createRule/updateRule      (huidig) && ((coordinator) ||
+    (@request.body.ouder_toestemming_op:isset = false &&
+     @request.body.ouder_iban_ok:isset = false))
+  hh_profielen.createRule/updateRule  (huidig) && ((coordinator) ||
+    (@request.body.id_gecontroleerd_op:isset = false &&
+     @request.body.id_gecontroleerd_door:isset = false &&
+     @request.body.vog_gezien_op:isset = false))
+  ouder_email, ouder_telefoon en huisnummer mag de eigenaar zelf meesturen
+  (ook bij anoniem registreren); daarvoor verandert geen rule.
+  hh_profielen lezen blijft: eigen profiel of coordinator. Een bewoner kan
+  het profiel van een helper dus niet lezen en document_foto (PROTECTED)
+  niet ophalen, ook niet met een eigen bestandstoken.
+  VOLGORDE: 70 --apply vóór 71 --apply (71 weigert anders). Draai 02, 06,
+  13, 21 of 61 daarna niet meer met --apply zonder 71 opnieuw.
+
+HOOK (backend/pb_hooks/hh_beheer.pb.js punt 3 + hh_beheer_hulp.js
+isGoedkeuring; deploy met scripts/73-hook-deploy.sh)
+  onRecordUpdateRequest hh_profielen: zet een COORDINATOR via de API
+  verificatiestatus van iets anders naar "goedgekeurd", dan VOOR het
+  opslaan: document_foto leeg (PocketBase verwijdert het bestand),
+  id_gecontroleerd_op = nu, id_gecontroleerd_door = de coordinator.
+  Nogmaals goedgekeurd opslaan doet niets; afwijzen wist niet. Superuser
+  of $app (scripts, andere hooks) valt er niet onder. De M14-auditregel
+  noemt document_foto alleen bij naam.
+
+TEKSTEN (hooks, zichtbaar voor gebruikers; rolcodes en veldnamen NIET
+veranderd)
+  hh_familie_hulp.js   "krijgt uw familielid" -> "krijgt je familielid";
+                       "U heeft vandaag al vaak" -> "Je hebt vandaag al vaak"
+  hh_meldingen_hulp.js "uw familielid" -> "je familielid"; "uw hulpvraag"
+                       -> "je hulpvraag" (2x); "Onderweg naar u" ->
+                       "Onderweg naar jou" (titel + tekst); "voor u." ->
+                       "voor jou." (2x)
+  hh_coordinator.pb.js "jongere" -> "helper" in 5 meldingen
+  hh_klussen.pb.js     "Alleen een jongere kan" -> "Alleen een helper kan"
+
+B1CHECK (scripts/72-b1check.mjs, dry-run standaard)
+  Zonder --apply: velden en slot (alleen lezen). Met --apply, met eigen
+  tijdelijke accounts "b1check-...@heitjehulp.invalid": eigenaar zet de
+  vrije velden wel en de server-velden niet (ook niet bij registreren of
+  profiel aanmaken), coordinator wel; bewoner kan profiel en ID-foto van
+  een helper niet ophalen; goedkeuren wist het bestand op de server en
+  zet id_gecontroleerd_*; afwijzen wist niet; alles opgeruimd.
+  Test zonder server: node --test backend/tests/*.test.mjs (64 tests).
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 70 --apply -> 71 --apply -> 73-hook-deploy.sh ->
+  72-b1check.mjs --apply
