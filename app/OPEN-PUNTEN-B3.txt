@@ -1,0 +1,69 @@
+HEITJEHULP B3 - OUDER-TOESTEMMING MET CODE: OPEN PUNTEN (4 okt 2026)
+Branch b3/ouder, worktree ~/flutter-builds/hh-b3. Backend NIET op prod
+(proefrit: backend/proefrit-b3.txt).
+
+KEUZES DIE IK MAAKTE
+  - Eigen collectie hh_ouder_toestemming (één rij per helper) in plaats van
+    velden op hh_users: de helper leest zijn eigen hh_users-rij, dus hashes,
+    IBAN en ouder-naam horen daar niet. Het resultaat (ouder_toestemming_op,
+    ouder_iban_ok) staat wel op hh_users; daar kijken rule en hook al naar.
+  - Code (6 cijfers) en link-token (40 tekens) alleen als sha256; de code
+    gaat nooit naar de app of in een log. Geen geheime sleutel op de server
+    nodig (zou een instelling op prod zijn): code verloopt na 24 uur en na
+    5 fouten, dus raden kan niet.
+  - De link (#/ouder?t=...) slaat de code-stap over zolang de code geldig
+    is: link en code staan in dezelfde mail, de token staat achter de #
+    (nooit in een serverlog of Referer) en de toestemming vraagt daarna nog
+    naam, IBAN en het vinkje. Na 24 uur toont de link alleen de stand;
+    intrekken met de link kan altijd. Zonder link: e-mail + code.
+  - Elke nieuwe mail geeft een nieuwe code EN een nieuwe link; de oude link
+    werkt dan niet meer ("gebruik de nieuwste mail").
+  - Max 3 mails per dag per helper (UTC-dag), 30 publieke verzoeken per IP
+    per uur. Een mislukte mail (SMTP) telt niet mee.
+  - Na intrekken mag de helper opnieuw een mail sturen (zie vraag 3).
+  - Status voor de app via een 5e route GET /api/hh/ouder/status (de app mag
+    de collectie niet lezen).
+  - App: na aanmelden onder 18 eerst de stap "Ouder" (mail gaat meteen,
+    "Stuur opnieuw", adres wijzigen), dan "Je aanmelding". Op Start komt de
+    ouder-balk nu VOOR "wordt nagekeken"; na toestemming verdwijnt hij (of
+    volgt "wordt nagekeken"). Ingetrokken heeft een eigen melding.
+  - Het aanmeldveld blijft "E-mail of mobiel van je ouder" (B2). Wie een
+    nummer gaf, krijgt bij de stap Ouder "Vul ook het e-mailadres van je
+    ouder in" (K1); het nummer blijft bewaard.
+  - AVP-vinkje is niet verplicht (het is een extra, onderzoek punt 3).
+  - Tiel-West en Passewaaij zijn regio (91); 04 en 82 lezen dat en
+    verwachten het bijpassende gedrag.
+  - Familie (K5): alleen code weg (app, website-paneel, niet meer in de
+    hook-deploy). Een oud account met rol familie kan niet meer inloggen in
+    de app (nette fout) en heeft in het paneel "geen rol". hh_koppelingen,
+    de familie-hooks op de server en hun data blijven staan.
+  - Beheerpaneel: "Ouder gaf toestemming op <datum>" en "AVP: ja/nee",
+    alleen lezen, geen knop.
+
+VÓÓR LIVEGANG
+  - De link in de mail is https://heitjehulp.nl/#/ouder: werkt pas als de
+    website online is (Ibrahim: ~17 okt).
+  - Teksten "Wat je moet weten" (o.a. "Jij blijft verantwoordelijk",
+    "we zijn geen werkgever") en de AVP-uitleg: VOORLOPIG, de jurist moet
+    ze keuren.
+  - Afzender van de mail (nu QawayahBase / info@bovexa.nl), zie vraag 1.
+
+OPEN (niet in B3)
+  - Ouder keurt elke klus goed (onderzoek punt 1) = B5. Fundament ligt er:
+    token_hash en de ouder-sessie op hh_ouder_toestemming.
+  - Tweede ouder bij gescheiden ouders (onderzoek punt 4): niet gebouwd.
+  - Sms naar de ouder (K1): wacht op een sms-dienst.
+  - Koppelen door de meldkamer (hh_coordinator.pb.js) kijkt nog niet naar
+    ouder-toestemming (B11, al in OPEN-PUNTEN-B2).
+  - De IP-teller zit in het geheugen van de server ($app.store): een
+    herstart zet hem terug. De 5-pogingen-grens per code staat wel in de
+    database.
+  - Oude checks 07, 11, 65 en 42 (familie) passen niet meer bij B2/B3; 42
+    werkt nog zolang de familie-hooks op de server staan.
+
+VRAGEN VOOR IBRAHIM
+1. De ouder krijgt mail van "QawayahBase" <info@bovexa.nl> (de instelling voor alle apps); wil je vóór livegang een eigen afzender (bv. info@heitjehulp.nl), en hoe (aparte mailbox of later per app)?
+2. Trekt een ouder de toestemming in terwijl het kind al een klus heeft aangenomen: moet die klus dan vrijkomen (nu blijft hij staan)?
+3. Mag een helper na intrekken zelf meteen opnieuw een mail aan de ouder sturen (nu ja, max 3 per dag), of moet eerst de meldkamer kijken?
+4. Sms kan nog niet: zal ik het aanmeldveld omzetten naar alleen "E-mailadres van je ouder" (nu "e-mail of mobiel")?
+5. De familie-accounts en hh_koppelingen op prod kunnen niet meer inloggen of gebruikt worden: wanneer mogen die (met een apart script) weg?

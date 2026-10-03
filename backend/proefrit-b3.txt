@@ -1,0 +1,131 @@
+HeitjeHulp B3 — proefrit (DRY-RUN tegen prod, niets geschreven) 2026-10-04
+Branch b3/ouder (worktree ~/flutter-builds/hh-b3). NOG NIET OP PROD.
+
+WAT VERANDERT ER OP PROD (na JA)
+  Collectie (90, NIEUW): hh_ouder_toestemming (lezen alleen coordinator,
+    hash-velden hidden, schrijven alleen de hook). Raakt geen bestaande
+    collectie.
+  Data (91): hh_wijken Tiel-West en Passewaaij regio = ja (2 rijen, alleen
+    dat ene veld). Gevolg: iedereen in Tiel ziet alle klussen in Tiel.
+    Alleen seed-/testaccounts wonen nog in die twee wijken.
+  Hooks (93): NIEUW hh_ouder_hulp.js + hh_ouder.pb.js. Verder niets.
+    hh_familie.pb.js/hh_familie_hulp.js blijven op de server staan (K5:
+    niet meer meesturen, niet weghalen).
+  Mail: de hook stuurt via de BESTAANDE SMTP van de server (TransIP,
+    afzender "QawayahBase" <info@bovexa.nl>). Geen instelling gewijzigd.
+  Geen datamigratie, geen gebruikers of collecties verwijderd.
+  Details: SCHEMA.txt sectie B3.
+
+LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie; schema = export van de 16
+hh_-collecties van prod, alleen gelezen; hooks uit deze branch; nep-SMTP op
+127.0.0.1:2525 die alles opvangt en NIETS doorstuurt; nep-Nominatim)
+  90 dry-run -> --apply -> nog een keer: "niets te doen"; 91 idem.
+  92 --apply: 78 groen, 0 rood (0 mails: .invalid wordt nooit verstuurd).
+  Hele flow met ECHTE mail-route naar de nep-SMTP (scratchpad
+  proef-flow.mjs): 20 groen, 0 rood — helper 14 jaar registreert (wijk via
+    nep-Nominatim) -> versturen -> 1 mail gevangen: aan de ouder, From
+    "QawayahBase <info@bovexa.nl>", onderwerp "Daan wil helper worden bij
+    HeitjeHulp", code + link https://heitjehulp.nl/#/ouder?t=..., "Code 24
+    uur geldig", "Was jij dit niet? Negeer deze mail."; de code staat
+    nergens in de database -> ouder: code + e-mail -> sessie ->
+    toestemming -> helper ziet de klus -> intrekken met de link -> klus
+    direct weg + bevestigingsmail gevangen -> rate-limit per IP 429.
+  Website tegen dezelfde lokale server (vite + Playwright, 390 breed):
+    link uit de echte mail -> stap 2 met de echte voornaam -> IBAN, naam,
+    vinkjes -> "Bedankt! Je toestemming is binnen." -> intrekken ->
+    "Je toestemming is ingetrokken". Geen horizontale scroll op 320, 390,
+    768, 1440.
+  Oude checks lokaal (met lokale seed in een kopie, GEHEIMEN.txt niet
+    aangeraakt): 04 223 groen (zowel met als zonder regio), 50 60 groen,
+    82 80 groen (beide standen), 72 54 groen, 62 118 groen, 42 41 groen.
+
+=== DRY-RUNS TEGEN PROD (alleen lezen) ===
+
+=== node scripts/90-b3-collectie.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+  + ZOU aanmaken: hh_ouder_toestemming (base, 19 velden)
+
+DRY-RUN: de collectie zou worden aangemaakt. Draai met --apply.
+
+=== node scripts/91-b3-wijken.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+  + ZOU Tiel / Tiel-West: regio nee -> ja
+  + ZOU Tiel / Passewaaij: regio nee -> ja
+  ✓ Tiel / Tiel en omstreken: regio ja
+
+DRY-RUN: 2 wijk(en) zouden regio = ja krijgen. Draai met --apply.
+
+=== node scripts/92-b3check.mjs ===
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+DRY-RUN: er wordt NIETS geschreven.
+
+B. Voorwaarden op de server (alleen lezen)
+  ✗ collectie hh_ouder_toestemming bestaat — draai 90 --apply
+  ✗ route POST /api/hh/ouder/versturen bestaat (anoniem 401, kreeg 404) — draai 93-hook-deploy.sh
+  ✗ route GET /api/hh/ouder/status bestaat (anoniem 401, kreeg 404) — draai 93-hook-deploy.sh
+  ✓ wijk "Tiel en omstreken" bestaat (B2)
+  ✗ wijk Tiel-West is regio (91) — draai 91 --apply
+  ✗ wijk Passewaaij is regio (91) — draai 91 --apply
+  ✓ hh_klussen.listRule eist ouder-toestemming of VOG (B2)
+
+Wat --apply ZOU doen:
+  · tijdelijke accounts maken (b3check-...@heitjehulp.invalid): coordinator, bewoner, 4 helpers;
+  · ouder-mails "versturen" naar .invalid-adressen (de hook verstuurt daar NOOIT mail);
+  · als superuser een bekende code/link-token (alleen de hash) in de rij zetten en de routes nalopen;
+  · één eigen open klus: wie ziet hem en wie mag accepteren, vóór/na toestemming en na intrekken;
+  · leesrechten op hh_ouder_toestemming per rol;
+  · alles opruimen en nameten.
+
+2 groen, 5 rood (leescontroles).
+Rood is verwacht zolang 90, 91 en 93 nog niet uitgerold zijn.
+
+=== node scripts/94-b3-mailcheck.mjs ===
+Verbonden met https://api.qawayahbase.com (ALLEEN LEZEN)
+
+  ✓ SMTP staat aan (smtp.transip.email:587)
+  · afzender: "QawayahBase" <info@bovexa.nl>
+  · appURL van de server: https://qawayahbase.com — de link in de mail gebruikt https://heitjehulp.nl (hh_ouder_hulp.js BASIS_URL)
+
+
+LET OP VOOR DE UITROL
+  1. 92 --apply op prod verstuurt GEEN mail (alleen .invalid-adressen) en
+     doet ~20 publieke verzoeken: niet twee keer binnen een uur vanaf
+     hetzelfde adres draaien (dan 429 "teveel").
+  2. 93 heeft ssh -n zoals 83. Auto-mode uit; stap 2 (lijst) nalezen: er
+     komen precies 2 nieuwe bestanden bij, geen diff (beide nieuw).
+  3. De link in de mail wijst naar https://heitjehulp.nl/#/ouder. Die site
+     staat nog niet online (tot ~17 okt). Tot die tijd kan een ouder de code
+     nergens invullen. Volgorde: eerst website online, dan pas echte
+     helpers onder 18 laten aanmelden (of de mail later opnieuw laten
+     sturen). De website moet VITE_POCKETBASE_URL=https://api.qawayahbase.com
+     hebben (zoals het beheerpaneel).
+  4. De afzender is "QawayahBase" <info@bovexa.nl> (globale instelling,
+     geldt voor alle apps). Zie OPEN-PUNTEN-B3 vraag 1.
+  5. Eerst backend, dan website, dan app. Een oude app (B2) blijft werken:
+     die kent de routes niet en kijkt alleen naar ouder_toestemming_op.
+     Een nieuwe app zonder backend valt terug op B2 (geen stap Ouder).
+  6. Na 91 zien de seed-helpers in Tiel-West ook Passewaaij-klussen; 04 en
+     82 weten dat (ze lezen de regio-vlag).
+
+UITROLLIJST (vanuit backend/, .env laden: set -a; . /Users/h/Desktop/qawayhabase/.env; set +a)
+  1. node scripts/00-backup.mjs
+  2. node scripts/94-b3-mailcheck.mjs          (alleen lezen: SMTP aan?)
+  3. node scripts/90-b3-collectie.mjs          (dry-run, lees na)
+     node scripts/90-b3-collectie.mjs --apply
+  4. node scripts/91-b3-wijken.mjs             (dry-run: 2 wijken)
+     node scripts/91-b3-wijken.mjs --apply
+  5. ./scripts/93-hook-deploy.sh               (stap 2 nalezen, dan y)
+  6. node scripts/92-b3check.mjs --apply       (verwacht: 78 groen, 0 rood)
+  7. node scripts/82-b2check.mjs --apply       (verwacht: 80 groen)
+     node scripts/72-b1check.mjs --apply       (verwacht: 54 groen)
+     node scripts/62-beheercheck.mjs --apply   (verwacht: 118 groen)
+     node scripts/04-rulecheck.mjs --apply     (verwacht: 223 groen)
+     node scripts/50-koppelcheck.mjs --apply   (verwacht: 60 groen)
+  8. Website (ouder-pagina's + beheerpaneel) en daarna de app uitrollen.
+  ROLLBACK: ./scripts/93-hook-deploy.sh --rollback (haalt de 2 nieuwe
+  bestanden weg); node scripts/91-b3-wijken.mjs --terug --apply (regio weer
+  uit). De collectie uit 90 mag blijven staan (doet niets zonder hooks); weg
+  kan alleen met een apart besluit (er staan dan echte ouder-gegevens in).

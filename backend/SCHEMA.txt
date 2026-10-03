@@ -1014,3 +1014,87 @@ B2CHECK (scripts/82-b2check.mjs, dry-run standaard)
 UITROLLEN (volgorde)
   00-backup.mjs -> 81 --apply -> 80 --apply -> 84 --apply ->
   83-hook-deploy.sh -> 82 --apply -> 72, 62, 04, 50
+
+================================================================
+B3 - OUDER-TOESTEMMING MET CODE (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b3.txt)
+================================================================
+
+Keuzes (prompt B3): K1 alleen e-mail (sms later); K2 de OUDER vult de code
+in op de website, niet het kind in de app; K3 ouder-pagina's in website/
+op #/ouder, link met vaste basis https://heitjehulp.nl (werkt pas als de
+site online is); K4 mail via de bestaande globale SMTP van de server
+(geen instelling gewijzigd); K5 familie alleen uit de CODE (collecties en
+data blijven); K6 alleen het fundament voor per-klus-goedkeuren (B5).
+
+hh_ouder_toestemming  NIEUW (scripts/90-b3-collectie.mjs), één rij per helper
+  helper               relatie hh_users, verplicht, 1, cascade
+  ouder_email          e-mail, verplicht
+  code_hash            tekst, HIDDEN  sha256("hh-ouder-code:<helper>:<code>")
+  code_verloopt_op     datum (24 uur)
+  pogingen             getal (max 5 foute codes, dan geblokkeerd)
+  token_hash           tekst, HIDDEN  sha256 van de link-token (40 tekens)
+  sessie_hash          tekst, HIDDEN  sha256 van de ouder-sessie
+  sessie_verloopt_op   datum (30 minuten)
+  status               verstuurd | gegeven | ingetrokken | verlopen
+  ouder_naam, iban (NL, mod-97), avp_verklaard (ja/nee)
+  verstuur_dag, verstuur_aantal (max 3 mails per UTC-dag), laatst_verstuurd_op
+  gegeven_op, ingetrokken_op, created, updated
+  Indexen: uniek helper; token_hash; ouder_email.
+  Regels: lezen ALLEEN coordinator (en de hash-velden ook niet: hidden);
+  aanmaken/bijwerken/verwijderen niemand (null). Alles via de hook ($app).
+  De code zelf staat NERGENS (ook niet in een log); de app krijgt hem nooit.
+  Waarom een eigen collectie: de helper leest zijn eigen hh_users-rij, dus
+  hashes en IBAN horen daar niet. Het RESULTAAT staat wel op hh_users
+  (ouder_toestemming_op, ouder_iban_ok uit B1): daar kijken de lijst-rule
+  (B2) en de accepteer-hook al naar.
+
+hh_wijken  (scripts/91-b3-wijken.mjs, besluit Ibrahim): Tiel-West en
+  Passewaaij krijgen regio = ja. Met de B2-rule ziet dan iedereen in Tiel
+  alle klussen in Tiel. 04-rulecheck en 82-b2check lezen of de wijken regio
+  zijn en verwachten dan het nieuwe gedrag (anders het oude). 50 blijft
+  groen (andere_wijk kijkt naar het wijk-id). --terug --apply draait het
+  terug.
+
+HOOKS (deploy met scripts/93-hook-deploy.sh; 2 nieuwe bestanden, verder
+niets; hh_familie*.js gaan niet meer mee maar blijven op de server)
+  hh_ouder_hulp.js (geen hook): alle logica en de mailteksten, getest
+    zonder server en zonder mail (backend/tests/hh_ouder_hulp.test.mjs).
+  hh_ouder.pb.js:
+    POST /api/hh/ouder/versturen   ingelogde helper < 18. body {ouder_email?}
+      Nieuwe code + nieuwe link-token (oude vervallen), pogingen 0, mail
+      naar de ouder. Max 3 per dag (429 limiet). 400 email/eigenadres,
+      403 rol, 409 volwassen/geboortedatum/algegeven, 502 mail (telt niet).
+      Een nieuw adres komt ook op hh_users.ouder_email.
+    GET  /api/hh/ouder/status      ingelogde helper: status, nodig,
+      ouder_email, verstuurd_op, geblokkeerd, gegeven_op, nog_te_sturen.
+    POST /api/hh/ouder/code        PUBLIEK. {email, code} of {token}
+      Goede code -> ouder-sessie (30 min). 5x fout -> 429 geblokkeerd (ook
+      de goede code) tot een nieuwe code. Onbekend adres = zelfde antwoord
+      als een foute code. De link (token) slaat de code over zolang de code
+      geldig is; daarna geeft hij alleen de stand (gegeven/verlopen/
+      ingetrokken).
+    POST /api/hh/ouder/toestemming PUBLIEK met sessie. {sessie, naam, iban,
+      akkoord: true, avp} -> rij gegeven + hh_users.ouder_toestemming_op =
+      nu, ouder_iban_ok = ja (in één transactie).
+    POST /api/hh/ouder/intrekken   PUBLIEK met link-token (altijd geldig)
+      of sessie -> rij ingetrokken, ouder_toestemming_op leeg, ouder_iban_ok
+      nee; de helper ziet direct geen open klussen meer. Bevestigingsmail.
+    Rate-limit: alle publieke routes samen 30 per IP per uur ($app.store).
+    Adressen op .invalid/.test/.example/.localhost krijgen nooit mail.
+  K6-fundament: token_hash + sessie op de rij. B5 kan per klus een route
+    toevoegen die dezelfde token/sessie accepteert.
+
+CHECKS
+  92-b3check.mjs (dry-run standaard): tijdelijke accounts op .invalid
+    (nooit mail), zet als superuser een bekende code-hash, en bewijst
+    versturen, 5 pogingen, verlopen, opnieuw sturen, limiet, toestemming
+    zet het veld, intrekken wist het, < 18 zonder toestemming kan niet
+    accepteren, geen API-leestoegang behalve coordinator, code nooit
+    leesbaar. Hooguit 1x per uur per IP draaien (rate-limit).
+  94-b3-mailcheck.mjs: ALLEEN LEZEN, SMTP aan en afzender.
+  Test zonder server: node --test backend/tests/*.test.mjs (142 tests).
+
+UITROLLEN (volgorde)
+  00-backup.mjs -> 94 (lezen) -> 90 --apply -> 91 --apply ->
+  93-hook-deploy.sh -> 92 --apply -> 82, 72, 62, 04, 50
