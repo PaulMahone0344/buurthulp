@@ -1,7 +1,7 @@
 import 'package:pocketbase/pocketbase.dart';
 
+import '../../features/toegang/domein/aanmelding.dart';
 import '../../features/toegang/model/hh_gebruiker.dart';
-import '../../features/toegang/model/hh_rol.dart';
 import '../hh_fout.dart';
 import '../result.dart';
 import 'pocketbase_gateway.dart';
@@ -14,14 +14,9 @@ const hhUsersCollectie = 'hh_users';
 abstract interface class AuthGateway {
   /// Maakt het account aan, logt meteen in en vraagt de bevestigingsmail
   /// aan (best-effort). Stuurt altijd rol en taal = nl mee (backend
-  /// OPEN-PUNTEN 8 en 9). [rol] mag geen coordinator zijn.
-  Future<Result<HhGebruiker>> registreren({
-    required String naam,
-    required String email,
-    required String wachtwoord,
-    required HhRol rol,
-    String? telefoon,
-  });
+  /// OPEN-PUNTEN 8 en 9) en de velden van de [aanmelding] (B2: adres of
+  /// geboortedatum, postcode, huisnummer, ouder-contact; geen telefoon).
+  Future<Result<HhGebruiker>> registreren(HhAanmelding aanmelding);
 
   Future<Result<HhGebruiker>> inloggen({
     required String email,
@@ -60,25 +55,20 @@ class PocketBaseAuthGateway implements AuthGateway {
       client.collection(hhUsersCollectie);
 
   @override
-  Future<Result<HhGebruiker>> registreren({
-    required String naam,
-    required String email,
-    required String wachtwoord,
-    required HhRol rol,
-    String? telefoon,
-  }) {
-    assert(rol.kanZelfRegistreren, 'coordinator registreert niet zelf');
+  Future<Result<HhGebruiker>> registreren(HhAanmelding aanmelding) {
+    final email = aanmelding.email;
+    final wachtwoord = aanmelding.wachtwoord;
     return _gateway.voerUit((client) async {
       await _users(client).create(
         body: {
-          'naam': naam,
+          ...aanmelding.velden,
+          'naam': aanmelding.naam,
           'email': email,
           'password': wachtwoord,
           'passwordConfirm': wachtwoord,
-          'rol': rol.code,
+          'rol': aanmelding.rol.code,
           'taal': HhTaal.nl.code,
           'emailVisibility': false,
-          if (telefoon != null && telefoon.isNotEmpty) 'telefoon': telefoon,
         },
       );
       final auth = await _users(client).authWithPassword(email, wachtwoord);

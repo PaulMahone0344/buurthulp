@@ -96,6 +96,13 @@ final _gevallen = [
     const CoordinatorStubScreen(),
     SessieIngelogd(testGebruiker(HhRol.coordinator)),
   ),
+  // B2: aanmelden als helper (achteraan, zodat de indexen erboven blijven).
+  const _Geval(
+    'G4 registreren helper',
+    RegistrerenScreen(),
+    _uit,
+    gekozenRol: HhRol.jongere,
+  ),
 ];
 
 Future<void> _pomp(
@@ -252,7 +259,12 @@ void main() {
       await _pomp(tester, _gevallen[5], dichtheid: HhDichtheid.groot);
 
       expect(find.byType(HhTerugKnop), findsOneWidget);
-      expect(find.byType(HhKnop), findsOneWidget);
+      // B2: één hoofdknop; "wachtwoord tonen" en "lees de voorwaarden"
+      // zijn kleine tekstknoppen.
+      final hoofd = tester
+          .widgetList<HhKnop>(find.byType(HhKnop))
+          .where((k) => k.soort == HhKnopSoort.primair);
+      expect(hoofd, hasLength(1));
     });
   });
 }

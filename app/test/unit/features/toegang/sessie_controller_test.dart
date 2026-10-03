@@ -5,6 +5,7 @@ import 'package:heitjehulp_app/core/hh_fout.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/result.dart';
+import 'package:heitjehulp_app/features/toegang/domein/aanmelding.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/features/toegang/provider/sessie_providers.dart';
@@ -149,15 +150,21 @@ void main() {
       final result = await t.container
           .read(sessieControllerProvider.notifier)
           .registreren(
-            naam: 'Nieuw',
-            email: 'nieuw@voorbeeld.nl',
-            wachtwoord: 'wachtwoord1',
-            rol: HhRol.hulpvrager,
+            const BewonerAanmelding(
+              naam: 'Nieuw',
+              email: 'nieuw@voorbeeld.nl',
+              wachtwoord: 'wachtwoord1',
+              straat: 'Dorpsstraat',
+              huisnummer: '1',
+              postcode: '4003 AB',
+              plaats: 'Tiel',
+            ),
           );
 
       expect(result, isA<Ok<void>>());
       expect(t.gateway.laatsteRegistratieBody?['rol'], 'hulpvrager');
       expect(t.gateway.laatsteRegistratieBody?['taal'], 'nl');
+      expect(t.gateway.laatsteRegistratieBody?['adres'], 'Dorpsstraat 1');
       expect(t.container.read(huidigeGebruikerProvider)?.naam, 'Nieuw');
       expect(t.container.read(dichtheidProvider), HhDichtheid.normaal);
     });
