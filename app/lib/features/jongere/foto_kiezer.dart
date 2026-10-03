@@ -20,7 +20,7 @@ class HhFoto {
 /// Ok(null) als de gebruiker annuleert; Err als het toestel geen camera
 /// heeft of de plugin faalt.
 abstract interface class FotoKiezer {
-  Future<Result<HhFoto?>> kies(HhFotoBron bron, {bool isSelfie = false});
+  Future<Result<HhFoto?>> kies(HhFotoBron bron);
 }
 
 class ImagePickerFotoKiezer implements FotoKiezer {
@@ -36,7 +36,7 @@ class ImagePickerFotoKiezer implements FotoKiezer {
   static const kwaliteit = 85;
 
   @override
-  Future<Result<HhFoto?>> kies(HhFotoBron bron, {bool isSelfie = false}) async {
+  Future<Result<HhFoto?>> kies(HhFotoBron bron) async {
     try {
       final bestand = await _picker.pickImage(
         source: switch (bron) {
@@ -46,9 +46,7 @@ class ImagePickerFotoKiezer implements FotoKiezer {
         maxWidth: maxLangeZijde,
         maxHeight: maxLangeZijde,
         imageQuality: kwaliteit,
-        preferredCameraDevice: isSelfie
-            ? CameraDevice.front
-            : CameraDevice.rear,
+        preferredCameraDevice: CameraDevice.rear,
         requestFullMetadata: false,
       );
       if (bestand == null) return Result.ok(null);
@@ -68,11 +66,11 @@ class FakeFotoKiezer implements FotoKiezer {
 
   HhFoto? volgende;
   HhFout? volgendeFout;
-  final List<({HhFotoBron bron, bool isSelfie})> aanroepen = [];
+  final List<HhFotoBron> aanroepen = [];
 
   @override
-  Future<Result<HhFoto?>> kies(HhFotoBron bron, {bool isSelfie = false}) async {
-    aanroepen.add((bron: bron, isSelfie: isSelfie));
+  Future<Result<HhFoto?>> kies(HhFotoBron bron) async {
+    aanroepen.add(bron);
     final fout = volgendeFout;
     if (fout != null) {
       volgendeFout = null;

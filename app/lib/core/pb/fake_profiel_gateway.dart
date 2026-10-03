@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import '../../features/jongere/model/hh_beschikbaarheid.dart';
 import '../../features/jongere/model/hh_profiel.dart';
 import '../../features/jongere/model/hh_screening_status.dart';
 import '../hh_fout.dart';
@@ -39,8 +38,8 @@ class FakeProfielGateway implements ProfielGateway {
   }) : _profielen = {...profielen},
        _accounts = {...accounts};
 
-  /// Een jongere die de hele screening al door is (alle stappen af,
-  /// goedgekeurd): de staat waarin de landing /jongere bereikbaar is.
+  /// Een helper van 18+ die helemaal rond is (goedgekeurd, ID
+  /// gecontroleerd, VOG gezien): de staat waarin hij klussen ziet.
   FakeProfielGateway.goedgekeurd(String gebruikerId)
     : this(
         profielen: {
@@ -48,25 +47,16 @@ class FakeProfielGateway implements ProfielGateway {
             id: 'profiel-$gebruikerId',
             gebruikerId: gebruikerId,
             verificatiestatus: HhScreeningStatus.goedgekeurd,
-            vogStatus: HhScreeningStatus.goedgekeurd,
-            isIbanGeverifieerd: true,
             straalKm: 3,
-            beschikbaarheid: HhBeschikbaarheid.van({
-              HhDag.ma: {HhDagdeel.middag},
-              HhDag.za: {HhDagdeel.ochtend},
-            }),
-            klustypeIds: const {'type-boodschappen', 'type-tuin'},
             overMij: 'Ik help graag met boodschappen.',
-            documentFoto: 'document_1.jpg',
-            selfie: 'selfie_1.jpg',
-            iban: 'NL91ABNA0417164300',
             vogAangevraagdOp: DateTime.utc(2026, 9, 1),
+            vogGezienOp: DateTime.utc(2026, 9, 20),
+            idGecontroleerdOp: DateTime.utc(2026, 9, 20),
           ),
         },
         accounts: {
           gebruikerId: HhAccountGegevens(
-            fotoBestand: 'foto_1.jpg',
-            geboortedatum: DateTime.utc(2008, 5, 14),
+            geboortedatum: DateTime.utc(2000, 5, 14),
             wijkId: 'wijk-west',
           ),
         },
@@ -108,7 +98,6 @@ class FakeProfielGateway implements ProfielGateway {
   HhFout? volgendeFout;
 
   Map<String, dynamic>? laatsteProfielBody;
-  Map<String, dynamic>? laatsteAccountBody;
   final List<FakeUpload> uploads = [];
   int _teller = 0;
 
@@ -116,19 +105,33 @@ class FakeProfielGateway implements ProfielGateway {
   HhAccountGegevens accountVan(String gebruikerId) =>
       _accounts[gebruikerId] ?? const HhAccountGegevens();
 
-  /// Voor tests: de coordinator (server) verandert een status.
-  void zetStatus(
-    String gebruikerId, {
-    HhScreeningStatus? verificatiestatus,
-    HhScreeningStatus? vogStatus,
-  }) {
+  /// Voor tests: de coordinator (server) verandert een status. Goedkeuren
+  /// wist de ID-foto en zet id_gecontroleerd_op, zoals de B2-hook.
+  void zetStatus(String gebruikerId, {HhScreeningStatus? verificatiestatus}) {
     final huidig = _profielen[gebruikerId];
     if (huidig == null) return;
+    final wordtGoedgekeurd =
+        verificatiestatus == HhScreeningStatus.goedgekeurd &&
+        huidig.verificatiestatus != HhScreeningStatus.goedgekeurd;
     _profielen[gebruikerId] = huidig.copyWith(
       verificatiestatus: verificatiestatus,
-      vogStatus: vogStatus,
+      documentFoto: wordtGoedgekeurd ? '' : null,
+      idGecontroleerdOp: wordtGoedgekeurd
+          ? () => DateTime.utc(2026, 10, 3)
+          : null,
     );
   }
+
+  /// Voor tests: de meldkamer zag de VOG (of haalt hem weg met null).
+  void zetVogGezien(String gebruikerId, DateTime? op) {
+    final huidig = _profielen[gebruikerId];
+    if (huidig == null) return;
+    _profielen[gebruikerId] = huidig.copyWith(vogGezienOp: () => op);
+  }
+
+  /// Voor tests: de accountvelden (geboortedatum, ouder-toestemming).
+  void zetAccount(String gebruikerId, HhAccountGegevens account) =>
+      _accounts[gebruikerId] = account;
 
   HhFout? _neemFout() {
     if (isOffline) return const HhFout(HhFoutSoort.geenVerbinding);
@@ -191,31 +194,31 @@ class FakeProfielGateway implements ProfielGateway {
   }
 
   @override
-  Future<Result<HhProfiel>> uploadProfielFoto({
+  Future<Result<HhProfiel>> uploadIdFoto({
     required String profielId,
-    required String veld,
     required Uint8List bytes,
     required String bestandsnaam,
   }) async {
     final fout = _neemFout();
     if (fout != null) return Result.err(fout);
     final huidig = _zoekProfiel(profielId);
-    if (huidig == null) {
+    // Na goedkeuring weigert de server een nieuwe ID-foto (80-b2-rules).
+    if (huidig == null ||
+        huidig.verificatiestatus == HhScreeningStatus.goedgekeurd) {
       return Result.err(const HhFout(HhFoutSoort.nietGevonden));
     }
     uploads.add(
       FakeUpload(
         collectie: hhProfielenCollectie,
         recordId: profielId,
-        veld: veld,
+        veld: 'document_foto',
         bestandsnaam: bestandsnaam,
         bytes: bytes.length,
       ),
     );
-    final opServer = '${veld}_${uploads.length}.jpg';
-    final nieuw = veld == 'selfie'
-        ? huidig.copyWith(selfie: opServer)
-        : huidig.copyWith(documentFoto: opServer);
+    final nieuw = huidig.copyWith(
+      documentFoto: 'document_foto_${uploads.length}.jpg',
+    );
     _profielen[nieuw.gebruikerId] = nieuw;
     return Result.ok(nieuw);
   }
@@ -227,52 +230,6 @@ class FakeProfielGateway implements ProfielGateway {
     final fout = _neemFout();
     if (fout != null) return Result.err(fout);
     return Result.ok(accountVan(gebruikerId));
-  }
-
-  @override
-  Future<Result<HhAccountGegevens>> werkAccountBij(
-    String gebruikerId,
-    Map<String, dynamic> velden,
-  ) async {
-    laatsteAccountBody = Map.unmodifiable(velden);
-    final fout = _neemFout();
-    if (fout != null) return Result.err(fout);
-    var account = accountVan(gebruikerId);
-    if (velden.containsKey('geboortedatum')) {
-      final waarde = velden['geboortedatum'] as String;
-      account = account.copyWith(
-        geboortedatum: () => HhProfiel.datumVanServer(waarde),
-      );
-    }
-    if (velden.containsKey('wijk')) {
-      account = account.copyWith(wijkId: velden['wijk'] as String);
-    }
-    _accounts[gebruikerId] = account;
-    return Result.ok(account);
-  }
-
-  @override
-  Future<Result<HhAccountGegevens>> uploadAccountFoto({
-    required String gebruikerId,
-    required Uint8List bytes,
-    required String bestandsnaam,
-  }) async {
-    final fout = _neemFout();
-    if (fout != null) return Result.err(fout);
-    uploads.add(
-      FakeUpload(
-        collectie: 'hh_users',
-        recordId: gebruikerId,
-        veld: 'foto',
-        bestandsnaam: bestandsnaam,
-        bytes: bytes.length,
-      ),
-    );
-    final account = accountVan(
-      gebruikerId,
-    ).copyWith(fotoBestand: 'foto_${uploads.length}.jpg');
-    _accounts[gebruikerId] = account;
-    return Result.ok(account);
   }
 
   @override
@@ -307,16 +264,6 @@ class FakeProfielGateway implements ProfielGateway {
           ? HhScreeningStatus.vanCode(velden['verificatiestatus'] as String?)
           : null,
       overMij: velden['over_mij'] as String?,
-      iban: velden['iban'] as String?,
-      straalKm: velden.containsKey('straal_km')
-          ? (velden['straal_km'] as num).round()
-          : null,
-      beschikbaarheid: velden.containsKey('beschikbaarheid')
-          ? HhBeschikbaarheid.vanJson(velden['beschikbaarheid'])
-          : null,
-      klustypeIds: velden.containsKey('klustypes')
-          ? Set.unmodifiable((velden['klustypes'] as List).cast<String>())
-          : null,
       vogAangevraagdOp: velden.containsKey('vog_aangevraagd_op')
           ? () =>
                 HhProfiel.datumVanServer(velden['vog_aangevraagd_op'] as String)

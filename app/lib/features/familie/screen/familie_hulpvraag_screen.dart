@@ -147,7 +147,7 @@ class _FamilieHulpvraagScreenState
               semantiekLabel: TekstenFamilieNl.f3Helper,
               child: PersoonRegel(
                 naam: klus.jongereVoornaam,
-                fotoUrl: klus.jongereFotoUrl,
+                isIdGecontroleerd: klus.isJongereIdGecontroleerd,
                 onderregel: TekstenFamilieNl.f3Helper,
               ),
             ),

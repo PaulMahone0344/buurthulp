@@ -1,44 +1,44 @@
 import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 
-import 'hh_beschikbaarheid.dart';
 import 'hh_screening_status.dart';
 
-/// Het hh_profielen-record van een jongere. Onveranderlijk; een wijziging
-/// levert via [copyWith] een nieuw object. Bestandsvelden houden alleen de
-/// bestandsnaam van de server (leeg = geen bestand); de app toont nooit de
-/// beschermde foto's zelf, alleen of ze er zijn.
+/// Het hh_profielen-record van een helper (rol jongere). Onveranderlijk;
+/// een wijziging levert via [copyWith] een nieuw object. [documentFoto]
+/// houdt alleen de bestandsnaam van de server (leeg = geen bestand); de app
+/// toont de beschermde foto nooit zelf. Sinds B2 leest de app alleen nog
+/// wat aanmelden en de wachtbalk nodig hebben (geen selfie, IBAN,
+/// beschikbaarheid, klussoorten of vog_status meer).
 @immutable
 class HhProfiel {
   const HhProfiel({
     required this.id,
     required this.gebruikerId,
     this.verificatiestatus = HhScreeningStatus.nieuw,
-    this.vogStatus = HhScreeningStatus.nieuw,
-    this.isIbanGeverifieerd = false,
     this.straalKm = 0,
-    this.beschikbaarheid = const HhBeschikbaarheid.leeg(),
-    this.klustypeIds = const {},
     this.overMij = '',
     this.documentFoto = '',
-    this.selfie = '',
-    this.iban = '',
     this.vogAangevraagdOp,
+    this.vogGezienOp,
+    this.idGecontroleerdOp,
   });
 
   final String id;
   final String gebruikerId;
   final HhScreeningStatus verificatiestatus;
-  final HhScreeningStatus vogStatus;
-  final bool isIbanGeverifieerd;
+
+  /// Uit M3 (werkgebied); de app zet hem niet meer, de klussenlijst
+  /// gebruikt hem nog als filter als hij er staat.
   final int straalKm;
-  final HhBeschikbaarheid beschikbaarheid;
-  final Set<String> klustypeIds;
   final String overMij;
   final String documentFoto;
-  final String selfie;
-  final String iban;
   final DateTime? vogAangevraagdOp;
+
+  /// Helper 18+: de meldkamer zag de VOG op deze datum (B1).
+  final DateTime? vogGezienOp;
+
+  /// De meldkamer controleerde het ID (en de server wiste de foto).
+  final DateTime? idGecontroleerdOp;
 
   factory HhProfiel.vanRecord(RecordModel record) {
     return HhProfiel(
@@ -47,17 +47,15 @@ class HhProfiel {
       verificatiestatus: HhScreeningStatus.vanCode(
         record.getStringValue('verificatiestatus'),
       ),
-      vogStatus: HhScreeningStatus.vanCode(record.getStringValue('vog_status')),
-      isIbanGeverifieerd: record.getBoolValue('iban_geverifieerd'),
       straalKm: record.getDoubleValue('straal_km').round(),
-      beschikbaarheid: HhBeschikbaarheid.vanJson(record.get('beschikbaarheid')),
-      klustypeIds: Set.unmodifiable(record.getListValue<String>('klustypes')),
       overMij: record.getStringValue('over_mij'),
       documentFoto: record.getStringValue('document_foto'),
-      selfie: record.getStringValue('selfie'),
-      iban: record.getStringValue('iban'),
       vogAangevraagdOp: datumVanServer(
         record.getStringValue('vog_aangevraagd_op'),
+      ),
+      vogGezienOp: datumVanServer(record.getStringValue('vog_gezien_op')),
+      idGecontroleerdOp: datumVanServer(
+        record.getStringValue('id_gecontroleerd_op'),
       ),
     );
   }
@@ -69,37 +67,31 @@ class HhProfiel {
   }
 
   bool get heeftDocumentFoto => documentFoto.isNotEmpty;
-  bool get heeftSelfie => selfie.isNotEmpty;
+  bool get isIdGecontroleerd => idGecontroleerdOp != null;
 
   HhProfiel copyWith({
     HhScreeningStatus? verificatiestatus,
-    HhScreeningStatus? vogStatus,
-    bool? isIbanGeverifieerd,
     int? straalKm,
-    HhBeschikbaarheid? beschikbaarheid,
-    Set<String>? klustypeIds,
     String? overMij,
     String? documentFoto,
-    String? selfie,
-    String? iban,
     DateTime? Function()? vogAangevraagdOp,
+    DateTime? Function()? vogGezienOp,
+    DateTime? Function()? idGecontroleerdOp,
   }) {
     return HhProfiel(
       id: id,
       gebruikerId: gebruikerId,
       verificatiestatus: verificatiestatus ?? this.verificatiestatus,
-      vogStatus: vogStatus ?? this.vogStatus,
-      isIbanGeverifieerd: isIbanGeverifieerd ?? this.isIbanGeverifieerd,
       straalKm: straalKm ?? this.straalKm,
-      beschikbaarheid: beschikbaarheid ?? this.beschikbaarheid,
-      klustypeIds: klustypeIds ?? this.klustypeIds,
       overMij: overMij ?? this.overMij,
       documentFoto: documentFoto ?? this.documentFoto,
-      selfie: selfie ?? this.selfie,
-      iban: iban ?? this.iban,
       vogAangevraagdOp: vogAangevraagdOp != null
           ? vogAangevraagdOp()
           : this.vogAangevraagdOp,
+      vogGezienOp: vogGezienOp != null ? vogGezienOp() : this.vogGezienOp,
+      idGecontroleerdOp: idGecontroleerdOp != null
+          ? idGecontroleerdOp()
+          : this.idGecontroleerdOp,
     );
   }
 
@@ -109,32 +101,24 @@ class HhProfiel {
       other.id == id &&
       other.gebruikerId == gebruikerId &&
       other.verificatiestatus == verificatiestatus &&
-      other.vogStatus == vogStatus &&
-      other.isIbanGeverifieerd == isIbanGeverifieerd &&
       other.straalKm == straalKm &&
-      other.beschikbaarheid == beschikbaarheid &&
-      setEquals(other.klustypeIds, klustypeIds) &&
       other.overMij == overMij &&
       other.documentFoto == documentFoto &&
-      other.selfie == selfie &&
-      other.iban == iban &&
-      other.vogAangevraagdOp == vogAangevraagdOp;
+      other.vogAangevraagdOp == vogAangevraagdOp &&
+      other.vogGezienOp == vogGezienOp &&
+      other.idGecontroleerdOp == idGecontroleerdOp;
 
   @override
   int get hashCode => Object.hash(
     id,
     gebruikerId,
     verificatiestatus,
-    vogStatus,
-    isIbanGeverifieerd,
     straalKm,
-    beschikbaarheid,
-    Object.hashAllUnordered(klustypeIds),
     overMij,
     documentFoto,
-    selfie,
-    iban,
     vogAangevraagdOp,
+    vogGezienOp,
+    idGecontroleerdOp,
   );
 }
 
@@ -179,51 +163,54 @@ class HhKlustype {
   );
 }
 
-/// De velden van hh_users die de screening nodig heeft en die niet in
-/// HhGebruiker zitten: foto, geboortedatum en wijk.
+/// De velden van hh_users die aanmelden en de wachtbalk nodig hebben en
+/// die niet in HhGebruiker zitten: geboortedatum, wijk en (helper < 18) de
+/// datum waarop de ouder toestemming gaf (zet alleen de meldkamer/server).
 @immutable
 class HhAccountGegevens {
   const HhAccountGegevens({
-    this.fotoBestand = '',
     this.geboortedatum,
     this.wijkId = '',
+    this.ouderToestemmingOp,
   });
 
-  final String fotoBestand;
   final DateTime? geboortedatum;
   final String wijkId;
+  final DateTime? ouderToestemmingOp;
 
   factory HhAccountGegevens.vanRecord(RecordModel record) => HhAccountGegevens(
-    fotoBestand: record.getStringValue('foto'),
     geboortedatum: HhProfiel.datumVanServer(
       record.getStringValue('geboortedatum'),
     ),
     wijkId: record.getStringValue('wijk'),
+    ouderToestemmingOp: HhProfiel.datumVanServer(
+      record.getStringValue('ouder_toestemming_op'),
+    ),
   );
 
-  bool get heeftFoto => fotoBestand.isNotEmpty;
-
   HhAccountGegevens copyWith({
-    String? fotoBestand,
     DateTime? Function()? geboortedatum,
     String? wijkId,
+    DateTime? Function()? ouderToestemmingOp,
   }) {
     return HhAccountGegevens(
-      fotoBestand: fotoBestand ?? this.fotoBestand,
       geboortedatum: geboortedatum != null
           ? geboortedatum()
           : this.geboortedatum,
       wijkId: wijkId ?? this.wijkId,
+      ouderToestemmingOp: ouderToestemmingOp != null
+          ? ouderToestemmingOp()
+          : this.ouderToestemmingOp,
     );
   }
 
   @override
   bool operator ==(Object other) =>
       other is HhAccountGegevens &&
-      other.fotoBestand == fotoBestand &&
       other.geboortedatum == geboortedatum &&
-      other.wijkId == wijkId;
+      other.wijkId == wijkId &&
+      other.ouderToestemmingOp == ouderToestemmingOp;
 
   @override
-  int get hashCode => Object.hash(fotoBestand, geboortedatum, wijkId);
+  int get hashCode => Object.hash(geboortedatum, wijkId, ouderToestemmingOp);
 }

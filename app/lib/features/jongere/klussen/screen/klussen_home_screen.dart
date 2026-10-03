@@ -19,8 +19,10 @@ import '../../../hulpvrager/provider/hulpvrager_providers.dart'
     show klokProvider;
 import '../../../toegang/model/hh_rol.dart';
 import '../../../toegang/provider/sessie_providers.dart';
+import '../../domein/helper_wacht.dart';
 import '../../model/hh_profiel.dart';
 import '../../provider/screening_providers.dart';
+import '../../widget/helper_wacht_start.dart';
 import '../domein/dagdeel.dart';
 import '../domein/klus_filter.dart';
 import '../domein/wanneer_tekst.dart';
@@ -37,8 +39,9 @@ enum KlussenWeergave { lijst, kaart }
 /// J11/J12. De landing van de goedgekeurde jongere (/jongere): open klussen
 /// in zijn wijk als lijst of op de kaart, met de filterbalk (soort, dagdeel)
 /// en de straal uit zijn profiel als client-filter. Pull-to-refresh op de
-/// lijst. Een jongere die nog niet goedgekeurd is komt hier niet: de
-/// router-guard stuurt hem naar J9.
+/// lijst. B2: wacht de helper nog (nagekeken, ouder-toestemming, VOG), dan
+/// alleen de gele balk en geen klussen; nog niet verstuurd of afgewezen
+/// stuurt de router-guard naar J9.
 class KlussenHomeScreen extends ConsumerStatefulWidget {
   const KlussenHomeScreen({super.key});
 
@@ -67,6 +70,31 @@ class _KlussenHomeScreenState extends ConsumerState<KlussenHomeScreen> {
     // Zonder sessie of met een andere rol stuurt de router-guard al weg.
     if (gebruiker == null || gebruiker.rol != HhRol.jongere) {
       return const Scaffold();
+    }
+
+    // B2: zolang de helper nog wacht (nagekeken, ouder, VOG) geen klussen,
+    // ook geen verzoek naar de server; wel de gele balk.
+    final wacht = ref.watch(helperWachtProvider);
+    if (wacht != HelperWacht.klaar) {
+      return JongereTabScherm(
+        actief: JongereTab.klussen,
+        child: HhScherm(
+          titel: TekstenKlussenNl.j11Titel,
+          toonTerug: false,
+          child: switch ((wacht, ref.watch(screeningControllerProvider))) {
+            (final HelperWacht w, _) => HelperWachtStart(wacht: w),
+            (null, AsyncError(:final error)) => HhLegeStaat(
+              icoon: Icons.cloud_off_outlined,
+              titel: TekstenKlussenNl.j11LadenMislukt,
+              uitleg: meldingVanFout(error),
+              knopLabel: TekstenNl.opnieuwProberen,
+              onKnop: () =>
+                  ref.read(screeningControllerProvider.notifier).vernieuw(),
+            ),
+            (null, _) => const HhLaadStaat.skelet(regels: 3),
+          },
+        ),
+      );
     }
 
     final gefilterd = ref.watch(gefilterdeKlussenProvider);

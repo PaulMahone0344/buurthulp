@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../../theme.dart';
 
 /// Foto en naam van een persoon op één regel. De foto is versiering (de
@@ -11,14 +12,18 @@ class PersoonRegel extends StatelessWidget {
     required this.naam,
     this.fotoUrl = '',
     this.onderregel = '',
+    this.isIdGecontroleerd = false,
     super.key,
   });
 
   final String naam;
   final String fotoUrl;
 
-  /// Een regel eronder, bijvoorbeeld "Uw helper".
+  /// Een regel eronder, bijvoorbeeld "Je helper".
   final String onderregel;
+
+  /// B2: vinkje "ID gecontroleerd" bij een helper (nooit het document).
+  final bool isIdGecontroleerd;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +70,29 @@ class PersoonRegel extends StatelessWidget {
               Text(naam, style: tekst.bodyLarge),
               if (onderregel.isNotEmpty)
                 Text(onderregel, style: tekst.bodyMedium),
+              if (isIdGecontroleerd)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.verified_outlined,
+                        size: HhMaten.icoonKeuzerij(dichtheid) * 0.75,
+                        color: HhKleuren.succes,
+                      ),
+                    ),
+                    SizedBox(width: HhRuimte.voor(HhRuimte.xs, dichtheid)),
+                    Flexible(
+                      child: Text(
+                        TekstenAanmeldenNl.idGecontroleerd,
+                        style: tekst.bodyMedium!.copyWith(
+                          color: HhKleuren.succes,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

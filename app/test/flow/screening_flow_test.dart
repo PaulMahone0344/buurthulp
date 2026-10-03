@@ -5,19 +5,18 @@ import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_stub_screen.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/paden_klussen.dart';
+import 'package:heitjehulp_app/features/jongere/model/hh_profiel.dart';
 import 'package:heitjehulp_app/features/jongere/model/hh_screening_status.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
 import 'package:heitjehulp_app/features/jongere/reputatie/screen/mijn_reputatie_screen.dart';
+import 'package:heitjehulp_app/features/jongere/screen/aanmelding_binnen_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
-import 'package:heitjehulp_app/features/jongere/screen/screening_beschikbaarheid_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/screening_foto_screen.dart';
-import 'package:heitjehulp_app/features/jongere/screen/screening_iban_screen.dart';
-import 'package:heitjehulp_app/features/jongere/screen/screening_klussoorten_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/screening_overzicht_screen.dart';
-import 'package:heitjehulp_app/features/jongere/screen/screening_profiel_screen.dart';
-import 'package:heitjehulp_app/features/jongere/screen/screening_vog_screen.dart';
-import 'package:heitjehulp_app/features/jongere/screen/screening_werkgebied_screen.dart';
+import 'package:heitjehulp_app/features/jongere/widget/helper_wacht_start.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
+import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_beoordelen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
@@ -31,98 +30,133 @@ const _tokenSleutel = 'hh_auth_token';
 GeheugenKeyValueStore _ingelogdAls(HhRol rol) =>
     GeheugenKeyValueStore({_tokenSleutel: testToken(rol)});
 
+/// De klussenlijst (en dus de schakelaar lijst/kaart) staat op Start.
+Finder get _klussenLijst => find.text(TekstenKlussenNl.weergaveLijst);
+
 void main() {
   testWidgets(
-    'nieuwe jongere: inloggen -> J9 -> J1 t/m J8 -> indienen -> in behandeling',
+    'nieuwe helper 18+: inloggen -> J9 -> ID-foto -> versturen -> binnen -> '
+    'Start met "nagekeken" -> goedgekeurd: "Regel je VOG" -> VOG gezien: klussen',
     (tester) async {
       final fake = fakeNieuweJongere();
       final kiezer = FakeFotoKiezer(volgende: testFoto());
       await pompJongereApp(tester, profielGateway: fake, fotoKiezer: kiezer);
 
-      // Inloggen als jongere landt door de guard op het overzicht, niet op /jongere.
+      // Inloggen als helper landt door de guard op J9, niet op Start.
       await tikKnop(tester, TekstenNl.alEenAccount);
       await vulVeld(tester, 0, testGebruiker(HhRol.jongere).email);
       await vulVeld(tester, 1, testWachtwoord);
       await tikKnop(tester, TekstenNl.inloggenKnop);
       expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
       expect(find.byType(JongereStubScreen), findsNothing);
-      expect(
-        tester
-            .widget<HhKnop>(
-              find.widgetWithText(HhKnop, TekstenJongereNl.j9Indienen),
-            )
-            .isActief,
-        isFalse,
+      final versturen = find.widgetWithText(
+        HhKnop,
+        TekstenAanmeldenNl.overzichtVersturen,
       );
+      expect(tester.widget<HhKnop>(versturen).isActief, isFalse);
 
-      // J1
-      await tikKnop(tester, '1. ${TekstenJongereNl.j1Titel}');
-      expect(find.byType(ScreeningProfielScreen), findsOneWidget);
-      await tikKnop(tester, TekstenJongereNl.fotoKiezen);
-      await vulVeld(tester, 0, '14-05-2008');
-      await vulVeld(tester, 1, 'Ik help graag met boodschappen.');
-      await tikKnop(tester, TekstenJongereNl.opslaanEnVerder);
-
-      // J2
+      // ID-foto
+      await tikKnop(tester, TekstenJongereNl.j2Titel);
       expect(find.byType(ScreeningIdentiteitScreen), findsOneWidget);
       await tikKnop(tester, TekstenJongereNl.fotoKiezen);
       await tikKnop(tester, TekstenNl.verder);
 
-      // J3
-      expect(find.byType(ScreeningSelfieScreen), findsOneWidget);
-      await tikKnop(tester, TekstenJongereNl.j3Knop);
-      await tikKnop(tester, TekstenNl.verder);
-
-      // J4
-      expect(find.byType(ScreeningVogScreen), findsOneWidget);
-      await tikKnop(tester, TekstenJongereNl.j4HebAangevraagd);
-      await tikKnop(tester, TekstenNl.verder);
-
-      // J5
-      expect(find.byType(ScreeningIbanScreen), findsOneWidget);
-      await vulVeld(tester, 0, 'NL91 ABNA 0417 1643 00');
-      await tikKnop(tester, TekstenJongereNl.opslaanEnVerder);
-
-      // J6
-      expect(find.byType(ScreeningWerkgebiedScreen), findsOneWidget);
-      await tikTekst(tester, 'Tiel-West');
-      await tikKnop(tester, TekstenJongereNl.opslaanEnVerder);
-
-      // J7
-      expect(find.byType(ScreeningBeschikbaarheidScreen), findsOneWidget);
-      await tikTekst(tester, TekstenJongereNl.dagdeelMiddag);
-      await tikKnop(tester, TekstenJongereNl.opslaanEnVerder);
-
-      // J8
-      expect(find.byType(ScreeningKlussoortenScreen), findsOneWidget);
-      await tikTekst(tester, 'boodschappen');
-      await tikKnop(tester, TekstenJongereNl.opslaanEnVerder);
-
-      // J9: alles af, indienen.
+      // Versturen -> Aanmelding binnen -> Start met de gele balk.
       expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
-      final indienen = find.widgetWithText(HhKnop, TekstenJongereNl.j9Indienen);
-      expect(tester.widget<HhKnop>(indienen).isActief, isTrue);
-      await tikKnop(tester, TekstenJongereNl.j9Indienen);
+      await tikKnop(tester, TekstenAanmeldenNl.overzichtVersturen);
+      expect(find.byType(AanmeldingBinnenScreen), findsOneWidget);
+      await tikKnop(tester, TekstenAanmeldenNl.naarStart);
+      expect(find.byType(JongereStubScreen), findsOneWidget);
+      expect(find.text(TekstenAanmeldenNl.wachtNagekeken), findsOneWidget);
+      expect(_klussenLijst, findsNothing);
 
-      expect(find.text(TekstenJongereNl.j9WachtTekst), findsOneWidget);
-      expect(fake.laatsteProfielBody, {'verificatiestatus': 'in_behandeling'});
-      final profiel = fake.profielVan(jongereId)!;
-      expect(profiel.verificatiestatus, HhScreeningStatus.inBehandeling);
-      expect(profiel.iban, 'NL91ABNA0417164300');
-      expect(profiel.klustypeIds, {'type-boodschappen'});
-      expect(profiel.straalKm, ScreeningWerkgebiedScreen.standaardStraal);
-      expect(fake.accountVan(jongereId).wijkId, 'wijk-west');
-      expect(fake.uploads.map((u) => u.veld), [
-        'foto',
-        'document_foto',
-        'selfie',
-      ]);
-      expect(kiezer.aanroepen.map((a) => a.isSelfie), [false, false, true]);
+      // De meldkamer keurt goed (ID-foto gewist), maar zag de VOG nog niet.
+      fake.zetStatus(
+        jongereId,
+        verificatiestatus: HhScreeningStatus.goedgekeurd,
+      );
+      expect(fake.profielVan(jongereId)!.heeftDocumentFoto, isFalse);
+      await tikKnop(tester, TekstenAanmeldenNl.wachtVernieuwen);
+      expect(find.text(TekstenAanmeldenNl.wachtVog), findsOneWidget);
+      expect(_klussenLijst, findsNothing);
+
+      // De meldkamer zet "VOG gezien op".
+      fake.zetVogGezien(jongereId, DateTime.utc(2026, 10, 3));
+      await tikKnop(tester, TekstenAanmeldenNl.wachtVernieuwen);
+      expect(find.byType(WachtBalk), findsNothing);
+      expect(_klussenLijst, findsOneWidget);
     },
   );
 
   testWidgets(
-    'guard: goedgekeurde jongere landt op /jongere (J11) en bereikt J9 via de tab Profiel',
+    'helper onder 18: geen VOG-stap; na goedkeuring wacht hij op zijn ouder',
+    (tester) async {
+      final fake = fakeNieuweJongere(isMinderjarig: true);
+      await pompJongereApp(
+        tester,
+        profielGateway: fake,
+        fotoKiezer: FakeFotoKiezer(volgende: testFoto()),
+        opslag: _ingelogdAls(HhRol.jongere),
+      );
+      expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
+      expect(
+        find.widgetWithText(HhKnop, TekstenJongereNl.j4Titel),
+        findsNothing,
+      );
+      expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
+
+      await tikKnop(tester, TekstenJongereNl.j2Titel);
+      await tikKnop(tester, TekstenJongereNl.fotoKiezen);
+      await tikKnop(tester, TekstenNl.verder);
+      await tikKnop(tester, TekstenAanmeldenNl.overzichtVersturen);
+      await tikKnop(tester, TekstenAanmeldenNl.naarStart);
+
+      fake.zetStatus(
+        jongereId,
+        verificatiestatus: HhScreeningStatus.goedgekeurd,
+      );
+      await tikKnop(tester, TekstenAanmeldenNl.wachtVernieuwen);
+      expect(find.text(TekstenAanmeldenNl.wachtOuder), findsOneWidget);
+      expect(_klussenLijst, findsNothing);
+
+      // De ouder geeft toestemming (B3: met een code; nu de meldkamer).
+      fake.zetAccount(
+        jongereId,
+        HhAccountGegevens(
+          geboortedatum: jongGeboren,
+          wijkId: 'wijk-west',
+          ouderToestemmingOp: DateTime.utc(2026, 10, 3),
+        ),
+      );
+      await tikKnop(tester, TekstenAanmeldenNl.wachtVernieuwen);
+      expect(_klussenLijst, findsOneWidget);
+    },
+  );
+
+  testWidgets('wachtend: een klus openen gaat terug naar Start', (
+    tester,
+  ) async {
+    final container = await pompJongereApp(
+      tester,
+      profielGateway: fakeJongereGoedgekeurdWachtend(),
+      opslag: _ingelogdAls(HhRol.jongere),
+    );
+    expect(find.text(TekstenAanmeldenNl.wachtVog), findsOneWidget);
+
+    container.read(routerProvider).go(HhPadenKlussen.klusDetail('k1'));
+    await tester.pumpAndSettle();
+    expect(find.byType(JongereStubScreen), findsOneWidget);
+    expect(find.text(TekstenAanmeldenNl.wachtVog), findsOneWidget);
+
+    // De tabs blijven bereikbaar.
+    container.read(routerProvider).go(HhPadenKlussen.instellingen);
+    await tester.pumpAndSettle();
+    expect(find.text(TekstenNl.instellingenTitel), findsWidgets);
+    expect(find.byType(JongereStubScreen), findsNothing);
+  });
+
+  testWidgets(
+    'helper die rond is landt op Start (klussen) en bereikt J9 via Profiel',
     (tester) async {
       await pompJongereApp(
         tester,
@@ -131,84 +165,44 @@ void main() {
       );
 
       expect(find.byType(JongereStubScreen), findsOneWidget);
-      expect(find.text(TekstenKlussenNl.j11Titel), findsOneWidget);
+      expect(_klussenLijst, findsOneWidget);
 
-      // M7: de tab Profiel is J19; J9 zit onder "Mijn screening".
       await tikTekst(tester, TekstenKlussenNl.tabProfiel);
       expect(find.byType(MijnReputatieScreen), findsOneWidget);
       await tikKnop(tester, TekstenBeoordelenNl.j19Screening);
       expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
       expect(find.text(TekstenJongereNl.statusGoedgekeurd), findsWidgets);
 
-      await tikKnop(tester, TekstenJongereNl.j9NaarKlussen);
+      await tikKnop(tester, TekstenAanmeldenNl.naarStart);
       expect(find.byType(JongereStubScreen), findsOneWidget);
     },
   );
 
-  for (final status in [
-    HhScreeningStatus.nieuw,
-    HhScreeningStatus.inBehandeling,
-    HhScreeningStatus.afgewezen,
-  ]) {
-    testWidgets(
-      'guard: jongere met status ${status.code} gaat van /jongere naar J9',
-      (tester) async {
-        final container = await pompJongereApp(
-          tester,
-          profielGateway: fakeJongereMetStatus(status),
-          opslag: _ingelogdAls(HhRol.jongere),
+  for (final status in [HhScreeningStatus.nieuw, HhScreeningStatus.afgewezen]) {
+    testWidgets('guard: helper met status ${status.code} gaat naar J9', (
+      tester,
+    ) async {
+      final container = await pompJongereApp(
+        tester,
+        profielGateway: fakeJongereMetStatus(status),
+        opslag: _ingelogdAls(HhRol.jongere),
+      );
+
+      expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
+      container.read(routerProvider).go(HhPaden.jongere);
+      await tester.pumpAndSettle();
+      expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
+      if (status == HhScreeningStatus.afgewezen) {
+        expect(
+          find.widgetWithText(HhKnop, TekstenJongereNl.j9BelOns),
+          findsOneWidget,
         );
-
-        expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
-        expect(find.byType(JongereStubScreen), findsNothing);
-        expect(find.text(status.naam), findsOneWidget);
-        if (status == HhScreeningStatus.afgewezen) {
-          expect(
-            find.widgetWithText(HhKnop, TekstenJongereNl.j9BelOns),
-            findsOneWidget,
-          );
-        }
-
-        // Ook een directe sprong naar /jongere komt terug op J9.
-        container.read(routerProvider).go(HhPaden.jongere);
-        await tester.pumpAndSettle();
-        expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
-
-        // Instellingen blijven bereikbaar; uitloggen werkt.
-        container.read(routerProvider).go(HhPaden.instellingen);
-        await tester.pumpAndSettle();
-        expect(find.text(TekstenNl.instellingenTitel), findsOneWidget);
-      },
-    );
+      }
+    });
   }
 
   testWidgets(
-    'J9: na goedkeuring door de meldkamer brengt Status vernieuwen naar /jongere',
-    (tester) async {
-      final fake = fakeJongereMetStatus(HhScreeningStatus.inBehandeling);
-      await pompJongereApp(
-        tester,
-        profielGateway: fake,
-        opslag: _ingelogdAls(HhRol.jongere),
-      );
-      expect(find.byType(ScreeningOverzichtScreen), findsOneWidget);
-      expect(find.text(TekstenJongereNl.j9WachtTekst), findsOneWidget);
-
-      // De meldkamer keurt goed, buiten de app om.
-      fake.zetStatus(
-        jongereId,
-        verificatiestatus: HhScreeningStatus.goedgekeurd,
-      );
-      await tikKnop(tester, TekstenJongereNl.j9Vernieuwen);
-
-      expect(find.text(TekstenJongereNl.j9GoedgekeurdTekst), findsOneWidget);
-      await tikKnop(tester, TekstenJongereNl.j9NaarKlussen);
-      expect(find.byType(JongereStubScreen), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'guard: een hulpvrager op een screeningpad gaat naar de eigen landing',
+    'guard: een bewoner op een aanmeldpad gaat naar de eigen landing',
     (tester) async {
       final container = await pompJongereApp(
         tester,
@@ -224,15 +218,15 @@ void main() {
     },
   );
 
-  testWidgets('uitgelogd: een screeningpad gaat naar welkom', (tester) async {
+  testWidgets('uitgelogd: een aanmeldpad gaat naar welkom', (tester) async {
     final container = await pompJongereApp(
       tester,
       profielGateway: fakeNieuweJongere(),
     );
 
-    container.read(routerProvider).go(HhPadenJongere.profiel);
+    container.read(routerProvider).go(HhPadenJongere.identiteit);
     await tester.pumpAndSettle();
-    expect(find.byType(ScreeningProfielScreen), findsNothing);
+    expect(find.byType(ScreeningIdentiteitScreen), findsNothing);
     expect(find.text(TekstenNl.welkomTitel), findsOneWidget);
   });
 }

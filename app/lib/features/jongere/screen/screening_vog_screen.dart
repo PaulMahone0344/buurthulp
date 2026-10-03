@@ -7,20 +7,22 @@ import '../../../design/components/hh_kaart.dart';
 import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_meld_balk.dart';
 import '../../../design/dichtheid_scope.dart';
+import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_jongere_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
 import '../../toegang/screen/hulp_screen.dart' show urlOpenerProvider;
 import '../datum_invoer.dart';
 import '../model/screening_stap.dart';
+import '../paden_jongere.dart';
 import '../provider/screening_providers.dart';
-import '../widget/hh_screening_pil.dart';
 import '../widget/screening_lader.dart';
 import '../widget/screening_stap_scherm.dart';
 
-/// J4. Uitleg, "VOG aanvragen" opent Justis, "Ik heb aangevraagd" zet
-/// hh_profielen.vog_aangevraagd_op op nu. vog_status is van de meldkamer en
-/// wordt alleen getoond.
+/// J4 (alleen 18+). Uitleg "Vraag je VOG aan via Justis, de meldkamer kijkt
+/// hem na". "VOG aanvragen" opent Justis, "Ik heb aangevraagd" zet
+/// hh_profielen.vog_aangevraagd_op. vog_gezien_op zet alleen de meldkamer;
+/// de app toont hem.
 class ScreeningVogScreen extends ConsumerStatefulWidget {
   const ScreeningVogScreen({super.key});
 
@@ -87,13 +89,15 @@ class _ScreeningVogScreenState extends ConsumerState<ScreeningVogScreen> {
     return ScreeningLader(
       builder: (context, gegevens) {
         final aangevraagdOp = gegevens.profiel?.vogAangevraagdOp;
+        final gezienOp = gegevens.profiel?.vogGezienOp;
         return ScreeningStapScherm(
           stap: ScreeningStap.vog,
-          uitleg: TekstenJongereNl.j4Uitleg,
+          gegevens: gegevens,
+          uitleg: TekstenAanmeldenNl.vogUitleg,
           melding: _melding,
           meldSoort: _meldSoort,
           knopLabel: TekstenNl.verder,
-          onVerder: () => context.go(ScreeningStap.vog.volgendPad),
+          onVerder: () => context.go(HhPadenJongere.overzicht),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -102,9 +106,13 @@ class _ScreeningVogScreenState extends ConsumerState<ScreeningVogScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    HhScreeningPil(
-                      status: gegevens.vogStatus,
-                      label: TekstenJongereNl.j9VogLabel,
+                    Text(
+                      gezienOp == null
+                          ? TekstenAanmeldenNl.vogNogNietGezien
+                          : TekstenAanmeldenNl.vogGezienOp(
+                              toonDatumNl(gezienOp.toLocal()),
+                            ),
+                      style: tekst.bodyLarge,
                     ),
                     if (aangevraagdOp != null) ...[
                       SizedBox(height: tussen),
@@ -118,14 +126,16 @@ class _ScreeningVogScreenState extends ConsumerState<ScreeningVogScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
-              HhKnop(
-                label: TekstenJongereNl.j4Aanvragen,
-                icoon: Icons.open_in_new,
-                soort: HhKnopSoort.tweedeKeus,
-                onPressed: _openAanvraag,
-              ),
-              if (aangevraagdOp == null) ...[
+              if (gezienOp == null) ...[
+                SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
+                HhKnop(
+                  label: TekstenJongereNl.j4Aanvragen,
+                  icoon: Icons.open_in_new,
+                  soort: HhKnopSoort.tweedeKeus,
+                  onPressed: _openAanvraag,
+                ),
+              ],
+              if (gezienOp == null && aangevraagdOp == null) ...[
                 SizedBox(height: tussen),
                 HhKnop(
                   label: TekstenJongereNl.j4HebAangevraagd,

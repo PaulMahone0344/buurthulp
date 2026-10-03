@@ -8,11 +8,13 @@ import '../../../core/result.dart';
 import '../../toegang/model/hh_gebruiker.dart';
 import '../../toegang/model/hh_rol.dart';
 import '../../toegang/provider/sessie_providers.dart';
+import '../../hulpvrager/provider/hulpvrager_providers.dart' show klokProvider;
+import '../domein/helper_wacht.dart';
 import '../model/hh_profiel.dart';
 import '../model/hh_screening_status.dart';
 import '../model/screening_stap.dart';
 
-/// Houdt profiel en accountvelden van de ingelogde jongere bij. Laadt zodra
+/// Houdt profiel en accountvelden van de ingelogde helper (rol jongere) bij. Laadt zodra
 /// een jongere is ingelogd; voor elke andere rol (of niemand) is de staat
 /// leeg zonder serververzoek. Een mislukte lading is een AsyncError met de
 /// [HhFout] als error; de schermen tonen dan fout.melding.
@@ -53,7 +55,7 @@ class ScreeningController extends AsyncNotifier<ScreeningGegevens> {
   }
 
   /// Stuurt ALLEEN [velden]. Bestaat het profiel nog niet, dan wordt het
-  /// aangemaakt met deze velden (J1 is de eerste stap).
+  /// aangemaakt met deze velden.
   Future<Result<void>> werkProfielBij(Map<String, dynamic> velden) async {
     final gebruiker = _jongere;
     final huidig = state.value;
@@ -66,20 +68,9 @@ class ScreeningController extends AsyncNotifier<ScreeningGegevens> {
     return _verwerk(result, (p) => huidig.copyWith(profiel: p));
   }
 
-  Future<Result<void>> werkAccountBij(Map<String, dynamic> velden) async {
-    final gebruiker = _jongere;
-    final huidig = state.value;
-    if (gebruiker == null || huidig == null) return _nietIngelogd;
-    final result = await ref
-        .read(profielGatewayProvider)
-        .werkAccountBij(gebruiker.id, velden);
-    return _verwerk(result, (a) => huidig.copyWith(account: a));
-  }
-
-  /// [veld] is document_foto (J2) of selfie (J3). Zonder profiel wordt het
-  /// eerst leeg aangemaakt.
-  Future<Result<void>> uploadProfielFoto({
-    required String veld,
+  /// De ID-foto (document_foto). Zonder profiel wordt het eerst leeg
+  /// aangemaakt.
+  Future<Result<void>> uploadIdFoto({
     required Uint8List bytes,
     required String bestandsnaam,
   }) async {
@@ -94,31 +85,13 @@ class ScreeningController extends AsyncNotifier<ScreeningGegevens> {
     }
     final result = await ref
         .read(profielGatewayProvider)
-        .uploadProfielFoto(
+        .uploadIdFoto(
           profielId: huidig!.profiel!.id,
-          veld: veld,
           bytes: bytes,
           bestandsnaam: bestandsnaam,
         );
     final basis = huidig;
     return _verwerk(result, (p) => basis.copyWith(profiel: p));
-  }
-
-  Future<Result<void>> uploadAccountFoto({
-    required Uint8List bytes,
-    required String bestandsnaam,
-  }) async {
-    final gebruiker = _jongere;
-    final huidig = state.value;
-    if (gebruiker == null || huidig == null) return _nietIngelogd;
-    final result = await ref
-        .read(profielGatewayProvider)
-        .uploadAccountFoto(
-          gebruikerId: gebruiker.id,
-          bytes: bytes,
-          bestandsnaam: bestandsnaam,
-        );
-    return _verwerk(result, (a) => huidig.copyWith(account: a));
   }
 
   /// J9: nieuw -> in_behandeling. Alleen dat ene veld gaat mee.
@@ -158,7 +131,7 @@ final screeningControllerProvider =
       ScreeningController.new,
     );
 
-/// Referentiedata voor J6 en J8. Een Err wordt een AsyncError met de
+/// Referentiedata: wijken (naam bij een klus) en klustypes (filterbalk). Een Err wordt een AsyncError met de
 /// [HhFout] als error.
 final wijkenProvider = FutureProvider<List<HhWijk>>((ref) async {
   final result = await ref.watch(profielGatewayProvider).haalWijken();
@@ -173,6 +146,16 @@ final klustypesProvider = FutureProvider<List<HhKlustype>>((ref) async {
   return switch (result) {
     Ok<List<HhKlustype>>(:final waarde) => waarde,
     Err<List<HhKlustype>>(:final fout) => throw fout,
+  };
+});
+
+/// Waar de ingelogde helper op wacht (B2), of null zolang zijn gegevens
+/// laden of niet konden laden.
+final helperWachtProvider = Provider<HelperWacht?>((ref) {
+  final nu = ref.watch(klokProvider)();
+  return switch (ref.watch(screeningControllerProvider)) {
+    AsyncData<ScreeningGegevens>(:final value) => helperWacht(value, nu),
+    _ => null,
   };
 });
 

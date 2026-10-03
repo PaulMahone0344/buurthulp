@@ -197,7 +197,7 @@ class _Inhoud extends StatelessWidget {
                   semantiekLabel: TekstenUitvoerenNl.o7Helper,
                   child: PersoonRegel(
                     naam: klus.jongereVoornaam,
-                    fotoUrl: klus.jongereFotoUrl,
+                    isIdGecontroleerd: klus.isJongereIdGecontroleerd,
                     onderregel: TekstenUitvoerenNl.o7Helper,
                   ),
                 ),

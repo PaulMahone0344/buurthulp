@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_jongere_nl.dart';
+import '../../toegang/domein/aanmelding.dart';
 import '../paden_jongere.dart';
 import 'hh_profiel.dart';
 import 'hh_screening_status.dart';
 
-/// Alles wat de screeningschermen nodig hebben, in een object: het profiel
-/// (null zolang het nog niet bestaat) en de accountvelden uit hh_users.
+/// Alles wat de aanmeldschermen van de helper nodig hebben, in een object:
+/// het profiel (null zolang het nog niet bestaat) en de accountvelden uit
+/// hh_users.
 @immutable
 class ScreeningGegevens {
   const ScreeningGegevens({
@@ -21,10 +24,13 @@ class ScreeningGegevens {
   HhScreeningStatus get verificatiestatus =>
       profiel?.verificatiestatus ?? HhScreeningStatus.nieuw;
 
-  HhScreeningStatus get vogStatus =>
-      profiel?.vogStatus ?? HhScreeningStatus.nieuw;
-
   bool get isGoedgekeurd => verificatiestatus == HhScreeningStatus.goedgekeurd;
+
+  /// Onder de 18 op [vandaag]. Zonder geboortedatum: null (onbekend).
+  bool? isMinderjarigOp(DateTime vandaag) {
+    final geboren = account.geboortedatum;
+    return geboren == null ? null : isMinderjarig(geboren, vandaag);
+  }
 
   ScreeningGegevens copyWith({HhProfiel? profiel, HhAccountGegevens? account}) {
     return ScreeningGegevens(
@@ -43,78 +49,58 @@ class ScreeningGegevens {
   int get hashCode => Object.hash(profiel, account);
 }
 
-/// De acht stappen J1-J8. J9 is het overzicht en geen stap.
+/// Wat een helper na het aanmeldformulier nog doet (B2): een foto van zijn
+/// ID (verplicht), zijn VOG (alleen 18+, de meldkamer kijkt hem na) en
+/// "Over mij" (mag leeg). Selfie, IBAN, werkgebied, beschikbaarheid en
+/// klussoorten zijn geen stap meer.
 enum ScreeningStap {
-  profiel,
   identiteit,
-  selfie,
   vog,
-  iban,
-  werkgebied,
-  beschikbaarheid,
-  klussoorten;
+  overMij;
 
-  int get nummer => index + 1;
-
-  static int get totaal => values.length;
+  /// De stappen voor deze helper: VOG alleen vanaf 18 (of als de leeftijd
+  /// onbekend is; dan beslist de meldkamer).
+  static List<ScreeningStap> voor(
+    ScreeningGegevens gegevens,
+    DateTime vandaag,
+  ) => [
+    ScreeningStap.identiteit,
+    if (gegevens.isMinderjarigOp(vandaag) != true) ScreeningStap.vog,
+    ScreeningStap.overMij,
+  ];
 
   String get titel => switch (this) {
-    ScreeningStap.profiel => TekstenJongereNl.j1Titel,
     ScreeningStap.identiteit => TekstenJongereNl.j2Titel,
-    ScreeningStap.selfie => TekstenJongereNl.j3Titel,
     ScreeningStap.vog => TekstenJongereNl.j4Titel,
-    ScreeningStap.iban => TekstenJongereNl.j5Titel,
-    ScreeningStap.werkgebied => TekstenJongereNl.j6Titel,
-    ScreeningStap.beschikbaarheid => TekstenJongereNl.j7Titel,
-    ScreeningStap.klussoorten => TekstenJongereNl.j8Titel,
+    ScreeningStap.overMij => TekstenAanmeldenNl.overMijNietVerplicht,
   };
 
   String get pad => switch (this) {
-    ScreeningStap.profiel => HhPadenJongere.profiel,
     ScreeningStap.identiteit => HhPadenJongere.identiteit,
-    ScreeningStap.selfie => HhPadenJongere.selfie,
     ScreeningStap.vog => HhPadenJongere.vog,
-    ScreeningStap.iban => HhPadenJongere.iban,
-    ScreeningStap.werkgebied => HhPadenJongere.werkgebied,
-    ScreeningStap.beschikbaarheid => HhPadenJongere.beschikbaarheid,
-    ScreeningStap.klussoorten => HhPadenJongere.klussoorten,
+    ScreeningStap.overMij => HhPadenJongere.overMij,
   };
 
-  /// Waar "opslaan en verder" heen gaat: de volgende stap, na J8 het
-  /// overzicht.
-  String get volgendPad => this == ScreeningStap.klussoorten
-      ? HhPadenJongere.overzicht
-      : values[index + 1].pad;
+  /// Alleen de ID-foto moet er zijn voordat de helper kan versturen. De VOG
+  /// kan weken duren; daarvoor is de wachtbalk.
+  bool get isVerplicht => this == ScreeningStap.identiteit;
 
   /// Is deze stap af, gezien de gegevens die nu op de server staan.
   bool isAf(ScreeningGegevens gegevens) {
     final profiel = gegevens.profiel;
-    final account = gegevens.account;
+    if (profiel == null) return false;
     return switch (this) {
-      ScreeningStap.profiel =>
-        account.heeftFoto &&
-            account.geboortedatum != null &&
-            (profiel?.overMij.trim().isNotEmpty ?? false),
-      ScreeningStap.identiteit => profiel?.heeftDocumentFoto ?? false,
-      ScreeningStap.selfie => profiel?.heeftSelfie ?? false,
+      ScreeningStap.identiteit =>
+        profiel.heeftDocumentFoto || profiel.isIdGecontroleerd,
       ScreeningStap.vog =>
-        profiel != null &&
-            (profiel.vogAangevraagdOp != null ||
-                profiel.vogStatus != HhScreeningStatus.nieuw),
-      ScreeningStap.iban => profiel?.iban.isNotEmpty ?? false,
-      ScreeningStap.werkgebied =>
-        account.wijkId.isNotEmpty && (profiel?.straalKm ?? 0) > 0,
-      ScreeningStap.beschikbaarheid =>
-        !(profiel?.beschikbaarheid.isLeeg ?? true),
-      ScreeningStap.klussoorten => profiel?.klustypeIds.isNotEmpty ?? false,
+        profiel.vogGezienOp != null || profiel.vogAangevraagdOp != null,
+      ScreeningStap.overMij => profiel.overMij.trim().isNotEmpty,
     };
   }
-
-  static bool alleAf(ScreeningGegevens gegevens) =>
-      values.every((stap) => stap.isAf(gegevens));
 }
 
-/// Mag de knop "Ter controle aanbieden" actief zijn: alle stappen af en
-/// nog niet ingediend (server-rule: alleen nieuw -> in_behandeling).
+/// Mag de knop "Aanmelding versturen" actief zijn: de ID-foto staat er en er
+/// is nog niet ingediend (server-rule: alleen nieuw -> in_behandeling).
 bool kanTerControleAanbieden(ScreeningGegevens gegevens) =>
-    ScreeningStap.alleAf(gegevens) && gegevens.verificatiestatus.kanIndienen;
+    ScreeningStap.identiteit.isAf(gegevens) &&
+    gegevens.verificatiestatus.kanIndienen;

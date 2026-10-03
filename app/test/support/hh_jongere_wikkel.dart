@@ -35,10 +35,22 @@ final Uint8List testFotoBytes = base64Decode(
 HhFoto testFoto([String naam = 'foto.png']) =>
     HhFoto(bytes: testFotoBytes, bestandsnaam: naam);
 
-/// Jongere zonder profiel en zonder accountvelden: de start van J1.
-FakeProfielGateway fakeNieuweJongere() => FakeProfielGateway();
+/// Geboortedatum van een helper van 13 en van een van 26 (in 2026).
+final jongGeboren = DateTime.utc(2013, 3, 1);
+final volwassenGeboren = DateTime.utc(2000, 5, 14);
 
-/// Jongere met een profiel in een gegeven staat.
+/// Helper net na het aanmeldformulier: geboortedatum, nog geen profiel.
+FakeProfielGateway fakeNieuweJongere({bool isMinderjarig = false}) =>
+    FakeProfielGateway(
+      accounts: {
+        jongereId: HhAccountGegevens(
+          geboortedatum: isMinderjarig ? jongGeboren : volwassenGeboren,
+          wijkId: 'wijk-west',
+        ),
+      },
+    );
+
+/// Helper met een profiel in een gegeven staat.
 FakeProfielGateway fakeJongereMet({
   required HhProfiel profiel,
   HhAccountGegevens account = const HhAccountGegevens(),
@@ -47,20 +59,40 @@ FakeProfielGateway fakeJongereMet({
   accounts: {jongereId: account},
 );
 
-/// Alles af, maar nog niet ingediend (status nieuw): J9 mag indienen.
-FakeProfielGateway fakeJongereKlaarOmInTeDienen() {
-  final klaar = FakeProfielGateway.goedgekeurd(jongereId);
-  klaar.zetStatus(
-    jongereId,
-    verificatiestatus: HhScreeningStatus.nieuw,
-    vogStatus: HhScreeningStatus.nieuw,
-  );
-  return klaar;
-}
+/// ID-foto staat er, nog niet verstuurd (status nieuw): J9 mag versturen.
+FakeProfielGateway fakeJongereKlaarOmInTeDienen({bool isMinderjarig = false}) =>
+    fakeJongereMet(
+      profiel: HhProfiel(
+        id: 'profiel-$jongereId',
+        gebruikerId: jongereId,
+        documentFoto: 'document_1.jpg',
+      ),
+      account: HhAccountGegevens(
+        geboortedatum: isMinderjarig ? jongGeboren : volwassenGeboren,
+        wijkId: 'wijk-west',
+      ),
+    );
 
+/// Een volwassen helper met VOG gezien, in [status].
 FakeProfielGateway fakeJongereMetStatus(HhScreeningStatus status) {
   final fake = FakeProfielGateway.goedgekeurd(jongereId);
   fake.zetStatus(jongereId, verificatiestatus: status);
+  return fake;
+}
+
+/// Goedgekeurd, maar nog wachtend: onder 18 zonder ouder-toestemming
+/// ([isMinderjarig]) of 18+ zonder VOG gezien.
+FakeProfielGateway fakeJongereGoedgekeurdWachtend({
+  bool isMinderjarig = false,
+}) {
+  final fake = FakeProfielGateway.goedgekeurd(jongereId);
+  fake.zetVogGezien(jongereId, null);
+  if (isMinderjarig) {
+    fake.zetAccount(
+      jongereId,
+      HhAccountGegevens(geboortedatum: jongGeboren, wijkId: 'wijk-west'),
+    );
+  }
   return fake;
 }
 
