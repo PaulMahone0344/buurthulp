@@ -26,7 +26,9 @@ import type {
   Markering,
   Oudere,
   Profiel,
+  Recensie,
   Rol,
+  Verklaring,
   Wijk,
 } from './types'
 import { ROLLEN } from './types'
@@ -131,6 +133,47 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     ouderAvp: ouderRij ? ouderRij.avp_verklaard === true : null,
     ouderStatus: tekst(ouderRij?.status),
     adresBron: naarAdresBron(gebruiker?.adres_bron),
+    niveau: tekst(r.niveau),
+    xpTotaal: getal(r.xp_totaal),
+  }
+}
+
+/** B9: een beoordeling met tekst, met de namen van gever en ontvanger. */
+export function naarRecensie(r: Uitgebreid): Recensie {
+  return {
+    id: r.id,
+    sterren: getal(r.sterren),
+    tekst: tekst(r.tekst),
+    vanNaam: tekst(uitgebreid(r, 'van_gebruiker')?.naam),
+    naarNaam: tekst(uitgebreid(r, 'naar_gebruiker')?.naam),
+    gemaaktOp: naarIso(r.created),
+    verborgen: tekst(r.verborgen_op) !== '',
+    verborgenReden: tekst(r.verborgen_reden),
+  }
+}
+
+/** B9: het antwoord van GET /api/hh/verklaring/{code}. */
+export function naarVerklaring(body: unknown): Verklaring {
+  const b = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>
+  const g = (b.gegevens && typeof b.gegevens === 'object' ? b.gegevens : {}) as Record<string, unknown>
+  const paren = (v: unknown) =>
+    Array.isArray(v)
+      ? v.map((x) => {
+          const o = (x && typeof x === 'object' ? x : {}) as Record<string, unknown>
+          return { naam: tekst(o.naam), datum: tekst(o.datum) }
+        })
+      : []
+  return {
+    code: tekst(b.code),
+    uitgegevenOp: naarIso(tekst(b.uitgegeven_op)),
+    voornaam: tekst(g.voornaam),
+    klussen: getal(g.klussen),
+    uren: getal(g.uren),
+    periodeVan: tekst(g.periode_van),
+    periodeTot: tekst(g.periode_tot),
+    niveau: tekst(g.niveau),
+    badges: paren(g.badges),
+    vertrouwen: paren(g.vertrouwen),
   }
 }
 
@@ -533,5 +576,32 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
       metFout(async () =>
         (await col('hh_auditlog').getList(1, 500, { sort: '-created', expand: 'door' })).items.map(naarAuditregel),
       ),
+    // ---- B9 -----------------------------------------------------------
+    recensies: () =>
+      metFout(async () =>
+        (
+          await col('hh_beoordelingen').getList(1, 100, {
+            filter: 'tekst != ""',
+            sort: '-created',
+            expand: 'van_gebruiker,naar_gebruiker',
+          })
+        ).items.map(naarRecensie),
+      ),
+    verbergRecensie: (id, verbergen, reden) =>
+      metFout(async () => {
+        await pb.send(`/api/hh/beoordelingen/${encodeURIComponent(id)}/verbergen`, {
+          method: 'POST',
+          body: { verborgen: verbergen, reden },
+        })
+      }),
+    zoekVerklaring: (code) =>
+      metFout(async () => {
+        try {
+          return naarVerklaring(await pb.send(`/api/hh/verklaring/${encodeURIComponent(code)}`, { method: 'GET' }))
+        } catch (fout) {
+          if (fout instanceof ClientResponseError && fout.status === 404) return null
+          throw fout
+        }
+      }),
   }
 }

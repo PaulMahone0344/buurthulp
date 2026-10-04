@@ -6,8 +6,7 @@ import {
   naarInstelling,
   naarKlus,
   naarKlusNaTeKijken,
-  naarProfiel,
-} from './pocketbaseBeheerData'
+  naarProfiel, naarRecensie, naarVerklaring } from './pocketbaseBeheerData'
 
 type Antwoord = { status: number; body: unknown }
 
@@ -336,5 +335,30 @@ describe('ADRES: adres_bron', () => {
     expect(naarAdresBron('pdok')).toBe('pdok')
     expect(naarAdresBron('iets')).toBe('')
     expect(naarAdresBron(undefined)).toBe('')
+  })
+
+  it('B9: niveau en XP op het profiel, recensie en verklaring', () => {
+    const p = naarProfiel({ id: 'p1', collectionId: 'c', collectionName: 'hh_profielen', niveau: 'ervaren', xp_totaal: 605 }, (b) => b)
+    expect(p.niveau).toBe('ervaren')
+    expect(p.xpTotaal).toBe(605)
+    const leeg = naarProfiel({ id: 'p2', collectionId: 'c', collectionName: 'hh_profielen' }, (b) => b)
+    expect(leeg.niveau).toBe('')
+    expect(leeg.xpTotaal).toBe(0)
+
+    const r = naarRecensie({
+      id: 'b1', collectionId: 'c', collectionName: 'hh_beoordelingen', sterren: 4, tekst: 'Top', created: '2026-10-01 10:00:00.000Z',
+      verborgen_op: '2026-10-02 10:00:00.000Z', verborgen_reden: 'nummer',
+      expand: {
+        van_gebruiker: { id: 'u1', collectionId: 'u', collectionName: 'hh_users', naam: 'Anja' },
+        naar_gebruiker: { id: 'u2', collectionId: 'u', collectionName: 'hh_users', naam: 'Daan' },
+      },
+    })
+    expect(r).toMatchObject({ sterren: 4, vanNaam: 'Anja', naarNaam: 'Daan', verborgen: true, verborgenReden: 'nummer' })
+    expect(naarRecensie({ id: 'b2', collectionId: 'c', collectionName: 'hh_beoordelingen' }).verborgen).toBe(false)
+
+    const v = naarVerklaring({ code: 'ABCDE-FGH23', uitgegeven_op: '2026-10-04 10:00:00.000Z', gegevens: { voornaam: 'Daan', klussen: 5, badges: [{ naam: 'Eerste klus', datum: '2026-08-01' }] } })
+    expect(v).toMatchObject({ code: 'ABCDE-FGH23', voornaam: 'Daan', klussen: 5, uren: 0, uitgegevenOp: '2026-10-04T10:00:00.000Z' })
+    expect(v.badges).toEqual([{ naam: 'Eerste klus', datum: '2026-08-01' }])
+    expect(naarVerklaring(null).code).toBe('')
   })
 })

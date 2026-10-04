@@ -93,6 +93,35 @@ export type Profiel = {
   ouderStatus: string
   /** ADRES: hh_users.adres_bron van de helper. */
   adresBron?: AdresBron
+  /** B9: niveau-code (nieuw|ervaren|top|geverifieerd) en XP van de hook. */
+  niveau?: string
+  xpTotaal?: number
+}
+
+/** B9: een recensie (beoordeling met tekst) voor de meldkamer. */
+export type Recensie = {
+  id: string
+  sterren: number
+  tekst: string
+  vanNaam: string
+  naarNaam: string
+  gemaaktOp: string
+  verborgen: boolean
+  verborgenReden: string
+}
+
+/** B9: wat er op een "Verklaring van inzet" stond (controle met de code). */
+export type Verklaring = {
+  code: string
+  uitgegevenOp: string
+  voornaam: string
+  klussen: number
+  uren: number
+  periodeVan: string
+  periodeTot: string
+  niveau: string
+  badges: { naam: string; datum: string }[]
+  vertrouwen: { naam: string; datum: string }[]
 }
 
 export type Wijk = {

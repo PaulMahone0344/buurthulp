@@ -25,6 +25,8 @@ import type {
   Rol,
   Screeningbesluit,
   Wijk,
+  Recensie,
+  Verklaring,
 } from './types'
 
 export class BeheerFout extends Error {
@@ -91,4 +93,12 @@ export interface BeheerData {
   slaInstellingOp(sleutel: string, waarde: string): Promise<void>
   betalingen(): Promise<Betaling[]>
   auditlog(): Promise<Auditregel[]>
+
+  // ---- B9 recensies en verklaringen ------------------------------------
+  /** De nieuwste beoordelingen met tekst (ook verborgen), nieuwste eerst. */
+  recensies(): Promise<Recensie[]>
+  /** POST /api/hh/beoordelingen/{id}/verbergen; de hook rekent sterren en XP opnieuw. */
+  verbergRecensie(id: string, verbergen: boolean, reden: string): Promise<void>
+  /** GET /api/hh/verklaring/{code}; null als de code onbekend is. */
+  zoekVerklaring(code: string): Promise<Verklaring | null>
 }

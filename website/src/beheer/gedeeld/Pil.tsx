@@ -41,3 +41,11 @@ export function AdresBronPil({ bron }: { bron?: AdresBron }) {
   if (bron === 'ongecontroleerd') return <Pil toon="fout">Adres niet gecontroleerd</Pil>
   return null
 }
+
+const NIVEAU_NAAM: Record<string, string> = { nieuw: 'Nieuw', ervaren: 'Ervaren', top: 'Top', geverifieerd: 'Geverifieerd' }
+
+/** B9: niveau + XP van een helper (de hook rekent; hier alleen tonen). Niets zonder niveau. */
+export function NiveauPil({ niveau, xp }: { niveau?: string; xp?: number }) {
+  if (!niveau) return null
+  return <Pil toon="gematcht">{`Niveau ${NIVEAU_NAAM[niveau] ?? niveau} · ${xp ?? 0} XP`}</Pil>
+}

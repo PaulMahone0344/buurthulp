@@ -28,6 +28,8 @@ import type {
   Rol,
   Screeningbesluit,
   Wijk,
+  Recensie,
+  Verklaring,
 } from './types'
 
 export type FakeAccount = { email: string; wachtwoord: string; rol: Rol; naam: string; id: string; geblokkeerd?: boolean }
@@ -46,6 +48,9 @@ export type FakeStand = {
   betalingen: Betaling[]
   auditlog: Auditregel[]
   naTeKijken: KlusNaTeKijken[]
+  /** B9 */
+  recensies: Recensie[]
+  verklaringen: Verklaring[]
 }
 
 export type Aanroep = { methode: string; args: unknown[] }
@@ -89,6 +94,8 @@ export function legeStand(): FakeStand {
     betalingen: [],
     auditlog: [],
     naTeKijken: [],
+    recensies: [],
+    verklaringen: [],
   }
 }
 
@@ -395,5 +402,26 @@ export class FakeBeheerData implements BeheerData {
 
   auditlog() {
     return this.lees(this.stand.auditlog)
+  }
+
+  // ---- B9 -------------------------------------------------------------
+  recensies() {
+    return this.lees(this.stand.recensies)
+  }
+
+  async verbergRecensie(id: string, verbergen: boolean, reden: string) {
+    this.schrijf('verbergRecensie', id, verbergen, reden)
+    const r = this.stand.recensies.find((x) => x.id === id)
+    if (r) {
+      r.verborgen = verbergen
+      r.verborgenReden = verbergen ? reden : ''
+    }
+  }
+
+  async zoekVerklaring(code: string) {
+    if (!this.ingelogd) throw new BeheerFout('Dit mag alleen een coordinator.')
+    const schoon = code.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    const v = this.stand.verklaringen.find((x) => x.code.replace('-', '') === schoon)
+    return v ? structuredClone(v) : null
   }
 }

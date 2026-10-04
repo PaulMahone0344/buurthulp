@@ -1,4 +1,4 @@
-// M14 — D4 SYSTEEMBEHEER. Zes tabbladen; het gekozen tabblad staat in de URL
+// M14 — D4 SYSTEEMBEHEER. Zeven tabbladen (B9: Recensies); het gekozen tabblad staat in de URL
 // (?tab=...). D3 (gemeentecijfers) is M15 en hoort hier niet.
 
 import type { BeheerData } from '../data/beheerData'
@@ -7,6 +7,7 @@ import { Betalingen } from './Betalingen'
 import { Gebruikers } from './Gebruikers'
 import { Instellingen } from './Instellingen'
 import { Klustypes } from './Klustypes'
+import { Recensies } from './Recensies'
 import { Wijken } from './Wijken'
 
 type Props = {
@@ -22,6 +23,8 @@ const TABS = [
   { id: 'instellingen', label: 'Instellingen' },
   { id: 'betalingen', label: 'Betalingen' },
   { id: 'auditlog', label: 'Auditlog' },
+  // B9: recensies verbergen en een verklaring van inzet nakijken.
+  { id: 'recensies', label: 'Recensies' },
 ] as const
 type Tab = (typeof TABS)[number]['id']
 
@@ -34,7 +37,7 @@ export function Systeem({ data, filters, zetFilters }: Props) {
       <header className="dashboard-topbar">
         <div>
           <h1>Systeembeheer</h1>
-          <p>Wijken, klustypes, gebruikers, instellingen, betalingen en het auditlog.</p>
+          <p>Wijken, klustypes, gebruikers, instellingen, betalingen, het auditlog en recensies.</p>
         </div>
       </header>
       <div className="seg" role="tablist" aria-label="Onderdelen systeembeheer">
@@ -57,6 +60,7 @@ export function Systeem({ data, filters, zetFilters }: Props) {
         {tab === 'gebruikers' ? <Gebruikers data={data} zoek={filters.zoek ?? ''} zetZoek={(zoek) => zetTabFilters({ zoek })} /> : null}
         {tab === 'instellingen' ? <Instellingen data={data} /> : null}
         {tab === 'betalingen' ? <Betalingen data={data} /> : null}
+        {tab === 'recensies' ? <Recensies data={data} /> : null}
         {tab === 'auditlog' ? (
           <Auditlog
             data={data}

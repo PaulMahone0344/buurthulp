@@ -159,4 +159,43 @@ describe('D4 systeembeheer', () => {
     await user.selectOptions(screen.getByLabelText('Actie'), 'aanmaken')
     expect(zetFilters).toHaveBeenCalledWith({ tab: 'auditlog', actie: 'aanmaken', persoon: '' })
   })
+
+  it('B9: recensie verbergen met reden en terugzetten', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      {
+        recensies: [
+          { id: 'b1', sterren: 2, tekst: 'Bel me op 0612345678', vanNaam: 'Anja de Vries', naarNaam: 'Daan', gemaaktOp: '2026-10-01T10:00:00Z', verborgen: false, verborgenReden: '' },
+        ],
+      },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'recensies' })
+    await user.type(await screen.findByLabelText('Reden om de recensie van Anja de Vries te verbergen'), 'Telefoonnummer')
+    await user.click(screen.getByRole('button', { name: 'Verbergen' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'verbergRecensie', args: ['b1', true, 'Telefoonnummer'] })
+    expect(await screen.findByText('Verborgen')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Terugzetten' }))
+    expect(data.aanroepen).toContainEqual({ methode: 'verbergRecensie', args: ['b1', false, ''] })
+  })
+
+  it('B9: een verklaring nakijken met de controlecode', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      {
+        verklaringen: [
+          { code: 'ABCDE-FGH23', uitgegevenOp: '2026-10-04T10:00:00Z', voornaam: 'Daan', klussen: 5, uren: 6.5, periodeVan: '2026-08-01', periodeTot: '2026-09-12', niveau: 'Ervaren', badges: [{ naam: 'Eerste klus', datum: '2026-08-01' }], vertrouwen: [] },
+        ],
+      },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'recensies' })
+    await user.type(screen.getByLabelText('Controlecode'), 'abcde fgh23')
+    await user.click(screen.getByRole('button', { name: 'Nakijken' }))
+    expect(await screen.findByText(/ABCDE-FGH23 · Daan · 5 klussen/)).toBeInTheDocument()
+    await user.clear(screen.getByLabelText('Controlecode'))
+    await user.type(screen.getByLabelText('Controlecode'), 'ZZZZZ-ZZZZZ')
+    await user.click(screen.getByRole('button', { name: 'Nakijken' }))
+    expect(await screen.findByText('Deze code kennen we niet.')).toBeInTheDocument()
+  })
 })

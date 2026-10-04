@@ -1,0 +1,68 @@
+/* B9 — de verklaring-pagina (#/verklaring). Bouwt op ouder.css (tokens --o-*);
+   bij printen alleen de verklaring zelf, zonder knoppen. */
+
+.verklaring-invul {
+  display: grid;
+  gap: 12px;
+}
+
+.verklaring__zin {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.verklaring__feiten,
+.verklaring__badges {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.verklaring__badges li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  border-bottom: 1px solid var(--o-line);
+  padding-bottom: 6px;
+}
+
+.verklaring__datum {
+  color: var(--o-muted);
+}
+
+.verklaring__code {
+  margin: 0 0 4px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 24px;
+  letter-spacing: 2px;
+  overflow-wrap: anywhere;
+}
+
+.verklaring__knoppen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.verklaring__knoppen a {
+  text-align: center;
+  text-decoration: none;
+}
+
+@media (max-width: 360px) {
+  .verklaring__knoppen {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .verklaring__knoppen,
+  .ouder-kopbalk,
+  .ouder-hulptekst {
+    display: none;
+  }
+}

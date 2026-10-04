@@ -9,7 +9,7 @@ import type { BeheerData } from '../data/beheerData'
 import { controleerBesluit } from '../data/screening'
 import { vogSignaal } from '../data/tegels'
 import { toonDatum, toonMoment } from '../data/tijd'
-import { AdresBronPil } from '../gedeeld/Pil'
+import { AdresBronPil, NiveauPil } from '../gedeeld/Pil'
 import type { Profiel, Screeningbesluit, Screeningstatus } from '../data/types'
 import { Foutmelding, Gelukt } from '../gedeeld/Meldbalk'
 import { SCREENING_LABEL } from '../teksten'
@@ -91,6 +91,7 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
         {profiel.email} · {profiel.wijkNaam || 'geen wijk'} · nu {SCREENING_LABEL[profiel.verificatiestatus].toLowerCase()}
       </p>
       <AdresBronPil bron={profiel.adresBron} />
+      <NiveauPil niveau={profiel.niveau} xp={profiel.xpTotaal} />
       <div className="beheer-fotos">
         <Foto url={profiel.documentFotoUrl} titel="Identiteitsbewijs" />
       </div>
