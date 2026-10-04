@@ -27,6 +27,7 @@ import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart'
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/theme.dart';
+import 'package:heitjehulp_app/core/pb/fake_xp_gateway.dart';
 
 import 'hh_jongere_wikkel.dart';
 import 'hh_toegang_wikkel.dart';
@@ -166,6 +167,7 @@ ProviderContainer klussenContainer({
   FakeUitvoerGateway? uitvoerGateway,
   FakeBeoordelingGateway? beoordelingGateway,
   FakeReactieGateway? reactieGateway,
+  FakeXpGateway? xpGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -182,6 +184,7 @@ ProviderContainer klussenContainer({
         uitvoerGateway: uitvoerGateway,
         beoordelingGateway: beoordelingGateway,
         reactieGateway: reactieGateway,
+        xpGateway: xpGateway,
       ),
       klokProvider.overrideWithValue(() => nu ?? klussenNu),
       kaartTegelsProvider.overrideWithValue(NepTegels.new),

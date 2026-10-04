@@ -138,4 +138,8 @@ abstract final class TekstenReactiesNl {
   static const geheimKies = 'Kies eerst Ja of Nee.';
   static const geheimNeeBedankt =
       'Dank je. De meldkamer neemt contact met je op.';
+
+  // ---- B9 -----------------------------------------------------------
+  /// Pil op KiesHelper bij een helper die nog geen klus klaar heeft.
+  static const nieuwInDeBuurt = 'Nieuw in de buurt';
 }

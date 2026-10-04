@@ -29,6 +29,7 @@ import '../domein/wanneer_tekst.dart';
 import '../model/hh_klus.dart';
 import '../paden_klussen.dart';
 import '../provider/klussen_providers.dart';
+import '../../xp/widget/xp_start_regel.dart';
 import '../widget/jongere_tabbalk.dart';
 import '../widget/klus_tegel.dart';
 import '../widget/klussen_kaart.dart';
@@ -122,6 +123,8 @@ class _KlussenHomeScreenState extends ConsumerState<KlussenHomeScreen> {
     final schakelaar = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // B9: klein XP/niveau-blok (tik = Profiel). De Start-indeling is B10.
+        const XpStartRegel(),
         const KanNuHelpenSchakelaar(),
         SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
         weergave,

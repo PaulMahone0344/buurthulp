@@ -193,9 +193,11 @@ class PocketBaseBeoordelingGateway implements BeoordelingGateway {
           .getList(
             perPage: limiet,
             skipTotal: true,
-            filter: client.filter('naar_gebruiker = {:id} && tekst != ""', {
-              'id': naarId,
-            }),
+            // B9: een recensie die de meldkamer verborg, tonen we niet.
+            filter: client.filter(
+              'naar_gebruiker = {:id} && tekst != "" && verborgen_op = ""',
+              {'id': naarId},
+            ),
             sort: '-created',
           );
       return [for (final r in pagina.items) HhBeoordeling.vanRecord(r)];

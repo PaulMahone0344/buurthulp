@@ -21,6 +21,8 @@ abstract final class HhPadenKlussen {
   static bool isKlussenPad(String locatie) =>
       locatie == mijnKlussen ||
       locatie == profiel ||
+      // B9: verdiensten en verklaring hangen onder het Profiel.
+      locatie.startsWith('$profiel/') ||
       locatie == instellingen ||
       locatie.startsWith('$klus/');
 }

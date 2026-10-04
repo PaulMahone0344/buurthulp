@@ -14,6 +14,7 @@ import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
 import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
+import 'package:heitjehulp_app/core/pb/xp_gateway.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/hulpvrager_providers.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
@@ -41,6 +42,7 @@ class SweepData {
     this.meldingen,
     this.coordinator,
     this.chat,
+    this.xp,
     this.extra,
   });
 
@@ -52,6 +54,9 @@ class SweepData {
 
   /// B6: de chat (berichten en de teller op de Chat-knoppen).
   final ChatGateway Function()? chat;
+
+  /// B9: XP, niveau, badges en verdiensten (Profiel, Start).
+  final XpGateway Function()? xp;
   final List<dynamic> Function()? extra;
 }
 
@@ -89,6 +94,7 @@ Future<List<String>> bekijk(
         meldingenGateway: data.meldingen?.call(),
         coordinatorGateway: data.coordinator?.call(),
         chatGateway: data.chat?.call(),
+        xpGateway: data.xp?.call(),
       ),
       // Nooit het netwerk op: nep-kaarttegels en een vaste klok.
       kaartTegelsProvider.overrideWithValue(NepTegels.new),

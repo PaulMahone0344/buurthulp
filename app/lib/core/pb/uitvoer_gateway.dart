@@ -4,6 +4,7 @@ import 'package:pocketbase/pocketbase.dart';
 
 import '../../features/jongere/klussen/model/hh_klus.dart';
 import '../../features/jongere/uitvoeren/model/hh_klus_logregel.dart';
+import '../../features/jongere/xp/model/hh_xp.dart';
 import '../../theme.dart';
 import '../hh_fout.dart';
 import '../result.dart';
@@ -47,9 +48,13 @@ sealed class UitvoerUitkomst {
 
 /// De stap of annulering is gezet; [status] is de nieuwe status.
 final class UitvoerGelukt extends UitvoerUitkomst {
-  const UitvoerGelukt(this.status);
+  const UitvoerGelukt(this.status, {this.beloning});
 
   final HhKlusStatus status;
+
+  /// B9: na "afgerond" stuurt de server de beloning mee (+XP, niveau,
+  /// nieuwe badges) voor HBeloning. Anders null.
+  final HhBeloning? beloning;
 }
 
 final class UitvoerGeweigerd extends UitvoerUitkomst {
@@ -161,7 +166,10 @@ class PocketBaseUitvoerGateway implements UitvoerGateway {
     final result = await _gateway.voerUit<UitvoerUitkomst>((client) async {
       try {
         final antwoord = await client.send(pad, method: 'POST', body: body);
-        return UitvoerGelukt(_statusUit(antwoord) ?? standaard);
+        return UitvoerGelukt(
+          _statusUit(antwoord) ?? standaard,
+          beloning: HhBeloning.vanJson(_alsMap(antwoord)['beloning']),
+        );
       } on ClientException catch (e) {
         final uitkomst = _weigeringUit(e);
         if (uitkomst == null) rethrow;

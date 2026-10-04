@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import '../../../design/components/hh_kaart.dart';
 import '../../../design/components/hh_knop.dart';
 import '../../../design/dichtheid_scope.dart';
-import '../../../design/lijn.dart';
 import '../../../l10n/teksten_reacties_nl.dart';
 import '../../../theme.dart';
 import '../domein/reactie_regels.dart';
 import '../model/hh_reactie.dart';
+import '../../jongere/xp/widget/niveau_pil.dart';
 import 'initialen_avatar.dart';
 
 /// KiesHelper: één helper die wil helpen. Initialen-avatar, voornaam en
-/// leeftijd, niveau-pil ("Nieuw" tot B9), sterren met aantal, "ID
+/// leeftijd, niveau-pil (B9: echt niveau, plus "Nieuw in de buurt"), sterren met aantal, "ID
 /// gecontroleerd", één regel uit de laatste recensie en het berichtje van de
 /// helper. Nooit een achternaam, geboortedatum of adres (die stuurt de
 /// server ook niet).
@@ -66,7 +66,12 @@ class HelperKaart extends StatelessWidget {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(naam, style: tekst.titleMedium),
-                          _Pil(tekst: kaart.niveau),
+                          NiveauPil(tekst: kaart.niveau),
+                          if (kaart.isNieuwInDeBuurt)
+                            const NiveauPil(
+                              tekst: TekstenReactiesNl.nieuwInDeBuurt,
+                              isZacht: true,
+                            ),
                         ],
                       ),
                       SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
@@ -141,35 +146,6 @@ class HelperKaart extends StatelessWidget {
             onPressed: onKies,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Pil extends StatelessWidget {
-  const _Pil({required this.tekst});
-
-  final String tekst;
-
-  @override
-  Widget build(BuildContext context) {
-    final dichtheid = HhDichtheidScope.van(context);
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: HhRuimte.voor(HhRuimte.xs, dichtheid) / 2,
-        horizontal: HhRuimte.voor(HhRuimte.s, dichtheid),
-      ),
-      decoration: BoxDecoration(
-        color: HhKleuren.accentZacht,
-        borderRadius: BorderRadius.circular(HhRadius.rond),
-        border: Border.all(color: HhKleuren.accent, width: HhLijn.dun(context)),
-      ),
-      child: Text(
-        tekst,
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-          color: HhKleuren.waarschuwing,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

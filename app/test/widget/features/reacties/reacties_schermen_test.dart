@@ -53,6 +53,8 @@ const _sanne = HhReactieKaart(
   helperId: 'h-sanne',
   voornaam: 'Sanne',
   leeftijd: 16,
+  // B9: nog geen klus klaar.
+  isNieuwInDeBuurt: true,
 );
 
 HhKlus _openKlus({int reacties = 2}) => uitvoerKlus(
@@ -129,6 +131,8 @@ void main() {
       expect(find.text(TekstenReactiesNl.aantalReacties(2)), findsOneWidget);
       expect(find.text('Daan, 14'), findsOneWidget);
       expect(find.text('Nieuw'), findsNWidgets(2));
+      // B9: "Nieuw in de buurt" alleen bij wie nog geen klus klaar heeft.
+      expect(find.text(TekstenReactiesNl.nieuwInDeBuurt), findsOneWidget);
       expect(find.text('4,8 (12)'), findsOneWidget);
       expect(find.text(TekstenReactiesNl.idGecontroleerd), findsOneWidget);
       expect(find.text('“Heel netjes de heg geknipt.”'), findsOneWidget);

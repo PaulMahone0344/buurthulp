@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../features/jongere/klussen/model/hh_klus.dart';
 import '../../features/jongere/uitvoeren/domein/klus_overgang.dart';
 import '../../features/jongere/uitvoeren/model/hh_klus_logregel.dart';
+import '../../features/jongere/xp/model/hh_xp.dart';
 import '../../theme.dart';
 import '../hh_fout.dart';
 import '../result.dart';
@@ -44,6 +45,9 @@ class FakeUitvoerGateway implements UitvoerGateway {
   bool isOffline = false;
   HhFout? volgendeFout;
   UitvoerUitkomst? volgendeUitkomst;
+
+  /// B9: wat de statusroute bij "afgerond" als beloning meestuurt.
+  HhBeloning? beloningBijAfgerond;
 
   int aantalStatusStappen = 0;
   int aantalAnnuleringen = 0;
@@ -118,7 +122,10 @@ class FakeUitvoerGateway implements UitvoerGateway {
     _log(klus, klus.status, naar);
     gezetteStappen.add(naar.name);
     zendUit(nieuw);
-    return UitvoerGelukt(naar);
+    return UitvoerGelukt(
+      naar,
+      beloning: naar == HhKlusStatus.afgerond ? beloningBijAfgerond : null,
+    );
   }
 
   @override

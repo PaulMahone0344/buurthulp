@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +36,7 @@ import '../widget/annuleer_dialoog.dart';
 import '../widget/bel_actie.dart';
 import '../widget/klus_stappen.dart';
 import '../widget/persoon_regel.dart';
+import '../../xp/paden_xp.dart';
 
 /// J15. Eén klus, één grote knop per stap: "Ik ga op weg" -> "Ik ben er" ->
 /// "Klus is klaar". De server beslist; een 409 zet een meldbalk neer en
@@ -75,11 +78,20 @@ class _KlusUitvoerenScreenState extends ConsumerState<KlusUitvoerenScreen> {
     if (!mounted) return;
     setState(() => _isBezig = false);
     switch (uitkomst) {
-      case UitvoerGelukt(:final status):
+      case UitvoerGelukt(:final status, :final beloning):
         _toon(
           TekstenUitvoerenNl.j15Gezet(KlusStappen.naamVan(status)),
           HhMeldSoort.geslaagd,
         );
+        // B9: klaar -> HBeloning (+XP, niveau, badges) als er iets te
+        // vieren is. Terug komt hij weer hier, bij "Beoordeel".
+        if (status == HhKlusStatus.afgerond &&
+            beloning != null &&
+            beloning.isIetsTeVieren) {
+          unawaited(
+            context.push(HhPadenXp.beloning(widget.klusId), extra: beloning),
+          );
+        }
       case UitvoerGeweigerd(:final reden, :final melding):
         _toon(melding ?? _standaardMelding(reden), HhMeldSoort.fout);
       case UitvoerFout(:final fout):

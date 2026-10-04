@@ -12,6 +12,7 @@ import '../../../toegang/provider/sessie_providers.dart';
 import '../../klussen/model/hh_klus.dart';
 import '../../klussen/provider/klussen_providers.dart';
 import '../model/hh_klus_logregel.dart';
+import '../../xp/provider/xp_providers.dart';
 
 /// De echte uitvoer-gateway; tests overriden hem met een
 /// [FakeUitvoerGateway]. Staat hier en niet in gateway_providers.dart, zodat
@@ -158,6 +159,8 @@ Future<void> _naEenWissel(
       ref.invalidate(klusDetailProvider(klusId));
       ref.invalidate(mijnKlussenProvider);
       ref.invalidate(openKlussenProvider);
+      // B9: na "afgerond" zijn XP, niveau en badges veranderd.
+      ref.invalidate(xpOverzichtProvider);
     case UitvoerFout(:final fout):
       if (fout.soort == HhFoutSoort.nietIngelogd) {
         await ref.read(sessieControllerProvider.notifier).sessieVerlopen();

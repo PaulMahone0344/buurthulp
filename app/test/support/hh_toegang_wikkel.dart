@@ -44,6 +44,9 @@ import 'package:heitjehulp_app/features/toegang/provider/sessie_providers.dart';
 import 'package:heitjehulp_app/features/toegang/screen/hulp_screen.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/theme.dart';
+import 'package:heitjehulp_app/core/pb/xp_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_xp_gateway.dart';
+import 'package:heitjehulp_app/features/jongere/xp/provider/xp_providers.dart';
 
 /// Wachtwoord van de nep-accounts. Alleen voor de fake; bestaat nergens
 /// op een server.
@@ -138,7 +141,10 @@ List<dynamic> toegangOverrides({
   ChatGateway? chatGateway,
   AdresGateway? adresGateway,
   ReactieGateway? reactieGateway,
+  XpGateway? xpGateway,
 }) => [
+  // B9: XP, niveau en badges (Profiel, Start). Standaard een lege fake.
+  xpGatewayProvider.overrideWithValue(xpGateway ?? FakeXpGateway()),
   // B5: reageren en kiezen. Standaard een lege fake zonder netwerk; de
   // B5-tests geven hun eigen fake mee.
   reactieGatewayProvider.overrideWithValue(

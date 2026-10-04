@@ -1,6 +1,7 @@
 import '../../../l10n/teksten_chat_nl.dart';
 import '../../../l10n/teksten_meldingen_nl.dart';
 import '../../../l10n/teksten_reacties_nl.dart';
+import '../../../l10n/teksten_xp_nl.dart';
 import '../../chat/paden_chat.dart';
 import '../../coordinator/paden_coordinator.dart';
 import '../../hulpvrager/status/paden_status.dart';
@@ -38,6 +39,7 @@ String titelVan(HhMelding melding, HhRol rol) {
     HhMeldingSoort.incident => TekstenMeldingenNl.soortIncident,
     HhMeldingSoort.bericht => TekstenChatNl.meldingTitel,
     HhMeldingSoort.reactie => TekstenReactiesNl.kiesTitel,
+    HhMeldingSoort.beloning => TekstenXpNl.beloningTitel,
     HhMeldingSoort.onbekend => TekstenMeldingenNl.soortOnbekend,
   };
 }
@@ -59,6 +61,10 @@ String? doelVan(HhMelding melding, HhRol rol) {
       return HhPadenReacties.kies(klus);
     }
     if (rol == HhRol.jongere) return HhPadenKlussen.mijnKlussen;
+  }
+  // B9: een beloning opent het Profiel (niveau en badges).
+  if (melding.soort == HhMeldingSoort.beloning && rol == HhRol.jongere) {
+    return HhPadenKlussen.profiel;
   }
   switch (rol) {
     case HhRol.jongere:

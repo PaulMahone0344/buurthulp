@@ -17,6 +17,8 @@ import 'package:heitjehulp_app/features/jongere/reputatie/model/hh_beoordeling.d
 import 'package:heitjehulp_app/features/jongere/reputatie/reputatie_routes.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/uitvoeren_routes.dart';
+import 'package:heitjehulp_app/features/jongere/xp/xp_routes.dart';
+import 'package:heitjehulp_app/core/pb/fake_xp_gateway.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -71,6 +73,7 @@ Widget hhReputatieWikkel(
   List<HhKlus>? mijnKlussen,
   HhDichtheid dichtheid = HhDichtheid.normaal,
   double tekstschaal = 1.0,
+  FakeXpGateway? xpGateway,
 }) {
   final router = GoRouter(
     initialLocation: pad,
@@ -83,6 +86,8 @@ Widget hhReputatieWikkel(
       ...klussenRoutes(),
       ...uitvoerenRoutes(),
       ...reputatieRoutes(),
+      // B9: beloning, verdiensten, verklaring.
+      ...xpRoutes(),
     ],
   );
   final container = klussenContainer(
@@ -91,6 +96,7 @@ Widget hhReputatieWikkel(
     nu: uitvoerNu,
     uitvoerGateway: uitvoerGateway,
     beoordelingGateway: beoordelingGateway,
+    xpGateway: xpGateway,
   );
   return _app(router, container, dichtheid, tekstschaal);
 }

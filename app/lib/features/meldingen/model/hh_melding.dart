@@ -20,6 +20,9 @@ enum HhMeldingSoort {
   /// (helper).
   reactie('reactie'),
 
+  /// B9: "+75 XP", "Nieuwe badge" of "Nieuw niveau" (hook hh_xp_hulp.js).
+  beloning('beloning'),
+
   /// Een waarde die de app (nog) niet kent: de melding blijft zichtbaar.
   onbekend('');
 

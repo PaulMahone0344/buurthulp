@@ -33,6 +33,8 @@ import 'package:heitjehulp_app/features/toegang/screen/hulp_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
+import 'package:heitjehulp_app/core/pb/fake_xp_gateway.dart';
+import 'package:heitjehulp_app/features/jongere/xp/provider/xp_providers.dart';
 
 import 'hh_toegang_wikkel.dart';
 
@@ -219,6 +221,8 @@ ProviderContainer hulpvragerContainer({
       reactieGatewayProvider.overrideWithValue(
         reactieGateway ?? FakeReactieGateway(),
       ),
+      // B9: XP-overzicht (alleen voor helpers; hier nooit een verzoek).
+      xpGatewayProvider.overrideWithValue(FakeXpGateway()),
       // ADRES: nep-PDOK in Mijn gegevens; nooit een echt verzoek.
       adresGatewayProvider.overrideWithValue(FakeAdresGateway()),
       klokProvider.overrideWithValue(() => nu ?? testNu),

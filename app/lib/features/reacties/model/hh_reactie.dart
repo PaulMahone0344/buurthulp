@@ -122,6 +122,7 @@ class HhReactieKaart {
     required this.voornaam,
     this.leeftijd,
     this.niveau = 'Nieuw',
+    this.isNieuwInDeBuurt = false,
     this.sterren = 0,
     this.beoordelingen = 0,
     this.isIdGecontroleerd = false,
@@ -135,8 +136,12 @@ class HhReactieKaart {
   final String voornaam;
   final int? leeftijd;
 
-  /// "Nieuw" tot B9 echte niveaus brengt.
+  /// Het niveau zoals de server het noemt (B9: Nieuw, Ervaren, Top,
+  /// Geverifieerd).
   final String niveau;
+
+  /// B9: nog geen enkele klus klaar ("Nieuw in de buurt"-duwtje).
+  final bool isNieuwInDeBuurt;
   final double sterren;
   final int beoordelingen;
   final bool isIdGecontroleerd;
@@ -154,6 +159,7 @@ class HhReactieKaart {
       voornaam: '${json['voornaam'] ?? ''}',
       leeftijd: leeftijd is num ? leeftijd.toInt() : null,
       niveau: '${json['niveau'] ?? 'Nieuw'}',
+      isNieuwInDeBuurt: json['nieuw_in_de_buurt'] == true,
       sterren: sterren is num ? sterren.toDouble() : 0,
       beoordelingen: aantal is num ? aantal.toInt() : 0,
       isIdGecontroleerd: json['id_gecontroleerd'] == true,
