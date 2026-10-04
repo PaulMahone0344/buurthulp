@@ -1,4 +1,5 @@
 HeitjeHulp B5 — REAGEREN EN KIEZEN (MATCH) — proefrit (DRY-RUN tegen prod, niets geschreven) 4 okt 2026
+Bijgewerkt met de antwoorden van Ibrahim op OPEN-PUNTEN-B5 (4 okt, zie onderaan app/OPEN-PUNTEN-B5.txt).
 Branch b5/kiezen (worktree ~/flutter-builds/hh-b5, vanaf main 8f36420 = ADRES live).
 NOG NIET OP PROD. Uitrol alleen na JA van Ibrahim, auto-mode UIT voor 133.
 
@@ -9,7 +10,8 @@ WAT VERANDERT ER OP PROD (na JA)
       token_hash (hidden), klus_samenvatting, gekozen_op); unieke index
       (klus, helper)
     hh_profielen.beschikbaar_tot, hh_beoordelingen.alles_in_orde +
-      geheim_toelichting, hh_meldingen.soort + "reactie"
+      geheim_toelichting, hh_meldingen.soort + "reactie",
+      hh_incidenten.soort + "signaal" (antwoord 4; de bestaande waarden blijven)
   Rules (131): alleen die van de NIEUWE collectie hh_reacties. Geen
     bestaande rule verandert (dus 101/111/71/80 hoeven niet opnieuw).
   Hooks (133): NIEUW hh_reacties_teksten.js, hh_reacties_basis.js,
@@ -24,7 +26,14 @@ WAT VERANDERT ER OP PROD (na JA)
       één winnaar; een helper niet op twee klussen tegelijk); de anderen
       krijgen "De bewoner koos iemand anders";
     - "Ik kan nu helpen" (3 uur) + "N helpers kunnen nu" bij plaatsen;
-    - beoordelen: geheime vraag; "nee" -> incident voor de meldkamer;
+    - beoordelen: geheime vraag (verplicht); "nee" -> incident soort "signaal":
+      GEEN melding aan de coordinatoren, wel in de lijst van het paneel (pil
+      "Signaal na de klus") en de app; de meldkamer mag dan de chat lezen;
+    - helpers onder 18: reageren pas als de schakelaar b5_onder18_reageren_open
+      aan staat (bij de uitrol UIT, antwoord 5) -> 409 "Fijn dat je wilt
+      helpen! ... nog even niet ..."; de app toont een rustige balk;
+    - "nieuwe klus"-melding alleen aan wie "Ik kan nu helpen" aan heeft
+      (schakelaar b5_nieuwe_klus_alleen_beschikbaar AAN bij de uitrol, antwoord 2);
     - accepteren (oude app) werkt NOG, tot de schakelaar b5_accepteren_dicht
       aan gaat (OPEN-PUNTEN-B5 vraag 1); koppelen door de meldkamer blijft.
   M6-statusverloop: ONGEWIJZIGD (kiezen = open -> geaccepteerd, zelfde
@@ -47,16 +56,37 @@ KEUZE: OUDE ROUTE ACCEPTEREN
   accepteren bestaat; kiezen tegen koppelen bewijst 132 (sectie K: koppelen
   zet open reacties op afgewezen). 11 was al vóór B5 rood op 4 punten (zie
   hieronder) en verandert niet door B5.
-  Zelfde patroon voor "nieuwe klus alleen aan wie nu kan helpen": schakelaar
-  b5_nieuwe_klus_alleen_beschikbaar (standaard uit), anders worden 32 en 102
-  rood (OPEN-PUNTEN-B5 vraag 2).
+  Antwoord 1 (akkoord): accepteren gaat dicht zodra de nieuwe app op alle
+  test-telefoons staat; bij de uitrol blijft de schakelaar UIT (stap 9).
+
+SCHAKELAARS BIJ DE UITROL (hh_instellingen; waarde true = aan, geen rij = uit)
+  b5_nieuwe_klus_alleen_beschikbaar  AAN  (stap 4b; antwoord 2)
+  b5_onder18_reageren_open           UIT  (pas aan als de site online is, stap 8)
+  b5_accepteren_dicht                UIT  (pas aan na de nieuwe app, stap 9)
+  Checks die door "nieuwe klus alleen bij beschikbaar" rood zouden worden en
+  zijn aangepast (antwoord 2):
+    102-b4check: de tijdelijke helpers (11/14/17/25) krijgen bij het aanmaken
+      beschikbaar_tot = nu + 3 uur. De check meet de LEEFTIJDSgrens van B4 (14,
+      17, 25 krijgen de melding, 11 niet); dat blijft precies zo.
+    32-meldingencheck: jongere 1 en 2 (seed) staan tijdens de run 1 uur op
+      "Ik kan nu helpen"; sectie I zet de oude waarde terug. Daarnaast plaatst
+      de superuser de [meldingencheck]-klussen (telefonische ingang, meteen
+      goedgekeurd): 32 was sinds B4 al rood op de verplichte foto. Verder
+      verwacht 32 precies hetzelfde als in M8.
+    Andere checks letten niet op "nieuwe klus" (gezocht: alleen 32 en 102).
+  132-b5check volgt de schakelaars die op de server staan en zet wat hij
+  tijdelijk nodig heeft (onder 18 aan in E t/m K en kort in M; accepteren
+  dicht kort in N; nieuwe-klus aan in N als hij nog niet bestaat) aan het eind
+  precies terug (sectie O meet het na).
 
 LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie; schema + data = de lokale
 proef van ADRES (prod-schema, seed zoals prod), hooks van deze branch
 (Nominatim -> nep), nep-SMTP, nep-PDOK)
   130 dry-run -> --apply -> nogmaals: "Niets te doen" (idempotent)
   131 --apply -> nogmaals: "regels al up-to-date"
-  132 --apply: 137 groen, 0 rood (2x, ook na het splitsen van de hulp)
+  Met de schakelaars ZOALS BIJ DE UITROL (nieuwe-klus AAN, onder 18 en
+  accepteren UIT):
+  132 --apply: 144 groen, 0 rood (eerder, zonder schakelaars: 137 groen)
     RACE I: 20/20 (dezelfde bewoner, twee klikken tegelijk: één 200, één 409,
             één logregel per ronde; Ruud 15 / Sanne 5)
     RACE J: 20/20 (twee bewoners kiezen tegelijk dezelfde helper voor
@@ -70,20 +100,24 @@ proef van ADRES (prod-schema, seed zoals prod), hooks van deze branch
     de lokale server): reageren (nummer -> •••), mijn_reactie/reacties_aantal
     op de klus, KiesHelper-kaart zonder achternaam, kiezen, 409 klusbezet,
     helper ziet de klus exact, "Ik kan nu helpen" aan/uit. Groen.
-  Bestaande checks met de B5-hooks (allemaal 0 rood):
-    92 89, 102 144, 112 124, 82 79, 72 54, 62 118, 04 223, 50 60, 122 85
+  Bestaande checks met de B5-hooks en de schakelaars zoals bij de uitrol
+  (allemaal 0 rood):
+    32 39 (aangepast, was rood sinds B4), 92 89, 102 144, 112 124, 82 79,
+    72 54, 62 118, 04 223, 50 60, 122 85
   Oudere checks (niet in de lijst van de prompt), ter info:
     11-accepteercheck 23 groen / 4 rood — PRECIES ZO ook met de hooks van main
       (zonder B5 lokaal nagemeten): Passewaaij/Tiel-West zijn sinds B3 regio
       (dus geen 409 wijk meer) en de nep-Nominatim geeft vaste punten.
-    14, 22, 32: stoppen bij het aanmaken van een klus zonder foto (sinds B4:
-      400 "Voeg een foto van de klus toe"). Niet door B5.
+    14, 22: stoppen bij het aanmaken van een klus zonder foto (sinds B4:
+      400 "Voeg een foto van de klus toe"). Niet door B5; ze worden omgezet bij
+      stap 9 (accepteren dicht).
 
 TESTS (zonder server)
-  backend  node --test tests/*.test.mjs        370 groen (was 338)
-  app      flutter test                        1098 groen, ~6 overgeslagen (was 1055)
+  backend  node --test tests/*.test.mjs        373 groen (was 338)
+  app      flutter test                        1099 groen, ~7 overgeslagen (was 1055; +1
+                                               overgeslagen = de lokale B5-smoke)
            flutter analyze                     schoon
-  website  npx vitest run                      170 groen (was 154); tsc, eslint, build schoon
+  website  npx vitest run                      171 groen (was 154); tsc, eslint, build schoon
 
 === DRY-RUNS TEGEN PROD (alleen lezen, 4 okt) ===
 
@@ -95,13 +129,16 @@ TESTS (zonder server)
   + ZOU keuze toevoegen: hh_meldingen.soort "reactie"
       was:    nieuwe_klus | toegewezen | onderweg | afgerond | geannuleerd | incident | bericht
       wordt:  ... | bericht | reactie
-  DRY-RUN: 5 wijziging(en).
+  + ZOU keuze toevoegen: hh_incidenten.soort "signaal"
+      was:    nood | probleem | overig
+      wordt:  nood | probleem | overig | signaal
+  DRY-RUN: 6 wijziging(en).
 
 === node scripts/131-b5-rules.mjs
   ! hh_reacties bestaat nog niet — eerst 130 --apply (toont de gewenste rules)
 
 === node scripts/132-b5check.mjs
-  1 groen, 6 rood (leescontroles) — rood verwacht zolang 130/131/133 niet
+  1 groen, 7 rood (leescontroles) — rood verwacht zolang 130/131/133 niet
   uitgerold zijn; schakelaars in hh_instellingen: geen (alles uit).
 
 === echo n | ./scripts/133-hook-deploy.sh   (stopt bij de vraag; niets gewijzigd)
@@ -118,10 +155,10 @@ UITROLLIJST (volgorde; na JA, auto-mode UIT)
   1. node scripts/00-backup.mjs
        verwacht: pad van backups/<datum>.json (bewaren voor rollback)
   2. node scripts/130-b5-reacties.mjs
-       verwacht: zoals de dry-run hierboven (5 wijzigingen)
+       verwacht: zoals de dry-run hierboven (6 wijzigingen)
      node scripts/130-b5-reacties.mjs --apply
        verwacht: "hh_reacties aangemaakt met 15 velden en 3 index(en)" (15 = met
-       id), 3 velden toegevoegd, soort "reactie"
+       id), 3 velden toegevoegd, soort "reactie" en soort "signaal"
      node scripts/130-b5-reacties.mjs   -> "Niets te doen"
   3. node scripts/131-b5-rules.mjs --apply
        verwacht: "hh_reacties: regels bijgewerkt"; nogmaals: "al up-to-date"
@@ -130,21 +167,34 @@ UITROLLIJST (volgorde; na JA, auto-mode UIT)
        verwacht 2b: alleen de B5-regels in hh_klussen.pb.js (zie hierboven)
        verwacht stap 6: alleen de 5 nieuwe bestanden erbij; journalctl zonder
        laadfout (zoek op "hh_reacties")
+  4b. Schakelaar "nieuwe klus alleen aan wie nu kan helpen" AAN (antwoord 2),
+     DIRECT na 4 (vóór de checks: die draaien met de stand van de uitrol).
+     Als superuser (PocketBase-dashboard, collectie hh_instellingen; het paneel
+     kent alleen zijn eigen sleutels) een rij:
+       sleutel b5_nieuwe_klus_alleen_beschikbaar, waarde true (json)
+     Controle: node scripts/132-b5check.mjs (dry-run) toont
+       "schakelaars in hh_instellingen: b5_nieuwe_klus_alleen_beschikbaar=true"
+     Gevolg: een helper krijgt alleen nog "Nieuwe klus in je buurt" als "Ik kan
+     nu helpen" aan staat; anders alleen de lijst. Terug: de rij weghalen.
   5. node scripts/132-b5check.mjs --apply
-       verwacht: 137 groen, 0 rood (zonder schakelaars op de server; staat er
-       al een b5_-schakelaar: sectie N overgeslagen, 130 groen + 1 overgeslagen)
+       verwacht: 144 groen, 0 rood (zo lokaal bewezen met deze schakelaars)
        LET OP op prod:
-         - sectie L maakt KORT een incident: elke coordinator (ook Ibrahim)
-           krijgt even "Probleem gemeld" (opgeruimd);
+         - sectie E t/m K (ca. 1 minuut) en kort in M staat onder 18 TIJDELIJK
+           open: een echt kind onder 18 kan dan reageren (de ouder-link werkt
+           pas als de site online is; zo'n reactie vervalt dan vanzelf);
+         - sectie L maakt KORT een signaal: GEEN melding aan de coordinatoren,
+           wel even in de incidentenlijst van het paneel (opgeruimd);
          - sectie K geeft een eigen klus terug (open): echte helpers in Tiel
-           krijgen even "Nieuwe klus in je buurt" (opgeruimd, zoals 14/50);
-         - sectie N zet de 2 schakelaars ~10 seconden aan (alleen als ze nog
-           niet bestaan) en haalt ze weer weg: een helper met de OUDE app die
-           precies dan accepteert, krijgt 409 "werk de app bij";
+           met "Ik kan nu helpen" aan krijgen even "Nieuwe klus in je buurt"
+           (opgeruimd, zoals 14/50);
+         - sectie N zet b5_accepteren_dicht ~5 seconden aan en weer weg: een
+           helper met de OUDE app die precies dan accepteert, krijgt 409;
          - de publieke ouder-route telt 30 per IP per uur: niet 2x binnen een
            uur draaien.
          Niet tijdens een dienst draaien.
-  6. Bestaande checks (allemaal lokaal groen met de B5-hooks):
+  6. Bestaande checks (allemaal lokaal groen met de B5-hooks en de schakelaar
+     van 4b aan):
+       node scripts/32-meldingencheck.mjs --apply                 verwacht  39 groen
        node scripts/92-b3check.mjs --apply                        verwacht  89 groen
        node scripts/102-b4check.mjs --apply                       verwacht 144 groen
        node --experimental-eventsource scripts/112-b6check.mjs --apply  verwacht 124 groen
@@ -156,16 +206,21 @@ UITROLLIJST (volgorde; na JA, auto-mode UIT)
        node --experimental-eventsource scripts/122-adrescheck.mjs --apply --zonder-limiet
                                                                   verwacht  77 groen + 2 overgeslagen (zoals bij de ADRES-uitrol)
      92 niet binnen een uur na een eerdere run vanaf hetzelfde adres (429).
-  7. Website (ouder-pagina #/ouder/klus) en app (EAS-build) OP DEZELFDE DAG
-     als 4. De mail-link wijst naar https://heitjehulp.nl/#/ouder/klus: werkt pas
-     als de site online is (~17 okt). TOT DAN kan een helper onder 18 wel
-     reageren, maar keurt niemand het goed (de reactie vervalt als de klus
-     begint). Zie OPEN-PUNTEN-B5 vraag 5.
-  8. Later, met apart JA (OPEN-PUNTEN-B5 vraag 1 en 2):
-       b5_accepteren_dicht = true          (paneel Instellingen of superuser)
-       b5_nieuwe_klus_alleen_beschikbaar = true
-     Dan eerst de checks die accepteren/"nieuwe klus voor iedereen" verwachten
-     omzetten (11, 14, 22, 32, 50, 62, 65, 82, 102, 122): niet in B5 gedaan.
+     32 zet jongere 1 en 2 een uur op "Ik kan nu helpen" en daarna terug.
+  7. Website (ouder-pagina #/ouder/klus + pil "Signaal na de klus" in het
+     paneel) en app (EAS-build) OP DEZELFDE DAG als 4.
+  8. LATER, als de site online is (~17 okt), met JA (antwoord 5):
+       hh_instellingen: sleutel b5_onder18_reageren_open, waarde true
+     Daarna kunnen helpers onder 18 reageren; hun ouder krijgt per klus de mail
+     met de link naar https://heitjehulp.nl/#/ouder/klus. Controle: 132 --apply
+     (sectie E slaat "onder 18 dicht" dan over: 1 overgeslagen).
+  9. LATER, als de nieuwe app op alle test-telefoons staat, met JA (antwoord 1):
+       a. checks 11, 14, 22, 32, 50, 62, 65, 82, 102 en 122 omzetten van
+          accepteren naar reageren + kiezen (eigen klus, tijdelijke bewoner);
+          11/14/22 meteen ook bijwerken voor B3 (regio) en B4 (foto);
+       b. hh_instellingen: sleutel b5_accepteren_dicht, waarde true
+          (elke helper met de oude app: 409 "werk de app bij");
+       c. alle checks opnieuw.
 
 OUDE APP (in de winkels) NA STAP 4
   - helper: "Klus aannemen" werkt nog (schakelaar uit) -> de klus gaat direct
@@ -176,6 +231,9 @@ OUDE APP (in de winkels) NA STAP 4
     melding, zonder doel).
   - beoordelen zonder geheime vraag blijft werken (veld niet verplicht op de
     server).
+  - meldkamer-app (oud): kent "signaal" niet en toont hem als "Overig".
+  - helper onder 18 met de oude app: accepteren werkt (schakelaar 9 uit); de
+    nieuwe app laat hem eerst de vriendelijke "nog even niet"-balk zien.
 
 ROLLBACK
   ./scripts/133-hook-deploy.sh --rollback   (hh_klussen.pb.js terug, de 5 nieuwe
@@ -184,4 +242,6 @@ ROLLBACK
   De velden en hh_reacties mogen blijven (additief, zonder hook doet niemand er
   iets mee; rules: lezen eigen/bewoner/coordinator, schrijven niemand).
   Verwijderen van de collectie alleen met een apart besluit (reacties weg).
-  Een gezette schakelaar: de rij in hh_instellingen weghalen.
+  Een gezette schakelaar: de rij in hh_instellingen weghalen (4b terug = elke
+  goedgekeurde helper krijgt weer elke "nieuwe klus").
+  De keuze "signaal" op hh_incidenten mag blijven (additief).

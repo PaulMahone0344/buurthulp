@@ -1569,7 +1569,15 @@ EXTRA VELDEN (130, additief)
   hh_beoordelingen.alles_in_orde     ja | nee (de geheime vraag)
   hh_beoordelingen.geheim_toelichting tekst, max 300
   hh_meldingen.soort + "reactie"
+  hh_incidenten.soort + "signaal"     (antwoord Ibrahim 4)
   GEEN bestaande rule verandert.
+
+SCHAKELAARS (hh_instellingen, waarde true = aan; geen rij = uit)
+  b5_nieuwe_klus_alleen_beschikbaar  AAN bij de uitrol (antwoord 2)
+  b5_onder18_reageren_open           UIT tot de site online is (antwoord 5):
+                                     helper < 18 -> 409 onder18
+  b5_accepteren_dicht                UIT tot de nieuwe app op alle test-
+                                     telefoons staat (antwoord 1)
 
 HOOKS (deploy met scripts/133-hook-deploy.sh; 5 nieuwe bestanden, 1 gewijzigd)
   hh_reacties_teksten.js, hh_reacties_basis.js, hh_reacties_na.js,
@@ -1584,7 +1592,9 @@ HOOKS (deploy met scripts/133-hook-deploy.sh; 5 nieuwe bestanden, 1 gewijzigd)
     afzender HeitjeHulp; .invalid/.test krijgt nooit mail; mail mislukt = 502
     en geen reactie). 18+: open + gebundelde melding aan de bewoner. Helper
     10-12, eerste klus bij deze bewoner (geen eerdere klus op geaccepteerd/
-    onderweg/bezig/afgerond/probleem): zonder vinkje 400 oudermee. Hooguit 10
+    onderweg/bezig/afgerond/probleem): zonder vinkje 400 oudermee. Onder 18
+    met b5_onder18_reageren_open uit: 409 onder18 ("Fijn dat je wilt helpen!
+    ... nog even niet ..."), na de gewone weigeringen. Hooguit 10
     reacties tegelijk open (429 limiet). Opnieuw na intrekken/afwijzen: zelfde
     rij.
   POST /api/hh/reacties/{id}/intrekken  eigen reactie, alleen wacht/open.
@@ -1607,7 +1617,8 @@ HOOKS (deploy met scripts/133-hook-deploy.sh; 5 nieuwe bestanden, 1 gewijzigd)
     klus begint, of niet meer open is (dan vervallen).
   POST /api/hh/beschikbaar {aan}  helper: beschikbaar_tot = nu + 3 uur (of leeg).
   GET  /api/hh/beschikbaar?klustype=&van=&tot=  bewoner: {aantal} helpers die
-    nu kunnen, in zijn werkgebied, oud genoeg voor categorie en tijd.
+    nu kunnen, in zijn werkgebied, oud genoeg voor categorie en tijd (onder 18
+    telt niet mee zolang b5_onder18_reageren_open uit staat).
   Na elke logregel (onRecordAfterCreateSuccess hh_klus_status; ook koppelen,
     accepteren, annuleren, afkeuren, ouder trekt in): naar geaccepteerd ->
     open reacties afgewezen ("De bewoner koos iemand anders"), die van de
@@ -1619,8 +1630,13 @@ HOOKS (deploy met scripts/133-hook-deploy.sh; 5 nieuwe bestanden, 1 gewijzigd)
     b5_nieuwe_klus_alleen_beschikbaar = true (standaard uit: 32/102 blijven
     groen).
   Geheime vraag: alles_in_orde = nee (aanmaken of wijzigen) -> één incident
-    (soort probleem, melder = de gever, klus erbij, "[geheime vraag] ...");
-    de M8-hook meldt het elke coordinator. onRecordEnrich: het antwoord zien
+    van soort "signaal" (melder = de gever, klus erbij, "[geheime vraag] ...").
+    Geen alarm: de meldingen die M8 elke coordinator zou sturen slaat de hook
+    over; de meldkamer ziet het in de incidentenlijst van het paneel (pil
+    "Signaal na de klus") en in de app (soort "Signaal na de klus"). KEUZE:
+    zoals bij elk incident mag de meldkamer dan de chat van die klus lezen
+    (B6-rule ongewijzigd) - juist bij "voelde me niet veilig" wil je kunnen
+    nakijken wat er gezegd is; en "gesprek verwijderen" wacht tot afhandeling. onRecordEnrich: het antwoord zien
     alleen de gever, de coordinator en de superuser; filteren/sorteren erop
     400 (ook realtime).
   onRecordEnrich hh_klussen: reacties_aantal (bewoner: open; helper: open +
@@ -1638,9 +1654,15 @@ CHECK  scripts/132-b5check.mjs (dry-run standaard). Met --apply: tijdelijke
   RACE 20 ronden dezelfde bewoner twee klikken + 20 ronden twee bewoners
   dezelfde helper op hetzelfde moment, intrekken/teruggeven/koppelen/
   annuleren, beoordelen twee kanten + geheime vraag, "Ik kan nu helpen",
-  schakelaars (alleen als ze nog niet bestaan). Lokaal 137 groen.
-  Test zonder server: node --test backend/tests/*.test.mjs (370 tests).
+  schakelaars (wat op de server staat is leidend; tijdelijk aanzetten en
+  precies terugzetten). Lokaal met de schakelaars zoals bij de uitrol: 144 groen.
+  Aangepast voor de nieuwe-klus-schakelaar: 102 (tijdelijke helpers "Ik kan nu
+  helpen" aan) en 32 (seed-jongeren tijdelijk aan; klussen via de superuser,
+  want 32 was sinds B4 rood op de verplichte foto): beide groen.
+  Test zonder server: node --test backend/tests/*.test.mjs (373 tests).
 
 UITROLLEN (volgorde; zie proefrit-b5.txt)
   00-backup.mjs -> 130 --apply -> 131 --apply -> 133-hook-deploy.sh ->
-  132 --apply -> 92, 102, 112, 82, 72, 62, 04, 50, 122 -> app + website
+  schakelaar b5_nieuwe_klus_alleen_beschikbaar aan -> 132 --apply -> 32, 92,
+  102, 112, 82, 72, 62, 04, 50, 122 -> app + website. Later: onder 18 open
+  (site online), accepteren dicht (+ oude checks omzetten).

@@ -55,3 +55,42 @@ ZELF GEKOZEN (geen vraag, wel goed om te weten)
     samen Gepland.
   - Kaart-weergave van de helper: de schakelaar "Ik kan nu helpen" staat
     alleen boven de lijst, zodat de kaart zijn ruimte houdt.
+
+ANTWOORDEN IBRAHIM (4 okt) EN WAT ER MEE GEBEURDE
+1. Accepteren dicht zodra de nieuwe app op alle test-telefoons staat, daarna
+   de oude checks omzetten: AKKOORD. Niets gebouwd; de schakelaar
+   b5_accepteren_dicht blijft bij de uitrol uit. Latere stap 9 in
+   backend/proefrit-b5.txt (checks 11/14/22/32/50/62/65/82/102/122 omzetten,
+   dan de schakelaar aan).
+2. b5_nieuwe_klus_alleen_beschikbaar gaat AAN bij de uitrol: stap 4b in de
+   proefrit (direct na de hook-deploy, vóór de checks). Aangepast zodat alles
+   groen blijft met de schakelaar aan:
+     - 102-b4check: de tijdelijke helpers staan op "Ik kan nu helpen";
+     - 32-meldingencheck: seed-jongere 1 en 2 een uur op "Ik kan nu helpen" en
+       daarna terug; de klussen plaatst de superuser (32 was sinds B4 rood op
+       de verplichte foto);
+     - 132-b5check: volgt wat op de server staat en zet wat hij tijdelijk
+       nodig heeft precies terug.
+   Lokaal met deze stand: 132 144 groen, 32 39, 102 144, de rest ongewijzigd
+   groen.
+3. Ouder beoordeelt de bewoner: LATER (B9/B11). Niets gebouwd.
+4. Geheime vraag blijft verplicht; "Nee" wordt de eigen soort "signaal":
+     - 130 vult hh_incidenten.soort aan met "signaal" (nieuwe keuzewaarde op een
+       bestaande collectie, additief; geen rule-wijziging);
+     - geen "Probleem gemeld"/"Nieuwe melding" aan elke coordinator (de hook
+       slaat die meldingen over); wel zichtbaar in de incidentenlijst van het
+       paneel (pil "Signaal na de klus", rustig blauw) en in de meldkamer-app
+       (soort "Signaal na de klus"); telt mee bij "Incidenten open";
+     - KEUZE chat: de B6-leesregel geldt ook voor een signaal (meldkamer mag
+       dan de chat van die klus lezen; rule ongewijzigd). Waarom: juist bij
+       "Voelde je je veilig? Nee" moet de meldkamer kunnen nakijken wat er
+       gezegd is, en het blijft beperkt tot die ene klus. Gevolg: "Gesprek
+       verwijderen" wacht (zoals bij elk open incident) tot de meldkamer het
+       signaal afhandelt.
+5. B5 al uitrollen; onder 18 pas als de site online is: schakelaar
+   b5_onder18_reageren_open (standaard UIT). Uit = een helper onder 18 krijgt
+   bij "Ik wil helpen" 409 "Fijn dat je wilt helpen! Helpers onder de 18
+   kunnen nog even niet reageren. Binnenkort kan het wel: je krijgt dan een
+   bericht." De app toont dat als rustige (blauwe) balk, geen foutmelding.
+   Onder 18 telt dan ook niet mee bij "N helpers kunnen nu". Latere stap 8 in
+   de proefrit om hem aan te zetten (~17 okt).
