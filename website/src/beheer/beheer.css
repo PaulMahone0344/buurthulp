@@ -520,7 +520,7 @@
 }
 
 .beheer-tabel tbody tr:hover {
-  background: rgba(32, 88, 79, 0.04);
+  background: rgba(29, 78, 49, 0.04);
 }
 
 .beheer-tabel input,
@@ -538,8 +538,8 @@
 
 .beheer-tabel input:focus,
 .beheer-tabel select:focus {
-  outline: 3px solid rgba(242, 176, 82, 0.34);
-  border-color: var(--accent);
+  outline: 3px solid var(--focus-zacht);
+  border-color: var(--green);
 }
 
 .beheer-tabel__actie {
