@@ -318,9 +318,10 @@ async function main() {
     const af = await mag('coordinator wijst af', () =>
       coord.client.collection('hh_profielen').update(profiel2.id, { verificatiestatus: 'afgewezen' }));
     // ID-AFKEUR (besluit Ibrahim 4 okt): afwijzen wist het document ook,
-    // maar zet id_gecontroleerd_op niet.
+    // maar zet id_gecontroleerd_op niet (profiel2 kreeg die datum hierboven al
+    // met de hand van de coordinator; afwijzen mag hem niet veranderen).
     check('afwijzen wist document_foto ook', !!metDoc2?.document_foto && af?.document_foto === '');
-    check('afwijzen zet id_gecontroleerd_op niet', !af?.id_gecontroleerd_op);
+    check('afwijzen verandert id_gecontroleerd_op niet', af?.id_gecontroleerd_op === metDoc2?.id_gecontroleerd_op);
   }
 
   kop('G. Opruimen en nameten');
