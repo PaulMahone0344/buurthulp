@@ -153,6 +153,41 @@ void main() {
       );
       expect(aanmelding.velden.containsKey('ouder_email'), isFalse);
       expect(aanmelding.velden.containsKey('ouder_telefoon'), isFalse);
+      expect(aanmelding.velden.containsKey('partner_code'), isFalse);
+    });
+
+    test(
+      'B11: helper met code van het jongerenwerk -> partner_code in hoofdletters',
+      () {
+        final aanmelding = HelperAanmelding(
+          voornaam: 'Sara',
+          email: 'sara@voorbeeld.nl',
+          wachtwoord: 'geheim123',
+          geboortedatum: DateTime.utc(1999, 1, 2),
+          adres: const AdresKeuze.bevestigd(FakeAdresGateway.kerkstraat1),
+          partnerCode: ' tiel jw ',
+        );
+        expect(aanmelding.velden['partner_code'], 'TIELJW');
+        expect(normaliseerPartnerCode('tiel-jw'), 'TIEL-JW');
+        expect(
+          HelperAanmelding(
+            voornaam: 'Sara',
+            email: 'sara@voorbeeld.nl',
+            wachtwoord: 'geheim123',
+            geboortedatum: DateTime.utc(1999, 1, 2),
+            adres: const AdresKeuze.bevestigd(FakeAdresGateway.kerkstraat1),
+            partnerCode: '   ',
+          ).velden.containsKey('partner_code'),
+          isFalse,
+        );
+      },
+    );
+
+    test('B11: partnercode controleren (leeg mag, 3-20 tekens)', () {
+      expect(valideerPartnerCode(''), isNull);
+      expect(valideerPartnerCode('TIEL-JW'), isNull);
+      expect(valideerPartnerCode('ab'), isNotNull);
+      expect(valideerPartnerCode('é-ok'), isNotNull);
     });
   });
 }

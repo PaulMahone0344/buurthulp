@@ -113,6 +113,25 @@ void main() {
       },
     );
 
+    test(
+      'B11: 400 met data.partner_code -> partnerCode met de melding van de server',
+      () {
+        const melding =
+            'Deze code kennen we niet. Vraag je jongerenwerker om de juiste code, of laat het vakje leeg.';
+        final fout = HhFout.vanStatus(
+          400,
+          antwoord: {
+            'message': melding,
+            'data': {
+              'partner_code': {'code': 'hh_partner_code', 'message': melding},
+            },
+          },
+        );
+        expect(fout.soort, HhFoutSoort.partnerCode);
+        expect(fout.melding, melding);
+      },
+    );
+
     test('400 met een andere veldfout blijft ongeldigeInvoer', () {
       final fout = HhFout.vanStatus(
         400,

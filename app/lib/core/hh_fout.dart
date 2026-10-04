@@ -35,6 +35,10 @@ enum HhFoutSoort {
   /// server (je-vorm, al Nederlands).
   adresOngeldig,
 
+  /// B11: de partnercode (jongerenwerk) bestaat niet of staat uit. De
+  /// melding komt van de server.
+  partnerCode,
+
   /// 5xx.
   server,
 
@@ -47,7 +51,7 @@ class HhFout {
   final HhFoutSoort soort;
 
   /// Een Nederlandse melding van de server zelf (alleen bij
-  /// [HhFoutSoort.adresOngeldig]).
+  /// [HhFoutSoort.adresOngeldig] en [HhFoutSoort.partnerCode]).
   final String? serverMelding;
 
   /// Technische details voor logs en tests, nooit voor de gebruiker.
@@ -72,18 +76,20 @@ class HhFout {
     return HhFout(
       soort,
       detail: '$statuscode $antwoord',
-      serverMelding: soort == HhFoutSoort.adresOngeldig
-          ? _adresMelding(antwoord)
-          : null,
+      serverMelding: switch (soort) {
+        HhFoutSoort.adresOngeldig => _veldMelding(antwoord, 'adres'),
+        HhFoutSoort.partnerCode => _veldMelding(antwoord, 'partner_code'),
+        _ => null,
+      },
     );
   }
 
-  /// De melding van de adres-check (hh_aanmelden.pb.js): data.adres.message,
-  /// anders de algemene message.
-  static String? _adresMelding(Map<String, dynamic> antwoord) {
+  /// De melding van een hook-check (adres: hh_aanmelden.pb.js, partnercode:
+  /// hh_meldkamer.pb.js): data.[veld].message, anders de algemene message.
+  static String? _veldMelding(Map<String, dynamic> antwoord, String veld) {
     final data = antwoord['data'];
-    final adres = data is Map ? data['adres'] : null;
-    final melding = adres is Map ? '${adres['message'] ?? ''}' : '';
+    final fout = data is Map ? data[veld] : null;
+    final melding = fout is Map ? '${fout['message'] ?? ''}' : '';
     if (melding.isNotEmpty) return melding;
     final algemeen = '${antwoord['message'] ?? ''}';
     return algemeen.isEmpty ? null : algemeen;
@@ -103,6 +109,10 @@ class HhFout {
     if (adres is Map && '${adres['code']}'.startsWith('hh_adres')) {
       return HhFoutSoort.adresOngeldig;
     }
+    final partner = data['partner_code'];
+    if (partner is Map && '${partner['code']}' == 'hh_partner_code') {
+      return HhFoutSoort.partnerCode;
+    }
     return HhFoutSoort.ongeldigeInvoer;
   }
 
@@ -117,6 +127,7 @@ class HhFout {
     HhFoutSoort.nietGevonden => TekstenNl.foutNietGevonden,
     HhFoutSoort.ongeldigeInvoer => TekstenNl.foutOngeldigeInvoer,
     HhFoutSoort.adresOngeldig => serverMelding ?? TekstenNl.foutOngeldigeInvoer,
+    HhFoutSoort.partnerCode => serverMelding ?? TekstenNl.foutOngeldigeInvoer,
     HhFoutSoort.server => TekstenNl.foutServer,
     HhFoutSoort.onbekend => TekstenNl.foutOnbekend,
   };

@@ -193,9 +193,12 @@ class _Inhoud extends StatelessWidget {
               // B4: eerst kijkt de meldkamer; een afkeuring met de reden.
               if (klus.wordtNagekeken) ...[
                 SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
-                const HhMeldBalk(
+                HhMeldBalk(
                   soort: HhMeldSoort.waarschuwing,
-                  tekst: TekstenKlusNl.wordtNagekekenUitleg,
+                  // B11: nieuwe bewoner: eerst het belletje.
+                  tekst: klus.wachtOpBelletje
+                      ? TekstenKlusNl.wachtOpBelletjeUitleg
+                      : TekstenKlusNl.wordtNagekekenUitleg,
                 ),
               ] else if (klus.afkeurReden.isNotEmpty) ...[
                 SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),

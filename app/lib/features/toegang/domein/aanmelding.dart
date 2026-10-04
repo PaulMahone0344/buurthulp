@@ -109,7 +109,24 @@ final class BewonerAanmelding extends HhAanmelding {
   Map<String, Object> get velden => adres.velden;
 }
 
-/// Helper (rol jongere), vanaf 10 jaar. Onder 18 met [ouderEmail].
+/// B11: "tiel jw" -> "TIELJW". Zelfde regel als de server
+/// (hh_meldkamer_hulp.js normaliseerCode); ongeldig blijft staan zodat de
+/// server de nette melding geeft.
+String normaliseerPartnerCode(String invoer) =>
+    invoer.trim().toUpperCase().replaceAll(RegExp(r'\s+'), '');
+
+final _partnerCodePatroon = RegExp(r'^[A-Z0-9-]{3,20}$');
+
+/// Leeg mag (geen jongerenwerk); anders 3-20 tekens A-Z, 0-9 of streepje.
+String? valideerPartnerCode(String invoer) {
+  final code = normaliseerPartnerCode(invoer);
+  if (code.isEmpty || _partnerCodePatroon.hasMatch(code)) return null;
+  return TekstenAanmeldenNl.validatiePartnerCode;
+}
+
+/// Helper (rol jongere), vanaf 10 jaar. Onder 18 met [ouderEmail]. B11:
+/// optioneel de code van het jongerenwerk ([partnerCode]); de server zet
+/// daarmee de partner (alleen tellen).
 final class HelperAanmelding extends HhAanmelding {
   const HelperAanmelding({
     required this.voornaam,
@@ -118,12 +135,14 @@ final class HelperAanmelding extends HhAanmelding {
     required this.geboortedatum,
     required this.adres,
     this.ouderEmail,
+    this.partnerCode,
   });
 
   final String voornaam;
   final DateTime geboortedatum;
   final AdresKeuze adres;
   final String? ouderEmail;
+  final String? partnerCode;
 
   @override
   HhRol get rol => HhRol.jongere;
@@ -137,5 +156,7 @@ final class HelperAanmelding extends HhAanmelding {
     ...adres.velden,
     if ((ouderEmail ?? '').trim().isNotEmpty)
       'ouder_email': (ouderEmail ?? '').trim().toLowerCase(),
+    if (normaliseerPartnerCode(partnerCode ?? '').isNotEmpty)
+      'partner_code': normaliseerPartnerCode(partnerCode ?? ''),
   };
 }

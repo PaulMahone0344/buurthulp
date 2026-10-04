@@ -37,6 +37,7 @@ class HhKlus {
     this.isJongereIdGecontroleerd = false,
     this.geplaatstDoorId = '',
     this.wordtNagekeken = false,
+    this.wachtOpBelletje = false,
     this.afkeurReden = '',
     this.klusFotoUrl = '',
     this.afstandMeter,
@@ -88,6 +89,11 @@ class HhKlus {
   /// (klus_goedgekeurd_op leeg). Alleen de bewoner (en de meldkamer) ziet
   /// hem dan; helpers nog niet.
   final bool wordtNagekeken;
+
+  /// B11: de klus wacht (nog nagekeken) op het kennismakingsbelletje van de
+  /// meldkamer met deze nieuwe bewoner (extra veld wacht_op_kennismaking,
+  /// alleen met schakelaar b11_kennismaking_verplicht aan).
+  final bool wachtOpBelletje;
 
   /// B4: de reden als de meldkamer de klus afkeurde (status geannuleerd).
   final String afkeurReden;
@@ -193,6 +199,11 @@ class HhKlus {
           status == HhKlusStatus.open &&
           !afgekeurd &&
           record.getStringValue('klus_goedgekeurd_op').isEmpty,
+      wachtOpBelletje:
+          status == HhKlusStatus.open &&
+          !afgekeurd &&
+          record.getStringValue('klus_goedgekeurd_op').isEmpty &&
+          record.data['wacht_op_kennismaking'] == true,
       afkeurReden: afgekeurd ? record.getStringValue('klus_afkeur_reden') : '',
       klusFotoUrl: klusFotos.isNotEmpty && klusFotoUrl != null
           ? klusFotoUrl(record, klusFotos.first)
@@ -254,6 +265,7 @@ class HhKlus {
           isJongereIdGecontroleerd ?? this.isJongereIdGecontroleerd,
       geplaatstDoorId: geplaatstDoorId ?? this.geplaatstDoorId,
       wordtNagekeken: wordtNagekeken,
+      wachtOpBelletje: wachtOpBelletje,
       afkeurReden: afkeurReden,
       klusFotoUrl: klusFotoUrl,
       afstandMeter: afstandMeter,

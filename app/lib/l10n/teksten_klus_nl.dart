@@ -116,6 +116,11 @@ abstract final class TekstenKlusNl {
   static const wordtNagekeken = 'Je klus wordt nagekeken';
   static const wordtNagekekenUitleg =
       'De meldkamer kijkt je klus na. Daarna zien helpers in je buurt hem.';
+  // B11: nieuwe bewoner, de meldkamer belt eerst.
+  static const wachtOpBelletje = 'De meldkamer belt je eerst even';
+  static const wachtOpBelletjeUitleg =
+      'Je bent nieuw bij HeitjeHulp. De meldkamer belt je om kennis te '
+      'maken; dat duurt een paar minuten. Daarna zien helpers je klus.';
   static const afgekeurd = 'Je klus is afgekeurd';
   static String afgekeurdReden(String reden) =>
       'De meldkamer keurde je klus af: $reden';

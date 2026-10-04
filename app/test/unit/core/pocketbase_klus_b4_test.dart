@@ -182,6 +182,28 @@ void main() {
       );
     });
 
+    test('B11: wacht_op_kennismaking van de server -> wachtOpBelletje', () {
+      final klus = HhKlus.vanRecord(
+        RecordModel.fromJson({...record(), 'wacht_op_kennismaking': true}),
+      );
+      expect(klus.wordtNagekeken, isTrue);
+      expect(klus.wachtOpBelletje, isTrue);
+      expect(
+        HhKlus.vanRecord(RecordModel.fromJson(record())).wachtOpBelletje,
+        isFalse,
+      );
+      // Alleen zolang hij nog nagekeken wordt.
+      expect(
+        HhKlus.vanRecord(
+          RecordModel.fromJson({
+            ...record(goedgekeurd: '2026-09-15 10:00:00.000Z'),
+            'wacht_op_kennismaking': true,
+          }),
+        ).wachtOpBelletje,
+        isFalse,
+      );
+    });
+
     test('afgekeurd: de reden, niet "nagekeken"', () {
       final klus = HhKlus.vanRecord(
         RecordModel.fromJson(

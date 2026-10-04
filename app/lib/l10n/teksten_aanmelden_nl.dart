@@ -34,6 +34,13 @@ abstract final class TekstenAanmeldenNl {
   static const veldOuderHulp =
       'Je bent onder de 18. Je ouder krijgt een mail en geeft één keer '
       'toestemming.';
+  // B11: code van het jongerenwerk (partner, alleen tellen)
+  static const veldPartnerCode = 'Code van je jongerenwerk (als je die hebt)';
+  static const veldPartnerCodeHulp =
+      'Heb je via het jongerenwerk van HeitjeHulp gehoord? Vul hun code in. '
+      'Geen code? Laat het leeg.';
+  static const validatiePartnerCode =
+      'Een code heeft 3 tot 20 tekens: letters, cijfers en een streepje.';
   static const postcodeUitleg =
       'Met je postcode zoeken we klussen bij jou in de buurt.';
 

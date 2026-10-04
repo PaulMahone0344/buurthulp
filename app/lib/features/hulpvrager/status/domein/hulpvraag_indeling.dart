@@ -56,6 +56,7 @@ Map<HulpvraagTab, List<HhKlus>> deelHulpvragenIn(List<HhKlus> klussen) {
 String statusZin(HhKlus klus) {
   final naam = klus.jongereVoornaam;
   // B4: eerst de meldkamer.
+  if (klus.wachtOpBelletje) return TekstenKlusNl.wachtOpBelletje;
   if (klus.wordtNagekeken) return TekstenKlusNl.wordtNagekeken;
   if (klus.afkeurReden.isNotEmpty) return TekstenKlusNl.afgekeurd;
   if (naam.isEmpty) {

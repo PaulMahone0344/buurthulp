@@ -1,4 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/model/hh_klus.dart';
+import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
+import 'package:pocketbase/pocketbase.dart';
 import 'package:heitjehulp_app/features/hulpvrager/status/domein/hulpvraag_indeling.dart';
 import 'package:heitjehulp_app/l10n/teksten_uitvoeren_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -129,6 +132,20 @@ void main() {
         statusZin(uitvoerKlus(status: HhKlusStatus.afgerond)),
         'Sanne heeft de klus gedaan.',
       );
+    });
+
+    test('B11: wacht op het belletje van de meldkamer', () {
+      final klus = HhKlus.vanRecord(
+        RecordModel.fromJson({
+          'id': 'k1',
+          'collectionId': 'c',
+          'collectionName': 'hh_klussen',
+          'status': 'open',
+          'klus_goedgekeurd_op': '',
+          'wacht_op_kennismaking': true,
+        }),
+      );
+      expect(statusZin(klus), TekstenKlusNl.wachtOpBelletje);
     });
 
     test('geen enkele zin bevat een cijfer (ouderenregel)', () {
