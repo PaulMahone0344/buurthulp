@@ -15,12 +15,19 @@ import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../../../l10n/teksten_adres_nl.dart';
+import '../../adres/domein/adres_invoer.dart';
+import '../../adres/widget/adres_zoeker.dart';
+import '../../toegang/provider/sessie_providers.dart';
+import '../domein/adres.dart';
 import '../model/hh_gegevens.dart';
 import '../provider/hulpvrager_providers.dart';
 
 /// O12. Naam, telefoon, adres en contactpersoon. Opslaan stuurt alleen de
 /// gewijzigde velden (backend OPEN-PUNT 10). Bereikbaar vanaf O1 en als
 /// tussenstap vanuit O4 wanneer er nog geen adres bekend is.
+/// ADRES (4 okt): het adres gaat "zoals bol.com" (postcode + huisnummer +
+/// toevoeging, straat en plaats van PDOK); niet meer vrij te typen.
 class MijnGegevensScreen extends ConsumerStatefulWidget {
   const MijnGegevensScreen({super.key});
 
@@ -32,9 +39,6 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
   final _velden = {
     HhGegevens.veldNaam: TextEditingController(),
     HhGegevens.veldTelefoon: TextEditingController(),
-    HhGegevens.veldAdres: TextEditingController(),
-    HhGegevens.veldPostcode: TextEditingController(),
-    HhGegevens.veldPlaats: TextEditingController(),
     HhGegevens.veldContactNaam: TextEditingController(),
     HhGegevens.veldContactTelefoon: TextEditingController(),
   };
@@ -44,10 +48,33 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
   String? _melding;
   String? _naamFout;
 
+  /// ADRES: de keuze uit de adres-suggestie; [_adresAangeraakt] zodra de
+  /// gebruiker iets aan het adres veranderde.
+  AdresKeuze? _adres;
+  bool _adresAangeraakt = false;
+  String? _adresFout;
+
+  /// Na een adreswijziging haalt de sessie de gebruiker opnieuw op (wijk,
+  /// werkgebied, gele balk), maar pas als dit scherm weg is: verandert de
+  /// sessie terwijl het scherm eronder gepauzeerd staat, dan wil Riverpod 3
+  /// bij terugkomen midden in een build opnieuw bouwen.
+  late final SessieController _sessie;
+  bool _sessieVerversen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessie = ref.read(sessieControllerProvider.notifier);
+  }
+
   @override
   void dispose() {
     for (final controller in _velden.values) {
       controller.dispose();
+    }
+    if (_sessieVerversen) {
+      final sessie = _sessie;
+      WidgetsBinding.instance.addPostFrameCallback((_) => sessie.ververs());
     }
     super.dispose();
   }
@@ -56,13 +83,24 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
     if (_isVoorgevuld) return;
     _isVoorgevuld = true;
     for (final veld in gegevens.alsVelden.entries) {
-      _velden[veld.key]!.text = veld.value;
+      _velden[veld.key]?.text = veld.value;
     }
   }
 
   Map<String, String> get _invoer => {
     for (final veld in _velden.entries) veld.key: veld.value.text.trim(),
   };
+
+  /// Alleen de adresvelden die anders zijn dan wat er staat.
+  Map<String, dynamic> _adresWijziging(HhGegevens huidig) {
+    final keuze = _adres;
+    if (!_adresAangeraakt || keuze == null) return const {};
+    final huidigeVelden = huidig.alsVelden;
+    final anders = keuze.velden.entries.any(
+      (v) => (huidigeVelden[v.key] ?? '') != v.value,
+    );
+    return anders ? keuze.velden : const {};
+  }
 
   Future<void> _opslaan(HhGegevens huidig) async {
     final invoer = _invoer;
@@ -71,10 +109,14 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
       _naamFout = invoer[HhGegevens.veldNaam]!.isEmpty
           ? TekstenHulpvragerNl.gegevensNaamVerplicht
           : null;
+      _adresFout = _adresAangeraakt && _adres == null
+          ? TekstenAdresNl.validatieNietBevestigd
+          : null;
     });
-    if (_naamFout != null) return;
+    if (_naamFout != null || _adresFout != null) return;
 
-    final gewijzigd = huidig.gewijzigdeVelden(invoer);
+    final adresWijziging = _adresWijziging(huidig);
+    final gewijzigd = {...huidig.gewijzigdeVelden(invoer), ...adresWijziging};
     if (gewijzigd.isEmpty) {
       setState(() {
         _meldSoort = HhMeldSoort.informatie;
@@ -87,6 +129,11 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
     final result = await ref
         .read(gegevensProvider.notifier)
         .bijwerken(gewijzigd);
+    // Een nieuw adres kan een nieuw werkgebied geven (en de gele balk weg):
+    // de sessie haalt de gebruiker opnieuw op als dit scherm weg is.
+    if (result is Ok<void> && adresWijziging.isNotEmpty) {
+      _sessieVerversen = true;
+    }
     if (!mounted) return;
     setState(() {
       _isBezig = false;
@@ -94,6 +141,7 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
         case Ok<void>():
           _meldSoort = HhMeldSoort.geslaagd;
           _melding = TekstenHulpvragerNl.gegevensOpgeslagen;
+          _adresAangeraakt = false;
         case Err<void>(:final fout):
           _meldSoort = HhMeldSoort.fout;
           _melding = fout.melding;
@@ -178,33 +226,25 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
         SizedBox(height: tussen),
         HhKaart(
           kop: TekstenHulpvragerNl.gegevensKaartAdres,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              HhInvoer(
-                label: TekstenHulpvragerNl.veldAdres,
-                controller: _velden[HhGegevens.veldAdres],
-                isActief: !_isBezig,
-                autofillHints: const [AutofillHints.streetAddressLine1],
-                textInputAction: TextInputAction.next,
-              ),
-              SizedBox(height: tussen),
-              HhInvoer(
-                label: TekstenHulpvragerNl.veldPostcode,
-                controller: _velden[HhGegevens.veldPostcode],
-                isActief: !_isBezig,
-                autofillHints: const [AutofillHints.postalCode],
-                textInputAction: TextInputAction.next,
-              ),
-              SizedBox(height: tussen),
-              HhInvoer(
-                label: TekstenHulpvragerNl.veldPlaats,
-                controller: _velden[HhGegevens.veldPlaats],
-                isActief: !_isBezig,
-                autofillHints: const [AutofillHints.addressCity],
-                textInputAction: TextInputAction.next,
-              ),
-            ],
+          child: AdresZoeker(
+            beginPostcode: gegevens.postcode,
+            beginHuisnummer: gegevens.huisnummer,
+            beginToevoeging: gegevens.toevoeging,
+            beginWeergave:
+                heeftVolledigAdres(gegevens.postcode, gegevens.huisnummer) &&
+                    gegevens.adres.trim().isNotEmpty
+                ? stelAdresSamen(
+                    adres: gegevens.adres,
+                    postcode: gegevens.postcode,
+                    plaats: gegevens.plaats,
+                  )
+                : null,
+            isActief: !_isBezig,
+            fouttekst: _adresFout,
+            onGewijzigd: (keuze) => setState(() {
+              _adres = keuze;
+              _adresAangeraakt = true;
+            }),
           ),
         ),
         SizedBox(height: tussen),

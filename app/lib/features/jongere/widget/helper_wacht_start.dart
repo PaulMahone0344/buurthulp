@@ -9,6 +9,7 @@ import '../../../design/lijn.dart';
 import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_ouder_nl.dart';
 import '../../../theme.dart';
+import '../../adres/widget/adres_aanvullen_balk.dart';
 import '../domein/helper_wacht.dart';
 import '../paden_jongere.dart';
 import '../provider/screening_providers.dart';
@@ -118,6 +119,8 @@ class HelperWachtStart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // ADRES: eerst het adres aanvullen (zonder adres geen werkgebied).
+        const AdresAanvullenBalk(),
         if (tekst != null) WachtBalk(kop: tekst.$1, uitleg: tekst.$2),
         // B3: naar de stap "Ouder" (opnieuw sturen, adres wijzigen). Na
         // intrekken niet: dan eerst de meldkamer.

@@ -10,6 +10,7 @@ import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../../adres/widget/adres_aanvullen_balk.dart';
 import '../../jongere/widget/helper_wacht_start.dart' show WachtBalk;
 import '../../toegang/domein/werkgebied.dart';
 import '../../toegang/model/hh_rol.dart';
@@ -66,8 +67,10 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
                 tekst: TekstenNl.bevestigEmailBanner,
               ),
             ],
-            // M8: de laatste melding, rustig, zonder teller.
+            // ADRES: een onvolledig adres eerst aanvullen (gele balk).
             SizedBox(height: tussen),
+            const AdresAanvullenBalk(),
+            // M8: de laatste melding, rustig, zonder teller.
             const LaatsteMeldingRegel(),
             SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
             // B2: buiten het werkgebied (of adres niet gevonden) geen klus.

@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:heitjehulp_app/core/pb/fake_adres_gateway.dart';
+import 'package:heitjehulp_app/features/adres/domein/adres_invoer.dart';
 import 'package:heitjehulp_app/features/toegang/domein/aanmelding.dart';
+import 'package:heitjehulp_app/l10n/teksten_adres_nl.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
 
@@ -77,61 +80,42 @@ void main() {
     });
   });
 
-  group('adresvelden', () {
-    test('postcode: 4 cijfers en 2 letters, netjes gemaakt', () {
+  group('adres (ADRES 4 okt)', () {
+    test('zonder adreskeuze kan aanmelden niet', () {
+      expect(valideerAdresKeuze(null), TekstenAdresNl.validatieVerplicht);
       expect(
-        valideerPostcode(''),
-        TekstenAanmeldenNl.validatiePostcodeVerplicht,
+        valideerAdresKeuze(
+          const AdresKeuze.bevestigd(FakeAdresGateway.kerkstraat1),
+        ),
+        isNull,
       );
       expect(
-        valideerPostcode('4003'),
-        TekstenAanmeldenNl.validatiePostcodeOngeldig,
+        valideerAdresKeuze(
+          const AdresKeuze.ongecontroleerd(
+            postcode: '4001 MA',
+            huisnummer: '3',
+          ),
+        ),
+        isNull,
+        reason: 'PDOK even weg: mag, de server markeert het',
       );
-      expect(
-        valideerPostcode('0123 AB'),
-        TekstenAanmeldenNl.validatiePostcodeOngeldig,
-      );
-      expect(valideerPostcode('4003ab'), isNull);
-      expect(normaliseerPostcode(' 4003ab '), '4003 AB');
-    });
-
-    test('huisnummer begint met een cijfer', () {
-      expect(
-        valideerHuisnummer(''),
-        TekstenAanmeldenNl.validatieHuisnummerVerplicht,
-      );
-      expect(
-        valideerHuisnummer('a12'),
-        TekstenAanmeldenNl.validatieHuisnummerOngeldig,
-      );
-      expect(valideerHuisnummer('12'), isNull);
-      expect(valideerHuisnummer('12a'), isNull);
-      expect(valideerHuisnummer('12-2'), isNull);
-    });
-
-    test('straat en plaats zijn verplicht', () {
-      expect(valideerStraat(' '), TekstenAanmeldenNl.validatieStraatVerplicht);
-      expect(valideerPlaats(''), TekstenAanmeldenNl.validatiePlaatsVerplicht);
-      expect(valideerStraat('Dorpsstraat'), isNull);
     });
   });
 
   group('HhAanmelding.velden', () {
-    test('bewoner: adres = straat + huisnummer, geen telefoon', () {
+    test('bewoner: straat en plaats van PDOK, geen telefoon', () {
       const aanmelding = BewonerAanmelding(
         naam: 'Ans',
         email: 'ans@voorbeeld.nl',
         wachtwoord: 'geheim123',
-        straat: ' Dorpsstraat ',
-        huisnummer: '12a',
-        postcode: '4003ab',
-        plaats: 'Tiel',
+        adres: AdresKeuze.bevestigd(FakeAdresGateway.kerkstraat1),
       );
       expect(aanmelding.rol, HhRol.hulpvrager);
       expect(aanmelding.velden, {
-        'adres': 'Dorpsstraat 12a',
-        'huisnummer': '12a',
-        'postcode': '4003 AB',
+        'postcode': '4001 MA',
+        'huisnummer': '1',
+        'toevoeging': '',
+        'adres': 'Kerkstraat 1',
         'plaats': 'Tiel',
       });
     });
@@ -142,8 +126,10 @@ void main() {
         email: 'daan@voorbeeld.nl',
         wachtwoord: 'geheim123',
         geboortedatum: DateTime.utc(2012, 5, 14),
-        postcode: '4003 ab',
-        huisnummer: '7',
+        adres: const AdresKeuze.ongecontroleerd(
+          postcode: '4003 ab',
+          huisnummer: '7',
+        ),
         ouderEmail: ' Mama@Voorbeeld.nl ',
       );
       expect(aanmelding.rol, HhRol.jongere);
@@ -152,6 +138,7 @@ void main() {
         'geboortedatum': '2012-05-14T00:00:00.000Z',
         'postcode': '4003 AB',
         'huisnummer': '7',
+        'toevoeging': '',
         'ouder_email': 'mama@voorbeeld.nl',
       });
     });
@@ -162,8 +149,7 @@ void main() {
         email: 'sara@voorbeeld.nl',
         wachtwoord: 'geheim123',
         geboortedatum: DateTime.utc(1999, 1, 2),
-        postcode: '4007AA',
-        huisnummer: '1',
+        adres: const AdresKeuze.bevestigd(FakeAdresGateway.kerkstraat1),
       );
       expect(aanmelding.velden.containsKey('ouder_email'), isFalse);
       expect(aanmelding.velden.containsKey('ouder_telefoon'), isFalse);

@@ -10,6 +10,8 @@ import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../../adres/domein/adres_invoer.dart';
+import '../../adres/widget/adres_zoeker.dart';
 import '../domein/aanmelding.dart';
 import '../provider/sessie_providers.dart';
 import '../screen/hulp_screen.dart' show urlOpenerProvider;
@@ -17,8 +19,9 @@ import '../validatie.dart';
 import 'aanmeld_velden.dart';
 
 /// Aanmelden als bewoner, één pagina (mockup AAanmeldenBewoner): naam,
-/// e-mail, straat + huisnummer, postcode + plaats, wachtwoord, vinkje
-/// voorwaarden. Geen telefoon: de chat loopt in de app.
+/// e-mail, adres (ADRES 4 okt: postcode + huisnummer + toevoeging, straat en
+/// plaats komen van PDOK), wachtwoord, vinkje voorwaarden. Geen telefoon: de
+/// chat loopt in de app.
 class BewonerFormulier extends ConsumerStatefulWidget {
   const BewonerFormulier({super.key});
 
@@ -29,11 +32,8 @@ class BewonerFormulier extends ConsumerStatefulWidget {
 class _BewonerFormulierState extends ConsumerState<BewonerFormulier> {
   final _naam = TextEditingController();
   final _email = TextEditingController();
-  final _straat = TextEditingController();
-  final _huisnummer = TextEditingController();
-  final _postcode = TextEditingController();
-  final _plaats = TextEditingController();
   final _wachtwoord = TextEditingController();
+  AdresKeuze? _adres;
   Map<String, String?> _fouten = const {};
   bool _isAkkoord = false;
   String? _melding;
@@ -41,15 +41,7 @@ class _BewonerFormulierState extends ConsumerState<BewonerFormulier> {
 
   @override
   void dispose() {
-    for (final c in [
-      _naam,
-      _email,
-      _straat,
-      _huisnummer,
-      _postcode,
-      _plaats,
-      _wachtwoord,
-    ]) {
+    for (final c in [_naam, _email, _wachtwoord]) {
       c.dispose();
     }
     super.dispose();
@@ -58,10 +50,7 @@ class _BewonerFormulierState extends ConsumerState<BewonerFormulier> {
   Map<String, String?> _controleer() => {
     'naam': valideerNaam(_naam.text),
     'email': valideerEmail(_email.text),
-    'straat': valideerStraat(_straat.text),
-    'huisnummer': valideerHuisnummer(_huisnummer.text),
-    'postcode': valideerPostcode(_postcode.text),
-    'plaats': valideerPlaats(_plaats.text),
+    'adres': valideerAdresKeuze(_adres),
     'wachtwoord': valideerWachtwoord(_wachtwoord.text),
     'akkoord': _isAkkoord ? null : TekstenAanmeldenNl.validatieAkkoord,
   };
@@ -82,10 +71,7 @@ class _BewonerFormulierState extends ConsumerState<BewonerFormulier> {
             naam: _naam.text.trim(),
             email: _email.text.trim(),
             wachtwoord: _wachtwoord.text,
-            straat: _straat.text,
-            huisnummer: _huisnummer.text,
-            postcode: _postcode.text,
-            plaats: _plaats.text,
+            adres: _adres!,
           ),
         );
     if (!mounted) return;
@@ -141,47 +127,10 @@ class _BewonerFormulierState extends ConsumerState<BewonerFormulier> {
             autofillHints: const [AutofillHints.email],
           ),
           SizedBox(height: tussen),
-          NaastElkaar(
-            links: HhInvoer(
-              label: TekstenAanmeldenNl.veldStraat,
-              controller: _straat,
-              fouttekst: _fouten['straat'],
-              isVerplicht: true,
-              isActief: actief,
-              textInputAction: TextInputAction.next,
-              autofillHints: const [AutofillHints.streetAddressLine1],
-            ),
-            rechts: HhInvoer(
-              label: TekstenAanmeldenNl.veldHuisnummer,
-              controller: _huisnummer,
-              fouttekst: _fouten['huisnummer'],
-              isVerplicht: true,
-              isActief: actief,
-              textInputAction: TextInputAction.next,
-            ),
-          ),
-          SizedBox(height: tussen),
-          NaastElkaar(
-            linksFlex: 1,
-            rechtsFlex: 1,
-            links: HhInvoer(
-              label: TekstenAanmeldenNl.veldPostcode,
-              controller: _postcode,
-              fouttekst: _fouten['postcode'],
-              isVerplicht: true,
-              isActief: actief,
-              textInputAction: TextInputAction.next,
-              autofillHints: const [AutofillHints.postalCode],
-            ),
-            rechts: HhInvoer(
-              label: TekstenAanmeldenNl.veldPlaats,
-              controller: _plaats,
-              fouttekst: _fouten['plaats'],
-              isVerplicht: true,
-              isActief: actief,
-              textInputAction: TextInputAction.next,
-              autofillHints: const [AutofillHints.addressCity],
-            ),
+          AdresZoeker(
+            isActief: actief,
+            fouttekst: _fouten['adres'],
+            onGewijzigd: (keuze) => setState(() => _adres = keuze),
           ),
           SizedBox(height: tussen),
           WachtwoordVeld(

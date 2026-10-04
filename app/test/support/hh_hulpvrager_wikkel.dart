@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:heitjehulp_app/core/pb/fake_adres_gateway.dart';
 import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
@@ -211,6 +212,8 @@ ProviderContainer hulpvragerContainer({
       ),
       // B6: de Chat-knop op O7. Standaard een lege fake.
       chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
+      // ADRES: nep-PDOK in Mijn gegevens; nooit een echt verzoek.
+      adresGatewayProvider.overrideWithValue(FakeAdresGateway()),
       klokProvider.overrideWithValue(() => nu ?? testNu),
       // B4: de klusfoto. Standaard kiest de fake meteen [testKlusFoto].
       fotoKiezerProvider.overrideWithValue(

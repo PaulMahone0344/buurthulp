@@ -10,6 +10,8 @@ import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_aanmelden_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../../adres/domein/adres_invoer.dart';
+import '../../adres/widget/adres_zoeker.dart';
 import '../../hulpvrager/provider/hulpvrager_providers.dart' show klokProvider;
 import '../../jongere/datum_invoer.dart';
 import '../domein/aanmelding.dart';
@@ -20,7 +22,8 @@ import 'aanmeld_stappen.dart';
 import 'aanmeld_velden.dart';
 
 /// Aanmelden als helper, één pagina (stijl mockup H6, stap 1 "Jij"):
-/// voornaam, geboortedatum, e-mail, postcode + huisnummer, wachtwoord.
+/// voornaam, geboortedatum, e-mail, adres (postcode + huisnummer +
+/// toevoeging, ADRES 4 okt), wachtwoord.
 /// Onder de 18 komt er het veld "E-mailadres van je ouder" bij (B3) en de
 /// stap "Ouder" in het balkje. Onder de 10 kan het niet (ook de server
 /// weigert). Geen IBAN: dat komt pas bij de eerste uitbetaling (B7/B8).
@@ -35,9 +38,8 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
   final _voornaam = TextEditingController();
   final _geboortedatum = TextEditingController();
   final _email = TextEditingController();
-  final _postcode = TextEditingController();
-  final _huisnummer = TextEditingController();
   final _ouder = TextEditingController();
+  AdresKeuze? _adres;
   final _wachtwoord = TextEditingController();
   Map<String, String?> _fouten = const {};
   bool _isAkkoord = false;
@@ -46,15 +48,7 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
 
   @override
   void dispose() {
-    for (final c in [
-      _voornaam,
-      _geboortedatum,
-      _email,
-      _postcode,
-      _huisnummer,
-      _ouder,
-      _wachtwoord,
-    ]) {
+    for (final c in [_voornaam, _geboortedatum, _email, _ouder, _wachtwoord]) {
       c.dispose();
     }
     super.dispose();
@@ -75,8 +69,7 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
         : null,
     'geboortedatum': valideerGeboortedatumHelper(_geboortedatum.text, _vandaag),
     'email': valideerEmail(_email.text),
-    'postcode': valideerPostcode(_postcode.text),
-    'huisnummer': valideerHuisnummer(_huisnummer.text),
+    'adres': valideerAdresKeuze(_adres),
     'ouder': _isMinderjarig
         ? valideerOuderEmail(_ouder.text, eigenEmail: _email.text)
         : null,
@@ -101,8 +94,7 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
             email: _email.text.trim(),
             wachtwoord: _wachtwoord.text,
             geboortedatum: parseDatumNl(_geboortedatum.text)!,
-            postcode: _postcode.text,
-            huisnummer: _huisnummer.text,
+            adres: _adres!,
             ouderEmail: _isMinderjarig ? _ouder.text : null,
           ),
         );
@@ -176,27 +168,10 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
             autofillHints: const [AutofillHints.email],
           ),
           SizedBox(height: tussen),
-          NaastElkaar(
-            linksFlex: 1,
-            rechtsFlex: 1,
-            links: HhInvoer(
-              label: TekstenAanmeldenNl.veldPostcode,
-              controller: _postcode,
-              hulptekst: TekstenAanmeldenNl.veldPostcodeHulp,
-              fouttekst: _fouten['postcode'],
-              isVerplicht: true,
-              isActief: actief,
-              textInputAction: TextInputAction.next,
-              autofillHints: const [AutofillHints.postalCode],
-            ),
-            rechts: HhInvoer(
-              label: TekstenAanmeldenNl.veldHuisnummer,
-              controller: _huisnummer,
-              fouttekst: _fouten['huisnummer'],
-              isVerplicht: true,
-              isActief: actief,
-              textInputAction: TextInputAction.next,
-            ),
+          AdresZoeker(
+            isActief: actief,
+            fouttekst: _fouten['adres'],
+            onGewijzigd: (keuze) => setState(() => _adres = keuze),
           ),
           SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
           Text(TekstenAanmeldenNl.postcodeUitleg, style: tekst.bodyMedium),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../key_value_store.dart';
+import 'adres_gateway.dart';
 import 'auth_gateway.dart';
 import 'ouder_gateway.dart';
 import 'pocketbase_gateway.dart';
@@ -30,4 +31,10 @@ final profielGatewayProvider = Provider<ProfielGateway>(
 /// [FakeOuderGateway].
 final ouderGatewayProvider = Provider<OuderGateway>(
   (ref) => PocketBaseOuderGateway(ref.watch(pocketBaseGatewayProvider)),
+);
+
+/// ADRES: adres-suggestie via PDOK (GET /api/hh/adres). Tests overriden met
+/// [FakeAdresGateway]; er gaat dan nooit een verzoek naar PDOK.
+final adresGatewayProvider = Provider<AdresGateway>(
+  (ref) => PocketBaseAdresGateway(ref.watch(pocketBaseGatewayProvider)),
 );

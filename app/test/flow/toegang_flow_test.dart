@@ -9,6 +9,7 @@ import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/coordinator/screen/coordinator_stub_screen.dart';
 import 'package:heitjehulp_app/features/hulpvrager/screen/hulpvrager_stub_screen.dart';
 import 'package:heitjehulp_app/features/jongere/screen/jongere_stub_screen.dart';
+import 'package:heitjehulp_app/features/adres/domein/adres_invoer.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/screen/bevestig_email_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/inloggen_screen.dart';
@@ -16,6 +17,7 @@ import 'package:heitjehulp_app/features/toegang/screen/registreren_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/splash_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/welkom_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_adres_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
@@ -47,6 +49,13 @@ Future<void> _vul(WidgetTester tester, int index, String tekst) async {
   await tester.enterText(veld, tekst);
 }
 
+/// ADRES: na postcode + huisnummer zoekt het formulier (nep-PDOK) na de
+/// wachttijd het adres op.
+Future<void> _wachtOpAdres(WidgetTester tester) async {
+  await tester.pump(adresZoekWachttijd);
+  await tester.pumpAndSettle();
+}
+
 Future<void> _vinkAkkoord(WidgetTester tester) async {
   final vinkje = find.byType(Checkbox);
   await tester.ensureVisible(vinkje);
@@ -76,21 +85,24 @@ void main() {
       expect(_dichtheid(tester), HhDichtheid.normaal);
       expect(find.text(TekstenAanmeldenNl.adresUitleg), findsOneWidget);
 
+      // ADRES: geen straat- of plaatsveld meer; die komen van PDOK.
+      expect(find.text('Straat'), findsNothing);
       await _vul(tester, 0, 'Mevrouw Jansen');
       await _vul(tester, 1, 'jansen@voorbeeld.nl');
-      await _vul(tester, 2, 'Dorpsstraat');
-      await _vul(tester, 3, '12a');
-      await _vul(tester, 4, '4003ab');
-      await _vul(tester, 5, 'Tiel');
-      await _vul(tester, 6, 'wachtwoord1');
+      await _vul(tester, 2, '4001ma');
+      await _vul(tester, 3, '1');
+      await _wachtOpAdres(tester);
+      expect(find.text('Kerkstraat 1, 4001 MA Tiel'), findsOneWidget);
+      await _vul(tester, 5, 'wachtwoord1');
       await _vinkAkkoord(tester);
       await _tik(tester, TekstenNl.registrerenKnop);
 
       expect(find.byType(BevestigEmailScreen), findsOneWidget);
       expect(gateway.laatsteRegistratieBody, {
-        'adres': 'Dorpsstraat 12a',
-        'huisnummer': '12a',
-        'postcode': '4003 AB',
+        'postcode': '4001 MA',
+        'huisnummer': '1',
+        'toevoeging': '',
+        'adres': 'Kerkstraat 1',
         'plaats': 'Tiel',
         'naam': 'Mevrouw Jansen',
         'email': 'jansen@voorbeeld.nl',
@@ -118,11 +130,12 @@ void main() {
 
       await _vul(tester, 0, 'Meneer Amsterdam');
       await _vul(tester, 1, 'adam@voorbeeld.nl');
-      await _vul(tester, 2, 'Damstraat');
+      await _vul(tester, 2, '1012 JS');
       await _vul(tester, 3, '1');
-      await _vul(tester, 4, '1012 AB');
-      await _vul(tester, 5, 'Amsterdam');
-      await _vul(tester, 6, 'wachtwoord1');
+      await _wachtOpAdres(tester);
+      // Meteen na het opzoeken: nog niet in jouw buurt (aanmelden mag wel).
+      expect(find.text(TekstenAanmeldenNl.nietInBuurt), findsOneWidget);
+      await _vul(tester, 5, 'wachtwoord1');
       await _vinkAkkoord(tester);
       await _tik(tester, TekstenNl.registrerenKnop);
       expect(find.byType(BevestigEmailScreen), findsOneWidget);
@@ -146,10 +159,7 @@ void main() {
       for (final fout in [
         TekstenNl.validatieNaamVerplicht,
         TekstenNl.validatieEmailVerplicht,
-        TekstenAanmeldenNl.validatieStraatVerplicht,
-        TekstenAanmeldenNl.validatieHuisnummerVerplicht,
-        TekstenAanmeldenNl.validatiePostcodeVerplicht,
-        TekstenAanmeldenNl.validatiePlaatsVerplicht,
+        TekstenAdresNl.validatieVerplicht,
         TekstenNl.validatieWachtwoordTeKort,
         TekstenAanmeldenNl.validatieAkkoord,
       ]) {
@@ -176,8 +186,9 @@ void main() {
       await _vul(tester, 1, geboortedatum);
       await tester.pump();
       await _vul(tester, 2, 'daan@voorbeeld.nl');
-      await _vul(tester, 3, '4003 AB');
-      await _vul(tester, 4, '7');
+      await _vul(tester, 3, '4001 MA');
+      await _vul(tester, 4, '1');
+      await _wachtOpAdres(tester);
     }
 
     testWidgets('18+: geen ouderveld, stuurt geboortedatum en postcode mee', (
@@ -192,15 +203,18 @@ void main() {
         findsNothing,
       );
       expect(find.text(TekstenAanmeldenNl.stapOuder), findsNothing);
-      await _vul(tester, 5, 'wachtwoord1');
+      await _vul(tester, 6, 'wachtwoord1');
       await _vinkAkkoord(tester);
       await _tik(tester, TekstenNl.registrerenKnop);
 
       expect(find.byType(BevestigEmailScreen), findsOneWidget);
       expect(gateway.laatsteRegistratieBody, {
         'geboortedatum': '1990-01-01T00:00:00.000Z',
-        'postcode': '4003 AB',
-        'huisnummer': '7',
+        'postcode': '4001 MA',
+        'huisnummer': '1',
+        'toevoeging': '',
+        'adres': 'Kerkstraat 1',
+        'plaats': 'Tiel',
         'naam': 'Daan',
         'email': 'daan@voorbeeld.nl',
         'rol': 'jongere',
@@ -220,7 +234,7 @@ void main() {
           findsOneWidget,
         );
         expect(find.text(TekstenAanmeldenNl.stapOuder), findsOneWidget);
-        await _vul(tester, 6, 'wachtwoord1');
+        await _vul(tester, 7, 'wachtwoord1');
         await _vinkAkkoord(tester);
         await _tik(tester, TekstenNl.registrerenKnop);
 
@@ -230,7 +244,7 @@ void main() {
         );
         expect(gateway.laatsteRegistratieBody, isNull);
 
-        await _vul(tester, 5, 'mama');
+        await _vul(tester, 6, 'mama');
         await _tik(tester, TekstenNl.registrerenKnop);
         expect(
           find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
@@ -238,7 +252,7 @@ void main() {
         );
         expect(gateway.laatsteRegistratieBody, isNull);
 
-        await _vul(tester, 5, '06 12 34 56 78');
+        await _vul(tester, 6, '06 12 34 56 78');
         await _tik(tester, TekstenNl.registrerenKnop);
         expect(
           find.text(TekstenAanmeldenNl.validatieOuderOngeldig),
@@ -246,7 +260,7 @@ void main() {
         );
         expect(gateway.laatsteRegistratieBody, isNull);
 
-        await _vul(tester, 5, 'mama@voorbeeld.nl');
+        await _vul(tester, 6, 'mama@voorbeeld.nl');
         await _tik(tester, TekstenNl.registrerenKnop);
         expect(find.byType(BevestigEmailScreen), findsOneWidget);
         expect(
@@ -267,7 +281,7 @@ void main() {
       await naarHelper(tester, gateway);
 
       await vulBasis(tester, '01-01-2020');
-      await _vul(tester, 5, 'wachtwoord1');
+      await _vul(tester, 6, 'wachtwoord1');
       await _vinkAkkoord(tester);
       await _tik(tester, TekstenNl.registrerenKnop);
 
@@ -282,15 +296,16 @@ void main() {
       final gateway = fakeMetAlleRollen();
       await naarHelper(tester, gateway);
 
-      await _vul(tester, 3, '400');
+      // De formatter maakt er "0401 MA" van; een 0 vooraan kan niet.
+      await _vul(tester, 3, '0401ma');
       await _tik(tester, TekstenNl.registrerenKnop);
 
       for (final fout in [
         TekstenAanmeldenNl.validatieVoornaamVerplicht,
         TekstenAanmeldenNl.validatieGeboortedatumVerplicht,
         TekstenNl.validatieEmailVerplicht,
-        TekstenAanmeldenNl.validatiePostcodeOngeldig,
-        TekstenAanmeldenNl.validatieHuisnummerVerplicht,
+        TekstenAdresNl.validatiePostcode,
+        TekstenAdresNl.validatieVerplicht,
         TekstenNl.validatieWachtwoordTeKort,
         TekstenAanmeldenNl.validatieAkkoord,
       ]) {

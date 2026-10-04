@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:heitjehulp_app/features/adres/domein/adres_invoer.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_scherm.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/concept_controller.dart';
@@ -216,13 +217,18 @@ void main() {
     await _tik(tester, TekstenHulpvragerNl.waarGeenAdresKnop);
     expect(find.byType(MijnGegevensScreen), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField).at(2), 'Kerkstraat 3');
-    await tester.enterText(find.byType(TextField).at(3), '4001 AB');
-    await tester.enterText(find.byType(TextField).at(4), 'Tiel');
+    // ADRES: postcode + huisnummer, straat en plaats komen van PDOK (nep).
+    await tester.enterText(find.byType(TextField).at(2), '4001ma');
+    await tester.enterText(find.byType(TextField).at(3), '1');
+    await tester.pump(adresZoekWachttijd);
+    await tester.pumpAndSettle();
+    expect(find.text('Kerkstraat 1, 4001 MA Tiel'), findsOneWidget);
     await _tik(tester, TekstenNl.opslaan);
     expect(klusGateway.laatsteGegevensBody, {
-      'adres': 'Kerkstraat 3',
-      'postcode': '4001 AB',
+      'postcode': '4001 MA',
+      'huisnummer': '1',
+      'toevoeging': '',
+      'adres': 'Kerkstraat 1',
       'plaats': 'Tiel',
     });
 
@@ -230,10 +236,10 @@ void main() {
     expect(find.byType(HulpVragenScreen), findsOneWidget);
     // Nu bekend: geen adresvelden meer, het adres zit in het concept.
     expect(
-      find.text(TekstenKlusNl.waarAdres('Kerkstraat 3, 4001 AB Tiel')),
+      find.text(TekstenKlusNl.waarAdres('Kerkstraat 1, 4001 MA Tiel')),
       findsOneWidget,
     );
-    expect(container.read(conceptProvider).adres, 'Kerkstraat 3');
+    expect(container.read(conceptProvider).adres, 'Kerkstraat 1');
   });
 
   testWidgets(

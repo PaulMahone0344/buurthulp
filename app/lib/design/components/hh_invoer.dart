@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme.dart';
 import '../dichtheid_scope.dart';
@@ -22,6 +23,8 @@ class HhInvoer extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.maxRegels = 1,
+    this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
     super.key,
   }) : assert(maxRegels >= 1, 'minstens een regel');
 
@@ -41,6 +44,11 @@ class HhInvoer extends StatelessWidget {
   /// Meer dan 1: een meerregelig veld (toelichting, M4) dat meegroeit tot
   /// dit aantal regels en dan scrollt.
   final int maxRegels;
+
+  /// Vormt de invoer tijdens het typen (bv. postcode: hoofdletters en een
+  /// spatie na de cijfers).
+  final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
 
   static const verplichtWoord = 'verplicht';
 
@@ -89,6 +97,8 @@ class HhInvoer extends StatelessWidget {
               minLines: 1,
               maxLines: maxRegels,
               autofillHints: autofillHints,
+              inputFormatters: inputFormatters,
+              textCapitalization: textCapitalization,
               onChanged: onChanged,
               onSubmitted: onSubmitted,
               style: tekst.bodyLarge,

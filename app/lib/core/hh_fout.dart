@@ -30,6 +30,11 @@ enum HhFoutSoort {
   /// 400 met veldfouten die de app niet apart kent.
   ongeldigeInvoer,
 
+  /// ADRES: de server keurde het adres af (bestaat niet bij PDOK, postcode
+  /// of huisnummer klopt niet, toevoeging kiezen). De melding komt van de
+  /// server (je-vorm, al Nederlands).
+  adresOngeldig,
+
   /// 5xx.
   server,
 
@@ -37,9 +42,13 @@ enum HhFoutSoort {
 }
 
 class HhFout {
-  const HhFout(this.soort, {this.detail});
+  const HhFout(this.soort, {this.detail, this.serverMelding});
 
   final HhFoutSoort soort;
+
+  /// Een Nederlandse melding van de server zelf (alleen bij
+  /// [HhFoutSoort.adresOngeldig]).
+  final String? serverMelding;
 
   /// Technische details voor logs en tests, nooit voor de gebruiker.
   final String? detail;
@@ -60,7 +69,24 @@ class HhFout {
       >= 500 => HhFoutSoort.server,
       _ => HhFoutSoort.onbekend,
     };
-    return HhFout(soort, detail: '$statuscode $antwoord');
+    return HhFout(
+      soort,
+      detail: '$statuscode $antwoord',
+      serverMelding: soort == HhFoutSoort.adresOngeldig
+          ? _adresMelding(antwoord)
+          : null,
+    );
+  }
+
+  /// De melding van de adres-check (hh_aanmelden.pb.js): data.adres.message,
+  /// anders de algemene message.
+  static String? _adresMelding(Map<String, dynamic> antwoord) {
+    final data = antwoord['data'];
+    final adres = data is Map ? data['adres'] : null;
+    final melding = adres is Map ? '${adres['message'] ?? ''}' : '';
+    if (melding.isNotEmpty) return melding;
+    final algemeen = '${antwoord['message'] ?? ''}';
+    return algemeen.isEmpty ? null : algemeen;
   }
 
   /// 400 draagt de veldfouten in "data". Een leeg "data" bij een
@@ -72,6 +98,10 @@ class HhFout {
     final email = data['email'];
     if (email is Map && '${email['code']}'.contains('unique')) {
       return HhFoutSoort.emailBestaatAl;
+    }
+    final adres = data['adres'];
+    if (adres is Map && '${adres['code']}'.startsWith('hh_adres')) {
+      return HhFoutSoort.adresOngeldig;
     }
     return HhFoutSoort.ongeldigeInvoer;
   }
@@ -86,6 +116,7 @@ class HhFout {
     HhFoutSoort.geenToegang => TekstenNl.foutGeenToegang,
     HhFoutSoort.nietGevonden => TekstenNl.foutNietGevonden,
     HhFoutSoort.ongeldigeInvoer => TekstenNl.foutOngeldigeInvoer,
+    HhFoutSoort.adresOngeldig => serverMelding ?? TekstenNl.foutOngeldigeInvoer,
     HhFoutSoort.server => TekstenNl.foutServer,
     HhFoutSoort.onbekend => TekstenNl.foutOnbekend,
   };

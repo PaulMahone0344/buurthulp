@@ -84,6 +84,8 @@ class FakeAuthGateway implements AuthGateway {
       werkgebiedStatus: _isBijTiel(aanmelding)
           ? HhWerkgebiedStatus.binnen
           : HhWerkgebiedStatus.buiten,
+      postcode: '${aanmelding.velden['postcode'] ?? ''}',
+      huisnummer: '${aanmelding.velden['huisnummer'] ?? ''}',
     );
     final account = FakeAccount(
       gebruiker: gebruiker,
@@ -176,6 +178,18 @@ class FakeAuthGateway implements AuthGateway {
           : null,
       telefoon: velden.containsKey('telefoon')
           ? () => velden['telefoon'] as String?
+          : null,
+      // ADRES: zoals de server: een ander adres geeft een nieuw werkgebied
+      // (40xx = Tiel en omstreken, de rest buiten).
+      postcode: velden['postcode'] as String?,
+      huisnummer: velden['huisnummer'] as String?,
+      wijkId: velden.containsKey('postcode')
+          ? ('${velden['postcode']}'.startsWith('40') ? fakeRegioWijk : '')
+          : null,
+      werkgebiedStatus: velden.containsKey('postcode')
+          ? ('${velden['postcode']}'.startsWith('40')
+                ? HhWerkgebiedStatus.binnen
+                : HhWerkgebiedStatus.buiten)
           : null,
     );
     final oud = _accounts[huidig.email]!;

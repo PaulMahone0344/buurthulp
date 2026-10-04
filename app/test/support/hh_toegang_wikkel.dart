@@ -8,6 +8,8 @@ import 'package:heitjehulp_app/core/pb/chat_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_chat_gateway.dart';
 import 'package:heitjehulp_app/features/chat/provider/chat_providers.dart';
 import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
+import 'package:heitjehulp_app/core/pb/adres_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_adres_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
@@ -50,6 +52,8 @@ HhGebruiker testGebruiker(
   HhRol rol, {
   bool isBevestigd = true,
   String? wijkId,
+  String? postcode,
+  String? huisnummer,
 }) => HhGebruiker(
   id: 'id-${rol.code}',
   naam: 'Test ${rol.naam}',
@@ -59,6 +63,14 @@ HhGebruiker testGebruiker(
   wijkId:
       wijkId ??
       (rol == HhRol.hulpvrager || rol == HhRol.jongere ? 'wijk-west' : ''),
+  // ADRES: bewoner en helper hebben een volledig adres (geen gele balk
+  // "Vul je adres aan"); de adres-tests geven er zelf een ander.
+  postcode:
+      postcode ??
+      (rol == HhRol.hulpvrager || rol == HhRol.jongere ? '4001 MA' : ''),
+  huisnummer:
+      huisnummer ??
+      (rol == HhRol.hulpvrager || rol == HhRol.jongere ? '1' : ''),
 );
 
 String testToken(HhRol rol) => 'token-${rol.code}';
@@ -121,6 +133,7 @@ List<dynamic> toegangOverrides({
   IncidentGateway? incidentGateway,
   OuderGateway? ouderGateway,
   ChatGateway? chatGateway,
+  AdresGateway? adresGateway,
 }) => [
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
@@ -170,6 +183,9 @@ List<dynamic> toegangOverrides({
   // B6: de Chat-knoppen (J13, J14, O7) tellen meteen de ongelezen
   // berichten. Standaard een lege fake zonder netwerk.
   chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
+  // ADRES: de adres-suggestie (PDOK). Standaard een fake met een paar vaste
+  // adressen; er gaat nooit een verzoek naar PDOK.
+  adresGatewayProvider.overrideWithValue(adresGateway ?? FakeAdresGateway()),
   if (sessie != null)
     sessieControllerProvider.overrideWith(() => VasteSessie(sessie)),
   if (gekozenRol != null)
@@ -189,6 +205,7 @@ ProviderContainer toegangContainer({
   KlussenGateway? klussenGateway,
   UitvoerGateway? uitvoerGateway,
   OuderGateway? ouderGateway,
+  AdresGateway? adresGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -206,6 +223,7 @@ ProviderContainer toegangContainer({
         klussenGateway: klussenGateway,
         uitvoerGateway: uitvoerGateway,
         ouderGateway: ouderGateway,
+        adresGateway: adresGateway,
       ),
     ],
   );
@@ -252,8 +270,13 @@ Future<ProviderContainer> pompApp(
   WidgetTester tester, {
   required FakeAuthGateway gateway,
   GeheugenKeyValueStore? opslag,
+  AdresGateway? adresGateway,
 }) async {
-  final container = toegangContainer(gateway: gateway, opslag: opslag);
+  final container = toegangContainer(
+    gateway: gateway,
+    opslag: opslag,
+    adresGateway: adresGateway,
+  );
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,

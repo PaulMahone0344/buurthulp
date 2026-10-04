@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../l10n/teksten_aanmelden_nl.dart';
+import '../../../l10n/teksten_adres_nl.dart';
+import '../../adres/domein/adres_invoer.dart';
 import '../../jongere/datum_invoer.dart';
 import '../model/hh_rol.dart';
 
@@ -46,39 +48,13 @@ String? valideerGeboortedatumHelper(String invoer, DateTime vandaag) {
   return null;
 }
 
-final _postcodePatroon = RegExp(r'^([1-9]\d{3})\s*([A-Za-z]{2})$');
-final _huisnummerPatroon = RegExp(r'^\d+[0-9A-Za-z\- ]{0,9}$');
 final _emailPatroon = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
-String? valideerPostcode(String waarde) {
-  if (waarde.trim().isEmpty) {
-    return TekstenAanmeldenNl.validatiePostcodeVerplicht;
-  }
-  return _postcodePatroon.hasMatch(waarde.trim())
-      ? null
-      : TekstenAanmeldenNl.validatiePostcodeOngeldig;
-}
-
-/// "4003ab" -> "4003 AB". Alleen voor een geldige postcode.
-String normaliseerPostcode(String waarde) {
-  final match = _postcodePatroon.firstMatch(waarde.trim());
-  if (match == null) return waarde.trim();
-  return '${match.group(1)} ${match.group(2)!.toUpperCase()}';
-}
-
-String? valideerHuisnummer(String waarde) {
-  final schoon = waarde.trim();
-  if (schoon.isEmpty) return TekstenAanmeldenNl.validatieHuisnummerVerplicht;
-  return _huisnummerPatroon.hasMatch(schoon)
-      ? null
-      : TekstenAanmeldenNl.validatieHuisnummerOngeldig;
-}
-
-String? valideerStraat(String waarde) =>
-    waarde.trim().isEmpty ? TekstenAanmeldenNl.validatieStraatVerplicht : null;
-
-String? valideerPlaats(String waarde) =>
-    waarde.trim().isEmpty ? TekstenAanmeldenNl.validatiePlaatsVerplicht : null;
+/// ADRES (4 okt): het adres komt uit de adres-suggestie (PDOK). Zonder
+/// keuze (nog niet gezocht, niet gevonden, nog bezig) kan aanmelden niet.
+/// Een ongecontroleerde keuze (PDOK even weg) mag wel; de server markeert hem.
+String? valideerAdresKeuze(AdresKeuze? keuze) =>
+    keuze == null ? TekstenAdresNl.validatieVerplicht : null;
 
 /// B3 (antwoord Ibrahim 4 okt): van de ouder van een helper onder 18 vraagt
 /// de app alleen nog het e-mailadres (sms kan nog niet). Een eerder bewaard
@@ -111,37 +87,26 @@ sealed class HhAanmelding {
   Map<String, Object> get velden;
 }
 
-/// Bewoner (rol hulpvrager). hh_users.adres blijft "straat + huisnummer"
-/// zoals sinds M4 (voorvullen van de hulpvraag); huisnummer staat er sinds
-/// B1 ook los.
+/// Bewoner (rol hulpvrager). Het adres komt uit de adres-suggestie (ADRES,
+/// 4 okt): postcode, huisnummer, toevoeging en, als PDOK het vond, straat en
+/// plaats. De server zoekt het zelf ook op en overschrijft straat/plaats.
 final class BewonerAanmelding extends HhAanmelding {
   const BewonerAanmelding({
     required this.naam,
     required super.email,
     required super.wachtwoord,
-    required this.straat,
-    required this.huisnummer,
-    required this.postcode,
-    required this.plaats,
+    required this.adres,
   });
 
   @override
   final String naam;
-  final String straat;
-  final String huisnummer;
-  final String postcode;
-  final String plaats;
+  final AdresKeuze adres;
 
   @override
   HhRol get rol => HhRol.hulpvrager;
 
   @override
-  Map<String, Object> get velden => {
-    'adres': '${straat.trim()} ${huisnummer.trim()}',
-    'huisnummer': huisnummer.trim(),
-    'postcode': normaliseerPostcode(postcode),
-    'plaats': plaats.trim(),
-  };
+  Map<String, Object> get velden => adres.velden;
 }
 
 /// Helper (rol jongere), vanaf 10 jaar. Onder 18 met [ouderEmail].
@@ -151,15 +116,13 @@ final class HelperAanmelding extends HhAanmelding {
     required super.email,
     required super.wachtwoord,
     required this.geboortedatum,
-    required this.postcode,
-    required this.huisnummer,
+    required this.adres,
     this.ouderEmail,
   });
 
   final String voornaam;
   final DateTime geboortedatum;
-  final String postcode;
-  final String huisnummer;
+  final AdresKeuze adres;
   final String? ouderEmail;
 
   @override
@@ -171,8 +134,7 @@ final class HelperAanmelding extends HhAanmelding {
   @override
   Map<String, Object> get velden => {
     'geboortedatum': datumVoorServer(geboortedatum),
-    'postcode': normaliseerPostcode(postcode),
-    'huisnummer': huisnummer.trim(),
+    ...adres.velden,
     if ((ouderEmail ?? '').trim().isNotEmpty)
       'ouder_email': (ouderEmail ?? '').trim().toLowerCase(),
   };

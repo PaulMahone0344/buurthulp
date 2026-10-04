@@ -11,6 +11,10 @@ abstract final class HhPadenJongere {
   static const overzicht = '$screening/overzicht'; // J9 Je aanmelding
   static const binnen = '$screening/binnen'; // H6b Aanmelding binnen
 
+  /// ADRES (4 okt): "Mijn adres" (gele balk "Vul je adres aan"). Onder
+  /// /jongere/screening, zodat ook een wachtende helper erbij kan.
+  static const adres = '$screening/adres';
+
   /// Elk pad onder /jongere/screening.
   static bool isScreeningPad(String locatie) => locatie.startsWith(screening);
 }

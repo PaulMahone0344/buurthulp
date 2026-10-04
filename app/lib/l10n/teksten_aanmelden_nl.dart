@@ -14,11 +14,6 @@ abstract final class TekstenAanmeldenNl {
   static const bewonerUitleg =
       'Je zoekt hulp in je buurt? Maak hier je account.';
   static const veldNaam = 'Naam';
-  static const veldStraat = 'Straat';
-  static const veldHuisnummer = 'Huisnummer';
-  static const veldPostcode = 'Postcode';
-  static const veldPostcodeHulp = 'Bijvoorbeeld 4003 AB.';
-  static const veldPlaats = 'Plaats';
   static const adresUitleg =
       'Je adres ziet alleen de helper die jij kiest, na de match.';
   static const akkoordTekst =
@@ -51,14 +46,6 @@ abstract final class TekstenAanmeldenNl {
 
   // Validatie
   static const validatieVoornaamVerplicht = 'Vul je voornaam in.';
-  static const validatieStraatVerplicht = 'Vul je straat in.';
-  static const validatieHuisnummerVerplicht = 'Vul je huisnummer in.';
-  static const validatieHuisnummerOngeldig =
-      'Een huisnummer begint met een cijfer, bijvoorbeeld 12 of 12a.';
-  static const validatiePostcodeVerplicht = 'Vul je postcode in.';
-  static const validatiePostcodeOngeldig =
-      'Een postcode is 4 cijfers en 2 letters, bijvoorbeeld 4003 AB.';
-  static const validatiePlaatsVerplicht = 'Vul je plaats in.';
   static const validatieGeboortedatumVerplicht = 'Vul je geboortedatum in.';
   static const validatieGeboortedatumOngeldig =
       'Dit is geen geldige datum. Gebruik dag-maand-jaar.';

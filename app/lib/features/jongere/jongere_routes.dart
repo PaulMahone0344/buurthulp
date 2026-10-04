@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import 'ouder/screen/ouder_screen.dart';
+import 'screen/mijn_adres_screen.dart';
 import 'paden_jongere.dart';
 import 'screen/aanmelding_binnen_screen.dart';
 import 'screen/screening_foto_screen.dart';
@@ -31,6 +32,11 @@ List<RouteBase> jongereRoutes() => [
   GoRoute(
     path: HhPadenJongere.binnen,
     builder: (context, state) => const AanmeldingBinnenScreen(),
+  ),
+  // ADRES: "Mijn adres" (gele balk "Vul je adres aan").
+  GoRoute(
+    path: HhPadenJongere.adres,
+    builder: (context, state) => const MijnAdresScreen(),
   ),
   // B3: stap "Ouder" (helper onder 18).
   GoRoute(

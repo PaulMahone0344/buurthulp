@@ -11,6 +11,8 @@ class HhGegevens {
     required this.naam,
     this.telefoon = '',
     this.adres = '',
+    this.huisnummer = '',
+    this.toevoeging = '',
     this.postcode = '',
     this.plaats = '',
     this.contactNaam = '',
@@ -21,6 +23,10 @@ class HhGegevens {
   final String naam;
   final String telefoon;
   final String adres;
+
+  /// ADRES (4 okt): los huisnummer en toevoeging (sinds B1/ADRES op hh_users).
+  final String huisnummer;
+  final String toevoeging;
   final String postcode;
   final String plaats;
   final String contactNaam;
@@ -31,6 +37,8 @@ class HhGegevens {
   static const veldNaam = 'naam';
   static const veldTelefoon = 'telefoon';
   static const veldAdres = 'adres';
+  static const veldHuisnummer = 'huisnummer';
+  static const veldToevoeging = 'toevoeging';
   static const veldPostcode = 'postcode';
   static const veldPlaats = 'plaats';
   static const veldContactNaam = 'contact_naam';
@@ -42,6 +50,8 @@ class HhGegevens {
       naam: record.getStringValue(veldNaam),
       telefoon: record.getStringValue(veldTelefoon),
       adres: record.getStringValue(veldAdres),
+      huisnummer: record.getStringValue(veldHuisnummer),
+      toevoeging: record.getStringValue(veldToevoeging),
       postcode: record.getStringValue(veldPostcode),
       plaats: record.getStringValue(veldPlaats),
       contactNaam: record.getStringValue(veldContactNaam),
@@ -60,6 +70,8 @@ class HhGegevens {
     veldNaam: naam,
     veldTelefoon: telefoon,
     veldAdres: adres,
+    veldHuisnummer: huisnummer,
+    veldToevoeging: toevoeging,
     veldPostcode: postcode,
     veldPlaats: plaats,
     veldContactNaam: contactNaam,
@@ -82,6 +94,8 @@ class HhGegevens {
       naam: (velden[veldNaam] as String?) ?? naam,
       telefoon: (velden[veldTelefoon] as String?) ?? telefoon,
       adres: (velden[veldAdres] as String?) ?? adres,
+      huisnummer: (velden[veldHuisnummer] as String?) ?? huisnummer,
+      toevoeging: (velden[veldToevoeging] as String?) ?? toevoeging,
       postcode: (velden[veldPostcode] as String?) ?? postcode,
       plaats: (velden[veldPlaats] as String?) ?? plaats,
       contactNaam: (velden[veldContactNaam] as String?) ?? contactNaam,
@@ -97,6 +111,8 @@ class HhGegevens {
       other.naam == naam &&
       other.telefoon == telefoon &&
       other.adres == adres &&
+      other.huisnummer == huisnummer &&
+      other.toevoeging == toevoeging &&
       other.postcode == postcode &&
       other.plaats == plaats &&
       other.contactNaam == contactNaam &&
@@ -108,6 +124,8 @@ class HhGegevens {
     naam,
     telefoon,
     adres,
+    huisnummer,
+    toevoeging,
     postcode,
     plaats,
     contactNaam,

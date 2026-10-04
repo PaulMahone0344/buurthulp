@@ -54,6 +54,58 @@ class SessieController extends Notifier<SessieState> {
     }
   }
 
+  /// ADRES: haalt de eigen gebruiker opnieuw op (na een adreswijziging via
+  /// Mijn gegevens: wijk, werkgebied en de gele balk volgen dan). Stil: bij
+  /// een fout blijft de sessie zoals hij was, alleen een 401 logt uit.
+  /// Roep dit pas aan als het scherm met de wijziging weg is (zie
+  /// [vervangGebruiker]).
+  Future<void> ververs() async {
+    if (_ingelogdeGebruiker == null) return;
+    final token = await ref.read(tokenStoreProvider).lees();
+    if (token == null || token.isEmpty) return;
+    final result = await ref.read(authGatewayProvider).sessieHerstellen(token);
+    switch (result) {
+      case Ok<HhGebruiker>(:final waarde):
+        vervangGebruiker(waarde);
+      case Err<HhGebruiker>(:final fout)
+          when fout.soort == HhFoutSoort.nietIngelogd:
+        await sessieVerlopen();
+      case Err<HhGebruiker>():
+        break;
+    }
+  }
+
+  /// ADRES: stuurt [velden] naar de server zoals [bijwerken], maar laat de
+  /// sessie nog staan; het scherm geeft de nieuwe gebruiker later door aan
+  /// [vervangGebruiker]. Waarom: verandert de sessie terwijl Start eronder
+  /// gepauzeerd staat, dan wil Riverpod 3 bij terugkomen midden in een build
+  /// opnieuw bouwen ("markNeedsBuild called during build"). Een 401 logt uit.
+  Future<Result<HhGebruiker>> bijwerkenUitgesteld(
+    Map<String, dynamic> velden,
+  ) async {
+    final gebruiker = _ingelogdeGebruiker;
+    if (gebruiker == null) {
+      return Result.err(const HhFout(HhFoutSoort.nietIngelogd));
+    }
+    final result = await ref
+        .read(authGatewayProvider)
+        .bijwerken(gebruiker.id, velden);
+    if (result case Err<HhGebruiker>(
+      :final fout,
+    ) when fout.soort == HhFoutSoort.nietIngelogd) {
+      await sessieVerlopen();
+    }
+    return result;
+  }
+
+  /// Zet een (door de server teruggegeven) nieuwere versie van de ingelogde
+  /// gebruiker in de sessie. Doet niets als er intussen iemand anders (of
+  /// niemand) ingelogd is.
+  void vervangGebruiker(HhGebruiker gebruiker) {
+    if (_ingelogdeGebruiker?.id != gebruiker.id) return;
+    state = SessieIngelogd(gebruiker);
+  }
+
   Future<Result<void>> registreren(HhAanmelding aanmelding) {
     return _authenticeer(
       () => ref.read(authGatewayProvider).registreren(aanmelding),

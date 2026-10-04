@@ -1,3 +1,4 @@
+import '../../../adres/widget/adres_aanvullen_balk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -246,6 +247,8 @@ class _Lijst extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ADRES: een helper met een onvolledig adres vult het aan.
+            const AdresAanvullenBalk(),
             schakelaar,
             SizedBox(height: tussen),
             const _FilterBalk(),

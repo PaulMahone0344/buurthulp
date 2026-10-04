@@ -6,6 +6,8 @@ import 'package:heitjehulp_app/core/hh_fout.dart';
 import 'package:heitjehulp_app/core/pb/auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/pocketbase_gateway.dart';
 import 'package:heitjehulp_app/core/result.dart';
+import 'package:heitjehulp_app/core/pb/fake_adres_gateway.dart';
+import 'package:heitjehulp_app/features/adres/domein/adres_invoer.dart';
 import 'package:heitjehulp_app/features/toegang/domein/aanmelding.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
@@ -75,10 +77,7 @@ const _bewoner = BewonerAanmelding(
   naam: 'Iemand',
   email: 'iemand@voorbeeld.nl',
   wachtwoord: 'wachtwoord1',
-  straat: 'Dorpsstraat',
-  huisnummer: '1',
-  postcode: '4003 AB',
-  plaats: 'Tiel',
+  adres: AdresKeuze.bevestigd(FakeAdresGateway.kerkstraat1),
 );
 
 void main() {
@@ -95,8 +94,10 @@ void main() {
           email: 'iemand@voorbeeld.nl',
           wachtwoord: 'wachtwoord1',
           geboortedatum: DateTime.utc(2012, 5, 14),
-          postcode: '4003ab',
-          huisnummer: '7',
+          adres: const AdresKeuze.ongecontroleerd(
+            postcode: '4003ab',
+            huisnummer: '7',
+          ),
           ouderEmail: 'ouder@voorbeeld.nl',
         ),
       );

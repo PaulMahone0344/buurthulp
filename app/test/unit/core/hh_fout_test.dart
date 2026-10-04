@@ -86,4 +86,44 @@ void main() {
       );
     });
   });
+
+  group('ADRES: de server keurt het adres af', () {
+    test(
+      '400 met data.adres (hh_adres_...) -> adresOngeldig met de melding van de server',
+      () {
+        final fout = HhFout.vanStatus(
+          400,
+          antwoord: {
+            'message':
+                'We vinden dit adres niet. Klopt de postcode en het huisnummer?',
+            'data': {
+              'adres': {
+                'code': 'hh_adres_nietgevonden',
+                'message':
+                    'We vinden dit adres niet. Klopt de postcode en het huisnummer?',
+              },
+            },
+          },
+        );
+        expect(fout.soort, HhFoutSoort.adresOngeldig);
+        expect(
+          fout.melding,
+          'We vinden dit adres niet. Klopt de postcode en het huisnummer?',
+        );
+      },
+    );
+
+    test('400 met een andere veldfout blijft ongeldigeInvoer', () {
+      final fout = HhFout.vanStatus(
+        400,
+        antwoord: {
+          'message': 'x',
+          'data': {
+            'naam': {'code': 'validation_required', 'message': 'x'},
+          },
+        },
+      );
+      expect(fout.soort, HhFoutSoort.ongeldigeInvoer);
+    });
+  });
 }

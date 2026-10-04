@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 
+import '../../adres/domein/adres_invoer.dart' as adres_invoer;
 import '../domein/werkgebied.dart';
 import 'hh_rol.dart';
 
@@ -38,6 +39,8 @@ class HhGebruiker {
     this.isBevestigd = false,
     this.wijkId = '',
     this.werkgebiedStatus = HhWerkgebiedStatus.onbepaald,
+    this.postcode = '',
+    this.huisnummer = '',
   });
 
   final String id;
@@ -53,6 +56,17 @@ class HhGebruiker {
   /// B2: hh_users.wijk en werkgebied_status (zet de server uit de postcode).
   final String wijkId;
   final HhWerkgebiedStatus werkgebiedStatus;
+
+  /// ADRES (4 okt): hh_users.postcode en huisnummer, alleen om te zien of
+  /// een bestaand account zijn adres moet aanvullen (gele balk).
+  final String postcode;
+  final String huisnummer;
+
+  /// Heeft een bewoner of helper een volledig adres (6-tekens-postcode en
+  /// een huisnummer)? Andere rollen hebben geen adres nodig.
+  bool get heeftVolledigAdres =>
+      (rol != HhRol.hulpvrager && rol != HhRol.jongere) ||
+      adres_invoer.heeftVolledigAdres(postcode, huisnummer);
 
   /// Een bewoner zonder wijk woont buiten het werkgebied (of zijn adres is
   /// nog niet gevonden): dan kan hij geen klus plaatsen.
@@ -78,6 +92,8 @@ class HhGebruiker {
       werkgebiedStatus: HhWerkgebiedStatus.vanCode(
         record.getStringValue('werkgebied_status'),
       ),
+      postcode: record.getStringValue('postcode'),
+      huisnummer: record.getStringValue('huisnummer'),
     );
   }
 
@@ -90,6 +106,8 @@ class HhGebruiker {
     bool? isBevestigd,
     String? wijkId,
     HhWerkgebiedStatus? werkgebiedStatus,
+    String? postcode,
+    String? huisnummer,
   }) {
     return HhGebruiker(
       id: id,
@@ -101,6 +119,8 @@ class HhGebruiker {
       isBevestigd: isBevestigd ?? this.isBevestigd,
       wijkId: wijkId ?? this.wijkId,
       werkgebiedStatus: werkgebiedStatus ?? this.werkgebiedStatus,
+      postcode: postcode ?? this.postcode,
+      huisnummer: huisnummer ?? this.huisnummer,
     );
   }
 
@@ -115,7 +135,9 @@ class HhGebruiker {
       other.telefoon == telefoon &&
       other.isBevestigd == isBevestigd &&
       other.wijkId == wijkId &&
-      other.werkgebiedStatus == werkgebiedStatus;
+      other.werkgebiedStatus == werkgebiedStatus &&
+      other.postcode == postcode &&
+      other.huisnummer == huisnummer;
 
   @override
   int get hashCode => Object.hash(
@@ -128,5 +150,7 @@ class HhGebruiker {
     isBevestigd,
     wijkId,
     werkgebiedStatus,
+    postcode,
+    huisnummer,
   );
 }
