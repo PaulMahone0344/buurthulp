@@ -151,7 +151,7 @@ UITROLLIJST (volgorde; na JA, auto-mode UIT)
        node --experimental-eventsource scripts/122-adrescheck.mjs --apply --zonder-limiet  verwacht 77 + 2 overgeslagen
      132 niet binnen een uur na de B5-run vanaf hetzelfde adres (ouder-route
      30/uur) en 92 niet binnen een uur na een eerdere 92.
-  7. (eigen JA) node scripts/144-b9-naberekenen.mjs ; --apply ; nogmaals.
+  7. node scripts/144-b9-naberekenen.mjs ; --apply ; nogmaals (antwoord 5: meedraaien).
   8. App + website OP DEZELFDE DAG als 4 (website staat nog niet online: de
      verklaring-pagina werkt pas als de site er is; de app toont de code wel).
 
