@@ -189,6 +189,10 @@ void main() {
       expect(gateway.laatsteUpdateBody, {'taal': 'tr'});
       expect(gateway.laatsteUpdateBody?.containsKey('rol'), isFalse);
       expect(find.text(TekstenNl.instellingenOpgeslagen), findsOneWidget);
+      // De nieuwe taal komt pas in de sessie als het scherm weg is (zie
+      // InstellingenScreen); scherm weghalen en die stap laten lopen.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(Duration.zero);
     });
 
     testWidgets('meldingen-schakelaar bewaart lokaal', (tester) async {

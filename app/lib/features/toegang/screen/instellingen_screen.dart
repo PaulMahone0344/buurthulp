@@ -54,18 +54,46 @@ class _InstellingenScreenState extends ConsumerState<InstellingenScreen> {
   HhMeldSoort? _meldSoort;
   String? _melding;
 
+  /// De nieuwe gebruiker na een taalwissel. Komt pas in de sessie als dit
+  /// scherm weg is: verandert de sessie terwijl Start (of een andere tab)
+  /// nog in het geheugen zit, dan bouwt Riverpod 3 die bij terugkomen midden
+  /// in een build opnieuw ("markNeedsBuild called during build"). Tot dan
+  /// toont dit scherm de nieuwe keuze zelf.
+  HhGebruiker? _opgeslagen;
+  late final SessieController _sessie;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessie = ref.read(sessieControllerProvider.notifier);
+  }
+
+  @override
+  void dispose() {
+    final nieuw = _opgeslagen;
+    if (nieuw != null) {
+      final sessie = _sessie;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => sessie.vervangGebruiker(nieuw),
+      );
+    }
+    super.dispose();
+  }
+
   Future<void> _zetTaal(HhTaal taal) async {
     setState(() {
       _isBezig = true;
       _melding = null;
     });
-    final result = await ref.read(sessieControllerProvider.notifier).bijwerken({
-      'taal': taal.code,
-    });
+    final result = await _sessie.bijwerkenUitgesteld({'taal': taal.code});
     if (!mounted) return;
     setState(() {
       _isBezig = false;
-      _toonResultaat(result, TekstenNl.instellingenOpgeslagen);
+      if (result case Ok<HhGebruiker>(:final waarde)) _opgeslagen = waarde;
+      _toonResultaat(switch (result) {
+        Ok<HhGebruiker>() => Result.ok(null),
+        Err<HhGebruiker>(:final fout) => Result.err(fout),
+      }, TekstenNl.instellingenOpgeslagen);
     });
   }
 
@@ -139,7 +167,7 @@ class _InstellingenScreenState extends ConsumerState<InstellingenScreen> {
                 HhKeuzerij<HhTaal>(
                   semantiekLabel: TekstenNl.instellingenTaal,
                   keuzes: _talen,
-                  geselecteerd: {gebruiker.taal},
+                  geselecteerd: {(_opgeslagen ?? gebruiker).taal},
                   onGewijzigd: _isBezig
                       ? null
                       : (keuze) => _zetTaal(keuze.first),
