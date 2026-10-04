@@ -1,0 +1,168 @@
+HeitjeHulp B9 — XP, BADGES, NIVEAUS EN VERDIENSTEN — proefrit (DRY-RUN tegen prod, niets geschreven) 4 okt 2026
+Branch b9/xp (worktree ~/flutter-builds/hh-b9, vanaf main 0d3abbd = B5 live). Gebouwd in de hoofdsessie (geen agent).
+NOG NIET OP PROD. Uitrol alleen na JA van Ibrahim, auto-mode UIT voor 143.
+
+WAT VERANDERT ER OP PROD (na JA)
+  Collecties (140, NIEUW, additief): hh_xp, hh_badges, hh_verklaringen.
+  Velden (140, additief): hh_profielen.xp_totaal/niveau/idin_geverifieerd_op,
+    hh_beoordelingen.verborgen_op/verborgen_door/verborgen_reden,
+    hh_meldingen.soort + "beloning". GEEN bestaande rij wordt gewijzigd.
+  Rules (141): de 3 nieuwe collecties (lezen helper zelf of coordinator,
+    schrijven niemand); SLOT erbij op hh_profielen en hh_beoordelingen
+    create/update (de B9-velden niet via de API). Bestaande rule-tekst blijft
+    staan, het slot komt er met && achter (patroon 21).
+  Hooks (143): NIEUW hh_xp_regels.js, hh_xp_hulp.js, hh_xp.pb.js;
+    GEWIJZIGD hh_reputatie.js, hh_reacties_hulp.js, hh_beoordelingen.pb.js,
+    hh_klussen.pb.js (alleen B9-regels; serverversie = main, nagekeken met
+    "echo n | 143").
+  Nieuw gedrag:
+    - klus afgerond -> XP + niveau + badges, melding "beloning", en de app
+      toont HBeloning; beoordeling 4/5 sterren -> XP; herboeking = meeste XP;
+    - klus van afgerond af / beoordeling lager / verborgen -> tegenboeking;
+    - KiesHelper: echt niveau + "Nieuw in de buurt";
+    - meldkamer verbergt een recensie (Systeem > Recensies): telt niet meer
+      voor sterren en XP;
+    - publieke route verklaring/{code} (30 per IP per uur).
+  M6-statusverloop en B5-kiezen: ONGEWIJZIGD.
+
+DATAMIGRATIE (script 144, APART, eigen JA)
+  Op prod hebben 3 accounts een afgeronde klus: hh-seed-jongere1/2/3 (alle
+  drie seed, 1 klus elk). Zonder 144 krijgen ze hun XP pas bij hun volgende
+  klus of beoordeling. 144 --apply boekt alleen NIEUWE rijen (hh_xp,
+  hh_badges) en xp_totaal/niveau; lokaal: 3 helpers, samen 255 XP, daarna
+  "niets te doen". Stuurt geen meldingen.
+
+LOKAAL BEWEZEN (PocketBase 0.25.9, prod-schema + B5-stand, hooks van deze
+branch, nep-Nominatim/PDOK/SMTP; schakelaars zoals op prod: nieuwe-klus AAN)
+  140 dry-run 10 -> --apply -> nogmaals "Niets te doen"
+  141 --apply -> nogmaals "Niets te doen"
+  142 --apply: 89 groen, 0 rood (2 bugs gevonden en gerepareerd: verklaring-
+    hergebruik vergeleek json met andere sleutelvolgorde; countRecords werkt
+    in de JSVM niet met een filter-tekst)
+  144 droog 3 helpers / --apply / daarna niets te doen
+  Bestaande checks met de B9-hooks (alle 0 rood):
+    132 144, 32 39, 92 89, 102 144, 112 124, 82 79, 72 54, 62 118, 04 223,
+    50 60, 122 85
+  App-smoke (test/smoke/b9_lokaal_smoke_test.dart, ECHTE PocketBaseXpGateway
+    tegen de lokale server): overzicht + verklaring als helper, 403 als
+    bewoner. Groen.
+
+TESTS (zonder server)
+  backend  node --test tests/*.test.mjs   407 groen (was 373)
+  app      flutter test                   1122 groen, ~8 overgeslagen (was 1099; +1 = lokale smoke)
+           flutter analyze                schoon; sweeps 320/390/430 x 100/200% 0 fouten
+  website  npx vitest run                 180 groen (was 171); tsc, eslint, build schoon
+
+=== DRY-RUNS TEGEN PROD (alleen lezen, 4 okt) ===
+=== node scripts/140-b9-xp.mjs
+  
+    + ZOU aanmaken: hh_xp (base, 9 velden)
+        helper (relation, cascade)
+        klus (relation)
+        beoordeling (relation)
+        bron (text, max 80)
+        soort (select: klus_klaar | eerste_klus | herboeking | beoordeling | tegenboeking)
+        punten (number)
+        sleutel (text, max 100)
+        created (autodate)
+        updated (autodate)
+        index: CREATE UNIQUE INDEX idx_hh_xp_sleutel ON hh_xp (helper, sleutel)
+        index: CREATE INDEX idx_hh_xp_helper ON hh_xp (helper)
+    + ZOU aanmaken: hh_badges (base, 5 velden)
+        helper (relation, cascade)
+        code (select: eerste_klus | vijf_klussen | tien_klussen | vijfentwintig_klussen | vijf_sterren_reeks | herboekt | drie_buren)
+        behaald_op (date)
+        created (autodate)
+        updated (autodate)
+        index: CREATE UNIQUE INDEX idx_hh_badges_uniek ON hh_badges (helper, code)
+    + ZOU aanmaken: hh_verklaringen (base, 5 velden)
+        helper (relation, cascade)
+        code (text, max 11)
+        gegevens (json)
+        created (autodate)
+        updated (autodate)
+        index: CREATE UNIQUE INDEX idx_hh_verklaringen_code ON hh_verklaringen (code)
+        index: CREATE INDEX idx_hh_verklaringen_helper ON hh_verklaringen (helper)
+    + ZOU toevoegen: hh_profielen.xp_totaal (number)
+    + ZOU toevoegen: hh_profielen.niveau (select: nieuw | ervaren | top | geverifieerd)
+    + ZOU toevoegen: hh_profielen.idin_geverifieerd_op (date)
+    + ZOU toevoegen: hh_beoordelingen.verborgen_op (date)
+    + ZOU toevoegen: hh_beoordelingen.verborgen_door (relation)
+    + ZOU toevoegen: hh_beoordelingen.verborgen_reden (text, max 300)
+    + ZOU keuze toevoegen: hh_meldingen.soort "beloning"
+        was:    nieuwe_klus | toegewezen | onderweg | afgerond | geannuleerd | incident | bericht | reactie
+        wordt:  nieuwe_klus | toegewezen | onderweg | afgerond | geannuleerd | incident | bericht | reactie | beloning
+  
+  DRY-RUN: 10 wijziging(en). Draai met --apply.
+
+=== node scripts/141-b9-rules.mjs  (alleen de samenvatting)
+  4 regel(s): 3 nieuwe collecties bestaan nog niet (eerst 140) + sloten op
+  hh_profielen en hh_beoordelingen create/update.
+  ! hh_xp bestaat nog niet — eerst 140-b9-xp.mjs --apply.
+  ! hh_badges bestaat nog niet — eerst 140-b9-xp.mjs --apply.
+  ! hh_verklaringen bestaat nog niet — eerst 140-b9-xp.mjs --apply.
+  + ZOU hh_profielen.createRule bijwerken — dry-run
+  + ZOU hh_profielen.updateRule bijwerken — dry-run
+  + ZOU hh_beoordelingen.createRule bijwerken — dry-run
+  + ZOU hh_beoordelingen.updateRule bijwerken — dry-run
+
+=== node scripts/142-b9check.mjs
+  2 groen, 10 rood (leescontroles).
+  Rood is verwacht zolang 140, 141 en 143 nog niet uitgerold zijn.
+
+=== echo n | ./scripts/143-hook-deploy.sh   (stopt bij de vraag; niets gewijzigd)
+     + NIEUW: hh_xp_regels.js
+     + NIEUW: hh_xp_hulp.js
+     = bestaat al: hh_reputatie.js
+     = bestaat al: hh_reacties_hulp.js
+     + NIEUW: hh_xp.pb.js
+     = bestaat al: hh_beoordelingen.pb.js
+     = bestaat al: hh_klussen.pb.js
+  2b: alleen B9-regels in de 4 gewijzigde bestanden.
+
+---------------------------------------------------------------------
+UITROLLIJST (volgorde; na JA, auto-mode UIT)
+---------------------------------------------------------------------
+  0. cd "<repo>/backend"   (branch b9/xp, of main na de merge)
+     set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  1. node scripts/00-backup.mjs                       (pad bewaren)
+  2. node scripts/140-b9-xp.mjs ; --apply ; nogmaals -> "Niets te doen"
+  3. node scripts/141-b9-rules.mjs --apply ; nogmaals -> "Niets te doen"
+  4. ./scripts/143-hook-deploy.sh   (DIRECT na 2 en 3; hh_reputatie.js filtert
+     op verborgen_op, dat veld moet er al zijn)
+       ssh eet stdin: als de vraag niet komt, met  yes y | ./scripts/143-hook-deploy.sh
+       verwacht: 3x + NIEUW, 4x = bestaat al; daarna journalctl zonder laadfout
+  5. node scripts/142-b9check.mjs --apply           verwacht 89 groen, 0 rood
+       LET OP op prod: 5 tijdelijke accounts + ±8 klussen (superuser, meteen
+       geaccepteerd: geen "nieuwe klus"); sectie L plaatst één klus als bewoner
+       en keurt hem als superuser (ook geen melding); alles opgeruimd. Telt
+       3 van de 30 publieke verklaring-opzoekingen per uur.
+  6. Bestaande checks (zelfde lijst als B5):
+       node scripts/132-b5check.mjs --apply                        verwacht 144
+       node scripts/32-meldingencheck.mjs --apply                  verwacht  39
+       node scripts/92-b3check.mjs --apply                         verwacht  89
+       node scripts/102-b4check.mjs --apply                        verwacht 144
+       node --experimental-eventsource scripts/112-b6check.mjs --apply  verwacht 124
+       node scripts/82-b2check.mjs --apply                         verwacht  79
+       node scripts/72-b1check.mjs --apply                         verwacht  54
+       node scripts/62-beheercheck.mjs --apply                     verwacht 118
+       node scripts/04-rulecheck.mjs --apply                       verwacht 223
+       node scripts/50-koppelcheck.mjs --apply                     verwacht  60
+       node --experimental-eventsource scripts/122-adrescheck.mjs --apply --zonder-limiet  verwacht 77 + 2 overgeslagen
+     132 niet binnen een uur na de B5-run vanaf hetzelfde adres (ouder-route
+     30/uur) en 92 niet binnen een uur na een eerdere 92.
+  7. (eigen JA) node scripts/144-b9-naberekenen.mjs ; --apply ; nogmaals.
+  8. App + website OP DEZELFDE DAG als 4 (website staat nog niet online: de
+     verklaring-pagina werkt pas als de site er is; de app toont de code wel).
+
+OUDE APP NA STAP 4
+  - helper: geen HBeloning en geen XP-blok (de app kent ze niet); de
+    statusroute stuurt alleen een extra veld mee, dat de oude app negeert.
+  - melding "beloning": de oude app toont hem als gewone melding zonder doel.
+  - KiesHelper oud: toont het niveau al goed (veld niveau bestond al).
+
+ROLLBACK
+  ./scripts/143-hook-deploy.sh --rollback   (de 4 gewijzigde terug, de 3 nieuwe
+     weg; alles werkt weer zoals B5). De collecties en velden van 140 blijven
+     staan (zonder hooks doen ze niets); de sloten van 141 ook (die verbieden
+     alleen het zetten van B9-velden via de API).

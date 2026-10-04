@@ -1,0 +1,43 @@
+HeitjeHulp B9 — XP, BADGES, NIVEAUS EN VERDIENSTEN — open punten (4 okt 2026)
+Branch b9/xp. Max 5 vragen voor Ibrahim; daaronder wat ik zelf koos.
+
+VRAGEN
+1. Zijn de getallen goed? (staan op één plek: backend/pb_hooks/hh_xp_regels.js)
+   XP:      klus klaar 50 · eerste klus ooit +25 · dezelfde bewoner kiest je
+            opnieuw +75 · beoordeling 5 sterren +30, 4 sterren +15
+   Niveaus: Ervaren = 300 XP en 5 klussen · Top = 1000 XP, 15 klussen en
+            gemiddeld 4,5 sterren · Geverifieerd = Top + iDIN (nooit vanzelf)
+2. Voordelen per niveau ("eerder zien", "meer soorten"): NIET gebouwd, alleen
+   het niveau ligt vast. Voorstel: (a) eerder zien = Ervaren/Top krijgen de
+   melding "nieuwe klus" meteen, Nieuw pas na 15 minuten; (b) meer soorten =
+   per categorie een minimum-niveau (instelbaar in het paneel, B11). Bouwen
+   bij B10/B11, nu, of nog niet?
+3. VOG-badge: zonder einddatum geldig tot 3 jaar na "VOG gezien", daarna grijs
+   met "Verlopen op ...". Goed zo, of een andere termijn?
+4. Badges: eerste klus, 5, 10, 25 klussen, 5 keer 5 sterren, "Weer gevraagd"
+   (herboekt), "3 buren geholpen". Behaald blijft behaald, ook als een klus
+   later wordt teruggedraaid. Goed zo, of andere/meer badges?
+5. Script 144 (XP voor klussen van vóór B9): op prod gaat het alleen om de 3
+   seed-helpers (1 klus elk). Meedraaien bij de uitrol of overslaan?
+
+ZELF GEKOZEN (geen vraag, wel goed om te weten)
+  - Elke XP-boeking is een rij in hh_xp (herleidbaar); terugdraaien =
+    tegenboeking, nooit wissen. Twee hooks tegelijk boeken nooit dubbel.
+  - XP komt meteen na "Klaar" (besluit 14), ook als de bewoner nog niet
+    beoordeelt; de beoordeling geeft later haar eigen XP.
+  - Verborgen recensie (meldkamer, Systeem > Recensies): telt niet voor de
+    sterren, niet voor XP of de 5-sterren-reeks, niet bij KiesHelper en niet
+    op het profiel. Terugzetten kan. De gever ziet zelf geen verschil.
+  - Ook de coordinator kan de B9-velden niet via de API zetten: verbergen
+    gaat via een route die meteen herrekent.
+  - Verdiensten = "verwacht" (klusbedrag van afgeronde klussen) tot B7/B8.
+  - Verklaring van inzet: de server maakt een snapshot met code XXXXX-XXXXX
+    (geen I/O/0/1). Binnen 24 uur zonder wijziging = dezelfde code. Te
+    bekijken/printen op heitjehulp.nl/#/verklaring/<code> (werkt pas als de
+    site online is; de app toont de code wel) en na te kijken in het paneel.
+    Er staat alleen een voornaam op.
+  - "Nieuw in de buurt" = helper zonder afgeronde klus (pil op KiesHelper).
+  - De oude beoordelingen-kaart op het Profiel blijft; XP, badges,
+    vertrouwen en verdiensten staan erboven. Recensies: zonder verborgen.
+  - Beloning-animatie (opkomen) valt weg bij "verminder beweging".
+  - Geen beelden van mensen/dieren: badges zijn iconen van voorwerpen.

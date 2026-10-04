@@ -1666,3 +1666,95 @@ UITROLLEN (volgorde; zie proefrit-b5.txt)
   schakelaar b5_nieuwe_klus_alleen_beschikbaar aan -> 132 --apply -> 32, 92,
   102, 112, 82, 72, 62, 04, 50, 122 -> app + website. Later: onder 18 open
   (site online), accepteren dicht (+ oude checks omzetten).
+
+================================================================
+B9 - XP, BADGES, NIVEAUS EN VERDIENSTEN (4 okt 2026)
+================================================================
+Punten 18 (herboeking = meeste XP, niveaus) en 19 (vertrouwensbadges met
+datum, "Verklaring van inzet"). GEEN "Held van de week". Het M6-statusverloop
+en het B5-kiezen veranderen NIET. XP, niveau en badges rekent ALTIJD de
+server (hook); de app toont alleen.
+
+REKENREGELS (pb_hooks/hh_xp_regels.js, getallen bovenaan, makkelijk te wijzigen)
+  XP per bron:  klaar:<klus> 50 | eerste 25 (eenmalig, vroegste klus) |
+                herboeking:<klus> 75 (2e, 3e ... afgeronde klus bij dezelfde
+                bewoner) | beoordeling:<id> 5 sterren 30, 4 sterren 15
+                (1-3: 0; verborgen door de meldkamer: 0)
+  Niveaus:      nieuw | ervaren (300 XP + 5 klussen) | top (1000 XP + 15
+                klussen + gemiddeld 4,5 sterren) | geverifieerd (top + iDIN;
+                idin_geverifieerd_op wordt NOOIT automatisch gezet)
+  Badges:       eerste_klus, vijf_klussen, tien_klussen, vijfentwintig_klussen,
+                vijf_sterren_reeks (5x achter elkaar 5 sterren), herboekt,
+                drie_buren. Behaald is behaald (nooit weggehaald).
+  Vertrouwen:   ouder_toestemming (hh_users.ouder_toestemming_op), vog
+                (vog_gezien_op; geldig tot vog_geldig_tot, anders + 3 jaar ->
+                daarna "verlopen"), id_gecontroleerd, idin. Niet opgeslagen:
+                elke keer uitgerekend.
+  Verdiensten:  per maand/jaar in NL-tijd uit de afgeronde klussen
+                (vergoeding_jongere, anders bedrag_bruto). "Verwacht": B7/B8
+                vervangen dit door de echte uitbetalingen (hh_transacties);
+                de route houdt dan dezelfde vorm (maanden/jaren/totaal).
+
+BOEKEN (pb_hooks/hh_xp_hulp.js werkXpBij, idempotent)
+  Rekent alles opnieuw uit en boekt alleen het VERSCHIL per bron in hh_xp:
+  positief met de soort van de bron, negatief als "tegenboeking". Er wordt
+  nooit een rij gewist. (helper, sleutel = bron#volgnummer) is uniek: twee
+  hooks tegelijk boeken nooit dubbel. Daarna xp_totaal + niveau op
+  hh_profielen en nieuwe badges in hh_badges. Aangeroepen (na de reputatie,
+  fouten houden nooit iets tegen):
+    - hh_klussen.pb.js statusroute bij "afgerond" -> antwoord krijgt
+      { beloning: {xp_erbij, totaal, niveau, niveau_omhoog, nieuwe_badges} }
+      + melding soort "beloning" (gebundeld, sleutel = eerste nieuwe boeking)
+    - hh_klussen.pb.js onRecordUpdateRequest: coordinator/superuser zet een
+      klus op of van afgerond (ook terug -> tegenboeking)
+    - hh_beoordelingen.pb.js na aanmaken/wijzigen (voor naar_gebruiker)
+    - POST /api/hh/beoordelingen/{id}/verbergen (meldkamer)
+  Een klus die (door een superuser) gewist wordt: de punten blijven tot de
+  volgende aanroep of script 144 (dat zet het recht).
+
+COLLECTIES (scripts/140-b9-xp.mjs; rules in 141)
+  hh_xp            helper (cascade), klus (geen cascade), beoordeling (geen
+                   cascade), bron, soort (klus_klaar|eerste_klus|herboeking|
+                   beoordeling|tegenboeking), punten (geheel, mag negatief),
+                   sleutel. UNIEK (helper, sleutel).
+  hh_badges        helper (cascade), code, behaald_op. UNIEK (helper, code).
+  hh_verklaringen  helper (cascade), code "XXXXX-XXXXX" UNIEK (tekens A-Z
+                   zonder I/O, 2-9), gegevens (json snapshot: voornaam,
+                   klussen, uren, periode, niveau, badges, vertrouwen).
+  Lezen: de helper zelf of de coordinator. Schrijven: niemand via de API.
+EXTRA VELDEN (140, additief)
+  hh_profielen.xp_totaal, .niveau, .idin_geverifieerd_op
+  hh_beoordelingen.verborgen_op, .verborgen_door (geen cascade), .verborgen_reden
+  hh_meldingen.soort + "beloning"
+SLOTEN (141, gewikkeld zoals 21)
+  hh_profielen create/update: xp_totaal/niveau/idin_geverifieerd_op niet via de API
+  hh_beoordelingen create/update: verborgen_* niet via de API (ook de
+  coordinator niet: verbergen gaat via de route, die meteen herrekent)
+  Draai 141 NA 02/06/13/21/61; daarna die niet meer met --apply.
+  onRecordEnrich hh_beoordelingen: verborgen_door/_reden alleen voor
+  coordinator en superuser.
+
+ROUTES (pb_hooks/hh_xp.pb.js)
+  GET  /api/hh/xp/mijn                 helper: xp_totaal, niveau, volgend
+       (xp_nodig, klussen_nodig, sterren_nodig, xp_vanaf, xp_tot), badges
+       (alle 7, behaald_op of ""), vertrouwen, verdiensten, recensies (zonder
+       verborgen, met voornaam bewoner), laatste 10 boekingen.
+  POST /api/hh/xp/verklaring           helper: nieuwe code, of de laatste als
+       die < 24 uur oud is en er niets veranderde.
+  GET  /api/hh/verklaring/{code}       PUBLIEK, 30 per IP per uur: de snapshot
+       (alleen voornaam). Website #/verklaring/<code> (printen) en paneel.
+  POST /api/hh/beoordelingen/{id}/verbergen {verborgen, reden}  coordinator.
+  POST /api/hh/xp/naberekenen {droog}  ALLEEN superuser (script 144).
+  KiesHelper (B5, hh_reacties_hulp.js): niveau = echt niveau, plus
+  niveau_code en nieuw_in_de_buurt (0 afgeronde klussen); verborgen recensie
+  telt niet in aantal/laatste recensie. hh_reputatie.js: verborgen telt niet
+  in sterren_gemiddeld.
+
+CHECK  scripts/142-b9check.mjs (dry-run standaard). Met --apply: tijdelijke
+  b9check-...@heitjehulp.invalid, klussen door de superuser meteen op
+  geaccepteerd (geen "nieuwe klus"-meldingen); afronden -> beloning,
+  herboeking, beoordelen + tegenboeking, van afgerond af en terug,
+  niveau-overgang, rules/sloten, overzicht, verbergen, verklaring + publiek
+  opzoeken, KiesHelper, naberekenen ALLEEN droog. Lokaal: 89 groen.
+UITROLLEN  zie proefrit-b9.txt: 00 -> 140 -> 141 -> 143 -> 142 -> oude checks
+  -> (144 met eigen ja) -> app + website.
