@@ -34,7 +34,7 @@ routerAdd(
   (e) => {
     const xp = require(`${__hooks}/hh_xp_hulp.js`);
     if (String(e.auth.get("rol") || "") !== "jongere") {
-      return e.json(403, { melding: "Alleen voor helpers.", reden: "geenhelper" });
+      return e.json(403, { melding: "Alleen voor strijders.", reden: "geenhelper" });
     }
     const uit = xp.overzicht({ app: $app, nu: () => Date.now() }, e.auth.id);
     return e.json(200, uit);
@@ -48,7 +48,7 @@ routerAdd(
   (e) => {
     const xp = require(`${__hooks}/hh_xp_hulp.js`);
     if (String(e.auth.get("rol") || "") !== "jongere") {
-      return e.json(403, { melding: "Alleen voor helpers.", reden: "geenhelper" });
+      return e.json(403, { melding: "Alleen voor strijders.", reden: "geenhelper" });
     }
     const env = {
       app: $app,

@@ -339,7 +339,7 @@ function meldBewoner(env, klus, nieuweReactieId) {
     var namen = [];
     for (var i = 0; i < open.length; i++) {
       var h = zoekId(app, "hh_users", tekst(open[i].get("helper")));
-      namen.push(h ? voornaam(h.get("naam")) || "Een helper" : "Een helper");
+      namen.push(h ? voornaam(h.get("naam")) || "Een strijder" : "Een strijder");
     }
     if (!namen.length) return;
     var info = klusInfo(env, klus);

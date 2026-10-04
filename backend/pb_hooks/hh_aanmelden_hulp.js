@@ -13,7 +13,7 @@ var MIN_LEEFTIJD_HELPER = 10;
 /// Vanaf 18: VOG verplicht, geen ouder-toestemming meer nodig.
 var VOLWASSEN = 18;
 
-var MELDING_TE_JONG = "Je moet minstens 10 jaar zijn om helper te worden.";
+var MELDING_TE_JONG = "Je moet minstens 10 jaar zijn om strijder te worden.";
 var MELDING_GEEN_GEBOORTEDATUM =
   "Je geboortedatum ontbreekt. Neem contact op met de meldkamer.";
 var MELDING_OUDER =

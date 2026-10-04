@@ -55,7 +55,7 @@ test('link: token achter de # (komt nooit in serverlogs of Referer)', () => {
 
 test('mail: voornaam, uitleg, code groot, link, 24 uur, negeer-zin; HTML ontsnapt', () => {
   const m = hulp.uitnodigingsMail({ voornaam: 'Daan', code: '482913', link: 'https://heitjehulp.nl/#/ouder?t=abc' });
-  assert.equal(m.onderwerp, 'Daan wil helper worden bij HeitjeHulp');
+  assert.equal(m.onderwerp, 'Daan wil strijder worden bij HeitjeHulp');
   for (const deel of ['Daan', '482913', 'https://heitjehulp.nl/#/ouder?t=abc', '24 uur', 'Was jij dit niet? Negeer deze mail.', 'HeitjeHulp brengt buren']) {
     assert.ok(m.tekst.includes(deel), `tekst mist ${deel}`);
     assert.ok(m.html.includes(deel.replace('&', '&amp;')), `html mist ${deel}`);

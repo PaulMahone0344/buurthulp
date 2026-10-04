@@ -261,7 +261,7 @@ function meldBewonerNaIntrekken(env, klus) {
     var namen = [];
     for (var i = 0; i < open.length; i++) {
       var h = zoekId(app, "hh_users", tekst(open[i].get("helper")));
-      namen.push(h ? voornaam(h.get("naam")) : "Een helper");
+      namen.push(h ? voornaam(h.get("naam")) : "Een strijder");
     }
     var info = klusInfo(env, klus);
     var t = env.dep.teksten.reactieBewoner(namen, info.klussoort, info.wanneer);

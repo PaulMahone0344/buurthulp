@@ -54,7 +54,7 @@ var VOLWASSEN = 18;
 var COLLECTIE = "hh_ouder_toestemming";
 
 var MELDING = {
-  rol: "Alleen een helper kan zijn ouder om toestemming vragen.",
+  rol: "Alleen een strijder kan zijn ouder om toestemming vragen.",
   volwassen: "Vanaf 18 jaar heb je geen toestemming van je ouder nodig.",
   geboortedatum: "Je geboortedatum ontbreekt. Neem contact op met de meldkamer.",
   email: "Vul het e-mailadres van je ouder in.",
@@ -62,7 +62,7 @@ var MELDING = {
   algegeven: "Je ouder heeft al toestemming gegeven.",
   ingetrokken: "Je ouder heeft de toestemming ingetrokken. De meldkamer neemt contact met je op.",
   coordinator: "Alleen de meldkamer kan dit doen.",
-  geenrij: "Voor deze helper is nog nooit een ouder gemaild.",
+  geenrij: "Voor deze strijder is nog nooit een ouder gemaild.",
   nietingetrokken: "De toestemming is niet ingetrokken; er is niets vrij te geven.",
   limiet: "Je hebt vandaag al 3 keer een mail gestuurd. Probeer het morgen opnieuw.",
   mail: "De mail kon niet worden verstuurd. Probeer het later opnieuw.",
@@ -175,11 +175,11 @@ function sessieHash(sha256, sessie) {
 
 function uitnodigingsMail(g) {
   var naam = zonderRegeleinden(g.voornaam) || "Je kind";
-  var onderwerp = naam + " wil helper worden bij HeitjeHulp";
+  var onderwerp = naam + " wil strijder worden bij HeitjeHulp";
   var tekst = [
     "Hallo,",
     "",
-    naam + " wil helper worden bij HeitjeHulp. HeitjeHulp brengt buren en helpers samen voor kleine klussen, zoals boodschappen of tuinwerk.",
+    naam + " wil strijder worden bij HeitjeHulp. HeitjeHulp brengt buren en strijders samen voor kleine klussen, zoals boodschappen of tuinwerk.",
     naam + " is jonger dan 18. Daarom vragen we eerst jouw toestemming.",
     "",
     "Je code: " + g.code,
@@ -199,7 +199,7 @@ function uitnodigingsMail(g) {
   var html =
     '<div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#0B2A25;max-width:560px">' +
     "<p>Hallo,</p>" +
-    "<p>" + n + " wil helper worden bij HeitjeHulp. HeitjeHulp brengt buren en helpers samen voor kleine klussen, zoals boodschappen of tuinwerk.</p>" +
+    "<p>" + n + " wil strijder worden bij HeitjeHulp. HeitjeHulp brengt buren en strijders samen voor kleine klussen, zoals boodschappen of tuinwerk.</p>" +
     "<p>" + n + " is jonger dan 18. Daarom vragen we eerst jouw toestemming.</p>" +
     '<p style="margin:24px 0 4px">Je code:</p>' +
     '<p style="margin:0 0 24px;font-size:36px;line-height:44px;font-weight:bold;letter-spacing:6px;color:#17453E">' + ontsnap(g.code) + "</p>" +

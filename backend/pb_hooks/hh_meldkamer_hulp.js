@@ -363,7 +363,7 @@ function zelfdePaar(env, statusRij) {
   r.set("soort", "signaal");
   r.set(
     "omschrijving",
-    MERK_PAAR + " Helper " + voornaam(helper.get("naam")) + " (" + jaren + ") en bewoner " + voornaam(bewoner.get("naam")) +
+    MERK_PAAR + " Strijder " + voornaam(helper.get("naam")) + " (" + jaren + ") en bewoner " + voornaam(bewoner.get("naam")) +
       " deden " + n + " klussen samen in " + dagen + " dagen. Kijk even of het goed gaat. (" + code + ")"
   );
   app.save(r);

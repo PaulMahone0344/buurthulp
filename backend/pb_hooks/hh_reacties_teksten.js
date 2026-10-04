@@ -11,11 +11,11 @@
 
 var MELDING = {
   // reageren
-  rol: "Alleen een helper kan reageren op een klus.",
+  rol: "Alleen een strijder kan reageren op een klus.",
   geenwijk: "HeitjeHulp is nog niet in jouw buurt. We laten het je weten zodra we er zijn.",
   nietgoedgekeurd: "Je aanmelding is nog niet goedgekeurd. Je kunt nog niet reageren op klussen.",
   nietgevonden: "Deze klus bestaat niet meer.",
-  bezet: "Deze klus heeft al een helper.",
+  bezet: "Deze klus heeft al een strijder.",
   wijk: "Deze klus ligt niet in jouw wijk.",
   nietgekeurd: "Deze klus wordt nog nagekeken door de meldkamer.",
   begonnen: "Deze klus is al begonnen.",
@@ -27,8 +27,8 @@ var MELDING = {
   geenouder: "We kunnen je ouder niet mailen. Neem contact op met de meldkamer.",
   mail: "De mail aan je ouder kon niet worden verstuurd. Probeer het later opnieuw.",
   onder18:
-    "Fijn dat je wilt helpen! Helpers onder de 18 kunnen nog even niet reageren. Binnenkort kan het wel: je krijgt dan een bericht.",
-  verstuurd: "Je reactie is verstuurd. De bewoner kiest zelf een helper.",
+    "Fijn dat je wilt helpen! Strijders onder de 18 kunnen nog even niet reageren. Binnenkort kan het wel: je krijgt dan een bericht.",
+  verstuurd: "Je reactie is verstuurd. De bewoner kiest zelf een strijder.",
   verstuurdOuder:
     "Je reactie is verstuurd. Eerst kijkt je ouder of het goed is. Daarna ziet de bewoner je reactie.",
   // intrekken
@@ -36,11 +36,11 @@ var MELDING = {
   status: "Deze reactie kan niet meer worden ingetrokken.",
   ingetrokken: "Je reactie is ingetrokken.",
   // kiezen
-  geenbewoner: "Alleen de bewoner van deze klus kan een helper kiezen.",
-  geenreactie: "Kies eerst een helper.",
-  reactieweg: "Deze helper is niet meer beschikbaar. Kies iemand anders.",
-  helperbezet: "Deze helper heeft op dat moment al een andere klus. Kies iemand anders.",
-  klusbezet: "Je hebt al een helper gekozen voor deze klus.",
+  geenbewoner: "Alleen de bewoner van deze klus kan een strijder kiezen.",
+  geenreactie: "Kies eerst een strijder.",
+  reactieweg: "Deze strijder is niet meer beschikbaar. Kies iemand anders.",
+  helperbezet: "Deze strijder heeft op dat moment al een andere klus. Kies iemand anders.",
+  klusbezet: "Je hebt al een strijder gekozen voor deze klus.",
   match: "Het is een match!",
   // ouder (website)
   link: "Deze link werkt niet meer. Gebruik de link uit de nieuwste mail.",
@@ -51,9 +51,9 @@ var MELDING = {
   reageren:
     "Een klus aannemen gaat nu anders: tik op \"Ik wil helpen\" en de bewoner kiest zelf. Zie je die knop niet? Werk de app dan bij.",
   // Ik kan nu helpen
-  beschikbaarRol: "Alleen een helper kan \"Ik kan nu helpen\" aanzetten.",
+  beschikbaarRol: "Alleen een strijder kan \"Ik kan nu helpen\" aanzetten.",
   geenprofiel: "Je profiel is nog niet klaar. Rond eerst je aanmelding af.",
-  telRol: "Alleen een bewoner kan zien hoeveel helpers nu kunnen.",
+  telRol: "Alleen een bewoner kan zien hoeveel strijders nu kunnen.",
   beschikbaarVeld: "\"Ik kan nu helpen\" zet je met de schakelaar in de app.",
 };
 
@@ -94,9 +94,9 @@ function klusRegel(klussoort, wanneer) {
 function reactieBewoner(namen, klussoort, wanneer) {
   var n = namen.length;
   var titel;
-  if (n <= 1) titel = (namen[0] || "Een helper") + " wil je helpen";
+  if (n <= 1) titel = (namen[0] || "Een strijder") + " wil je helpen";
   else if (n === 2) titel = namen[0] + " en " + namen[1] + " willen je helpen";
-  else titel = n + " helpers willen je helpen";
+  else titel = n + " strijders willen je helpen";
   return {
     titel: titel,
     tekst: "Voor " + klusRegel(klussoort, wanneer) + ". Kies zelf wie je helpt.",
