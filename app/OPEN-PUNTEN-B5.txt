@@ -1,0 +1,57 @@
+HeitjeHulp B5 — REAGEREN EN KIEZEN — open punten (4 okt 2026)
+Branch b5/kiezen. Max 5 vragen voor Ibrahim; daaronder wat ik zelf koos.
+
+VRAGEN
+1. Wanneer gaat "Klus aannemen" (oude app) dicht?
+   Nu werkt de oude route accepteren nog, achter de schakelaar
+   b5_accepteren_dicht (hh_instellingen). Zolang hij uit staat kan een helper
+   met de OUDE app een klus direct pakken: zonder keuze van de bewoner en
+   zonder ouder per klus. Voorstel: schakelaar aan zodra de nieuwe app op alle
+   test-telefoons staat (een paar dagen na de uitrol); daarna zet ik de oude
+   checks (11, 14, 22, 32, 50, 62, 65, 82, 102, 122) om naar reageren + kiezen.
+   Goed zo, of meteen bij de uitrol dicht?
+
+2. "Nieuwe klus"-melding alleen als "Ik kan nu helpen" aan staat?
+   Gebouwd achter de schakelaar b5_nieuwe_klus_alleen_beschikbaar (standaard
+   uit). Aan = een helper zonder de schakelaar krijgt geen melding meer, ziet
+   nieuwe klussen alleen in de lijst. Aanzetten bij de uitrol, of eerst een
+   week kijken hoeveel helpers de schakelaar gebruiken?
+
+3. Mag de ouder ook de bewoner beoordelen (punt 11 "helper (of ouder)")?
+   Nu beoordeelt alleen de helper zelf in de app (sterren + tekst + geheime
+   vraag "Voelde je je veilig?"). Een ouder heeft geen account; dat zou een
+   tweede mail-link na "Klaar" worden. Voorstel: later (B9/B11), tenzij je het
+   nu wilt.
+
+4. Geheime vraag: verplicht en "nee" = melding "probleem" voor de meldkamer?
+   Nu: bij een NIEUWE beoordeling moet je Ja of Nee kiezen (bij wijzigen niet).
+   "Nee" maakt een incident van soort "probleem" ("[geheime vraag] ...") met
+   de klus erbij; elke coordinator krijgt "Probleem gemeld" en mag dan ook de
+   chat van die klus lezen (B6-regel). Akkoord, of liever een eigen, zachtere
+   soort ("signaal") die niet als probleem telt?
+
+5. Ouder-link en de site: wachten met helpers onder 18?
+   De mail-link wijst naar https://heitjehulp.nl/#/ouder/klus. Tot de site
+   online is (~17 okt) kan een ouder niets kiezen; de reactie van een kind
+   onder 18 vervalt dan als de klus begint. Elke reactie van een kind = één
+   mail aan de ouder (max 10 open reacties per helper). Goed om B5 al uit te
+   rollen en kinderen onder 18 pas te laten reageren als de site online is?
+
+ZELF GEKOZEN (geen vraag, wel goed om te weten)
+  - Max 10 reacties tegelijk open per helper (429 "Je hebt al 10 reacties open
+    staan"): tegen spam en tegen tien ouder-mails per uur.
+  - "Onder 18" en "10-12 jaar" gelden op VANDAAG (zoals de ouder-toestemming
+    van B2/B3), de leeftijdsgrens van de klus op de klusdag (zoals B4).
+  - Een helper kan niet gekozen worden voor twee klussen die elkaar overlappen
+    (zonder eindtijd telt 2 uur): dat is de race "2 klussen tegelijk".
+  - De meldkamer mag namens een bewoner kiezen (telefonische bewoner zonder
+    app); logregel "gekozen door de meldkamer". Koppelen blijft bestaan.
+  - Een reactie op een klus die al begonnen is: 409 "Deze klus is al
+    begonnen." (accepteren keek daar niet naar).
+  - Familie doet niet mee met kiezen (de familie-rol is sinds B3 uit de app).
+  - Het hartje op het match-blad is een plusje geworden (geen symbolen van
+    lichaamsdelen/levende wezens; B13 maakt het feestelijker).
+  - Mijn klussen opent op Gepland (zoals de mockup); Vandaag en Gepland zijn
+    samen Gepland.
+  - Kaart-weergave van de helper: de schakelaar "Ik kan nu helpen" staat
+    alleen boven de lijst, zodat de kaart zijn ruimte houdt.
