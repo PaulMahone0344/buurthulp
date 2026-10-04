@@ -123,7 +123,14 @@
 // zit in hh_klusplaatsen.pb.js; dat bestand laadt vóór dit bestand en roept
 // e.next() aan, zodat de geocoding en de eerste logregel hier gewoon volgen.
 //
-// DEPLOY: sinds B4 scripts/103-hook-deploy.sh (eerder 10/83; kopie naar /root/pb_hooks/, geen restart;
+// B5 (4 okt): de app neemt geen klus meer aan, maar REAGEERT (hh_reacties.pb.js)
+// en de bewoner KIEST. Deze route blijft bestaan (vangnet oude app, meldkamer-
+// checks); met de schakelaar b5_accepteren_dicht in hh_instellingen op true
+// geeft hij elke helper 409 { reden: "reageren" }. Het statusverloop van M6
+// verandert niet: kiezen zet de klus op precies dezelfde manier op
+// geaccepteerd (zelfde velden, zelfde soort logregel).
+//
+// DEPLOY: sinds B5 scripts/133-hook-deploy.sh (eerder 10/83/103/123; kopie naar /root/pb_hooks/, geen restart;
 // PocketBase herlaadt hooks bij een bestandswijziging). ROLLBACK: het bestand
 // weer verwijderen uit /root/pb_hooks/.
 
@@ -151,6 +158,21 @@ routerAdd(
     const rol = String(e.auth.get("rol") || "");
     if (rol !== "jongere") {
       return e.json(403, { melding: MELDING_GEEN_JONGERE, reden: "rol" });
+    }
+    // B5: aannemen wordt reageren + de bewoner kiest. Zolang de schakelaar
+    // b5_accepteren_dicht (hh_instellingen) uit staat, werkt deze route nog
+    // zoals in M5 (oude app, checks 11/14/22/32/50/62/65/82/102/122); staat
+    // hij aan, dan krijgt elke helper 409 "reageren". Koppelen door de
+    // meldkamer (hh_coordinator.pb.js) blijft altijd werken.
+    try {
+      const reacties = require(`${__hooks}/hh_reacties_hulp.js`);
+      if (reacties.instellingAan($app, reacties.INSTELLING_ACCEPTEREN_DICHT)) {
+        const teksten = require(`${__hooks}/hh_reacties_teksten.js`);
+        return e.json(409, { melding: teksten.MELDING.reageren, reden: "reageren" });
+      }
+    } catch (err) {
+      // Geen B5-bestanden (rollback van 133): accepteren zoals voorheen.
+      console.log("[hh_klussen] schakelaar accepteren niet te lezen:", String(err));
     }
     const wijk = String(e.auth.get("wijk") || "").trim();
     if (!wijk) {
