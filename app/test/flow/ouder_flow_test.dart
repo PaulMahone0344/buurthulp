@@ -17,8 +17,8 @@ import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
 import 'package:heitjehulp_app/features/jongere/screen/screening_overzicht_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
-import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_ouder_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_start_nl.dart';
 
 import '../support/hh_jongere_wikkel.dart';
 import '../support/hh_toegang_wikkel.dart';
@@ -28,7 +28,9 @@ const _tokenSleutel = 'hh_auth_token';
 GeheugenKeyValueStore _ingelogd() =>
     GeheugenKeyValueStore({_tokenSleutel: testToken(HhRol.jongere)});
 
-Finder get _klussenLijst => find.text(TekstenKlussenNl.weergaveLijst);
+/// B10: de Start van een helper die klaar is toont "Klussen bij jou in de
+/// buurt" (de lijst zelf is de tab Klussen).
+Finder get _klussenLijst => find.text(TekstenStartNl.inDeBuurtKop);
 
 FakeOuderGateway _ouder(
   HhOuderStatus status, {

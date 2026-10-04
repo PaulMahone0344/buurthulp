@@ -1,159 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/paden.dart';
-import '../../../../design/dichtheid_scope.dart';
-import '../../../../design/lijn.dart';
+import '../../../../design/components/hh_tabbalk.dart';
 import '../../../../l10n/teksten_klussen_nl.dart';
 import '../../../meldingen/widget/meldingen_bel.dart';
-import '../../../../theme.dart';
 import '../paden_klussen.dart';
+import '../provider/klussen_providers.dart';
+import '../../domein/helper_wacht.dart';
+import '../../provider/screening_providers.dart';
 
-/// De vier tabbladen van de jongere (M5; M6-M8 hergebruiken deze balk).
+/// De vier tabbladen van de helper (B10, mockup StartHelper): Start, Klussen,
+/// Mijn klussen, Profiel. Instellingen zit sinds B10 onder het Profiel.
 enum JongereTab {
+  start,
   klussen,
   mijnKlussen,
-  profiel,
-  instellingen;
+  profiel;
 
-  String get label => switch (this) {
-    JongereTab.klussen => TekstenKlussenNl.tabKlussen,
-    JongereTab.mijnKlussen => TekstenKlussenNl.tabMijnKlussen,
-    JongereTab.profiel => TekstenKlussenNl.tabProfiel,
-    JongereTab.instellingen => TekstenKlussenNl.tabInstellingen,
+  HhTab get tab => switch (this) {
+    JongereTab.start => const HhTab(
+      label: TekstenKlussenNl.tabStart,
+      icoon: Icons.home_outlined,
+      pad: HhPaden.jongere,
+    ),
+    JongereTab.klussen => const HhTab(
+      label: TekstenKlussenNl.tabKlussen,
+      icoon: Icons.search,
+      pad: HhPadenKlussen.lijst,
+    ),
+    JongereTab.mijnKlussen => const HhTab(
+      label: TekstenKlussenNl.tabMijnKlussen,
+      icoon: Icons.assignment_turned_in_outlined,
+      pad: HhPadenKlussen.mijnKlussen,
+    ),
+    JongereTab.profiel => const HhTab(
+      label: TekstenKlussenNl.tabProfiel,
+      icoon: Icons.person_outline,
+      pad: HhPadenKlussen.profiel,
+    ),
   };
 
-  IconData get icoon => switch (this) {
-    JongereTab.klussen => Icons.search,
-    JongereTab.mijnKlussen => Icons.assignment_turned_in_outlined,
-    JongereTab.profiel => Icons.person_outline,
-    JongereTab.instellingen => Icons.settings_outlined,
-  };
-
-  String get pad => switch (this) {
-    JongereTab.klussen => HhPaden.jongere,
-    JongereTab.mijnKlussen => HhPadenKlussen.mijnKlussen,
-    JongereTab.profiel => HhPadenKlussen.profiel,
-    JongereTab.instellingen => HhPadenKlussen.instellingen,
-  };
+  String get label => tab.label;
+  String get pad => tab.pad;
 }
 
-/// Onderste tabbalk van de jongere. Eigen widget in plaats van de
-/// Material NavigationBar: vaste raakhoogte uit theme.dart, kleuren uit
-/// theme.dart, en labels die bij 200 procent wikkelen in plaats van
-/// afkappen. Navigeert met context.go zodat er geen stapel ontstaat.
+final _jongereTabs = [for (final t in JongereTab.values) t.tab];
+
+/// Onderste tabbalk van de helper: sinds B10 de gedeelde [HhTabbalk].
 class JongereTabbalk extends StatelessWidget {
   const JongereTabbalk({required this.actief, super.key});
 
   final JongereTab actief;
 
   @override
-  Widget build(BuildContext context) {
-    final dichtheid = HhDichtheidScope.van(context);
-
-    return Semantics(
-      container: true,
-      label: TekstenKlussenNl.tabbalkLabel,
-      child: Material(
-        color: HhKleuren.achtergrond,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: HhKleuren.rand,
-                width: HhLijn.dun(context),
-              ),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final tab in JongereTab.values)
-                    Expanded(
-                      child: _TabKnop(
-                        tab: tab,
-                        isActief: tab == actief,
-                        dichtheid: dichtheid,
-                        onTik: tab == actief ? null : () => context.go(tab.pad),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => HhTabbalk(
+    tabs: _jongereTabs,
+    actief: actief.index,
+    semantiekLabel: TekstenKlussenNl.tabbalkLabel,
+  );
 }
 
-class _TabKnop extends StatelessWidget {
-  const _TabKnop({
-    required this.tab,
-    required this.isActief,
-    required this.dichtheid,
-    required this.onTik,
-  });
-
-  final JongereTab tab;
-  final bool isActief;
-  final HhDichtheid dichtheid;
-  final VoidCallback? onTik;
-
-  @override
-  Widget build(BuildContext context) {
-    final tekst = Theme.of(context).textTheme;
-    final kleur = isActief ? HhKleuren.primair : HhKleuren.tekstGedempt;
-
-    return Semantics(
-      button: true,
-      selected: isActief,
-      label: tab.label,
-      onTap: onTik,
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTik,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: HhMaten.knopHoogte(dichtheid)),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: HhRuimte.voor(HhRuimte.s, dichtheid),
-              horizontal: HhRuimte.voor(HhRuimte.xs, dichtheid),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  tab.icoon,
-                  size: HhMaten.icoonKeuzerij(dichtheid),
-                  color: kleur,
-                ),
-                SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
-                Text(
-                  tab.label,
-                  textAlign: TextAlign.center,
-                  style: tekst.bodyMedium!.copyWith(
-                    color: kleur,
-                    fontWeight: isActief ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Een scherm van de jongere met de tabbalk eronder. Het kind is een
-/// gewoon scherm met eigen [Scaffold] (HhScherm); de buitenste Scaffold
-/// haalt de onderste veilige rand uit het kind, de balk regelt hem zelf.
-class JongereTabScherm extends StatelessWidget {
+/// Een scherm van de helper met de tabbalk eronder. Het kind is een gewoon
+/// scherm met eigen Scaffold (HhScherm). M8: het belletje met de
+/// ongelezen-teller staat in de kop.
+class JongereTabScherm extends ConsumerWidget {
   const JongereTabScherm({
     required this.actief,
     required this.child,
@@ -164,10 +75,19 @@ class JongereTabScherm extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // B10: zolang de helper in een tab is, volgen we de klussen van Start en
+    // de tab Klussen. Anders raken ze "oud" terwijl hij op Profiel zit (bv.
+    // na een taalwissel) en ververst Riverpod ze pas tijdens het bouwen van
+    // de tab Klussen: "markNeedsBuild during build" (Riverpod 3.3.2).
+    // Alleen voor een helper die klaar is: wie nog wacht, krijgt geen
+    // verzoek naar de server (zoals in B2).
+    if (ref.watch(helperWachtProvider) == HelperWacht.klaar) {
+      ref.listen(gefilterdeKlussenProvider, (_, _) {});
+      ref.listen(mijnKlussenProvider, (_, _) {});
+    }
     return Scaffold(
-      // M8: het belletje met de ongelezen-teller in de kop.
-      body: MeldingenKop(child: child),
+      body: HhTabScope(child: MeldingenKop(child: child)),
       bottomNavigationBar: JongereTabbalk(actief: actief),
     );
   }

@@ -1,0 +1,33 @@
+HeitjeHulp B10 — START-SCHERMEN IN BUURTHELD-STIJL — open punten (4 okt 2026)
+Branch b10/start. Alleen app (geen server-wijziging). Max 5 vragen voor Ibrahim.
+
+VRAGEN
+1. Tabs helper volgens de mockup: Start | Klussen | Mijn klussen | Profiel.
+   Instellingen is geen tab meer maar een knop onderaan het Profiel. Goed zo?
+2. Bewoner: de tegels tonen getallen ("Aankomend 3 klussen", "Nieuwe reacties
+   3"), zoals de mockup. Vroeger (M-reeks) was de regel "geen cijfers op
+   ouderenschermen". Getallen houden, of liever in woorden?
+3. Bewoner-tabs blijven Start | Mijn hulpvragen | Bel ons | Meer. De mockup
+   heeft Saldo als tab; die komt met B7. Dan "Bel ons" naar Meer, of 5 tabs?
+4. "Aankomende klussen" opent op Week (deze week ma-zo). Liever op Dag
+   (vandaag)?
+5. Op het iPhone keuren (klaar-als van B10): nu een release-build zetten, of
+   later samen met de volgende ronde?
+
+ZELF GEKOZEN
+  - /jongere is de Start; de klussenlijst/kaart (J11/J12) is de tab Klussen
+    op /jongere/klussen. Knoppen "naar de klussen" gaan naar die tab.
+  - Start helper: "Ik kan nu helpen", niveau + volgende niveau + XP-balk +
+    behaalde badges (tik = Profiel), je volgende eigen klus, de 3 eerste
+    klussen in de buurt (zelfde filter/straal als de tab Klussen) met "Alle",
+    verdiensten. Wie nog wacht ziet alleen de gele balk (zoals in B2).
+  - Het XP-blok uit B9 op de klussenlijst is weg (staat nu op Start).
+  - Start bewoner: tegels Aankomend en Nieuwe reacties (Saldo met B7), de
+    knop Hulp vragen, "N helpers willen je helpen", en Aankomende klussen
+    met Dag/Week/Maand, een weekstrook (stip = klus; tik = die dag).
+  - Tabbalken van helper en meldkamer staan op de gedeelde HhTabbalk (amber
+    streep; de meldkamer houdt zijn teller "N open").
+  - Riverpod 3.3.2-fout "markNeedsBuild during build" na een taalwissel op
+    Instellingen -> tab Klussen: opgelost doordat de helper-tabs de klussen
+    blijven volgen (alleen voor een helper die klaar is; wie wacht krijgt
+    nog steeds geen verzoek).

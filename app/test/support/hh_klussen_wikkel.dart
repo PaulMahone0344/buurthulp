@@ -28,6 +28,9 @@ import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/theme.dart';
 import 'package:heitjehulp_app/core/pb/fake_xp_gateway.dart';
+import 'package:heitjehulp_app/app/router.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/paden_klussen.dart';
+import 'package:heitjehulp_app/features/jongere/xp/xp_routes.dart';
 
 import 'hh_jongere_wikkel.dart';
 import 'hh_toegang_wikkel.dart';
@@ -207,6 +210,7 @@ Widget hhKlussenWikkel(
   ProviderContainer? container,
   FakeUitvoerGateway? uitvoerGateway,
   FakeReactieGateway? reactieGateway,
+  FakeXpGateway? xpGateway,
 }) {
   final router = GoRouter(
     initialLocation: pad,
@@ -219,6 +223,7 @@ Widget hhKlussenWikkel(
       ...klussenRoutes(),
       ...uitvoerenRoutes(),
       ...reactiesRoutes(),
+      ...xpRoutes(),
     ],
   );
   return UncontrolledProviderScope(
@@ -231,6 +236,7 @@ Widget hhKlussenWikkel(
           nu: nu,
           uitvoerGateway: uitvoerGateway,
           reactieGateway: reactieGateway,
+          xpGateway: xpGateway,
         ),
     child: MaterialApp.router(
       theme: hhThema(dichtheid),
@@ -246,7 +252,8 @@ Widget hhKlussenWikkel(
 }
 
 /// De hele app met router en guard, ingelogd als jongere via een bewaard
-/// token. Landt op J11.
+/// token. Landt op de Start (B10); met [naarKlussen] (standaard) daarna via
+/// de router naar de tab Klussen (J11), waar deze tests over gaan.
 Future<ProviderContainer> pompKlussenApp(
   WidgetTester tester, {
   required FakeKlussenGateway klussenGateway,
@@ -255,6 +262,7 @@ Future<ProviderContainer> pompKlussenApp(
   FakeUitvoerGateway? uitvoerGateway,
   FakeBeoordelingGateway? beoordelingGateway,
   FakeReactieGateway? reactieGateway,
+  bool naarKlussen = true,
 }) async {
   final opslag = GeheugenKeyValueStore({
     'hh_auth_token': testToken(HhRol.jongere),
@@ -275,5 +283,9 @@ Future<ProviderContainer> pompKlussenApp(
     ),
   );
   await tester.pumpAndSettle();
+  if (naarKlussen) {
+    container.read(routerProvider).go(HhPadenKlussen.lijst);
+    await tester.pumpAndSettle();
+  }
   return container;
 }

@@ -9,6 +9,9 @@ abstract final class HhPadenKlussen {
   /// Tab Profiel: J9 (M3-overzicht) als tijdelijke inhoud, met tabbalk.
   static const profiel = '${HhPaden.jongere}/profiel';
 
+  /// B10: de klussenlijst/kaart (J11/J12) is een eigen tab; /jongere is Start.
+  static const lijst = '${HhPaden.jongere}/klussen';
+
   /// Tab Instellingen: G7 met tabbalk.
   static const instellingen = '${HhPaden.jongere}/instellingen';
 
@@ -20,6 +23,7 @@ abstract final class HhPadenKlussen {
   /// Elk M5-pad: hoort bij een goedgekeurde jongere (guard).
   static bool isKlussenPad(String locatie) =>
       locatie == mijnKlussen ||
+      locatie == lijst ||
       locatie == profiel ||
       // B9: verdiensten en verklaring hangen onder het Profiel.
       locatie.startsWith('$profiel/') ||

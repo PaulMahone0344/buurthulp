@@ -23,6 +23,9 @@ import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart'
 import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
+import 'package:heitjehulp_app/l10n/teksten_start_nl.dart';
+import 'package:heitjehulp_app/features/jongere/start/helper_start_screen.dart';
+import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 
 import '../../../../support/hh_jongere_wikkel.dart';
 import '../../../../support/hh_klussen_wikkel.dart';
@@ -38,11 +41,15 @@ class _Geval {
 }
 
 final _gevallen = [
-  const _Geval('J11 lijst met klussen', HhPaden.jongere, fakeKlussen),
-  _Geval('J11 lijst leeg', HhPaden.jongere, () => fakeKlussen(open: const [])),
+  const _Geval('J11 lijst met klussen', HhPadenKlussen.lijst, fakeKlussen),
+  _Geval(
+    'J11 lijst leeg',
+    HhPadenKlussen.lijst,
+    () => fakeKlussen(open: const []),
+  ),
   _Geval(
     'J11 lijst laadfout',
-    HhPaden.jongere,
+    HhPadenKlussen.lijst,
     () => fakeKlussen()..isOffline = true,
   ),
   _Geval('J13 open klus', HhPadenKlussen.klusDetail('k-middag'), fakeKlussen),
@@ -184,12 +191,17 @@ void main() {
       expect(find.byType(MijnReputatieScreen), findsOneWidget);
       expect(find.byType(JongereTabbalk), findsOneWidget);
 
-      await tikTekst(tester, TekstenKlussenNl.tabInstellingen);
+      // B10: Instellingen is een knop op het Profiel, geen tab meer.
+      await tikKnop(tester, TekstenStartNl.instellingen);
       expect(find.byType(InstellingenScreen), findsOneWidget);
-      expect(find.byType(JongereTabbalk), findsOneWidget);
+      await tikTekst(tester, TekstenNl.terug);
 
       await tikTekst(tester, TekstenKlussenNl.tabKlussen);
       expect(find.byType(KlussenHomeScreen), findsOneWidget);
+
+      // B10: Start is de eerste tab.
+      await tikTekst(tester, TekstenKlussenNl.tabStart);
+      expect(find.byType(HelperStartScreen), findsOneWidget);
     });
   });
 
@@ -267,7 +279,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-        hhKlussenWikkel(HhPaden.jongere, klussenGateway: fake),
+        hhKlussenWikkel(HhPadenKlussen.lijst, klussenGateway: fake),
       );
       await tester.pumpAndSettle();
       expect(find.byType(KlusTegel), findsNWidgets(4));
@@ -296,7 +308,7 @@ void main() {
     ) async {
       final fake = fakeKlussen(open: [testKlus(id: 'a', afstandKm: null)]);
       await tester.pumpWidget(
-        hhKlussenWikkel(HhPaden.jongere, klussenGateway: fake),
+        hhKlussenWikkel(HhPadenKlussen.lijst, klussenGateway: fake),
       );
       await tester.pumpAndSettle();
       await _naarKaart(tester);

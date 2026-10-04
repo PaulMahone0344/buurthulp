@@ -15,6 +15,7 @@ import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
+import 'package:heitjehulp_app/l10n/teksten_start_nl.dart';
 
 import '../../../support/hh_jongere_wikkel.dart';
 import '../../../support/hh_wikkel.dart';
@@ -299,7 +300,8 @@ void main() {
     testWidgets('alles rond: klussen en de tabbalk, geen balk', (tester) async {
       await _pomp(tester, 'start klaar');
 
-      expect(find.text(TekstenKlussenNl.j11Titel), findsOneWidget);
+      // B10: de Start toont "Klussen bij jou in de buurt".
+      expect(find.text(TekstenStartNl.inDeBuurtKop), findsOneWidget);
       expect(find.byType(JongereTabbalk), findsOneWidget);
       expect(find.byType(WachtBalk), findsNothing);
     });

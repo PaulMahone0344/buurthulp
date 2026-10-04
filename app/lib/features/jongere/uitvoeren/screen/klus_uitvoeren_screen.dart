@@ -260,7 +260,7 @@ class _Inhoud extends ConsumerWidget {
                   titel: TekstenUitvoerenNl.j15Geannuleerd,
                   uitleg: TekstenUitvoerenNl.j15GeannuleerdUitleg,
                   knopLabel: TekstenUitvoerenNl.j15NaarKlussen,
-                  onKnop: () => context.go(HhPaden.jongere),
+                  onKnop: () => context.go(HhPadenKlussen.lijst),
                 ),
                 SizedBox(height: tussen),
               ] else ...[

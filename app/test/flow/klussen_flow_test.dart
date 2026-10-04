@@ -17,6 +17,7 @@ import 'package:heitjehulp_app/features/jongere/screen/screening_overzicht_scree
 import 'package:heitjehulp_app/features/toegang/screen/inloggen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_start_nl.dart';
 
 import '../support/hh_jongere_wikkel.dart';
 import '../support/hh_klussen_wikkel.dart';
@@ -30,13 +31,14 @@ Future<void> tikEersteTegel(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('ingelogde goedgekeurde jongere landt op J11 met de klussen', (
-    tester,
-  ) async {
-    await pompKlussenApp(tester, klussenGateway: fakeKlussen());
-    expect(find.byType(KlussenHomeScreen), findsOneWidget);
-    expect(find.byType(KlusTegel), findsNWidgets(4));
-  });
+  testWidgets(
+    'ingelogde goedgekeurde jongere: tab Klussen toont J11 met de klussen',
+    (tester) async {
+      await pompKlussenApp(tester, klussenGateway: fakeKlussen());
+      expect(find.byType(KlussenHomeScreen), findsOneWidget);
+      expect(find.byType(KlusTegel), findsNWidgets(4));
+    },
+  );
 
   testWidgets('filteren op soort en dagdeel, en filters wissen', (
     tester,
@@ -261,7 +263,9 @@ void main() {
 
   testWidgets('uitloggen via de tab Instellingen', (tester) async {
     await pompKlussenApp(tester, klussenGateway: fakeKlussen());
-    await tikTekst(tester, TekstenKlussenNl.tabInstellingen);
+    // B10: Instellingen zit onder het Profiel.
+    await tikTekst(tester, TekstenKlussenNl.tabProfiel);
+    await tikKnop(tester, TekstenStartNl.instellingen);
     await tikKnop(tester, TekstenNl.uitloggen);
     await tester.pumpAndSettle();
     expect(find.byType(KlussenHomeScreen), findsNothing);

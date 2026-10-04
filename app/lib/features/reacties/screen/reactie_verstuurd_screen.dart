@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/paden.dart';
 import '../../../design/components/hh_kaart.dart';
 import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_scherm.dart';
@@ -39,7 +38,7 @@ class ReactieVerstuurdScreen extends ConsumerWidget {
 
     return HhScherm(
       titel: TekstenReactiesNl.verstuurdTitel,
-      onTerug: () => context.go(HhPaden.jongere),
+      onTerug: () => context.go(HhPadenKlussen.lijst),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -76,7 +75,7 @@ class ReactieVerstuurdScreen extends ConsumerWidget {
           HhKnop(
             label: TekstenReactiesNl.meerKlussen,
             icoon: Icons.search_rounded,
-            onPressed: () => context.go(HhPaden.jongere),
+            onPressed: () => context.go(HhPadenKlussen.lijst),
           ),
           SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
           HhKnop(

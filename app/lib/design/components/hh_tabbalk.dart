@@ -18,6 +18,7 @@ class HhTab {
     required this.icoon,
     required this.pad,
     this.semantiekLabel,
+    this.teller,
   });
 
   /// Kort woord onder het icoon.
@@ -28,6 +29,10 @@ class HhTab {
 
   final IconData icoon;
   final String pad;
+
+  /// B10: een korte teller onder het woord ("3 open"), in de foutkleur. Null
+  /// = geen teller. Zet dan ook [semantiekLabel] met het aantal erin.
+  final String? teller;
 }
 
 /// Onderste tabbalk (3 okt, indeling naar BuurtHeld): wit, dunne lijn
@@ -166,11 +171,44 @@ class _TabKnop extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (tab.teller case final teller?) ...[
+                    SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
+                    _Teller(tekst: teller),
+                  ],
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "3 open" onder een tab. In de foutkleur: er wacht iets op iemand.
+class _Teller extends StatelessWidget {
+  const _Teller({required this.tekst});
+
+  final String tekst;
+
+  @override
+  Widget build(BuildContext context) {
+    final dichtheid = HhDichtheidScope.van(context);
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: HhRuimte.voor(HhRuimte.s, dichtheid),
+        vertical: HhRuimte.xs,
+      ),
+      decoration: BoxDecoration(
+        color: HhKleuren.fout,
+        borderRadius: BorderRadius.circular(HhRadius.rond),
+      ),
+      child: Text(
+        tekst,
+        textAlign: TextAlign.center,
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall!.copyWith(color: HhKleuren.opPrimair),
       ),
     );
   }

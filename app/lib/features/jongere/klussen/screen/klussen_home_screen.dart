@@ -29,7 +29,6 @@ import '../domein/wanneer_tekst.dart';
 import '../model/hh_klus.dart';
 import '../paden_klussen.dart';
 import '../provider/klussen_providers.dart';
-import '../../xp/widget/xp_start_regel.dart';
 import '../widget/jongere_tabbalk.dart';
 import '../widget/klus_tegel.dart';
 import '../widget/klussen_kaart.dart';
@@ -38,7 +37,8 @@ import '../../../reacties/widget/kan_nu_helpen_schakelaar.dart';
 /// Lijst (J11) of kaart (J12).
 enum KlussenWeergave { lijst, kaart }
 
-/// J11/J12. De landing van de goedgekeurde jongere (/jongere): open klussen
+/// J11/J12. De tab Klussen van de goedgekeurde helper (B10: /jongere/klussen;
+/// /jongere is de Start): open klussen
 /// in zijn wijk als lijst of op de kaart, met de filterbalk (soort, dagdeel)
 /// en de straal uit zijn profiel als client-filter. Pull-to-refresh op de
 /// lijst. B2: wacht de helper nog (nagekeken, ouder-toestemming, VOG), dan
@@ -123,8 +123,6 @@ class _KlussenHomeScreenState extends ConsumerState<KlussenHomeScreen> {
     final schakelaar = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // B9: klein XP/niveau-blok (tik = Profiel). De Start-indeling is B10.
-        const XpStartRegel(),
         const KanNuHelpenSchakelaar(),
         SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
         weergave,

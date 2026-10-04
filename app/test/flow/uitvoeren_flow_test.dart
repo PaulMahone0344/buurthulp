@@ -224,15 +224,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(KlusUitvoerenScreen), findsOneWidget);
 
-      // Teruggeven met een reden.
+      // Teruggeven met een reden. De klussen-fake weet het al vóór de
+      // bevestiging: sinds B10 houdt de tabbalk J14 actief, dus de lijst
+      // wordt meteen na het annuleren opnieuw opgehaald (zoals de server).
       await tikKnop(tester, TekstenUitvoerenNl.j15Annuleren);
       await _vulVeld(tester, 'Ik ben ziek geworden.');
-      await tikKnop(tester, TekstenUitvoerenNl.annuleerBevestigJongere);
-
-      // De M5-lijst is opnieuw opgehaald; de klus is niet meer van hem.
       klussen.zetKlus(
         mijn.first.copyWith(status: HhKlusStatus.open, toegewezenJongereId: ''),
       );
+      await tikKnop(tester, TekstenUitvoerenNl.annuleerBevestigJongere);
+
+      // De M5-lijst is opnieuw opgehaald; de klus is niet meer van hem.
       await tikTekst(tester, TekstenNl.terug);
       await tikTekst(tester, TekstenReactiesNl.tabGepland);
       expect(find.byType(KlusTegel), findsNothing);

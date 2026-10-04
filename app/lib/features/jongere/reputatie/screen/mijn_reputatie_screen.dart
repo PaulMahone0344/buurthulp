@@ -23,6 +23,8 @@ import '../../../../l10n/teksten_xp_nl.dart';
 import '../../xp/paden_xp.dart';
 import '../../xp/provider/xp_providers.dart';
 import '../../xp/widget/xp_profiel_blok.dart';
+import '../../klussen/paden_klussen.dart';
+import '../../../../l10n/teksten_start_nl.dart';
 
 /// J19. Mijn profiel en reputatie: het gemiddelde aantal sterren en het
 /// aantal klussen zoals de server ze uitrekende (hh_users), en de laatste
@@ -116,6 +118,14 @@ class MijnReputatieScreen extends ConsumerWidget {
                 icoon: Icons.home_outlined,
                 soort: HhKnopSoort.tweedeKeus,
                 onPressed: () => context.push(HhPadenJongere.adres),
+              ),
+              // B10: Instellingen is geen tab meer.
+              SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+              HhKnop(
+                label: TekstenStartNl.instellingen,
+                icoon: Icons.settings_outlined,
+                soort: HhKnopSoort.tweedeKeus,
+                onPressed: () => context.push(HhPadenKlussen.instellingen),
               ),
             ],
           ),

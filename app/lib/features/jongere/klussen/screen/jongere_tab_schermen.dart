@@ -18,15 +18,11 @@ class JongereProfielScreen extends StatelessWidget {
   }
 }
 
-/// Tab Instellingen (M5): G7 met de tabbalk eronder.
+/// Instellingen (G7). Sinds B10 geen tab meer maar een gewoon scherm onder
+/// het Profiel (knop "Instellingen"), met terugknop.
 class JongereInstellingenScreen extends StatelessWidget {
   const JongereInstellingenScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const JongereTabScherm(
-      actief: JongereTab.instellingen,
-      child: InstellingenScreen(),
-    );
-  }
+  Widget build(BuildContext context) => const InstellingenScreen();
 }

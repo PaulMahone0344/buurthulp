@@ -21,6 +21,7 @@ import 'package:heitjehulp_app/l10n/teksten_beoordelen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_start_nl.dart';
 
 import '../support/hh_jongere_wikkel.dart';
 import '../support/hh_toegang_wikkel.dart';
@@ -31,7 +32,9 @@ GeheugenKeyValueStore _ingelogdAls(HhRol rol) =>
     GeheugenKeyValueStore({_tokenSleutel: testToken(rol)});
 
 /// De klussenlijst (en dus de schakelaar lijst/kaart) staat op Start.
-Finder get _klussenLijst => find.text(TekstenKlussenNl.weergaveLijst);
+/// B10: de Start van een helper die klaar is toont "Klussen bij jou in de
+/// buurt" (de lijst zelf is de tab Klussen).
+Finder get _klussenLijst => find.text(TekstenStartNl.inDeBuurtKop);
 
 void main() {
   testWidgets(

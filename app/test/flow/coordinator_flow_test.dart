@@ -10,11 +10,11 @@ import 'package:heitjehulp_app/features/coordinator/screen/coordinator_klussen_s
 import 'package:heitjehulp_app/features/coordinator/widget/incident_tegel.dart';
 import 'package:heitjehulp_app/features/coordinator/widget/kandidaat_lijst.dart';
 import 'package:heitjehulp_app/features/coordinator/widget/vrijgeef_blok.dart';
-import 'package:heitjehulp_app/features/jongere/klussen/screen/klussen_home_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/l10n/teksten_coordinator_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
+import 'package:heitjehulp_app/features/jongere/start/helper_start_screen.dart';
 
 import '../support/hh_coordinator_wikkel.dart';
 import '../support/hh_jongere_wikkel.dart';
@@ -336,8 +336,8 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      // De jongere landt op zijn eigen J11, niet op C1.
-      expect(find.byType(KlussenHomeScreen), findsOneWidget);
+      // De jongere landt op zijn eigen Start (B10), niet op C1.
+      expect(find.byType(HelperStartScreen), findsOneWidget);
       expect(find.byType(CoordinatorIncidentenScreen), findsNothing);
       expect(find.byType(CoordinatorKlussenScreen), findsNothing);
     });

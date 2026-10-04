@@ -22,6 +22,7 @@ import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
+import 'package:heitjehulp_app/l10n/teksten_start_nl.dart';
 
 import '../support/hh_toegang_wikkel.dart';
 
@@ -343,10 +344,11 @@ void main() {
 
     expect(find.byType(JongereStubScreen), findsOneWidget);
 
-    // M5: de landing van de jongere is J11 met een tabbalk; uitloggen zit
-    // onder de tab Instellingen (G7).
-    await tester.tap(find.text(TekstenKlussenNl.tabInstellingen));
+    // B10: de landing van de jongere is de Start met een tabbalk; uitloggen
+    // zit onder Profiel > Instellingen (G7).
+    await tester.tap(find.text(TekstenKlussenNl.tabProfiel));
     await tester.pumpAndSettle();
+    await _tik(tester, TekstenStartNl.instellingen);
     await _tik(tester, TekstenNl.uitloggen);
 
     expect(find.byType(WelkomScreen), findsOneWidget);

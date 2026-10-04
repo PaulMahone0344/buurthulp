@@ -4,6 +4,8 @@
 
 abstract final class TekstenKlussenNl {
   // Tabbalk helper
+  /// B10: de nieuwe Start van de helper (mockup StartHelper).
+  static const tabStart = 'Start';
   static const tabKlussen = 'Klussen';
   static const tabMijnKlussen = 'Mijn klussen';
   static const tabProfiel = 'Profiel';

@@ -13,35 +13,44 @@ import 'package:heitjehulp_app/features/toegang/screen/instellingen_screen.dart'
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_start_nl.dart';
 
 import '../support/hh_hulpvrager_wikkel.dart';
 import '../support/hh_toegang_wikkel.dart';
 
 void main() {
-  testWidgets('helper: taal wijzigen in de tab Instellingen, terug naar Klussen', (
-    tester,
-  ) async {
-    final auth = fakeMetAlleRollen();
-    final container = await pompApp(
-      tester,
-      gateway: auth,
-      opslag: GeheugenKeyValueStore({
-        'hh_auth_token': testToken(HhRol.jongere),
-      }),
-    );
-    await tester.tap(find.text(TekstenKlussenNl.tabInstellingen).last);
-    await tester.pumpAndSettle();
-    expect(find.byType(InstellingenScreen), findsOneWidget);
-    await tester.tap(find.text(TekstenNl.taalTurks));
-    await tester.pumpAndSettle();
-    expect(auth.laatsteUpdateBody, {'taal': 'tr'});
-    expect(find.text(TekstenNl.instellingenOpgeslagen), findsOneWidget);
+  testWidgets(
+    'helper: taal wijzigen in Instellingen (onder Profiel), terug naar Klussen',
+    (tester) async {
+      final auth = fakeMetAlleRollen();
+      final container = await pompApp(
+        tester,
+        gateway: auth,
+        opslag: GeheugenKeyValueStore({
+          'hh_auth_token': testToken(HhRol.jongere),
+        }),
+      );
+      // B10: Instellingen zit onder het Profiel.
+      await tester.tap(find.text(TekstenKlussenNl.tabProfiel).last);
+      await tester.pumpAndSettle();
+      final instellingen = find.text(TekstenStartNl.instellingen);
+      await tester.ensureVisible(instellingen);
+      await tester.tap(instellingen);
+      await tester.pumpAndSettle();
+      expect(find.byType(InstellingenScreen), findsOneWidget);
+      await tester.tap(find.text(TekstenNl.taalTurks));
+      await tester.pumpAndSettle();
+      expect(auth.laatsteUpdateBody, {'taal': 'tr'});
+      expect(find.text(TekstenNl.instellingenOpgeslagen), findsOneWidget);
 
-    await tester.tap(find.text(TekstenKlussenNl.tabKlussen).last);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(container.read(huidigeGebruikerProvider)?.taal, HhTaal.tr);
-  });
+      await tester.tap(find.text(TekstenNl.terug).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(TekstenKlussenNl.tabKlussen).last);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(container.read(huidigeGebruikerProvider)?.taal, HhTaal.tr);
+    },
+  );
 
   testWidgets('bewoner: Meer -> Instellingen -> taal -> terug', (tester) async {
     final container = await pompHulpvragerApp(

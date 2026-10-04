@@ -19,9 +19,12 @@ import '../../reacties/widget/helpers_willen_kaart.dart';
 import '../../toegang/provider/sessie_providers.dart';
 import '../paden_hulpvrager.dart';
 import '../provider/concept_controller.dart';
+import '../start/bewoner_start_blokken.dart';
 import '../widget/oudere_tabbalk.dart';
 
-/// O1. Het begin voor de oudere: de grote knop "Hulp vragen". Mijn
+/// O1. Het begin voor de bewoner (B10, mockup Main): tegels Aankomend en
+/// Nieuwe reacties, de grote knop "Hulp vragen", "N helpers willen je
+/// helpen" en de aankomende klussen met Dag/Week/Maand en een weekstrook. Mijn
 /// hulpvragen, Bel ons en Meer (gegevens, instellingen) zijn sinds 3 okt
 /// tabs in de balk onderin (indeling naar BuurtHeld). Geen terugknop.
 /// M8: de laatste melding staat als rustige regel bovenaan (geen teller,
@@ -73,7 +76,9 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
             const AdresAanvullenBalk(),
             // M8: de laatste melding, rustig, zonder teller.
             const LaatsteMeldingRegel(),
-            SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+            SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
+            // B10: tegels "Aankomend" en "Nieuwe reacties" (Saldo met B7).
+            const BewonerTegels(),
             // B5: "3 helpers willen je helpen" per open klus met reacties.
             const HelpersWillenKaart(),
             // B2: buiten het werkgebied (of adres niet gevonden) geen klus.
@@ -94,6 +99,9 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
                   gebruiker.werkgebiedStatus,
                 )!,
               ),
+            // B10: aankomende klussen met Dag/Week/Maand en de weekstrook.
+            SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+            const AankomendeKlussenKaart(),
           ],
         ),
       ),
