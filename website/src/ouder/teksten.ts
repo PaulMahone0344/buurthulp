@@ -10,9 +10,9 @@ export const T = {
   merk: 'heitjehulp',
   stap: (n: number) => `Stap ${n} van 2`,
 
-  codeKop: 'Je kind wil helper worden bij HeitjeHulp',
+  codeKop: 'Je kind wil strijder worden bij HeitjeHulp',
   codeUitleg: [
-    'HeitjeHulp brengt buren en helpers samen voor kleine klussen.',
+    'HeitjeHulp brengt buren en strijders samen voor kleine klussen.',
     'Je kind doet kleine klussen in de buurt, zoals boodschappen of tuinwerk.',
     'Je kind kiest zelf welke klus het wordt.',
   ],
@@ -41,7 +41,7 @@ export const T = {
   ibanPlaceholder: 'NL00 BANK 0000 0000 00',
   naamLabel: 'Je naam',
   naamPlaceholder: 'Voor- en achternaam',
-  akkoord: (n: string) => `Ik geef toestemming dat ${hoofdletter(n)} helper wordt`,
+  akkoord: (n: string) => `Ik geef toestemming dat ${hoofdletter(n)} strijder wordt`,
   avp: 'Ik heb een aansprakelijkheidsverzekering (AVP)',
   avpUitleg: (n: string) =>
     `Een AVP betaalt als ${n} per ongeluk iets kapotmaakt bij een ander. De meeste gezinnen hebben er een. Geen AVP? Je kunt toch toestemming geven.`,

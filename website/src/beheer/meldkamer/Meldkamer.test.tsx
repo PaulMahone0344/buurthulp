@@ -88,7 +88,7 @@ describe('D1 meldkamer', () => {
         'Bewoner',
         'Klus',
         'Wanneer',
-        'Helper',
+        'Strijder',
         'Status',
         'Acties',
       ])
@@ -106,14 +106,14 @@ describe('D1 meldkamer', () => {
       expect(await screen.findByText('Iedereen is gebeld.')).toBeInTheDocument()
       expect(screen.getByText('Er is niets na te kijken.')).toBeInTheDocument()
       expect(screen.queryByText(/bel ze even/)).not.toBeInTheDocument()
-      expect(screen.queryByText(/Helpers zien een klus pas/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Strijders zien een klus pas/)).not.toBeInTheDocument()
     })
 
     it('legt een blok wel uit als er iets te doen is', async () => {
       opzet(new FakeBeheerData({ nogTeBellen: [BEWONER], naTeKijken: [naTeKijken({ id: 'n1' })] }, COORDINATOR))
 
       expect(await screen.findByText(/bel ze even/)).toBeInTheDocument()
-      expect(screen.getByText(/Helpers zien een klus pas/)).toBeInTheDocument()
+      expect(screen.getByText(/Strijders zien een klus pas/)).toBeInTheDocument()
     })
   })
 

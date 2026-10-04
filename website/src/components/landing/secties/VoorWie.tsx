@@ -82,8 +82,8 @@ export function Bemiddelaar() {
           </h2>
         </div>
         <p className="lp-lead">
-          HeitjeHulp is een bedrijf dat bewoners en helpers bij elkaar brengt. De helper is niet bij ons in dienst.
-          Jij en de helper spreken samen de klus af. Wij zorgen voor de app, de chat, het betalen en de meldkamer die
+          HeitjeHulp is een bedrijf dat bewoners en strijders bij elkaar brengt. De strijder is niet bij ons in dienst.
+          Jij en de strijder spreken samen de klus af. Wij zorgen voor de app, de chat, het betalen en de meldkamer die
           meekijkt als er iets misgaat.
         </p>
       </div>

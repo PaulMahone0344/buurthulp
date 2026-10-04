@@ -83,7 +83,7 @@ describe('B11 omzetten', () => {
   })
 
   it('zonderCode haalt de zp-code achteraan weg', () => {
-    expect(zonderCode('[zelfde paar] Helper Daan (15) en bewoner Kees. Kijk even. (zp:h1:b1)')).toBe('[zelfde paar] Helper Daan (15) en bewoner Kees. Kijk even.')
+    expect(zonderCode('[zelfde paar] Strijder Daan (15) en bewoner Kees. Kijk even. (zp:h1:b1)')).toBe('[zelfde paar] Strijder Daan (15) en bewoner Kees. Kijk even.')
     expect(zonderCode('Gewone melding (met haakjes)')).toBe('Gewone melding (met haakjes)')
   })
 })

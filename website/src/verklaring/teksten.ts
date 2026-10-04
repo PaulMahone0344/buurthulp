@@ -27,5 +27,5 @@ export const V = {
   echt: (code: string, op: string) => `Deze verklaring met code ${code} is uitgegeven door HeitjeHulp${op ? ` op ${dag(op)}` : ''}.`,
   print: 'Printen of opslaan als pdf',
   andere: 'Andere code nakijken',
-  voet: 'HeitjeHulp brengt buren en helpers bij elkaar. Vragen? Mail info@heitjehulp.nl.',
+  voet: 'HeitjeHulp brengt buren en strijders bij elkaar. Vragen? Mail info@heitjehulp.nl.',
 }

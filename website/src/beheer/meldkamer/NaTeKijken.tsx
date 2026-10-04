@@ -41,7 +41,7 @@ export function NaTeKijken({ data, klussen, opGewijzigd, opGelukt }: Props) {
     setFout('')
     try {
       await data.keurKlus(klus.id, { besluit: 'goedkeuren' })
-      opGelukt(`De klus van ${klus.hulpvragerNaam} is goedgekeurd. Helpers in de buurt zien hem nu.`)
+      opGelukt(`De klus van ${klus.hulpvragerNaam} is goedgekeurd. Strijders in de buurt zien hem nu.`)
       opGewijzigd()
     } catch (e) {
       setFout(e instanceof Error ? e.message : String(e))
@@ -61,7 +61,7 @@ export function NaTeKijken({ data, klussen, opGewijzigd, opGelukt }: Props) {
         </div>
       </div>
       {isLeeg ? <p className="empty-note">Er is niets na te kijken.</p> : null}
-      {isLeeg ? null : <p className="admin-muted">Helpers zien een klus pas als je hem goedkeurt.</p>}
+      {isLeeg ? null : <p className="admin-muted">Strijders zien een klus pas als je hem goedkeurt.</p>}
       <Foutmelding melding={fout} />
       {isLeeg ? null : (
         <ul className="klus-kaarten" aria-label="Klussen na te kijken">

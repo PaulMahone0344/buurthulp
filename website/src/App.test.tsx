@@ -18,7 +18,7 @@ function toonPagina(pad: string) {
 const PAGINAS = [
   { pad: '/', kop: /^heitje voor een karweitje, in jouw buurt\.$/i },
   { pad: '/zo-werkt-het', kop: /in vier stappen/ },
-  { pad: '/voor-wie', kop: /Bewoners, helpers, ouders en de meldkamer/ },
+  { pad: '/voor-wie', kop: /Bewoners, strijders, ouders en de meldkamer/ },
   { pad: '/helpers', kop: /Help je buurt en verdien je zakgeld/ },
   { pad: '/veiligheid', kop: /Veilig helpen en geholpen worden/ },
   { pad: '/partners', kop: /Samen met het jongerenwerk/ },
@@ -37,8 +37,9 @@ function alleTekst(): string {
 
 // Woorden en cijfers uit het oude verhaal (stichting met jongeren 16-20 voor
 // ouderen, pilot met een welzijnspartner) die niet meer op de site mogen staan.
+// 4 okt (collega): "helper" heet nu "strijder".
 const OUD_VERHAAL =
-  /stichting|vrijwilliger|3,40|16 t\/m 20|16-20|Moza[iï]ek|per uur|sociaal tarief|pilot|gemeente|ouderen/i
+  /stichting|vrijwilliger|3,40|16 t\/m 20|16-20|Moza[iï]ek|per uur|sociaal tarief|pilot|gemeente|ouderen|\bhelpers?\b/i
 
 describe('HeitjeHulp voorpagina', () => {
   it('toont de naam met de slogan in de hero', () => {
@@ -77,8 +78,8 @@ describe('HeitjeHulp voorpagina', () => {
 
     for (const [label, pad, kop] of [
       ['Zo werkt het', '/zo-werkt-het', /in vier stappen/],
-      ['Voor wie', '/voor-wie', /Bewoners, helpers, ouders en de meldkamer/],
-      ['Helpers', '/helpers', /Help je buurt en verdien je zakgeld/],
+      ['Voor wie', '/voor-wie', /Bewoners, strijders, ouders en de meldkamer/],
+      ['Strijders', '/helpers', /Help je buurt en verdien je zakgeld/],
       ['Veiligheid', '/veiligheid', /Veilig helpen en geholpen worden/],
       ['Partners', '/partners', /Samen met het jongerenwerk/],
       ['Vragen', '/vragen', /Veelgestelde vragen/],
@@ -107,7 +108,7 @@ describe('HeitjeHulp voorpagina', () => {
 
   it('zet de paginatitel bij elke pagina', () => {
     toonPagina('/helpers')
-    expect(document.title).toBe('Helpers — HeitjeHulp')
+    expect(document.title).toBe('Strijders — HeitjeHulp')
   })
 
   it('toont een nette melding bij een adres dat niet bestaat', () => {
@@ -149,7 +150,7 @@ describe('HeitjeHulp voorpagina', () => {
     await user.click(knop)
     const menu = screen.getByRole('navigation', { name: 'Menu' })
     expect(knop).toHaveAttribute('aria-expanded', 'true')
-    for (const label of ['Zo werkt het', 'Voor wie', 'Helpers', 'Veiligheid', 'Partners', 'Vragen', 'Inloggen', 'Aanmelden']) {
+    for (const label of ['Zo werkt het', 'Voor wie', 'Strijders', 'Veiligheid', 'Partners', 'Vragen', 'Inloggen', 'Aanmelden']) {
       expect(within(menu).getByRole('link', { name: label })).toBeInTheDocument()
     }
 
@@ -196,7 +197,7 @@ describe('HeitjeHulp voorpagina', () => {
     expect(within(hero).queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('vertelt het nieuwe verhaal: bemiddelaar, helpers vanaf 10, ouder-toestemming, VOG vanaf 18', () => {
+  it('vertelt het nieuwe verhaal: bemiddelaar, strijders vanaf 10, ouder-toestemming, VOG vanaf 18', () => {
     const tekst = alleTekst()
 
     expect(tekst).toMatch(/geen werkgever/)
@@ -216,7 +217,7 @@ describe('HeitjeHulp voorpagina', () => {
     await user.click(screen.getByRole('tab', { name: 'Privacy' }))
 
     const paneel = screen.getByRole('tabpanel')
-    expect(paneel).toHaveTextContent('De meldkamer kan chats lezen om helpers en bewoners veilig te houden.')
+    expect(paneel).toHaveTextContent('De meldkamer kan chats lezen om strijders en bewoners veilig te houden.')
     expect(paneel).not.toHaveTextContent(/alleen mee als iemand een melding doet/)
   })
 
@@ -263,7 +264,7 @@ describe('HeitjeHulp voorpagina', () => {
 
     await user.click(screen.getByRole('tab', { name: 'VOG' }))
     expect(screen.getByRole('tab', { name: 'VOG' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('VOG voor helpers vanaf 18 jaar')
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('VOG voor strijders vanaf 18 jaar')
 
     await user.keyboard('{ArrowRight}')
     expect(screen.getByRole('tab', { name: 'Privacy' })).toHaveAttribute('aria-selected', 'true')
@@ -278,7 +279,7 @@ describe('HeitjeHulp voorpagina', () => {
     const user = userEvent.setup()
     toonPagina('/vragen')
 
-    const vraag = screen.getByText('Is HeitjeHulp de werkgever van de helpers?')
+    const vraag = screen.getByText('Is HeitjeHulp de werkgever van de strijders?')
     await user.click(vraag)
     expect(vraag.closest('details')).toHaveAttribute('open')
   })
@@ -294,7 +295,7 @@ describe('B3 ouder-pagina', () => {
   it('#/ouder opent de ouder-pagina (stap 1) en niet de voorpagina', async () => {
     window.location.hash = '#/ouder'
     render(<App />)
-    expect(await screen.findByRole('heading', { level: 1, name: 'Je kind wil helper worden bij HeitjeHulp' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Je kind wil strijder worden bij HeitjeHulp' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Hoofdnavigatie' })).not.toBeInTheDocument()
   })
 })

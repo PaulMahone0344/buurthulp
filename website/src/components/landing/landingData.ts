@@ -44,7 +44,7 @@ export const SLOGAN = 'Heitje voor een karweitje, in jouw buurt.'
 export const navLinks: NavLink[] = [
   { href: '/zo-werkt-het', label: 'Zo werkt het' },
   { href: '/voor-wie', label: 'Voor wie' },
-  { href: '/helpers', label: 'Helpers' },
+  { href: '/helpers', label: 'Strijders' },
   { href: '/veiligheid', label: 'Veiligheid' },
   { href: '/partners', label: 'Partners' },
   { href: '/vragen', label: 'Vragen' },
@@ -59,26 +59,26 @@ export interface Wegwijzer {
 
 // Voorpagina, blok "Voor de buurt": per groep de weg naar de eigen pagina.
 export const wegwijzers: Wegwijzer[] = [
-  { icon: 'House', titel: 'Bewoners', tekst: 'Plaats een klus en kies zelf je helper.', href: '/zo-werkt-het' },
-  { icon: 'Sparkles', titel: 'Helpers', tekst: 'Verdien zakgeld in je eigen buurt.', href: '/helpers' },
+  { icon: 'House', titel: 'Bewoners', tekst: 'Plaats een klus en kies zelf je strijder.', href: '/zo-werkt-het' },
+  { icon: 'Sparkles', titel: 'Strijders', tekst: 'Verdien zakgeld in je eigen buurt.', href: '/helpers' },
   { icon: 'Users', titel: 'Ouders', tekst: 'Lees hoe we het veilig houden.', href: '/veiligheid' },
   { icon: 'Handshake', titel: 'Jongerenwerk', tekst: 'Word partner van HeitjeHulp.', href: '/partners' },
 ]
 
 export const heroPoints: string[] = [
   'Plaats je klus met een foto',
-  'Kies zelf je helper, op sterren en recensies',
+  'Kies zelf je strijder, op sterren en recensies',
   'Chat in de app, je nummer blijft verborgen',
 ]
 
 export const introText: string[] = [
   'Je heg moet gesnoeid worden. Je hond moet uit. Of je wilt hulp met je nieuwe telefoon. Kleine klussen, maar ze blijven liggen. En vaak woont er iemand om de hoek die je graag helpt.',
-  'HeitjeHulp brengt die twee bij elkaar. Jij plaatst een klus. Helpers uit je buurt reageren. Jij kiest wie het doet. HeitjeHulp regelt het contact, de betaling en de veiligheid.',
+  'HeitjeHulp brengt die twee bij elkaar. Jij plaatst een klus. Strijders uit je buurt reageren. Jij kiest wie het doet. HeitjeHulp regelt het contact, de betaling en de veiligheid.',
 ]
 
 export const verhaal = {
   tekst:
-    'Sanne zet een foto van haar voortuin in de app: het onkruid staat hoog. Drie helpers uit de buurt reageren. Ze kijkt naar hun sterren en leest de recensies. Ze kiest Daan (14). Zijn moeder gaf eerder al toestemming met een code. Daan komt zaterdag langs en de tuin is weer netjes. Sanne geeft hem vijf sterren. Daan krijgt zijn zakgeld en een nieuwe badge.',
+    'Sanne zet een foto van haar voortuin in de app: het onkruid staat hoog. Drie strijders uit de buurt reageren. Ze kijkt naar hun sterren en leest de recensies. Ze kiest Daan (14). Zijn moeder gaf eerder al toestemming met een code. Daan komt zaterdag langs en de tuin is weer netjes. Sanne geeft hem vijf sterren. Daan krijgt zijn zakgeld en een nieuwe badge.',
   bijschrift: 'Een voorbeeld van hoe een klus verloopt',
 }
 
@@ -91,17 +91,17 @@ export const processSteps: IconItem[] = [
   {
     icon: 'MessageCircle',
     title: 'Reacties krijgen',
-    text: 'Helpers uit je buurt zien je klus en reageren. Je kunt met ze chatten in de app.',
+    text: 'Strijders uit je buurt zien je klus en reageren. Je kunt met ze chatten in de app.',
   },
   {
     icon: 'Star',
-    title: 'Helper kiezen',
-    text: 'Je ziet de sterren en recensies van elke helper. Jij kiest wie de klus doet.',
+    title: 'Strijder kiezen',
+    text: 'Je ziet de sterren en recensies van elke strijder. Jij kiest wie de klus doet.',
   },
   {
     icon: 'Wallet',
     title: 'Klaar en betalen',
-    text: 'Je betaalt met saldo dat je vooraf oplaadt met iDEAL. Na de klus geef je de helper sterren en een recensie.',
+    text: 'Je betaalt met saldo dat je vooraf oplaadt met iDEAL. Na de klus geef je de strijder sterren en een recensie.',
   },
 ]
 
@@ -127,7 +127,7 @@ export const rollen: Rol[] = [
   },
   {
     icon: 'Sparkles',
-    rol: 'Helpers',
+    rol: 'Strijders',
     kop: 'Zakgeld verdienen in je eigen buurt',
     items: [
       { title: 'Vanaf 10 jaar', text: 'Er is geen maximum leeftijd. Scholieren, studenten en volwassenen zijn welkom.' },
@@ -150,7 +150,7 @@ export const rollen: Rol[] = [
     rol: 'Meldkamer',
     kop: 'HeitjeHulp houdt een oogje in het zeil',
     items: [
-      { title: 'Goedkeuren', text: 'De meldkamer keurt elke nieuwe helper goed voordat die kan reageren.' },
+      { title: 'Goedkeuren', text: 'De meldkamer keurt elke nieuwe strijder goed voordat die kan reageren.' },
       { title: 'Helpen', text: 'Gaat er iets mis? De meldkamer helpt je verder.' },
       { title: 'Meldingen', text: 'Elke melding wordt bekeken en opgevolgd.' },
     ],
@@ -204,7 +204,7 @@ export const safetyItems: IconItem[] = [
   {
     icon: 'ClipboardCheck',
     title: 'Meldkamer keurt goed',
-    text: 'Elke nieuwe helper wordt eerst goedgekeurd door de meldkamer van HeitjeHulp.',
+    text: 'Elke nieuwe strijder wordt eerst goedgekeurd door de meldkamer van HeitjeHulp.',
   },
   {
     icon: 'MessageCircle',
@@ -238,8 +238,8 @@ export const kaders: Kader[] = [
     title: 'Saldo vooraf, geen contant geld',
     intro: 'Je laadt saldo op met iDEAL. Als de klus klaar is, gaat het bedrag van je saldo af.',
     points: [
-      'De prijs per klus zie je vooraf, voordat je een helper kiest.',
-      'HeitjeHulp betaalt de helper uit. Je hoeft geen geld te geven.',
+      'De prijs per klus zie je vooraf, voordat je een strijder kiest.',
+      'HeitjeHulp betaalt de strijder uit. Je hoeft geen geld te geven.',
       'Herhaalklussen, zoals elke week de tuin, gaan met het abonnement Plus.',
     ],
   },
@@ -248,23 +248,23 @@ export const kaders: Kader[] = [
     icon: 'KeyRound',
     tab: 'Ouders',
     title: 'Toestemming met een code',
-    intro: 'Helpers jonger dan 18 hebben toestemming van een ouder nodig.',
+    intro: 'Strijders jonger dan 18 hebben toestemming van een ouder nodig.',
     points: [
       'Je kind vult bij het aanmelden het e-mailadres of telefoonnummer van een ouder in.',
       'De ouder krijgt een code per e-mail of sms en geeft daarmee toestemming.',
-      'Jonge helpers zien alleen klussen die passen bij hun leeftijd.',
+      'Jonge strijders zien alleen klussen die passen bij hun leeftijd.',
     ],
   },
   {
     key: 'vog',
     icon: 'FileCheck2',
     tab: 'VOG',
-    title: 'VOG voor helpers vanaf 18 jaar',
+    title: 'VOG voor strijders vanaf 18 jaar',
     intro: 'Ben je 18 jaar of ouder? Dan heb je een Verklaring Omtrent het Gedrag nodig.',
     points: [
       'Zonder geldige VOG kun je niet reageren op klussen.',
       'Onder 18 is geen VOG nodig. Dan geeft een ouder toestemming.',
-      'De meldkamer keurt elke helper goed, jong of oud.',
+      'De meldkamer keurt elke strijder goed, jong of oud.',
     ],
   },
   {
@@ -276,7 +276,7 @@ export const kaders: Kader[] = [
     points: [
       'Telefoonnummers blijven verborgen. Je praat via de chat in de app.',
       // B11: de meldkamer kan elke chat lezen (besluit 4 okt).
-      'De meldkamer kan chats lezen om helpers en bewoners veilig te houden.',
+      'De meldkamer kan chats lezen om strijders en bewoners veilig te houden.',
       'Je gegevens staan versleuteld op servers in Europa.',
     ],
   },
@@ -296,15 +296,15 @@ export const partnerPunten: IconItem[] = [
   {
     icon: 'MapPin',
     title: 'Dichtbij in de wijk',
-    text: 'Jullie kennen de buurt. Zo komen bewoners en helpers sneller bij elkaar.',
+    text: 'Jullie kennen de buurt. Zo komen bewoners en strijders sneller bij elkaar.',
   },
 ]
 
 export const vragen: Vraag[] = [
   {
-    vraag: 'Is HeitjeHulp de werkgever van de helpers?',
+    vraag: 'Is HeitjeHulp de werkgever van de strijders?',
     antwoord:
-      'Nee. HeitjeHulp is een bemiddelaar. We brengen bewoners en helpers bij elkaar en regelen de chat, de betaling en de veiligheid. De helper is niet bij ons in dienst.',
+      'Nee. HeitjeHulp is een bemiddelaar. We brengen bewoners en strijders bij elkaar en regelen de chat, de betaling en de veiligheid. De strijder is niet bij ons in dienst.',
   },
   {
     vraag: 'Vanaf welke leeftijd kun je helpen?',
@@ -312,9 +312,9 @@ export const vragen: Vraag[] = [
       'Vanaf 10 jaar. Er is geen maximum. Ben je jonger dan 18? Dan geeft een ouder toestemming met een code. Ben je 18 of ouder? Dan heb je een VOG nodig.',
   },
   {
-    vraag: 'Hoe kies ik een helper?',
+    vraag: 'Hoe kies ik een strijder?',
     antwoord:
-      'Helpers reageren op je klus. Je ziet hun sterren en recensies. Je kunt ook eerst met ze chatten. Daarna kies je er één.',
+      'Strijders reageren op je klus. Je ziet hun sterren en recensies. Je kunt ook eerst met ze chatten. Daarna kies je er één.',
   },
   {
     vraag: 'Wat kost een klus?',

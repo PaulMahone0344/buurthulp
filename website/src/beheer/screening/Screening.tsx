@@ -33,7 +33,7 @@ const LIJSTEN: Array<{ id: Lijst; label: string }> = [
   { id: 'wachtrij', label: 'Wachtrij' },
   { id: 'vog', label: 'VOG nodig' },
   { id: 'signalen', label: 'VOG verloopt' },
-  { id: 'alle', label: 'Alle helpers' },
+  { id: 'alle', label: 'Alle strijders' },
 ]
 
 const VOG_REDEN = (r: VogRij) => (r.reden === 'geen' ? 'nog geen VOG gezien' : `VOG verlopen op ${toonDatum(r.verlooptOp)}`)
@@ -67,7 +67,7 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
       <header className="dashboard-topbar">
         <div>
           <h1>Screening</h1>
-          <p>Helpers die gecontroleerd moeten worden: ID en (vanaf 18) VOG.</p>
+          <p>Strijders die gecontroleerd moeten worden: ID en (vanaf 18) VOG.</p>
         </div>
       </header>
       <div className="admin-stat-grid admin-stat-grid--drie">
@@ -82,10 +82,10 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
           <div className="admin-card__header">
             <div>
               <Users size={22} />
-              <h2>Helpers</h2>
+              <h2>Strijders</h2>
             </div>
           </div>
-          <div className="seg" role="tablist" aria-label="Welke helpers">
+          <div className="seg" role="tablist" aria-label="Welke strijders">
             {LIJSTEN.map((l) => (
               <button
                 key={l.id}
@@ -100,7 +100,7 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
             ))}
           </div>
           {lijst === 'vog' ? (
-            <div className="helper-list" aria-label="Helpers die een VOG nodig hebben">
+            <div className="helper-list" aria-label="Strijders die een VOG nodig hebben">
               {vog.waarde.map((r) => (
                 <article className="helper-row helper-row--beheer" key={r.profielId}>
                   <div>
@@ -123,7 +123,7 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
               {vog.geladen && vog.waarde.length === 0 ? <p className="empty-note">Iedereen van 18+ heeft een geldige VOG.</p> : null}
             </div>
           ) : null}
-          <div className="helper-list" aria-label="Helpers" hidden={lijst === 'vog'}>
+          <div className="helper-list" aria-label="Strijders" hidden={lijst === 'vog'}>
             {zichtbaar.map((p) => {
               const signaal = vogSignaal(p.vogGeldigTot, vandaag)
               return (

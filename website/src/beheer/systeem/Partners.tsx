@@ -49,7 +49,7 @@ export function Partners({ data }: { data: BeheerData }) {
     <>
       <h2>Partners</h2>
       <p className="admin-muted">
-        Jongerenwerk-organisaties met een eigen code. Een helper vult de code in bij het aanmelden; hier zie je hoeveel helpers
+        Jongerenwerk-organisaties met een eigen code. Een strijder vult de code in bij het aanmelden; hier zie je hoeveel strijders
         via de partner kwamen.
       </p>
       <Foutmelding melding={fout || partners.fout} />

@@ -30,7 +30,7 @@ const PAGINAS: Record<string, Pagina> = {
   '/': { titel: `${NAAM} — heitje voor een karweitje, in jouw buurt`, Inhoud: Home },
   '/zo-werkt-het': { titel: `Zo werkt het — ${NAAM}`, Inhoud: ZoWerktHetPagina },
   '/voor-wie': { titel: `Voor wie — ${NAAM}`, Inhoud: VoorWiePagina },
-  '/helpers': { titel: `Helpers — ${NAAM}`, Inhoud: HelpersPagina },
+  '/helpers': { titel: `Strijders — ${NAAM}`, Inhoud: HelpersPagina },
   '/veiligheid': { titel: `Veiligheid — ${NAAM}`, Inhoud: VeiligheidPagina },
   '/partners': { titel: `Partners — ${NAAM}`, Inhoud: PartnersPagina },
   '/vragen': { titel: `Vragen — ${NAAM}`, Inhoud: VragenPagina },

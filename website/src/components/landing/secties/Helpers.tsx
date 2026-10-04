@@ -7,7 +7,7 @@ import { helperBeloning, helperInApp, helperSteps } from '../landingData'
 
 export function HelperStappen() {
   return (
-    <section className="lp-sectie" aria-label="Zo word je helper">
+    <section className="lp-sectie" aria-label="Zo word je strijder">
       <div className="lp-wrap">
         <Stappen stappen={helperSteps} />
       </div>

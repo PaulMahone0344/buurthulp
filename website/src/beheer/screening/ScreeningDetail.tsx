@@ -175,7 +175,7 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
         </label>
         {/* Besluit 2 okt: de helper leest zijn eigen profiel, dus ook deze notitie. */}
         <small id="screening-notitie-uitleg" className="admin-muted">
-          De helper kan deze notitie lezen. Schrijf hem zakelijk.
+          De strijder kan deze notitie lezen. Schrijf hem zakelijk.
         </small>
       </div>
       <Foutmelding melding={fout} />

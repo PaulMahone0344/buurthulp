@@ -38,7 +38,7 @@ export function Recensies({ data }: { data: BeheerData }) {
     <>
       <h2>Recensies</h2>
       <p className="beheer-hulp">
-        Een verborgen recensie telt niet mee voor de sterren en de XP van de helper, en niemand ziet hem nog behalve de meldkamer.
+        Een verborgen recensie telt niet mee voor de sterren en de XP van de strijder, en niemand ziet hem nog behalve de meldkamer.
       </p>
       <Foutmelding melding={lijst.fout || fout} />
       <div className="activity-list" aria-label="Recensies">

@@ -64,7 +64,7 @@ describe('B11 meldkamer: nakijken en chat', () => {
     expect(within(kaart).getByRole('button', { name: 'Afkeuren' })).toBeEnabled()
   })
 
-  it('leest de chat van een klus met helper (alleen lezen)', async () => {
+  it('leest de chat van een klus met strijder (alleen lezen)', async () => {
     const user = userEvent.setup()
     const data = new FakeBeheerData(
       {
@@ -108,7 +108,7 @@ describe('B11 screening: VOG nodig', () => {
     )
     render(<Screening data={data} filters={{ lijst: 'vog' }} zetFilters={vi.fn()} nu={() => NU} />)
 
-    const lijst = await screen.findByLabelText('Helpers die een VOG nodig hebben')
+    const lijst = await screen.findByLabelText('Strijders die een VOG nodig hebben')
     expect(await within(lijst).findByText(/20 jaar · nog geen VOG gezien/)).toBeInTheDocument()
     expect(within(lijst).getByText(/30 jaar · VOG verlopen op/)).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /VOG nodig/ })).toHaveTextContent('2')

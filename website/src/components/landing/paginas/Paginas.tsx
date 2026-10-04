@@ -39,7 +39,7 @@ export function VoorWiePagina() {
     <>
       <PaginaKop
         label="Voor wie"
-        kop="Bewoners, helpers, ouders en de meldkamer."
+        kop="Bewoners, strijders, ouders en de meldkamer."
         sub="Iedereen ziet in de app alleen wat bij hem of haar hoort."
       />
       <Rollen />
@@ -52,7 +52,7 @@ export function HelpersPagina() {
   return (
     <>
       <PaginaKop
-        label="Voor helpers"
+        label="Voor strijders"
         kop="Help je buurt en verdien je zakgeld."
         sub="Je kunt helpen vanaf 10 jaar. Er is geen maximum leeftijd."
       />
@@ -68,7 +68,7 @@ export function VeiligheidPagina() {
       <PaginaKop
         label="Veiligheid"
         kop="Veilig helpen en geholpen worden."
-        sub="De meldkamer van HeitjeHulp keurt elke helper goed en helpt als er iets misgaat."
+        sub="De meldkamer van HeitjeHulp keurt elke strijder goed en helpt als er iets misgaat."
       />
       <Veiligheid />
       <Kaders />

@@ -82,7 +82,7 @@ export function HulpvragenTabel({ data, klussen, filter, zetFilter, nu, opGewijz
                   Wanneer
                 </th>
                 <th scope="col" className="beheer-kolom--helper">
-                  Helper
+                  Strijder
                 </th>
                 <th scope="col" className="beheer-kolom--status">
                   Status

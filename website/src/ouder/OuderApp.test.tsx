@@ -21,7 +21,7 @@ async function vulCodeIn(user: ReturnType<typeof userEvent.setup>, email: string
 async function vulToestemmingIn(user: ReturnType<typeof userEvent.setup>, { avp = true } = {}) {
   await user.type(screen.getByLabelText('Rekeningnummer voor uitbetaling (IBAN)'), 'NL91 ABNA 0417 1643 00')
   await user.type(screen.getByLabelText('Je naam'), 'Anna Verhoeven')
-  await user.click(screen.getByLabelText(/Ik geef toestemming dat Daan helper wordt/))
+  await user.click(screen.getByLabelText(/Ik geef toestemming dat Daan strijder wordt/))
   if (avp) await user.click(screen.getByLabelText(/Ik heb een aansprakelijkheidsverzekering \(AVP\)/))
   await user.click(screen.getByRole('button', { name: 'Toestemming geven' }))
 }
@@ -30,8 +30,8 @@ describe('ouder-pagina zonder link: e-mail + code', () => {
   it('stap 1 toont uitleg, e-mail en 6 vakjes; plakken vult alle vakjes', async () => {
     const user = opzet(new NepOuderApi({ code: GOEDE_CODE }))
     expect(screen.getByText('Stap 1 van 2')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Je kind wil helper worden bij HeitjeHulp')
-    expect(screen.getByText(/HeitjeHulp brengt buren en helpers samen/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Je kind wil strijder worden bij HeitjeHulp')
+    expect(screen.getByText(/HeitjeHulp brengt buren en strijders samen/)).toBeInTheDocument()
     expect(screen.getByText(/De code is 24 uur geldig/)).toBeInTheDocument()
     await user.click(screen.getByLabelText('Cijfer 1'))
     await user.paste('48 29-13')
@@ -103,7 +103,7 @@ describe('ouder-pagina met de link uit de mail', () => {
     await user.type(screen.getByLabelText('Je naam'), 'Anna')
     await user.click(screen.getByRole('button', { name: 'Toestemming geven' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Zet het vinkje om toestemming te geven.')
-    await user.click(screen.getByLabelText(/Ik geef toestemming dat Daan helper wordt/))
+    await user.click(screen.getByLabelText(/Ik geef toestemming dat Daan strijder wordt/))
     await user.click(screen.getByRole('button', { name: 'Toestemming geven' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Vul een geldig Nederlands rekeningnummer (IBAN) in.')
     expect(api.aanroepen).toHaveLength(1)

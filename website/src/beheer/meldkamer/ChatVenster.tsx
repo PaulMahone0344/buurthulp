@@ -32,14 +32,14 @@ export function ChatVenster({ data, klus, opSluit }: Props) {
       <div className="beheer-venster beheer-venster--breed" role="dialog" aria-modal="true" aria-labelledby={titelId}>
         <h2 id={titelId}>Chat bij de klus van {klus.hulpvragerNaam}</h2>
         <p className="admin-muted">
-          {klus.hulpvragerNaam} en {klus.jongereNaam || 'de helper'}. Alleen lezen.
+          {klus.hulpvragerNaam} en {klus.jongereNaam || 'de strijder'}. Alleen lezen.
         </p>
         <Foutmelding melding={berichten.fout} />
         <ol className="beheer-chat" aria-label="Berichten">
           {berichten.waarde.map((b) => (
             <li key={b.id} className={`beheer-chat__bericht${b.vanBewoner ? ' is-bewoner' : ''}`}>
               <p className="beheer-chat__kop">
-                <strong>{b.afzenderNaam || (b.vanBewoner ? 'Bewoner' : 'Helper')}</strong>
+                <strong>{b.afzenderNaam || (b.vanBewoner ? 'Bewoner' : 'Strijder')}</strong>
                 <span>{toonMoment(b.verstuurdOp)}</span>
               </p>
               <p>{b.gewist ? <em>Bericht verwijderd</em> : b.tekst}</p>

@@ -26,7 +26,7 @@ const SCHAKELAARS = [
   {
     sleutel: 'b11_zelfde_paar_aan',
     label: 'Signaal zelfde paar',
-    uitleg: 'Aan: een signaal als een helper onder 18 vaak met dezelfde bewoner werkt (getallen hierboven).',
+    uitleg: 'Aan: een signaal als een strijder onder 18 vaak met dezelfde bewoner werkt (getallen hierboven).',
   },
 ] as const
 

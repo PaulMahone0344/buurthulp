@@ -30,7 +30,7 @@ function geluktTekst(naam: string, besluit: Kennismakingbesluit, geannuleerd: nu
   if (besluit === 'gesproken') return `Kennismaking met ${naam} staat erin. De klussen van ${naam} kun je nu keuren.`
   const delen = [`${naam} is geweigerd en kan niet meer inloggen.`]
   if (geannuleerd) delen.push(`${geannuleerd} open klus${geannuleerd === 1 ? '' : 'sen'} geannuleerd.`)
-  if (lopend) delen.push(`Let op: ${lopend} klus${lopend === 1 ? '' : 'sen'} met een helper loopt nog; kijk die zelf na.`)
+  if (lopend) delen.push(`Let op: ${lopend} klus${lopend === 1 ? '' : 'sen'} met een strijder loopt nog; kijk die zelf na.`)
   return delen.join(' ')
 }
 
@@ -111,7 +111,7 @@ export function Kennismaking({ data, bewoners, opGewijzigd, opGelukt }: Props) {
         >
           {keuze.besluit === 'geweigerd' ? (
             <p className="beheer-signaal">
-              Het account wordt geblokkeerd en open klussen zonder helper worden geannuleerd. Schrijf kort waarom.
+              Het account wordt geblokkeerd en open klussen zonder strijder worden geannuleerd. Schrijf kort waarom.
             </p>
           ) : (
             <p className="admin-muted">Optioneel: een korte notitie. Alleen de meldkamer ziet hem.</p>

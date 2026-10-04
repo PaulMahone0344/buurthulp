@@ -29,7 +29,7 @@ export function Hero() {
           <span className="lp-koppen__plus">+</span>
         </span>
         <span className="lp-glas__regel">
-          <span>Vind een helper in je buurt</span>
+          <span>Vind een strijder in je buurt</span>
           <ArrowRight size={18} />
         </span>
       </PaginaLink>

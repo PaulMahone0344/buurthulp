@@ -62,7 +62,7 @@ export function Contact() {
             <h2 className="lp-h2" id="kop-contact">
               Meedoen of meer weten?
             </h2>
-            <p className="lp-lead">Als bewoner, helper, ouder of organisatie: we horen graag van je.</p>
+            <p className="lp-lead">Als bewoner, strijder, ouder of organisatie: we horen graag van je.</p>
           </div>
           <a className="lp-pil lp-pil--limoen" href={CONTACT_MAIL}>
             Neem contact op
@@ -88,7 +88,7 @@ export function Voet() {
             </PaginaLink>
           ))}
         </nav>
-        <p>{SLOGAN} HeitjeHulp bemiddelt tussen bewoners en helpers en is geen werkgever.</p>
+        <p>{SLOGAN} HeitjeHulp bemiddelt tussen bewoners en strijders en is geen werkgever.</p>
       </div>
     </footer>
   )
