@@ -8,6 +8,7 @@ import '../../../../design/components/hh_laad_staat.dart';
 import '../../../../design/components/hh_lege_staat.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
+import '../../../../l10n/teksten_adres_nl.dart';
 import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../theme.dart';
@@ -88,6 +89,15 @@ class MijnReputatieScreen extends ConsumerWidget {
                 icoon: Icons.verified_user_outlined,
                 soort: HhKnopSoort.tweedeKeus,
                 onPressed: () => context.push(HhPadenJongere.overzicht),
+              ),
+              // ADRES (antwoord Ibrahim 5): verhuisd? Zelf het adres
+              // aanpassen; de server bepaalt het werkgebied opnieuw.
+              SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+              HhKnop(
+                label: TekstenAdresNl.mijnAdresTitel,
+                icoon: Icons.home_outlined,
+                soort: HhKnopSoort.tweedeKeus,
+                onPressed: () => context.push(HhPadenJongere.adres),
               ),
             ],
           ),

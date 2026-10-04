@@ -14,6 +14,7 @@ import 'package:heitjehulp_app/features/jongere/screen/mijn_adres_screen.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/provider/sessie_providers.dart';
 import 'package:heitjehulp_app/l10n/teksten_adres_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 
 import '../support/hh_hulpvrager_wikkel.dart';
@@ -170,5 +171,25 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('helper: Profiel -> Mijn adres (verhuizen kan altijd zelf)', (
+    tester,
+  ) async {
+    await pompApp(
+      tester,
+      gateway: fakeMetAlleRollen(),
+      opslag: GeheugenKeyValueStore({
+        'hh_auth_token': testToken(HhRol.jongere),
+      }),
+    );
+    expect(find.text(TekstenAdresNl.aanvullenKop), findsNothing);
+    await tester.tap(find.text(TekstenKlussenNl.tabProfiel).last);
+    await tester.pumpAndSettle();
+    await _tik(tester, TekstenAdresNl.mijnAdresTitel);
+    expect(find.byType(MijnAdresScreen), findsOneWidget);
+    // Het bewaarde adres wordt meteen opgezocht en als kaartje getoond.
+    await tester.pumpAndSettle();
+    expect(find.text('Kerkstraat 1, 4001 MA Tiel'), findsOneWidget);
   });
 }
