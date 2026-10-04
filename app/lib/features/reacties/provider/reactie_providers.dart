@@ -192,7 +192,7 @@ final beschikbaarProvider = NotifierProvider<BeschikbaarController, DateTime?>(
   BeschikbaarController.new,
 );
 
-/// De vraag voor "N helpers kunnen nu" bij het plaatsen.
+/// De vraag voor "N strijders kunnen nu" bij het plaatsen.
 @immutable
 class BeschikbaarVraag {
   const BeschikbaarVraag({required this.klustypeId, this.van, this.tot});

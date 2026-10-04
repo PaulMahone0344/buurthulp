@@ -91,7 +91,7 @@ void main() {
     });
   });
 
-  test('mijnReacties filtert op de helper en leest de velden', () async {
+  test('mijnReacties filtert op de strijder en leest de velden', () async {
     final server = _NepServer()
       ..zet('GET', '/api/collections/hh_reacties/records', 200, {
         'page': 1,
@@ -160,7 +160,7 @@ void main() {
   );
 
   group('kiezen', () {
-    test('200 is de match met de voornaam van de helper', () async {
+    test('200 is de match met de voornaam van de strijder', () async {
       final server = _NepServer()
         ..zet('POST', '/api/hh/klussen/k1/kiezen', 200, {
           'melding': 'Het is een match!',
@@ -175,7 +175,7 @@ void main() {
       final server = _NepServer()
         ..zet('POST', '/api/hh/klussen/k1/kiezen', 409, {
           'reden': 'helperbezet',
-          'melding': 'Deze helper heeft op dat moment al een andere klus.',
+          'melding': 'Deze strijder heeft op dat moment al een andere klus.',
         });
       final uit = await server.gateway().kiezen('k1', 'r1');
       expect((uit as KiesGeweigerd).reden, 'helperbezet');
@@ -198,7 +198,7 @@ void main() {
     expect((uit as Ok<DateTime?>).waarde, isNull);
   });
 
-  test('aantal helpers dat nu kan: klustype en tijden in de vraag', () async {
+  test('aantal strijders dat nu kan: klustype en tijden in de vraag', () async {
     final server = _NepServer()
       ..zet('GET', '/api/hh/beschikbaar', 200, {'aantal': 4});
     final uit = await server.gateway().aantalBeschikbaar(

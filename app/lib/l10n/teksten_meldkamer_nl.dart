@@ -28,7 +28,7 @@ abstract final class TekstenMeldkamerNl {
   static String gesprokenTitel(String naam) => 'Gesproken met $naam';
   static String weigerenTitel(String naam) => '$naam weigeren';
   static const weigerenUitleg =
-      'Het account wordt geblokkeerd en open klussen zonder helper worden '
+      'Het account wordt geblokkeerd en open klussen zonder strijder worden '
       'geannuleerd. Schrijf kort waarom.';
   static const notitieOptioneel = 'Notitie (optioneel)';
   static const notitieVerplicht = 'Notitie';
@@ -42,7 +42,7 @@ abstract final class TekstenMeldkamerNl {
             '${geannuleerd == 1 ? 'klus' : 'klussen'} geannuleerd.';
 
   // Helpers keuren
-  static const helpersKop = 'Helpers keuren';
+  static const helpersKop = 'Strijders keuren';
   static String helperLeeftijd(int jaren) => '$jaren jaar';
   static const goedkeuren = 'Goedkeuren';
   static const afwijzen = 'Afwijzen';
@@ -57,7 +57,7 @@ abstract final class TekstenMeldkamerNl {
   // Ouder
   static const oudersKop = 'Ouder trok toestemming in';
   static const oudersUitleg =
-      'Vrijgeven betekent: de helper mag zijn ouder opnieuw mailen.';
+      'Vrijgeven betekent: de strijder mag zijn ouder opnieuw mailen.';
   static const vrijgeven = 'Vrijgeven';
   static String vrijgevenTitel(String naam) => 'Ouder van $naam vrijgeven';
   static String vrijgevenGelukt(String naam) =>
@@ -65,7 +65,7 @@ abstract final class TekstenMeldkamerNl {
 
   // Klussen keuren
   static const klussenKop = 'Klussen keuren';
-  static const klussenUitleg = 'Helpers zien een klus pas na je goedkeuring.';
+  static const klussenUitleg = 'Strijders zien een klus pas na je goedkeuring.';
   static const afkeuren = 'Afkeuren';
   static const eerstBellen = 'Bel eerst de bewoner (zie hierboven).';
   static String afkeurenTitel(String soort) => 'Klus "$soort" afkeuren';
@@ -73,7 +73,7 @@ abstract final class TekstenMeldkamerNl {
       'De bewoner krijgt deze reden te zien. Schrijf hem in gewone taal.';
   static const reden = 'Reden';
   static const klusGoedgekeurd =
-      'Klus goedgekeurd. Helpers in de buurt zien hem nu.';
+      'Klus goedgekeurd. Strijders in de buurt zien hem nu.';
   static const klusAfgekeurd = 'Klus afgekeurd. De bewoner ziet de reden.';
 
   // Dialoog

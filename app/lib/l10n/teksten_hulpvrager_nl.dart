@@ -7,7 +7,7 @@ abstract final class TekstenHulpvragerNl {
   // O1 Home
   static const homeHulpVragen = 'Klus plaatsen';
   static const homeHulpVragenSemantiek =
-      'Klus plaatsen, vraag een helper om hulp';
+      'Klus plaatsen, vraag een strijder om hulp';
   static const homeInstellingen = 'Instellingen';
   static const homeMijnGegevens = 'Mijn gegevens';
 
@@ -67,15 +67,15 @@ abstract final class TekstenHulpvragerNl {
   // O6 Verstuurd
   static const verstuurdTitel = 'Je klus is geplaatst';
   static const verstuurdUitleg =
-      'De meldkamer kijkt je klus eerst na. Daarna zien helpers in je buurt '
-      'hem. Je hoort van ons zodra een helper hem aanneemt.';
+      'De meldkamer kijkt je klus eerst na. Daarna zien strijders in je buurt '
+      'hem. Je hoort van ons zodra een strijder hem aanneemt.';
   static const verstuurdNaarBegin = 'Naar het begin';
   static const verstuurdNaarBeginSemantiek = 'Ga naar het begin';
 
   // O12 Mijn gegevens
   static const gegevensTitel = 'Mijn gegevens';
   static const gegevensUitleg =
-      'Deze gegevens gebruiken we om de helper naar je toe te sturen en om '
+      'Deze gegevens gebruiken we om de strijder naar je toe te sturen en om '
       'iemand te bellen als dat nodig is.';
   static const gegevensKaartAdres = 'Je adres';
   static const gegevensKaartContact = 'Contactpersoon';

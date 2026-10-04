@@ -43,7 +43,7 @@ void main() {
       expect(titelVan(m, HhRol.hulpvrager), 'Onderweg naar u');
     });
 
-    test('bewoner en helper krijgen allebei je', () {
+    test('bewoner en strijder krijgen allebei je', () {
       expect(
         titelVan(_melding(HhMeldingSoort.toegewezen), HhRol.hulpvrager),
         TekstenMeldingenNl.soortToegewezenOudere,

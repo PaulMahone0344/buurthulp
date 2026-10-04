@@ -60,7 +60,7 @@ Future<void> _helperStart(
 }
 
 void main() {
-  group('Start helper (StartHelper)', () {
+  group('Start strijder (StartHelper)', () {
     testWidgets('hoi, niveau met volgende, XP-balk en badges', (tester) async {
       await _helperStart(tester);
       expect(find.byType(HelperStartScreen), findsOneWidget);

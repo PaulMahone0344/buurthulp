@@ -73,7 +73,7 @@ Map<String, dynamic> _pagina(List<Map<String, dynamic>> items) => {
 };
 
 void main() {
-  test('berichten: van deze klus en deze helper, oudste eerst', () async {
+  test('berichten: van deze klus en deze strijder, oudste eerst', () async {
     final server = _NepServer()
       ..zet('GET', _berichten, 200, _pagina([_bericht(gefilterd: true)]));
     final r = await PocketBaseChatGateway(

@@ -190,7 +190,7 @@ void main() {
             )
             ..kiesUitkomst = const KiesGeweigerd(
               'helperbezet',
-              'Deze helper heeft op dat moment al een andere klus. Kies iemand anders.',
+              'Deze strijder heeft op dat moment al een andere klus. Kies iemand anders.',
             );
       await _pompBewoner(
         tester,
@@ -223,7 +223,7 @@ void main() {
   });
 
   group('ingangen bewoner', () {
-    testWidgets('Start: "2 helpers willen je helpen" opent KiesHelper', (
+    testWidgets('Start: "2 strijders willen je helpen" opent KiesHelper', (
       tester,
     ) async {
       await _pompBewoner(tester, pad: HhPaden.hulpvrager);
@@ -277,7 +277,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
     });
 
-    testWidgets('plaatsen: bij 0 helpers geen regel', (tester) async {
+    testWidgets('plaatsen: bij 0 strijders geen regel', (tester) async {
       final container = hulpvragerContainer(
         klusGateway: FakeKlusGateway(),
         sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
@@ -340,7 +340,7 @@ void main() {
       expect(find.text(TekstenReactiesNl.nuHelpenUit), findsOneWidget);
     });
 
-    testWidgets('Start helper toont de schakelaar boven de lijst', (
+    testWidgets('Start strijder toont de schakelaar boven de lijst', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -370,7 +370,7 @@ void main() {
       );
     });
 
-    testWidgets('J13 open klus: "3 helpers reageerden al"', (tester) async {
+    testWidgets('J13 open klus: "3 strijders reageerden al"', (tester) async {
       final open = testKlus(id: 'k-r').copyWith(reactiesAantal: 3);
       await tester.pumpWidget(
         hhKlussenWikkel(
@@ -397,7 +397,7 @@ void main() {
       expect(titelVan(melding(), HhRol.hulpvrager), 'Daan wil je helpen');
     });
 
-    test('bewoner -> KiesHelper, helper -> Mijn klussen', () {
+    test('bewoner -> KiesHelper, strijder -> Mijn klussen', () {
       expect(doelVan(melding(), HhRol.hulpvrager), HhPadenReacties.kies('k1'));
       expect(doelVan(melding(), HhRol.jongere), HhPadenKlussen.mijnKlussen);
     });

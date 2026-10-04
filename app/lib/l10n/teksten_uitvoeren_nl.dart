@@ -61,7 +61,7 @@ abstract final class TekstenUitvoerenNl {
   static const annuleerTitelJongere = 'Klus teruggeven';
   static const annuleerUitlegJongere =
       'Vertel kort waarom het niet lukt. De klus komt daarna weer vrij voor '
-      'een andere helper in de buurt.';
+      'een andere strijder in de buurt.';
   static const annuleerLabelReden = 'Waarom lukt het niet?';
   static const annuleerHintReden = 'Bijvoorbeeld: ik ben ziek geworden';
   static const annuleerBevestigJongere = 'Klus teruggeven';
@@ -102,7 +102,7 @@ abstract final class TekstenUitvoerenNl {
   static const o7AnnulerenSemantiek = 'Ik heb deze hulp niet meer nodig';
   static const o7Vernieuwen = 'Vernieuwen';
   static const o7LadenMislukt = 'Je hulpvraag kon niet worden geladen.';
-  static const o7Helper = 'Jouw helper';
+  static const o7Helper = 'Jouw strijder';
 
   // Annuleren door de bewoner: drie grote keuzes en "anders", zodat er niet
   // getypt hoeft te worden.

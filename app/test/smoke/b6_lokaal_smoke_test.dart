@@ -50,7 +50,7 @@ void main() {
       File(_accounts).existsSync();
 
   test(
-    'bewoner en helper chatten realtime; filter, gelezen, teller, derden niets',
+    'bewoner en strijder chatten realtime; filter, gelezen, teller, derden niets',
     () async {
       final data =
           jsonDecode(File(_accounts).readAsStringSync())

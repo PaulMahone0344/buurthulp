@@ -53,7 +53,7 @@ void main() {
       File(_accounts).existsSync();
 
   test(
-    'helper reageert, bewoner ziet de kaart en kiest: match, helper ziet hem',
+    'strijder reageert, bewoner ziet de kaart en kiest: match, strijder ziet hem',
     () async {
       final data =
           jsonDecode(File(_accounts).readAsStringSync())

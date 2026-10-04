@@ -80,7 +80,7 @@ abstract final class TekstenBeoordelenNl {
 
   /// Besluit 30 sep 2026: de bewoner hoort dat de helper de tekst leest.
   /// Zonder cijfer, dus zonder "500 tekens".
-  static const o9TekstHulp = 'De helper kan dit lezen.';
+  static const o9TekstHulp = 'De strijder kan dit lezen.';
   static const o9Versturen = 'Versturen';
   static const o9Opslaan = 'Opslaan';
   static const o9BestaandUitleg =

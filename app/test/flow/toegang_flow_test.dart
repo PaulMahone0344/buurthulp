@@ -171,7 +171,7 @@ void main() {
     },
   );
 
-  group('registreren als helper', () {
+  group('registreren als strijder', () {
     Future<void> naarHelper(
       WidgetTester tester,
       FakeAuthGateway gateway,

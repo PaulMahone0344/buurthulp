@@ -103,7 +103,7 @@ void main() {
     expect(nieuweReacties(const []), 0);
   });
 
-  test('status-woord: zoekt helper, wordt nagekeken, bevestigd, bezig', () {
+  test('status-woord: zoekt strijder, wordt nagekeken, bevestigd, bezig', () {
     expect(agendaStatus(zondag), AgendaStatus.zoektHelper);
     expect(
       agendaStatus(

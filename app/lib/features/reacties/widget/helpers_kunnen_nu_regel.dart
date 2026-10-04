@@ -5,7 +5,7 @@ import '../../../design/components/hh_meld_balk.dart';
 import '../../../l10n/teksten_reacties_nl.dart';
 import '../provider/reactie_providers.dart';
 
-/// Bij het plaatsen (punt 12): "4 helpers kunnen nu helpen". Alleen een
+/// Bij het plaatsen (punt 12): "4 strijders kunnen nu helpen". Alleen een
 /// aantal (de server stuurt geen namen); niets als het 0 of onbekend is.
 class HelpersKunnenNuRegel extends ConsumerWidget {
   const HelpersKunnenNuRegel({

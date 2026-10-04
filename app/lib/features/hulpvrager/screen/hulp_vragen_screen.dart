@@ -150,7 +150,7 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
             const _Kop(TekstenKlusNl.wanneerTitel),
             SizedBox(height: tussen),
             const HulpvraagWanneerSectie(),
-            // B5 (punt 12): "4 helpers kunnen nu helpen" (alleen een aantal).
+            // B5 (punt 12): "4 strijders kunnen nu helpen" (alleen een aantal).
             const _HelpersNu(),
             SizedBox(height: blok),
             const _Kop(TekstenKlusNl.herhalenTitel),

@@ -120,7 +120,7 @@ void main() {
       });
     });
 
-    test('helper onder 18: geboortedatum, postcode, huisnummer en ouder', () {
+    test('strijder onder 18: geboortedatum, postcode, huisnummer en ouder', () {
       final aanmelding = HelperAanmelding(
         voornaam: 'Daan',
         email: 'daan@voorbeeld.nl',
@@ -143,7 +143,7 @@ void main() {
       });
     });
 
-    test('helper 18+: geen ouder', () {
+    test('strijder 18+: geen ouder', () {
       final aanmelding = HelperAanmelding(
         voornaam: 'Sara',
         email: 'sara@voorbeeld.nl',
@@ -157,7 +157,7 @@ void main() {
     });
 
     test(
-      'B11: helper met code van het jongerenwerk -> partner_code in hoofdletters',
+      'B11: strijder met code van het jongerenwerk -> partner_code in hoofdletters',
       () {
         final aanmelding = HelperAanmelding(
           voornaam: 'Sara',

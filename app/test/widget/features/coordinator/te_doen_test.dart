@@ -127,7 +127,7 @@ void main() {
     },
   );
 
-  testWidgets('helper goedkeuren met voorgevulde notitie', (tester) async {
+  testWidgets('strijder goedkeuren met voorgevulde notitie', (tester) async {
     final fake = await _open(tester, HhTeDoen(helpers: [_sanne]));
     expect(find.textContaining('jaar'), findsOneWidget);
 
@@ -138,7 +138,7 @@ void main() {
     await _tik(tester, _inDialoog(TekstenMeldkamerNl.goedkeuren));
 
     expect(fake.aanroepen, [
-      'helper p1 goedgekeurd ${TekstenMeldkamerNl.goedkeurenStandaardNotitie}',
+      'strijder p1 goedgekeurd ${TekstenMeldkamerNl.goedkeurenStandaardNotitie}',
     ]);
   });
 
@@ -183,12 +183,12 @@ void main() {
       );
       await tester.enterText(
         find.byType(TextField),
-        'Dit mag een helper niet doen.',
+        'Dit mag een strijder niet doen.',
       );
       await tester.pumpAndSettle();
       await _tik(tester, _inDialoog(TekstenMeldkamerNl.afkeuren));
       expect(fake.aanroepen, [
-        'klus k1 afkeuren Dit mag een helper niet doen.',
+        'klus k1 afkeuren Dit mag een strijder niet doen.',
       ]);
     },
   );

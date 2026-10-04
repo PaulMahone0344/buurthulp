@@ -217,7 +217,7 @@ ProviderContainer hulpvragerContainer({
       ),
       // B6: de Chat-knop op O7. Standaard een lege fake.
       chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
-      // B5: "N helpers kunnen nu" bij plaatsen en KiesHelper. Standaard leeg.
+      // B5: "N strijders kunnen nu" bij plaatsen en KiesHelper. Standaard leeg.
       reactieGatewayProvider.overrideWithValue(
         reactieGateway ?? FakeReactieGateway(),
       ),

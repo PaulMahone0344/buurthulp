@@ -296,7 +296,7 @@ void main() {
     });
   });
 
-  group('Start van de helper (gele balk)', () {
+  group('Start van de strijder (gele balk)', () {
     testWidgets('alles rond: klussen en de tabbalk, geen balk', (tester) async {
       await _pomp(tester, 'start klaar');
 

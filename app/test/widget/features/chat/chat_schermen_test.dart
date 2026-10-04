@@ -45,7 +45,7 @@ FakeUitvoerGateway _afgelopen(Duration geleden, {String? ikBen}) {
 }
 
 void main() {
-  group('B6 chatscherm (helper)', () {
+  group('B6 chatscherm (strijder)', () {
     testWidgets(
       'kop: voornaam van de bewoner, klus eronder, meldknop en infobalk',
       (tester) async {
@@ -61,7 +61,7 @@ void main() {
       },
     );
 
-    testWidgets('snelknoppen van de helper; een snelknop wisselt geen status', (
+    testWidgets('snelknoppen van de strijder; een snelknop wisselt geen status', (
       tester,
     ) async {
       final chat = fakeChat();
@@ -335,7 +335,7 @@ void main() {
   });
 
   group('B6 chatscherm (bewoner)', () {
-    testWidgets('naam van de helper en de snelknoppen van de bewoner', (
+    testWidgets('naam van de strijder en de snelknoppen van de bewoner', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -377,7 +377,7 @@ void main() {
   });
 
   group('B6 ingangen', () {
-    testWidgets('Mijn klussen: Chat-knop met teller bij een klus met helper', (
+    testWidgets('Mijn klussen: Chat-knop met teller bij een klus met strijder', (
       tester,
     ) async {
       final chat = fakeChat([

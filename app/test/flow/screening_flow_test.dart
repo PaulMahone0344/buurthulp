@@ -38,7 +38,7 @@ Finder get _klussenLijst => find.text(TekstenStartNl.inDeBuurtKop);
 
 void main() {
   testWidgets(
-    'nieuwe helper 18+: inloggen -> J9 -> ID-foto -> versturen -> binnen -> '
+    'nieuwe strijder 18+: inloggen -> J9 -> ID-foto -> versturen -> binnen -> '
     'Start met "nagekeken" -> goedgekeurd: "Regel je VOG" -> VOG gezien: klussen',
     (tester) async {
       final fake = fakeNieuweJongere();
@@ -92,7 +92,7 @@ void main() {
   );
 
   testWidgets(
-    'helper onder 18: geen VOG-stap; na goedkeuring wacht hij op zijn ouder',
+    'strijder onder 18: geen VOG-stap; na goedkeuring wacht hij op zijn ouder',
     (tester) async {
       final fake = fakeNieuweJongere(isMinderjarig: true);
       await pompJongereApp(
@@ -159,7 +159,7 @@ void main() {
   });
 
   testWidgets(
-    'helper die rond is landt op Start (klussen) en bereikt J9 via Profiel',
+    'strijder die rond is landt op Start (klussen) en bereikt J9 via Profiel',
     (tester) async {
       await pompJongereApp(
         tester,
@@ -182,7 +182,7 @@ void main() {
   );
 
   for (final status in [HhScreeningStatus.nieuw, HhScreeningStatus.afgewezen]) {
-    testWidgets('guard: helper met status ${status.code} gaat naar J9', (
+    testWidgets('guard: strijder met status ${status.code} gaat naar J9', (
       tester,
     ) async {
       final container = await pompJongereApp(

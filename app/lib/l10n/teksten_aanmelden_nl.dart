@@ -5,7 +5,7 @@
 abstract final class TekstenAanmeldenNl {
   // Welkom (mockup AWelkom)
   static const welkomZoekHulpUitleg =
-      'Plaats een klus. Een helper uit je buurt helpt je.';
+      'Plaats een klus. Een strijder uit je buurt helpt je.';
   static const welkomWilHelpenUitleg =
       'Help mensen in je buurt en verdien zakgeld. Vanaf 10 jaar.';
 
@@ -15,7 +15,7 @@ abstract final class TekstenAanmeldenNl {
       'Je zoekt hulp in je buurt? Maak hier je account.';
   static const veldNaam = 'Naam';
   static const adresUitleg =
-      'Je adres ziet alleen de helper die jij kiest, na de match.';
+      'Je adres ziet alleen de strijder die jij kiest, na de match.';
   static const akkoordTekst =
       'Ik ga akkoord met de voorwaarden en de privacyverklaring.';
   static const akkoordLinks = 'Lees de voorwaarden en de privacyverklaring';
@@ -59,7 +59,7 @@ abstract final class TekstenAanmeldenNl {
   static const validatieGeboortedatumToekomst =
       'Deze datum ligt in de toekomst.';
   static const validatieTeJong =
-      'Je moet minstens 10 jaar zijn om helper te worden. Kom terug als je '
+      'Je moet minstens 10 jaar zijn om strijder te worden. Kom terug als je '
       '10 bent.';
   static const validatieOuderVerplicht = 'Vul het e-mailadres van je ouder in.';
   static const validatieOuderOngeldig = 'Vul een geldig e-mailadres in.';
@@ -105,7 +105,7 @@ abstract final class TekstenAanmeldenNl {
   static const overMijTitel = 'Over mij';
   static const overMijNietVerplicht = 'Over mij (mag leeg)';
   static const overMijUitleg =
-      'Een paar zinnen over jezelf. Bewoners zien dit als ze een helper '
+      'Een paar zinnen over jezelf. Bewoners zien dit als ze een strijder '
       'kiezen. Dit mag ook leeg blijven.';
   static const overMijHulp = 'Waar help je graag mee? Maximaal 500 tekens.';
   static const validatieOverMijTeLang = 'Maximaal 500 tekens.';

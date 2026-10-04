@@ -62,7 +62,7 @@ class FakeMeldkamerGateway implements MeldkamerGateway {
     required String notitie,
   }) async {
     aanroepen.add(
-      'helper $profielId ${goedkeuren ? 'goedgekeurd' : 'afgewezen'} $notitie',
+      'strijder $profielId ${goedkeuren ? 'goedgekeurd' : 'afgewezen'} $notitie',
     );
     final fout = _fout<void>();
     if (fout != null) return fout;

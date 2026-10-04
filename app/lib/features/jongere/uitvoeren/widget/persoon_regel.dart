@@ -19,7 +19,7 @@ class PersoonRegel extends StatelessWidget {
   final String naam;
   final String fotoUrl;
 
-  /// Een regel eronder, bijvoorbeeld "Je helper".
+  /// Een regel eronder, bijvoorbeeld "Je strijder".
   final String onderregel;
 
   /// B2: vinkje "ID gecontroleerd" bij een helper (nooit het document).

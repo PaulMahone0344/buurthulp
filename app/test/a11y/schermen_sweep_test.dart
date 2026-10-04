@@ -76,7 +76,7 @@ void main() {
     expect(bevindingen, isEmpty, reason: '${bevindingen.length} layoutfouten');
   });
 
-  testWidgets('B2: aanmelden als helper past ook (uitgelogd, rol helper)', (
+  testWidgets('B2: aanmelden als strijder past ook (uitgelogd, rol strijder)', (
     tester,
   ) async {
     final bevindingen = await sweep(

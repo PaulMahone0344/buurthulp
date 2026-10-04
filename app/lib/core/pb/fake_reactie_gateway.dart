@@ -8,7 +8,7 @@ import 'reactie_gateway.dart';
 /// wacht_op_ouder ([helperOnder18]), nog eens reageren geeft 409, kiezen
 /// lukt één keer per klus. Stuurbaar met [isOffline], [volgendeFout],
 /// [reageerUitkomst] en [kiesUitkomst] (de eerstvolgende aanroep geeft
-/// precies dit terug) en [aantalNu] (wat "N helpers kunnen nu" telt).
+/// precies dit terug) en [aantalNu] (wat "N strijders kunnen nu" telt).
 class FakeReactieGateway implements ReactieGateway {
   FakeReactieGateway({
     this.helperId = 'id-jongere',
@@ -148,7 +148,7 @@ class FakeReactieGateway implements ReactieGateway {
     if (_gekozenKlussen.contains(klusId)) {
       return const KiesGeweigerd(
         'klusbezet',
-        'Je hebt al een helper gekozen voor deze klus.',
+        'Je hebt al een strijder gekozen voor deze klus.',
       );
     }
     final kaart = (_kaarten[klusId] ?? const <HhReactieKaart>[])
@@ -157,7 +157,7 @@ class FakeReactieGateway implements ReactieGateway {
     if (kaart == null) {
       return const KiesGeweigerd(
         'reactieweg',
-        'Deze helper is niet meer beschikbaar. Kies iemand anders.',
+        'Deze strijder is niet meer beschikbaar. Kies iemand anders.',
       );
     }
     _gekozenKlussen.add(klusId);

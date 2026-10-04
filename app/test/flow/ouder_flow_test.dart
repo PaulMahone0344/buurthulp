@@ -67,7 +67,7 @@ String _tekstVanMeldBalken(WidgetTester tester) => tester
     .join('\n');
 
 void main() {
-  group('stap "Ouder" (helper onder 18)', () {
+  group('stap "Ouder" (strijder onder 18)', () {
     testWidgets(
       'nog niets verstuurd: de mail gaat bij openen meteen (1 keer)',
       (tester) async {

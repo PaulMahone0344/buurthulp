@@ -41,7 +41,7 @@ HhBericht _bericht(
 
 void main() {
   group('chatStandVan (gelijk aan de server, 72 uur)', () {
-    test('zonder helper of bij concept/open: geen chat', () {
+    test('zonder strijder of bij concept/open: geen chat', () {
       expect(
         chatStandVan(_klus(HhKlusStatus.open, helper: ''), const [], _nu),
         ChatStand.geenHelper,
@@ -115,7 +115,7 @@ void main() {
   });
 
   test(
-    'heeftChat: knop alleen bij een klus met helper (ook na afloop, om te lezen)',
+    'heeftChat: knop alleen bij een klus met strijder (ook na afloop, om te lezen)',
     () {
       expect(heeftChat(_klus(HhKlusStatus.geaccepteerd)), isTrue);
       expect(heeftChat(_klus(HhKlusStatus.afgerond)), isTrue);
@@ -124,7 +124,7 @@ void main() {
     },
   );
 
-  test('snelknoppen: helper en bewoner elk hun eigen drie', () {
+  test('snelknoppen: strijder en bewoner elk hun eigen drie', () {
     expect(snelknoppenVoor(HhRol.jongere), [
       'Ik ben onderweg',
       'Ik ben er',

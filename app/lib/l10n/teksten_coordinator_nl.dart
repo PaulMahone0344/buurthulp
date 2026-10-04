@@ -93,11 +93,11 @@ abstract final class TekstenCoordinatorNl {
   static const c2Koppelen = 'Koppelen';
   static const c2KoppelenTitel = 'Wie doet deze klus';
   static const c2ZoekLabel = 'Zoek op naam';
-  static const c2GeenKandidaten = 'Geen goedgekeurde helpers gevonden';
+  static const c2GeenKandidaten = 'Geen goedgekeurde strijders gevonden';
   static const c2GeenKandidatenUitleg =
-      'Pas het zoekwoord aan, of keur eerst een helper goed in het beheerpaneel.';
+      'Pas het zoekwoord aan, of keur eerst een strijder goed in het beheerpaneel.';
   static const c2KandidatenLadenMislukt =
-      'De helpers konden niet worden geladen';
+      'De strijders konden niet worden geladen';
   static String c2KandidaatKlussen(int aantal) =>
       aantal == 1 ? '1 klus gedaan' : '$aantal klussen gedaan';
   static const c2KandidaatGeenWijk = 'Geen werkgebied ingesteld';
@@ -106,7 +106,7 @@ abstract final class TekstenCoordinatorNl {
       'Zet deze klus op naam van $naam?';
   static String c2AndereWijkWaarschuwing(String jongereWijk, String klusWijk) =>
       'Let op: $jongereWijk is een andere wijk dan $klusWijk. '
-      'Handmatig koppelen mag over de wijkgrens, maar de helper moet er wel heen kunnen.';
+      'Handmatig koppelen mag over de wijkgrens, maar de strijder moet er wel heen kunnen.';
   static const c2AndereWijkKort = 'Andere wijk';
   static const c2BevestigKoppelen = 'Ja, koppelen';
   static String c2Gekoppeld(String naam) =>
@@ -115,8 +115,8 @@ abstract final class TekstenCoordinatorNl {
   static const c2KoppelenBezet =
       'Deze klus is niet meer open; iemand anders was eerder.';
   static const c2KoppelenNietGoedgekeurd =
-      'Deze helper is nog niet goedgekeurd en kan geen klussen doen.';
-  static const c2KoppelenGeenJongere = 'Deze gebruiker is geen helper.';
+      'Deze strijder is nog niet goedgekeurd en kan geen klussen doen.';
+  static const c2KoppelenGeenJongere = 'Deze gebruiker is geen strijder.';
   static const c2KoppelenGeenToegang =
       'Alleen een coordinator kan een klus koppelen.';
   static const c2KoppelenNietGevonden = 'Deze klus bestaat niet meer.';

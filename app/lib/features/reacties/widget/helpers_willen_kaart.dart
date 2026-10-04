@@ -16,7 +16,7 @@ import '../../meldingen/provider/meldingen_providers.dart';
 import '../paden_reacties.dart';
 import 'initialen_avatar.dart';
 
-/// Start van de bewoner (mockup Main): "3 helpers willen je helpen" per open
+/// Start van de bewoner (mockup Main): "3 strijders willen je helpen" per open
 /// klus waarop helpers reageerden (reacties_aantal van de server). Een
 /// nieuwe reactie-melding (realtime) laadt de klussen opnieuw.
 class HelpersWillenKaart extends ConsumerWidget {

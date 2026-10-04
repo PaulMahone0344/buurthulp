@@ -102,7 +102,7 @@ void main() {
       }
     });
 
-    test('op een aanmeldpad blijft de helper altijd', () {
+    test('op een aanmeldpad blijft de strijder altijd', () {
       for (final status in HhScreeningStatus.values) {
         for (final pad in [
           HhPadenJongere.overzicht,
@@ -128,7 +128,7 @@ void main() {
       );
     });
 
-    test('andere paden van de helper raakt de guard niet', () {
+    test('andere paden van de strijder raakt de guard niet', () {
       expect(guard(met(HhScreeningStatus.nieuw), HhPaden.instellingen), isNull);
       expect(guard(met(HhScreeningStatus.nieuw), HhPaden.hulp), isNull);
     });

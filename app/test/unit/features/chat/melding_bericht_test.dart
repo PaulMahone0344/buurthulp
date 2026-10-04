@@ -19,7 +19,7 @@ void main() {
     expect(_bericht().soort, HhMeldingSoort.bericht);
   });
 
-  test('tik op een chatmelding opent de chat (helper en bewoner)', () {
+  test('tik op een chatmelding opent de chat (strijder en bewoner)', () {
     expect(doelVan(_bericht(), HhRol.jongere), HhPadenChat.chat('k1'));
     expect(doelVan(_bericht(), HhRol.hulpvrager), HhPadenChat.chat('k1'));
   });

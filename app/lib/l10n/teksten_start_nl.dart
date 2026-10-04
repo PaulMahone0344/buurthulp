@@ -37,7 +37,7 @@ abstract final class TekstenStartNl {
       aantal == 0 ? dag : '$dag, ${aantal == 1 ? '1 klus' : '$aantal klussen'}';
   static const geenAankomend = 'Geen klussen in deze periode.';
   static const statusBevestigd = 'Bevestigd';
-  static const statusZoekt = 'Zoekt helper';
+  static const statusZoekt = 'Zoekt strijder';
   static const statusNagekeken = 'Wordt nagekeken';
   static const statusBezig = 'Bezig';
   static const weekdagenKort = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];

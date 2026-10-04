@@ -148,7 +148,7 @@ class FakeCoordinatorGateway implements CoordinatorGateway {
       return const KoppelGeweigerd(
         KoppelReden.jongereNietGeschikt,
         melding:
-            'Deze helper is nog niet goedgekeurd en kan geen klussen doen.',
+            'Deze strijder is nog niet goedgekeurd en kan geen klussen doen.',
       );
     }
     final jongere = _jongereVan(jongereId);

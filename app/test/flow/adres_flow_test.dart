@@ -69,7 +69,7 @@ void main() {
   });
 
   testWidgets(
-    'helper met een onvolledig adres: balk -> Mijn adres -> opslaan -> balk weg',
+    'strijder met een onvolledig adres: balk -> Mijn adres -> opslaan -> balk weg',
     (tester) async {
       final auth = _metOnvolledigAdres(HhRol.jongere);
       final adres = FakeAdresGateway();

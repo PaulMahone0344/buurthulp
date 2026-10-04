@@ -67,7 +67,7 @@ final _gevallen = [
   ),
   const _Geval('G8 hulp zonder rol', HulpScreen(), _uit),
   _Geval(
-    'G8 hulp als helper',
+    'G8 hulp als strijder',
     const HulpScreen(),
     SessieIngelogd(testGebruiker(HhRol.jongere)),
   ),
@@ -83,7 +83,7 @@ final _gevallen = [
   ),
   // B2: aanmelden als helper (achteraan, zodat de indexen erboven blijven).
   const _Geval(
-    'G4 registreren helper',
+    'G4 registreren strijder',
     RegistrerenScreen(),
     _uit,
     gekozenRol: HhRol.jongere,

@@ -114,7 +114,7 @@ void main() {
     },
   );
 
-  testWidgets('helper onder 18: "Wacht op je ouder", en intrekken kan', (
+  testWidgets('strijder onder 18: "Wacht op je ouder", en intrekken kan', (
     tester,
   ) async {
     final reacties = FakeReactieGateway(
@@ -149,7 +149,7 @@ void main() {
     final reacties = FakeReactieGateway(helperId: jongereId)
       ..reageerUitkomst = const ReageerGeweigerd(
         'onder18',
-        'Fijn dat je wilt helpen! Helpers onder de 18 kunnen nog even niet '
+        'Fijn dat je wilt helpen! Strijders onder de 18 kunnen nog even niet '
             'reageren.',
       );
     await pompKlussenApp(
@@ -169,7 +169,7 @@ void main() {
     final reacties = FakeReactieGateway(helperId: jongereId)
       ..reageerUitkomst = const ReageerGeweigerd(
         'bezet',
-        'Deze klus heeft al een helper.',
+        'Deze klus heeft al een strijder.',
       );
     await pompKlussenApp(
       tester,
@@ -179,7 +179,7 @@ void main() {
     await tikEersteTegel(tester);
     await tikKnop(tester, TekstenReactiesNl.reageerKnop);
     expect(find.byType(HhMeldBalk), findsOneWidget);
-    expect(find.text('Deze klus heeft al een helper.'), findsOneWidget);
+    expect(find.text('Deze klus heeft al een strijder.'), findsOneWidget);
     expect(find.byType(KlusDetailScreen), findsOneWidget);
   });
 

@@ -9,9 +9,9 @@ abstract final class TekstenReactiesNl {
   static const reageerHint = 'Bijvoorbeeld: Ik heb al vaker tuinen gedaan.';
   static const reageerKnop = 'Ik wil helpen';
   static const reageerUitleg =
-      'De bewoner kiest zelf een helper. Je nummer en adres blijven verborgen.';
+      'De bewoner kiest zelf een strijder. Je nummer en adres blijven verborgen.';
   static String alReacties(int n) =>
-      n == 1 ? '1 helper reageerde al' : '$n helpers reageerden al';
+      n == 1 ? '1 strijder reageerde al' : '$n strijders reageerden al';
   static const ouderMeeVinkje = 'Mijn ouder gaat mee bij deze eerste klus';
   static const ouderMeeUitleg =
       'Dit is je eerste klus bij deze bewoner. Tot en met 12 jaar gaat je '
@@ -26,7 +26,7 @@ abstract final class TekstenReactiesNl {
   // HKlusBekijken: al gereageerd
   static const gereageerdKop = 'Je hebt gereageerd';
   static const gereageerdWacht =
-      'De bewoner kiest zelf een helper. Je krijgt een melding.';
+      'De bewoner kiest zelf een strijder. Je krijgt een melding.';
   static const gereageerdOuder =
       'Eerst kijkt je ouder of het goed is. Daarna ziet de bewoner je reactie.';
   static const intrekken = 'Reactie intrekken';
@@ -41,7 +41,7 @@ abstract final class TekstenReactiesNl {
   static const verstuurdTitel = 'Reactie verstuurd';
   static const verstuurdKop = 'Je reactie is verstuurd';
   static const verstuurdUitleg =
-      'De bewoner kiest zelf een helper. Je krijgt een melding.';
+      'De bewoner kiest zelf een strijder. Je krijgt een melding.';
   static const verstuurdOuderUitleg =
       'We hebben je ouder gemaild. Als je ouder "Goed" kiest, ziet de bewoner '
       'je reactie. Je krijgt een melding.';
@@ -82,16 +82,16 @@ abstract final class TekstenReactiesNl {
 
   // Start bewoner
   static String helpersWillen(int n) =>
-      n == 1 ? '1 helper wil je helpen' : '$n helpers willen je helpen';
+      n == 1 ? '1 strijder wil je helpen' : '$n strijders willen je helpen';
   static String helpersWillenBij(String klus) => 'Bij: $klus';
-  static const bekijkReacties = 'Kies je helper';
+  static const bekijkReacties = 'Kies je strijder';
 
   // Klus plaatsen
   static String helpersKunnenNu(int n) =>
-      n == 1 ? '1 helper kan nu helpen' : '$n helpers kunnen nu helpen';
+      n == 1 ? '1 strijder kan nu helpen' : '$n strijders kunnen nu helpen';
 
   // KiesHelper
-  static const kiesTitel = 'Kies je helper';
+  static const kiesTitel = 'Kies je strijder';
   static String aantalReacties(int n) => n == 1 ? '1 reactie' : '$n reacties';
   static String voornaamLeeftijd(String naam, int? leeftijd) =>
       leeftijd == null ? naam : '$naam, $leeftijd';
@@ -102,13 +102,13 @@ abstract final class TekstenReactiesNl {
   static String kies(String naam) => 'Kies $naam';
   static String kiesVraag(String naam) => '$naam kiezen?';
   static String kiesUitleg(String naam) =>
-      'Andere helpers krijgen een bericht dat je iemand anders koos. '
+      'Andere strijders krijgen een bericht dat je iemand anders koos. '
       '$naam ziet daarna je adres en jullie kunnen chatten.';
   static const kiesJa = 'Ja, kiezen';
   static const kiesNee = 'Nog niet';
   static const geenReacties = 'Nog geen reacties';
   static const geenReactiesUitleg =
-      'Zodra een helper wil helpen, zie je hem hier. Je krijgt een melding.';
+      'Zodra een strijder wil helpen, zie je hem hier. Je krijgt een melding.';
   static const reactiesMislukt = 'De reacties konden niet worden geladen.';
   static String helperSemantiek({
     required String naam,

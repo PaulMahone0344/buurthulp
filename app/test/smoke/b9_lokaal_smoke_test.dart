@@ -47,7 +47,7 @@ void main() {
       File(_accounts).existsSync();
 
   test(
-    'helper leest zijn XP-overzicht en maakt een verklaring; bewoner niet',
+    'strijder leest zijn XP-overzicht en maakt een verklaring; bewoner niet',
     () async {
       final data =
           jsonDecode(File(_accounts).readAsStringSync())

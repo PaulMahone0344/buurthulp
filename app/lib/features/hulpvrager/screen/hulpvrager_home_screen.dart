@@ -79,7 +79,7 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
             SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
             // B10: tegels "Aankomend" en "Nieuwe reacties" (Saldo met B7).
             const BewonerTegels(),
-            // B5: "3 helpers willen je helpen" per open klus met reacties.
+            // B5: "3 strijders willen je helpen" per open klus met reacties.
             const HelpersWillenKaart(),
             // B2: buiten het werkgebied (of adres niet gevonden) geen klus.
             if (gebruiker.magKlusPlaatsen)

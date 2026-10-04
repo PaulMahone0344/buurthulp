@@ -24,7 +24,7 @@ abstract final class TekstenNl {
 
   // Rollen
   static const rolHulpvrager = 'Bewoner';
-  static const rolJongere = 'Helper';
+  static const rolJongere = 'Strijder';
   static const rolCoordinator = 'Coordinator';
 
   // G1 Splash
@@ -35,7 +35,7 @@ abstract final class TekstenNl {
   static const welkomTitel = 'Welkom bij HeitjeHulp';
   static const welkomUitleg =
       'Heitje voor een karweitje, in jouw buurt. Bewoners plaatsen een '
-      'klus, helpers uit de buurt helpen. Kies wat bij jou past.';
+      'klus, strijders uit de buurt helpen. Kies wat bij jou past.';
   static const keuzeZoekHulp = 'Ik zoek hulp';
   static const keuzeWilHelpen = 'Ik wil helpen';
   static const alEenAccount = 'Ik heb al een account';
@@ -126,11 +126,11 @@ abstract final class TekstenNl {
     HhVraag(
       'Hoe vraag ik hulp?',
       'Kies in de app wat je nodig hebt, bijvoorbeeld boodschappen of de '
-          'tuin. Een helper uit je buurt neemt de klus aan.',
+          'tuin. Een strijder uit je buurt neemt de klus aan.',
     ),
     HhVraag(
       'Wie komt er bij mij thuis?',
-      'Alleen helpers die door de meldkamer zijn gecontroleerd. Je ziet '
+      'Alleen strijders die door de meldkamer zijn gecontroleerd. Je ziet '
           'vooraf hun naam en foto.',
     ),
     HhVraag(
