@@ -16,6 +16,8 @@ import 'package:heitjehulp_app/core/pb/fake_adres_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_auth_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_meldkamer_gateway.dart';
+import 'package:heitjehulp_app/core/pb/meldkamer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_incident_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klussen_gateway.dart';
@@ -32,6 +34,7 @@ import 'package:heitjehulp_app/features/jongere/ouder/model/hh_ouder_stand.dart'
 import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
 import 'package:heitjehulp_app/features/coordinator/provider/coordinator_providers.dart';
+import 'package:heitjehulp_app/features/coordinator/provider/te_doen_providers.dart';
 import 'package:heitjehulp_app/features/hulpvrager/veiligheid/provider/veiligheid_providers.dart';
 import 'package:heitjehulp_app/features/meldingen/provider/meldingen_providers.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
@@ -134,6 +137,7 @@ List<dynamic> toegangOverrides({
   KlussenGateway? klussenGateway,
   UitvoerGateway? uitvoerGateway,
   CoordinatorGateway? coordinatorGateway,
+  MeldkamerGateway? meldkamerGateway,
   BeoordelingGateway? beoordelingGateway,
   MeldingenGateway? meldingenGateway,
   IncidentGateway? incidentGateway,
@@ -175,6 +179,11 @@ List<dynamic> toegangOverrides({
   // coordinatortests geven hun eigen fake mee.
   coordinatorGatewayProvider.overrideWithValue(
     coordinatorGateway ?? FakeCoordinatorGateway(),
+  ),
+  // B11: de tabbalk van de coordinator telt "Te doen" meteen. Standaard een
+  // lege fake zonder netwerk.
+  meldkamerGatewayProvider.overrideWithValue(
+    meldkamerGateway ?? FakeMeldkamerGateway(),
   ),
   // M7: J14, J15, O7 en O8 vragen welke klussen al beoordeeld zijn.
   // Standaard een lege fake zonder netwerk.

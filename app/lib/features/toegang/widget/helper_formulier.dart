@@ -209,6 +209,13 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
             ),
           ],
           SizedBox(height: tussen),
+          WachtwoordVeld(
+            controller: _wachtwoord,
+            isActief: actief,
+            fouttekst: _fouten['wachtwoord'],
+          ),
+          SizedBox(height: tussen),
+          // B11: optioneel, onderaan (de meeste helpers hebben geen code).
           HhInvoer(
             label: TekstenAanmeldenNl.veldPartnerCode,
             controller: _partner,
@@ -217,12 +224,6 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
             isActief: actief,
             textCapitalization: TextCapitalization.characters,
             textInputAction: TextInputAction.next,
-          ),
-          SizedBox(height: tussen),
-          WachtwoordVeld(
-            controller: _wachtwoord,
-            isActief: actief,
-            fouttekst: _fouten['wachtwoord'],
           ),
           SizedBox(height: tussen),
           AkkoordVinkje(

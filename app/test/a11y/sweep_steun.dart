@@ -11,6 +11,7 @@ import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/beoordeling_gateway.dart';
 import 'package:heitjehulp_app/core/pb/chat_gateway.dart';
 import 'package:heitjehulp_app/core/pb/coordinator_gateway.dart';
+import 'package:heitjehulp_app/core/pb/meldkamer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
@@ -41,6 +42,7 @@ class SweepData {
     this.beoordeling,
     this.meldingen,
     this.coordinator,
+    this.meldkamer,
     this.chat,
     this.xp,
     this.extra,
@@ -51,6 +53,9 @@ class SweepData {
   final BeoordelingGateway Function()? beoordeling;
   final MeldingenGateway Function()? meldingen;
   final CoordinatorGateway Function()? coordinator;
+
+  /// B11: "Te doen" van de meldkamer.
+  final MeldkamerGateway Function()? meldkamer;
 
   /// B6: de chat (berichten en de teller op de Chat-knoppen).
   final ChatGateway Function()? chat;
@@ -93,6 +98,7 @@ Future<List<String>> bekijk(
         beoordelingGateway: data.beoordeling?.call(),
         meldingenGateway: data.meldingen?.call(),
         coordinatorGateway: data.coordinator?.call(),
+        meldkamerGateway: data.meldkamer?.call(),
         chatGateway: data.chat?.call(),
         xpGateway: data.xp?.call(),
       ),

@@ -113,6 +113,18 @@ void main() {
       },
     );
 
+    test('B11: 409 met een melding van een hook -> die melding', () {
+      final fout = HhFout.vanStatus(
+        409,
+        antwoord: {
+          'melding': 'Bel eerst de bewoner voor de kennismaking.',
+          'reden': 'kennismaking',
+        },
+      );
+      expect(fout.melding, 'Bel eerst de bewoner voor de kennismaking.');
+      expect(HhFout.vanStatus(409).melding, TekstenNl.foutOnbekend);
+    });
+
     test(
       'B11: 400 met data.partner_code -> partnerCode met de melding van de server',
       () {

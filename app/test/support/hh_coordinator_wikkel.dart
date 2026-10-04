@@ -6,6 +6,7 @@ import 'package:heitjehulp_app/app/app.dart';
 import 'package:heitjehulp_app/app/paden.dart';
 import 'package:heitjehulp_app/core/key_value_store.dart';
 import 'package:heitjehulp_app/core/pb/fake_coordinator_gateway.dart';
+import 'package:heitjehulp_app/core/pb/fake_meldkamer_gateway.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/coordinator/coordinator_routes.dart';
 import 'package:heitjehulp_app/features/coordinator/model/hh_coordinator_klus.dart';
@@ -180,6 +181,7 @@ class TrilTeller {
 /// trilteller. Ingelogd als coordinator tenzij anders.
 ProviderContainer coordinatorContainer({
   required FakeCoordinatorGateway gateway,
+  FakeMeldkamerGateway? meldkamer,
   TrilTeller? tril,
   GeheugenKeyValueStore? opslag,
   SessieState? sessie,
@@ -203,6 +205,7 @@ ProviderContainer coordinatorContainer({
             : null,
         urlOpenerLukt: urlOpenerLukt,
         coordinatorGateway: gateway,
+        meldkamerGateway: meldkamer,
       ),
       trilProvider.overrideWithValue((tril ?? TrilTeller()).tril),
       klokProvider.overrideWithValue(() => nu ?? coordinatorNu),
@@ -218,6 +221,7 @@ ProviderContainer coordinatorContainer({
 Widget hhCoordinatorWikkel(
   String pad, {
   required FakeCoordinatorGateway gateway,
+  FakeMeldkamerGateway? meldkamer,
   TrilTeller? tril,
   SessieState? sessie,
   DateTime? nu,
@@ -241,6 +245,7 @@ Widget hhCoordinatorWikkel(
         container ??
         coordinatorContainer(
           gateway: gateway,
+          meldkamer: meldkamer,
           tril: tril,
           sessie: sessie,
           nu: nu,

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'paden_coordinator.dart';
 import 'screen/coordinator_klus_detail_screen.dart';
 import 'screen/coordinator_klussen_screen.dart';
+import 'screen/coordinator_te_doen_screen.dart';
 import 'screen/coordinator_tab_schermen.dart';
 import 'screen/incident_detail_screen.dart';
 import '../../design/components/hh_tabbalk.dart';
@@ -12,6 +13,12 @@ import '../../design/components/hh_tabbalk.dart';
 /// router.dart (CoordinatorStubScreen bouwt CoordinatorIncidentenScreen).
 /// Deze lijst wordt in router.dart met een spread toegevoegd.
 List<RouteBase> coordinatorRoutes() => [
+  // B11: tab "Te doen".
+  GoRoute(
+    path: HhPadenCoordinator.teDoen,
+    pageBuilder: (context, state) =>
+        hhTabPagina(state, const CoordinatorTeDoenScreen()),
+  ),
   GoRoute(
     path: HhPadenCoordinator.klussen,
     pageBuilder: (context, state) =>

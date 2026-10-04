@@ -16,12 +16,16 @@ abstract final class HhPadenCoordinator {
   static const klusPatroon = '$klus/:id';
   static String klusDetail(String id) => '$klus/$id';
 
+  /// B11: tab "Te doen" (bellen, helpers en klussen keuren, ouder vrijgeven).
+  static const teDoen = '${HhPaden.coordinator}/te-doen';
+
   /// Tab Instellingen: G7 met de tabbalk van de coordinator.
   static const instellingen = '${HhPaden.coordinator}/instellingen';
 
   /// Elk M10-pad onder de landing: hoort bij de rol coordinator (guard).
   static bool isCoordinatorPad(String locatie) =>
       locatie == klussen ||
+      locatie == teDoen ||
       locatie == instellingen ||
       locatie.startsWith('$incident/') ||
       locatie.startsWith('$klus/');

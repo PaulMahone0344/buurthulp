@@ -51,7 +51,8 @@ class HhFout {
   final HhFoutSoort soort;
 
   /// Een Nederlandse melding van de server zelf (alleen bij
-  /// [HhFoutSoort.adresOngeldig] en [HhFoutSoort.partnerCode]).
+  /// [HhFoutSoort.adresOngeldig], [HhFoutSoort.partnerCode] en een 409 van
+  /// een hook).
   final String? serverMelding;
 
   /// Technische details voor logs en tests, nooit voor de gebruiker.
@@ -79,9 +80,16 @@ class HhFout {
       serverMelding: switch (soort) {
         HhFoutSoort.adresOngeldig => _veldMelding(antwoord, 'adres'),
         HhFoutSoort.partnerCode => _veldMelding(antwoord, 'partner_code'),
+        // B11: een hook antwoordt 409 met {melding, reden} in gewone taal.
+        _ when statuscode == 409 => _hookMelding(antwoord),
         _ => null,
       },
     );
+  }
+
+  static String? _hookMelding(Map<String, dynamic> antwoord) {
+    final melding = antwoord['melding'];
+    return melding is String && melding.trim().isNotEmpty ? melding : null;
   }
 
   /// De melding van een hook-check (adres: hh_aanmelden.pb.js, partnercode:
@@ -129,7 +137,7 @@ class HhFout {
     HhFoutSoort.adresOngeldig => serverMelding ?? TekstenNl.foutOngeldigeInvoer,
     HhFoutSoort.partnerCode => serverMelding ?? TekstenNl.foutOngeldigeInvoer,
     HhFoutSoort.server => TekstenNl.foutServer,
-    HhFoutSoort.onbekend => TekstenNl.foutOnbekend,
+    HhFoutSoort.onbekend => serverMelding ?? TekstenNl.foutOnbekend,
   };
 
   bool get isGeenVerbinding => soort == HhFoutSoort.geenVerbinding;
