@@ -86,7 +86,10 @@ onRecordCreateRequest((e) => {
     huisnummer: e.record.get("huisnummer"),
     toevoeging: e.record.get("toevoeging"),
   });
-  if (uit.actie === "weiger") throw new BadRequestError(uit.melding);
+  if (uit.actie === "weiger") {
+    // data.adres.code "hh_adres_<reden>": de app toont dan deze melding.
+    throw new BadRequestError(uit.melding, { adres: new ValidationError("hh_adres_" + uit.reden, uit.melding) });
+  }
   if (uit.actie === "pdok") adres.zetPdokAdres(e.record, uit.adres);
   if (uit.actie === "terugval") adres.zetOngecontroleerd(e.record, uit);
   if (uit.actie === "handmatig") e.record.set("adres_bron", "handmatig");
@@ -170,7 +173,10 @@ onRecordUpdateRequest((e) => {
     huisnummer: e.record.get("huisnummer"),
     toevoeging: e.record.get("toevoeging"),
   });
-  if (uit.actie === "weiger") throw new BadRequestError(uit.melding);
+  if (uit.actie === "weiger") {
+    // data.adres.code "hh_adres_<reden>": de app toont dan deze melding.
+    throw new BadRequestError(uit.melding, { adres: new ValidationError("hh_adres_" + uit.reden, uit.melding) });
+  }
   if (uit.actie === "pdok") adres.zetPdokAdres(e.record, uit.adres);
   if (uit.actie === "terugval") adres.zetOngecontroleerd(e.record, uit);
   if (uit.actie === "handmatig") e.record.set("adres_bron", "handmatig");
