@@ -466,3 +466,57 @@ test('serverveldenGestuurd: lat, lon of adres_bron in de body', () => {
   assert.equal(hulp.serverveldenGestuurd({ adres_bron: '' }), true);
   assert.equal(hulp.serverveldenGestuurd(null), false);
 });
+
+// ------------------------------------------------------------ vaag vóór de match (antwoord Ibrahim 3)
+const aanmelden = laad('hh_aanmelden_hulp.js');
+const km = (a, b) => aanmelden.afstandKm(a, b);
+
+test('vaagPunt: ~200 m van het echte punt, stabiel per klus-id', () => {
+  const echt = { lat: 51.88761538, lon: 5.43597055 };
+  const a = hulp.vaagPunt('k1abcdefghijklm', echt);
+  const b = hulp.vaagPunt('k1abcdefghijklm', echt);
+  assert.deepEqual(a, b, 'zelfde klus = zelfde punt (niet bij elk verversen anders)');
+  const d = km(echt, a);
+  assert.ok(d > 0.17 && d < 0.23, `afstand ${d}`);
+});
+
+test('vaagPunt: andere klus = andere richting; met zout ook anders', () => {
+  const echt = { lat: 51.88, lon: 5.43 };
+  const punten = ['a1', 'b2', 'c3', 'd4', 'e5'].map((id) => hulp.vaagPunt(id, echt));
+  assert.ok(new Set(punten.map((p) => `${p.lat},${p.lon}`)).size >= 4);
+  assert.notDeepEqual(hulp.vaagPunt('a1', echt, 'geheim'), hulp.vaagPunt('a1', echt, ''));
+});
+
+test('vaagPunt: geen punt (0/0 of leeg) blijft geen punt', () => {
+  assert.equal(hulp.vaagPunt('x', { lat: 0, lon: 0 }), null);
+  assert.equal(hulp.vaagPunt('x', null), null);
+});
+
+test('afstandAfgerond: meters op 100 afgerond, minstens 100; zonder punt null', () => {
+  const a = { lat: 51.88, lon: 5.43 };
+  assert.equal(hulp.afstandAfgerond(a, { lat: 51.88, lon: 5.43 }), 100);
+  assert.equal(hulp.afstandAfgerond(a, { lat: 51.8827, lon: 5.43 }), 300);
+  assert.equal(hulp.afstandAfgerond(a, { lat: 51.9, lon: 5.43 }), 2200);
+  assert.equal(hulp.afstandAfgerond(null, a), null);
+  assert.equal(hulp.afstandAfgerond({ lat: 0, lon: 0 }, a), null);
+});
+
+test('isVoorDeMatch: alleen een helper die niet de toegewezen helper is', () => {
+  assert.equal(hulp.isVoorDeMatch({ id: 'h1', collectie: 'hh_users', rol: 'jongere' }, ''), true);
+  assert.equal(hulp.isVoorDeMatch({ id: 'h1', collectie: 'hh_users', rol: 'jongere' }, 'h2'), true);
+  assert.equal(hulp.isVoorDeMatch({ id: 'h1', collectie: 'hh_users', rol: 'jongere' }, 'h1'), false);
+  assert.equal(hulp.isVoorDeMatch({ id: 'b1', collectie: 'hh_users', rol: 'hulpvrager' }, ''), false);
+  assert.equal(hulp.isVoorDeMatch({ id: 'c1', collectie: 'hh_users', rol: 'coordinator' }, ''), false);
+  assert.equal(hulp.isVoorDeMatch({ id: 's', collectie: '_superusers', rol: '' }, ''), false);
+  assert.equal(hulp.isVoorDeMatch(null, ''), false);
+});
+
+test('zoektOpLocatie: filter of sort op lat, lon, adres of postcode is voor een helper dicht', () => {
+  for (const f of ['lat > 51.8', 'lon<5', 'adres ~ "Kerk"', 'hulpvrager.postcode = "4001 MA"', 'klus.lat>1', '(lat)', 'hulpvrager.huisnummer="1"']) {
+    assert.equal(hulp.zoektOpLocatie(f, ''), true, f);
+  }
+  assert.equal(hulp.zoektOpLocatie('', '-lat'), true);
+  for (const f of ['status = "open"', 'klustype.naam = "Tuin"', 'wanneer_van > "2026"', 'plaatsen = 1', 'adres_bron = "pdok"', 'latje = 1']) {
+    assert.equal(hulp.zoektOpLocatie(f, '-created'), false, f);
+  }
+});

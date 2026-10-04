@@ -24,6 +24,11 @@
 //   G. klus op het adres van de bewoner krijgt EXACT het PDOK-punt (geen
 //      Nominatim). (Dat een bewoner van zijn helper geen punt/toevoeging ziet,
 //      staat in VERBORGEN_VOOR_ANDEREN; getest in tests/hh_aanmelden_hulp.)
+//   K. vaag vóór de match (antwoord Ibrahim 3): een helper ziet de open klus
+//      ~200 m verschoven (stabiel), zonder adres, met afstand_m (echt punt,
+//      afgerond op 100 m); filteren/sorteren op locatie (ook via meldingen en
+//      realtime) geweigerd; meldkamer exact; na accepteren exact + adres.
+//      Realtime alleen met node --experimental-eventsource.
 //   H. PDOK-storing -> terugval (aanmelden gaat door, ongecontroleerd, werkgebied
 //      via Nominatim). ALLEEN LOKAAL: met HH_NEP_PDOK_BEDIENING (de nep-PDOK
 //      gaat even uit). Op prod: overgeslagen (PDOK is niet uit te zetten).
@@ -40,7 +45,7 @@
 // DRAAIEN (na 120 --apply en 123-hook-deploy.sh):
 //   set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
 //   node scripts/122-adrescheck.mjs            (dry-run: alleen leescontroles)
-//   node scripts/122-adrescheck.mjs --apply
+//   node --experimental-eventsource scripts/122-adrescheck.mjs --apply
 //   node scripts/122-adrescheck.mjs --apply --alleen-opruimen
 //   node scripts/122-adrescheck.mjs --apply --zonder-limiet   (I overslaan)
 
@@ -48,7 +53,7 @@ import { randomBytes } from 'node:crypto';
 import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { ADRES_VELDNAMEN } from './120-adres-velden.mjs';
 import { REGIO_WIJK } from './81-b2-werkgebied.mjs';
-import { TIEL, OCHTEN, AMSTERDAM, NIET_BESTAAND, invoer, zelfdePunt } from './_adressen.mjs';
+import { TIEL, OCHTEN, AMSTERDAM, NIET_BESTAAND, invoer, zelfdePunt, afstandKm } from './_adressen.mjs';
 
 const MAIL_PREFIX = 'adrescheck-';
 const MAIL_DOMEIN = '@heitjehulp.invalid';
@@ -161,6 +166,7 @@ async function main() {
     console.log(`  · tijdelijke accounts (${MAIL_PREFIX}...${MAIL_DOMEIN}): coordinator, ~6 bewoners, ~3 helpers;`);
     console.log('  · hooguit 4 PDOK-verzoeken (Tiel, Ochten, Amsterdam, niet-bestaand), 10 minuten onthouden;');
     console.log('  · een klus op het adres van een bewoner (punt = PDOK-punt, geen Nominatim);');
+    console.log('  · twee tijdelijke helpers (goedgekeurd, VOG): vaag vóór de match, filters dicht, één accepteert de klus;');
     console.log(`  · rate-limit: tot ${MAX_ANONIEM + 1} anonieme opzoekingen met een ONGELDIGE postcode (dit IP daarna een uur geen anonieme opzoekingen);`);
     console.log('  · PDOK-storing alleen lokaal (HH_NEP_PDOK_BEDIENING); op prod overgeslagen;');
     console.log('  · alles opruimen en nameten.');
@@ -296,6 +302,65 @@ async function main() {
       status: 'open', bron: 'telefoon', bedrag_bruto: 0, vergoeding_jongere: 0, commissie: 0,
     }));
   check('  klus.lat/lon = het PDOK-punt van de bewoner', zelfdePunt(klus, TIEL), `${klus?.lat}, ${klus?.lon}`);
+
+
+  // ---------------------------------------------------------------- K
+  kop('K. Vaag vóór de match: helper ziet ~200 m verschoven, geen adres, afstand afgerond');
+  const helperVaag = await account('helper-vaag', 'jongere', { geboortedatum: geboren(25), ...invoer(OCHTEN) });
+  const helperAnder = await account('helper-ander', 'jongere', { geboortedatum: geboren(25), ...invoer(TIEL) });
+  for (const h of [helperVaag, helperAnder]) {
+    await su.collection(assertHh('hh_profielen')).create({ gebruiker: h.id, verificatiestatus: 'goedgekeurd', vog_gezien_op: new Date().toISOString().replace('T', ' ') });
+  }
+  check('helper heeft een PDOK-punt (Ochten) en de regio-wijk', helperVaag.record.adres_bron === 'pdok' && helperVaag.record.wijk === regio.id);
+  const zichtbaar = async (h) => (await h.client.collection('hh_klussen').getList(1, 5, { filter: `id = "${klus?.id}"` })).items[0];
+  const v1 = klus ? await zichtbaar(helperVaag) : null;
+  check('helper ziet de open (telefonisch goedgekeurde) klus', !!v1);
+  if (v1) {
+    const d = afstandKm(v1, TIEL);
+    check(`  punt verschoven: ${Math.round(d * 1000)} m van het echte punt (150-250)`, d > 0.15 && d < 0.25);
+    check('  geen adres in het antwoord', !('adres' in v1) || !v1.adres, JSON.stringify(v1.adres));
+    check('  locatie_vaag = ja', v1.locatie_vaag === true);
+    const verwacht = Math.max(100, Math.round((afstandKm(OCHTEN, TIEL) * 1000) / 100) * 100);
+    check(`  afstand_m = echte afstand afgerond op 100 m (${v1.afstand_m} = ${verwacht})`, v1.afstand_m === verwacht);
+    const v2 = await zichtbaar(helperVaag);
+    check('  stabiel: opnieuw opvragen geeft hetzelfde punt', v2?.lat === v1.lat && v2?.lon === v1.lon);
+    const los = await helperVaag.client.collection('hh_klussen').getOne(klus.id);
+    check('  ook los opgevraagd (view) vaag', los.lat === v1.lat && !los.adres);
+  }
+  const coordZiet = klus ? await coord.client.collection('hh_klussen').getOne(klus.id) : null;
+  check('meldkamer ziet het exacte punt en het adres', zelfdePunt(coordZiet, TIEL) && !!coordZiet?.adres);
+  for (const [label, q] of [
+    ['filter op lat', { filter: 'lat > 51' }],
+    ['sorteren op lat', { sort: '-lat' }],
+    ['filter op adres', { filter: 'adres ~ "Kerk"' }],
+    ['filter op hulpvrager.postcode', { filter: 'hulpvrager.postcode = "4001 MA"' }],
+  ]) {
+    await magNiet(`helper: ${label} geweigerd`, () => helperVaag.client.collection('hh_klussen').getList(1, 5, q));
+  }
+  await magNiet('helper: filter op klus.lat via meldingen geweigerd', () => helperVaag.client.collection('hh_meldingen').getList(1, 5, { filter: 'klus.lat > 51' }));
+  await mag('helper: gewoon filteren (status) mag', () => helperVaag.client.collection('hh_klussen').getList(1, 5, { filter: 'status = "open"' }));
+  if (typeof EventSource !== 'undefined' && klus) {
+    const ontvangen = { coord: null, helper: null };
+    const stopC = await coord.client.collection('hh_klussen').subscribe(klus.id, (ev) => { ontvangen.coord = ev.record; });
+    const stopH = await helperAnder.client.collection('hh_klussen').subscribe(klus.id, (ev) => { ontvangen.helper = ev.record; });
+    await su.collection(assertHh('hh_klussen')).update(klus.id, { omschrijving: `${MERK} klus op het eigen adres (realtime)` });
+    for (let i = 0; i < 30 && (!ontvangen.coord || !ontvangen.helper); i++) await new Promise((r) => setTimeout(r, 100));
+    check('realtime: meldkamer krijgt het exacte punt', zelfdePunt(ontvangen.coord, TIEL), JSON.stringify(ontvangen.coord?.lat));
+    check('realtime: helper krijgt het vage punt, geen adres', !!ontvangen.helper && !zelfdePunt(ontvangen.helper, TIEL) && !ontvangen.helper.adres);
+    await stopC();
+    await stopH();
+  } else {
+    overgeslagen++;
+    console.log('  ~ realtime overgeslagen (draai met node --experimental-eventsource)');
+  }
+  await magNiet('realtime: helper abonneert met een filter op lat: geweigerd', () =>
+    helperVaag.client.collection('hh_klussen').subscribe('*', () => {}, { filter: 'lat > 51' }));
+  const acc = klus ? await helperVaag.client.send(`/api/hh/klussen/${klus.id}/accepteren`, { method: 'POST' }).then(() => 200, (e) => e?.status) : 0;
+  check(`helper accepteert de klus (kreeg ${acc})`, acc === 200);
+  const na = klus ? await helperVaag.client.collection('hh_klussen').getOne(klus.id) : null;
+  check('na de match: exact punt en adres', zelfdePunt(na, TIEL) && !!na?.adres && na?.locatie_vaag !== true, JSON.stringify({ lat: na?.lat, adres: na?.adres }));
+  const ander = klus ? await zichtbaar(helperAnder).catch(() => null) : null;
+  check('een andere helper ziet hem niet meer (niet meer open)', !ander);
 
   // ---------------------------------------------------------------- H
   kop('H. PDOK-storing -> terugval');

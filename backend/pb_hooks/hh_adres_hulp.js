@@ -478,7 +478,83 @@ function puntVoorKlus(klusAdres, bewoner) {
   return null;
 }
 
+// ---------------------------------------------------------------- vaag vóór de match
+// Antwoord Ibrahim (4 okt, vraag 3): een helper ziet een klus VÓÓR de match
+// vaag: het punt ~200 m verschoven (stabiel per klus, afgeleid van het
+// klus-id), de afstand wel van het echte punt maar afgerond op 100 m. Het
+// exacte punt en het adres pas na de match. De server doet dit (hh_klussen.pb.js,
+// onRecordEnrich), de app niet.
+
+var VAAG_METER = 200;
+var AFSTAND_STAP_METER = 100;
+/// Velden waarop een helper niet mag filteren of sorteren (anders kan hij
+/// het echte punt of adres "raden" met een reeks filters).
+var LOCATIE_VELDEN = ["lat", "lon", "adres", "postcode", "huisnummer", "toevoeging"];
+
+/// FNV-1a (32 bit), alleen met verschuivingen: in de JSVM even exact als in node.
+function hash32(tekst) {
+  var h = 0x811c9dc5;
+  var t = String(tekst);
+  for (var i = 0; i < t.length; i++) {
+    h ^= t.charCodeAt(i) & 0xff;
+    h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function heeftPunt(p) {
+  return !!p && isFinite(Number(p.lat)) && isFinite(Number(p.lon)) && (Number(p.lat) !== 0 || Number(p.lon) !== 0);
+}
+
+/// Het echte punt [punt] VAAG_METER verschoven in een richting die alleen van
+/// het klus-id (en eventueel een geheim [zout] uit de omgeving) afhangt. null
+/// zonder punt.
+function vaagPunt(klusId, punt, zout) {
+  if (!heeftPunt(punt)) return null;
+  var hoek = ((hash32(String(zout || "") + ":" + String(klusId)) % 3600) / 10) * (Math.PI / 180);
+  var lat = Number(punt.lat);
+  var lon = Number(punt.lon);
+  var dLat = (VAAG_METER * Math.cos(hoek)) / 111320;
+  var dLon = (VAAG_METER * Math.sin(hoek)) / (111320 * Math.cos((lat * Math.PI) / 180));
+  return { lat: Math.round((lat + dLat) * 1e6) / 1e6, lon: Math.round((lon + dLon) * 1e6) / 1e6 };
+}
+
+/// Afstand in meters tussen twee echte punten, afgerond op 100 m (minstens
+/// 100). null als een van de twee geen punt heeft.
+function afstandAfgerond(a, b) {
+  if (!heeftPunt(a) || !heeftPunt(b)) return null;
+  var r = 6371000;
+  var rad = Math.PI / 180;
+  var dLat = (b.lat - a.lat) * rad;
+  var dLon = (b.lon - a.lon) * rad;
+  var h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  var meter = 2 * r * Math.asin(Math.min(1, Math.sqrt(h)));
+  return Math.max(AFSTAND_STAP_METER, Math.round(meter / AFSTAND_STAP_METER) * AFSTAND_STAP_METER);
+}
+
+/// Ziet deze kijker de klus "vóór de match"? Alleen een helper (rol jongere)
+/// die niet de toegewezen helper is. [kijker] = { id, collectie, rol } of null.
+function isVoorDeMatch(kijker, toegewezenJongere) {
+  if (!kijker || kijker.collectie !== "hh_users" || kijker.rol !== "jongere") return false;
+  return String(toegewezenJongere || "") !== String(kijker.id);
+}
+
+/// Noemt een filter of sort een locatieveld (ook via een relatie, zoals
+/// hulpvrager.postcode of klus.lat)?
+function zoektOpLocatie(filter, sort) {
+  var tekst = String(filter || "") + " " + String(sort || "");
+  var re = new RegExp("(^|[^A-Za-z0-9_])(" + LOCATIE_VELDEN.join("|") + ")(?![A-Za-z0-9_])");
+  return re.test(tekst);
+}
+
 module.exports = {
+  VAAG_METER: VAAG_METER,
+  vaagPunt: vaagPunt,
+  afstandAfgerond: afstandAfgerond,
+  isVoorDeMatch: isVoorDeMatch,
+  zoektOpLocatie: zoektOpLocatie,
   PDOK_URL: PDOK_URL,
   CACHE_MS: CACHE_MS,
   MAX_ANONIEM_PER_UUR: MAX_ANONIEM_PER_UUR,

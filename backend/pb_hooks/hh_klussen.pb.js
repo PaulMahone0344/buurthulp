@@ -96,6 +96,18 @@
 //    adreswijziging. Records die al lat/lon meekrijgen (03-seed) worden
 //    overgeslagen.
 //
+// 3. ADRES (antwoord Ibrahim 4 okt, vraag 3): VAAG VÓÓR DE MATCH.
+//    onRecordEnrich (elk antwoord, ook expand en realtime): een helper die
+//    niet de toegewezen helper is, krijgt lat/lon ~200 m verschoven (stabiel
+//    per klus, uit het klus-id; met HH_VAAG_ZOUT uit de omgeving als geheim),
+//    geen adres, en afstand_m = de afstand van zijn eigen (PDOK-)punt tot het
+//    ECHTE punt, afgerond op 100 m (alleen als hij een punt heeft), plus
+//    locatie_vaag = ja. Na de match: alles exact (zoals voorheen). De bewoner,
+//    het familielid, de coordinator en de superuser zien altijd alles.
+//    Raden via filters kan niet: een helper die filtert of sorteert op lat,
+//    lon, adres, postcode, huisnummer of toevoeging (ook via een relatie)
+//    krijgt 400, bij lijsten en bij realtime-abonnementen.
+//
 // Gotchas (memory reference_pb_jsvm_hooks): helpers BINNEN elke handler (de
 // pool-runtime deelt geen scope; daarom staat de geocode-helper twee keer),
 // $app en niet e.app, e.next() op ELK pad van een onRecord*-hook, server
@@ -908,3 +920,71 @@ onRecordUpdateRequest((e) => {
     return { lat: lat, lon: lon };
   }
 }, "hh_klussen");
+
+
+// --------------------------------------------------------------------------
+// 3. ADRES: vaag vóór de match (antwoord Ibrahim 4 okt, vraag 3)
+// --------------------------------------------------------------------------
+onRecordEnrich((e) => {
+  const kijker = e.requestInfo ? e.requestInfo.auth : null;
+  if (!kijker) return e.next();
+  const adres = require(`${__hooks}/hh_adres_hulp.js`);
+  const wie = {
+    id: kijker.id,
+    collectie: kijker.collection().name,
+    rol: kijker.collection().name === "hh_users" ? String(kijker.get("rol") || "") : "",
+  };
+  if (!adres.isVoorDeMatch(wie, e.record.get("toegewezen_jongere"))) return e.next();
+
+  const echt = { lat: Number(e.record.get("lat") || 0), lon: Number(e.record.get("lon") || 0) };
+  const vaag = adres.vaagPunt(e.record.id, echt, $os.getenv("HH_VAAG_ZOUT") || "");
+  e.record.set("lat", vaag ? vaag.lat : 0);
+  e.record.set("lon", vaag ? vaag.lon : 0);
+  e.record.hide("adres");
+  e.record.withCustomData(true);
+  e.record.set("locatie_vaag", true);
+  const afstand = adres.afstandAfgerond(
+    { lat: Number(kijker.get("lat") || 0), lon: Number(kijker.get("lon") || 0) },
+    echt
+  );
+  if (afstand !== null) e.record.set("afstand_m", afstand);
+  return e.next();
+}, "hh_klussen");
+
+// Raden via filters of sorteren op locatievelden: dicht voor een helper.
+onRecordsListRequest((e) => {
+  const adres = require(`${__hooks}/hh_adres_hulp.js`);
+  const auth = e.auth;
+  const isHelper =
+    !!auth && auth.collection().name === "hh_users" && String(auth.get("rol") || "") === "jongere";
+  if (isHelper) {
+    // requestInfo(): e.request is in deze event niet bereikbaar vanuit de JSVM.
+    const q = (e.requestInfo() || {}).query || {};
+    if (adres.zoektOpLocatie(q.filter, q.sort)) {
+      throw new BadRequestError("Filteren of sorteren op de locatie van een klus kan niet.");
+    }
+  }
+  return e.next();
+}, "hh_klussen", "hh_meldingen", "hh_klus_status", "hh_berichten", "hh_beoordelingen");
+
+onRealtimeSubscribeRequest((e) => {
+  const adres = require(`${__hooks}/hh_adres_hulp.js`);
+  const auth = e.auth;
+  const isHelper =
+    !!auth && auth.collection().name === "hh_users" && String(auth.get("rol") || "") === "jongere";
+  if (isHelper) {
+    for (const sub of e.subscriptions || []) {
+      let tekst = String(sub);
+      try {
+        tekst = decodeURIComponent(tekst);
+      } catch (_) {
+        // onleesbaar: dan de ruwe tekst toetsen
+      }
+      const vraag = tekst.indexOf("?");
+      if (vraag >= 0 && adres.zoektOpLocatie(tekst.slice(vraag + 1), "")) {
+        throw new BadRequestError("Filteren op de locatie van een klus kan niet.");
+      }
+    }
+  }
+  return e.next();
+});

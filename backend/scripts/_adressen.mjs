@@ -48,3 +48,12 @@ export const invoer = (a, extra = {}) => ({ postcode: a.postcode, huisnummer: a.
 /// Liggen twee punten op een paar meter na op elkaar (afronding)?
 export const zelfdePunt = (x, y) =>
   Math.abs(Number(x?.lat) - Number(y?.lat)) < 1e-6 && Math.abs(Number(x?.lon) - Number(y?.lon)) < 1e-6;
+
+/// Afstand in km tussen twee punten (haversine), zoals de server rekent.
+export function afstandKm(a, b) {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
