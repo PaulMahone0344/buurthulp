@@ -38,13 +38,16 @@ export function Kennismaking({ data, bewoners, opGewijzigd, opGelukt }: Props) {
   const [keuze, setKeuze] = useState<Keuze | null>(null)
   const [notitie, setNotitie] = useState('')
 
+  // Niemand te bellen: het blok blijft één regel, zodat het geen plek inneemt.
+  const isLeeg = bewoners.length === 0
+
   function kies(bewoner: NieuweBewoner, besluit: Kennismakingbesluit) {
     setNotitie('')
     setKeuze({ bewoner, besluit })
   }
 
   return (
-    <section className="admin-card" aria-labelledby="nog-bellen-kop">
+    <section className={isLeeg ? 'admin-card admin-card--kort' : 'admin-card'} aria-labelledby="nog-bellen-kop">
       <div className="admin-card__header">
         <div>
           <PhoneCall size={22} />
@@ -53,41 +56,45 @@ export function Kennismaking({ data, bewoners, opGewijzigd, opGelukt }: Props) {
           </h2>
         </div>
       </div>
-      <p className="admin-muted">Nieuwe bewoners: bel ze even (5 minuten) om kennis te maken. Je mag iemand weigeren.</p>
-      <ul className="klus-kaarten" aria-label="Nieuwe bewoners om te bellen">
-        {bewoners.map((b) => (
-          <li key={b.id}>
-            <article className="klus-kaart" aria-label={`Bellen: ${b.naam}`}>
-              <header className="klus-kaart__kop">
-                <h3>{b.naam || 'Onbekende bewoner'}</h3>
-                <span className="admin-muted">aangemeld {toonMoment(b.aangemeldOp)}</span>
-              </header>
-              <p className="klus-kaart__meta">
-                {b.telefoon ? (
-                  <a href={telLink(b.telefoon)}>
-                    <Phone size={15} aria-hidden="true" /> {b.telefoon}
-                  </a>
-                ) : (
-                  <span>Geen telefoonnummer</span>
-                )}
-                <span>{[b.adres, b.plaats].filter(Boolean).join(', ')}</span>
-              </p>
-              <footer className="klus-kaart__voet">
-                <span />
-                <div className="beheer-acties">
-                  <button className="mini-btn" type="button" onClick={() => kies(b, 'gesproken')}>
-                    Gesproken
-                  </button>
-                  <button className="mini-btn mini-btn--ghost" type="button" onClick={() => kies(b, 'geweigerd')}>
-                    Weigeren
-                  </button>
-                </div>
-              </footer>
-            </article>
-          </li>
-        ))}
-      </ul>
-      {bewoners.length === 0 ? <p className="empty-note">Iedereen is gebeld.</p> : null}
+      {isLeeg ? <p className="empty-note">Iedereen is gebeld.</p> : null}
+      {isLeeg ? null : (
+        <p className="admin-muted">Nieuwe bewoners: bel ze even (5 minuten) om kennis te maken. Je mag iemand weigeren.</p>
+      )}
+      {isLeeg ? null : (
+        <ul className="klus-kaarten" aria-label="Nieuwe bewoners om te bellen">
+          {bewoners.map((b) => (
+            <li key={b.id}>
+              <article className="klus-kaart" aria-label={`Bellen: ${b.naam}`}>
+                <header className="klus-kaart__kop">
+                  <h3>{b.naam || 'Onbekende bewoner'}</h3>
+                  <span className="admin-muted">aangemeld {toonMoment(b.aangemeldOp)}</span>
+                </header>
+                <p className="klus-kaart__meta">
+                  {b.telefoon ? (
+                    <a href={telLink(b.telefoon)}>
+                      <Phone size={15} aria-hidden="true" /> {b.telefoon}
+                    </a>
+                  ) : (
+                    <span>Geen telefoonnummer</span>
+                  )}
+                  <span>{[b.adres, b.plaats].filter(Boolean).join(', ')}</span>
+                </p>
+                <footer className="klus-kaart__voet">
+                  <span />
+                  <div className="beheer-acties">
+                    <button className="mini-btn" type="button" onClick={() => kies(b, 'gesproken')}>
+                      Gesproken
+                    </button>
+                    <button className="mini-btn mini-btn--ghost" type="button" onClick={() => kies(b, 'geweigerd')}>
+                      Weigeren
+                    </button>
+                  </div>
+                </footer>
+              </article>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {keuze ? (
         <Bevestigvenster

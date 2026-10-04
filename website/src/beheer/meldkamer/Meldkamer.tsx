@@ -1,7 +1,9 @@
-// M14 — D1 MELDKAMER. Staat de hele dag open: vijf tegels, de hulpvragen met
-// vier filters, de incidenten aflopend op tijd. Ververst vanzelf zodra er op
-// de server iets aan hh_klussen of hh_incidenten verandert (realtime).
-// B11: bovenaan "Nog bellen" (kennismaking met nieuwe bewoners).
+// M14 — D1 MELDKAMER. Staat de hele dag open: vijf tegels, de incidenten
+// aflopend op tijd, de hulpvragen met vier filters. Ververst vanzelf zodra er
+// op de server iets aan hh_klussen of hh_incidenten verandert (realtime).
+// B11: "Nog bellen" (kennismaking met nieuwe bewoners).
+// Volgorde = wat het eerst moet: incidenten, bellen, nakijken, hulpvragen.
+// Zonder filter in de URL staan alleen de nieuwe hulpvragen in beeld.
 
 import { useCallback, useEffect, useState } from 'react'
 import { PhoneCall } from 'lucide-react'
@@ -57,7 +59,7 @@ export function Meldkamer({ data, filters, zetFilters, nu }: Props) {
   useEffect(() => data.abonneer(herlaadAlles), [data, herlaadAlles])
 
   const tegels = meldkamerTegels(klussen.waarde, incidenten.waarde, nu())
-  const hulpvraagfilter = isHulpvraagfilter(filters.filter) ? filters.filter : 'alle'
+  const hulpvraagfilter = isHulpvraagfilter(filters.filter) ? filters.filter : 'nieuw'
   const incidentfilter = isIncidentfilter(filters.incidenten) ? filters.incidenten : 'open'
 
   return (
@@ -83,35 +85,35 @@ export function Meldkamer({ data, filters, zetFilters, nu }: Props) {
         <Tegel label="Incidenten open" waarde={tegels.incidentenOpen} />
       </div>
 
+      <section className="admin-card">
+        <Foutmelding melding={incidenten.fout} />
+        <IncidentenLijst
+          data={data}
+          incidenten={incidenten.waarde}
+          filter={incidentfilter}
+          zetFilter={(incidentenFilter) => zetFilters({ ...filters, incidenten: incidentenFilter })}
+          opGewijzigd={herlaadAlles}
+        />
+      </section>
+
       <Foutmelding melding={nogTeBellen.fout} />
       <Kennismaking data={data} bewoners={nogTeBellen.waarde} opGewijzigd={herlaadAlles} opGelukt={setGelukt} />
 
       <Foutmelding melding={naTeKijken.fout} />
       <NaTeKijken data={data} klussen={naTeKijken.waarde} opGewijzigd={herlaadAlles} opGelukt={setGelukt} />
 
-      <div className="beheer-kolommen">
-        <section className="admin-card">
-          <Foutmelding melding={klussen.fout} />
-          <HulpvragenTabel
-            data={data}
-            klussen={klussen.waarde}
-            filter={hulpvraagfilter}
-            zetFilter={(filter) => zetFilters({ ...filters, filter })}
-            nu={nu}
-            opGewijzigd={herlaadAlles}
-          />
-        </section>
-        <section className="admin-card">
-          <Foutmelding melding={incidenten.fout} />
-          <IncidentenLijst
-            data={data}
-            incidenten={incidenten.waarde}
-            filter={incidentfilter}
-            zetFilter={(incidentenFilter) => zetFilters({ ...filters, incidenten: incidentenFilter })}
-            opGewijzigd={herlaadAlles}
-          />
-        </section>
-      </div>
+      <section className="admin-card">
+        <Foutmelding melding={klussen.fout} />
+        <HulpvragenTabel
+          data={data}
+          klussen={klussen.waarde}
+          filter={hulpvraagfilter}
+          zetFilter={(filter) => zetFilters({ ...filters, filter })}
+          nu={nu}
+          opGewijzigd={herlaadAlles}
+          opGelukt={setGelukt}
+        />
+      </section>
 
       {aanmelden ? (
         <TelefonischeAanmelding

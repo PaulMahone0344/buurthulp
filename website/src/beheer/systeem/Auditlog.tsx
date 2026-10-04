@@ -19,6 +19,22 @@ const ACTIES = [
 
 type Props = { data: BeheerData; actie: string; persoon: string; zetFilter: (filter: Auditfilter) => void }
 
+/**
+ * De server bewaart het detail als JSON ({"velden":[...],"waarden":{...}}).
+ * In de tabel staat alleen welke velden geraakt zijn; de hele regel zit
+ * achter een uitklapper. Geen JSON = de tekst zelf.
+ */
+function veldenUitDetail(detail: string): string {
+  try {
+    const gelezen: unknown = JSON.parse(detail)
+    const velden = typeof gelezen === 'object' && gelezen !== null ? (gelezen as { velden?: unknown }).velden : undefined
+    if (Array.isArray(velden) && velden.length) return velden.map(String).join(', ')
+  } catch {
+    // geen JSON: hieronder de tekst zelf
+  }
+  return detail
+}
+
 export function Auditlog({ data, actie, persoon, zetFilter }: Props) {
   const laad = useCallback(() => data.auditlog(), [data])
   const regels = useLaden(laad, GEEN)
@@ -52,18 +68,38 @@ export function Auditlog({ data, actie, persoon, zetFilter }: Props) {
         </label>
       </div>
       <Foutmelding melding={regels.fout} />
-      <div className="activity-list" aria-label="Auditregels">
-        {zichtbaar.map((r) => (
-          <article key={r.id}>
-            <strong>
-              {r.doorNaam || 'Onbekend'} · {r.actie} · {r.doelCollectie}
-            </strong>
-            <span>
-              {toonMoment(r.gebeurdOp)} · {r.doelId}
-              {r.detail ? ` · ${r.detail}` : ''}
-            </span>
-          </article>
-        ))}
+      <div className="beheer-tabel-wrap">
+        <table className="beheer-tabel" aria-label="Auditregels">
+          <thead>
+            <tr>
+              <th scope="col">Wanneer</th>
+              <th scope="col">Wie</th>
+              <th scope="col">Actie</th>
+              <th scope="col">Onderdeel</th>
+              <th scope="col">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {zichtbaar.map((r) => (
+              <tr key={r.id}>
+                <td className="beheer-tabel__kort">{toonMoment(r.gebeurdOp)}</td>
+                <td>{r.doorNaam || 'Onbekend'}</td>
+                <td>{r.actie}</td>
+                <td>{r.doelCollectie}</td>
+                <td className="beheer-tabel__detail">
+                  {r.detail ? (
+                    <details>
+                      <summary>{`${r.doelId} · ${veldenUitDetail(r.detail)}`}</summary>
+                      <pre>{r.detail}</pre>
+                    </details>
+                  ) : (
+                    r.doelId
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         {regels.geladen && zichtbaar.length === 0 ? <p className="empty-note">Geen regels.</p> : null}
       </div>
     </>

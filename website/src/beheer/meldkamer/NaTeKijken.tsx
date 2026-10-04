@@ -33,6 +33,8 @@ export function NaTeKijken({ data, klussen, opGewijzigd, opGelukt }: Props) {
   const [afkeuren, setAfkeuren] = useState<KlusNaTeKijken | null>(null)
   const [bezig, setBezig] = useState('')
   const [fout, setFout] = useState('')
+  // Niets na te kijken: het blok blijft één regel, zodat het geen plek inneemt.
+  const isLeeg = klussen.length === 0
 
   async function goedkeuren(klus: KlusNaTeKijken) {
     setBezig(klus.id)
@@ -49,7 +51,7 @@ export function NaTeKijken({ data, klussen, opGewijzigd, opGelukt }: Props) {
   }
 
   return (
-    <section className="admin-card" aria-labelledby="na-te-kijken-kop">
+    <section className={isLeeg ? 'admin-card admin-card--kort' : 'admin-card'} aria-labelledby="na-te-kijken-kop">
       <div className="admin-card__header">
         <div>
           <ShieldCheck size={22} />
@@ -58,71 +60,73 @@ export function NaTeKijken({ data, klussen, opGewijzigd, opGelukt }: Props) {
           </h2>
         </div>
       </div>
-      <p className="admin-muted">Helpers zien een klus pas als je hem goedkeurt.</p>
+      {isLeeg ? <p className="empty-note">Er is niets na te kijken.</p> : null}
+      {isLeeg ? null : <p className="admin-muted">Helpers zien een klus pas als je hem goedkeurt.</p>}
       <Foutmelding melding={fout} />
-      <ul className="klus-kaarten" aria-label="Klussen na te kijken">
-        {klussen.map((klus) => (
-          <li key={klus.id}>
-            <article className="klus-kaart klus-kaart--nakijken" aria-label={`Na te kijken: klus van ${klus.hulpvragerNaam}`}>
-              <header className="klus-kaart__kop">
-                <h3>{klus.hulpvragerNaam || 'Onbekende bewoner'}</h3>
-                {klus.wachtOpKennismaking ? <Pil toon="stop">Eerst bellen</Pil> : <Pil toon="nieuw">Na te kijken</Pil>}
-              </header>
-              <div className="klus-nakijken">
-                {klus.fotoUrl ? (
-                  <img className="klus-nakijken__foto" src={klus.fotoUrl} alt={`Foto bij de klus van ${klus.hulpvragerNaam}`} />
-                ) : (
-                  <p className="klus-nakijken__geen-foto">Geen foto</p>
-                )}
-                <div className="klus-nakijken__inhoud">
-                  <p className="klus-kaart__meta">
-                    <span>
-                      <Wrench size={15} aria-hidden="true" /> {klus.klustypeNaam || 'Klus'}
-                    </span>
-                    <span>
-                      <UserRound size={15} aria-hidden="true" /> vanaf {klus.minLeeftijd || 18} jaar
-                    </span>
-                    <span>
-                      <CalendarClock size={15} aria-hidden="true" /> {toonMoment(klus.wanneerVan) || 'geen tijd'}
-                    </span>
-                  </p>
-                  <p className="klus-nakijken__tekst">{klus.omschrijving || 'Geen omschrijving.'}</p>
-                  {klus.markering.length ? (
-                    <p className="klus-nakijken__markering" aria-label="Markering van het voorfilter">
-                      {klus.markering.map((m) => (
-                        <Pil key={m} toon="fout">
-                          {MARKERING_LABEL[m]}
-                        </Pil>
-                      ))}
+      {isLeeg ? null : (
+        <ul className="klus-kaarten" aria-label="Klussen na te kijken">
+          {klussen.map((klus) => (
+            <li key={klus.id}>
+              <article className="klus-kaart klus-kaart--nakijken" aria-label={`Na te kijken: klus van ${klus.hulpvragerNaam}`}>
+                <header className="klus-kaart__kop">
+                  <h3>{klus.hulpvragerNaam || 'Onbekende bewoner'}</h3>
+                  {klus.wachtOpKennismaking ? <Pil toon="stop">Eerst bellen</Pil> : <Pil toon="nieuw">Na te kijken</Pil>}
+                </header>
+                <div className="klus-nakijken">
+                  {klus.fotoUrl ? (
+                    <img className="klus-nakijken__foto" src={klus.fotoUrl} alt={`Foto bij de klus van ${klus.hulpvragerNaam}`} />
+                  ) : (
+                    <p className="klus-nakijken__geen-foto">Geen foto</p>
+                  )}
+                  <div className="klus-nakijken__inhoud">
+                    <p className="klus-kaart__meta">
+                      <span>
+                        <Wrench size={15} aria-hidden="true" /> {klus.klustypeNaam || 'Klus'}
+                      </span>
+                      <span>
+                        <UserRound size={15} aria-hidden="true" /> vanaf {klus.minLeeftijd || 18} jaar
+                      </span>
+                      <span>
+                        <CalendarClock size={15} aria-hidden="true" /> {toonMoment(klus.wanneerVan) || 'geen tijd'}
+                      </span>
                     </p>
-                  ) : null}
+                    <p className="klus-nakijken__tekst">{klus.omschrijving || 'Geen omschrijving.'}</p>
+                    {klus.markering.length ? (
+                      <p className="klus-nakijken__markering" aria-label="Markering van het voorfilter">
+                        {klus.markering.map((m) => (
+                          <Pil key={m} toon="fout">
+                            {MARKERING_LABEL[m]}
+                          </Pil>
+                        ))}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-              <footer className="klus-kaart__voet">
-                {klus.wachtOpKennismaking ? (
-                  <span className="beheer-signaal">Bel eerst de bewoner (zie Nog bellen).</span>
-                ) : (
-                  <span />
-                )}
-                <div className="beheer-acties">
-                  <button
-                    className="mini-btn"
-                    type="button"
-                    disabled={bezig === klus.id || klus.wachtOpKennismaking}
-                    onClick={() => void goedkeuren(klus)}
-                  >
-                    Goedkeuren
-                  </button>
-                  <button className="mini-btn mini-btn--ghost" type="button" onClick={() => setAfkeuren(klus)}>
-                    Afkeuren
-                  </button>
-                </div>
-              </footer>
-            </article>
-          </li>
-        ))}
-      </ul>
-      {klussen.length === 0 ? <p className="empty-note">Er is niets na te kijken.</p> : null}
+                <footer className="klus-kaart__voet">
+                  {klus.wachtOpKennismaking ? (
+                    <span className="beheer-signaal">Bel eerst de bewoner (zie Nog bellen).</span>
+                  ) : (
+                    <span />
+                  )}
+                  <div className="beheer-acties">
+                    <button
+                      className="mini-btn"
+                      type="button"
+                      disabled={bezig === klus.id || klus.wachtOpKennismaking}
+                      onClick={() => void goedkeuren(klus)}
+                    >
+                      Goedkeuren
+                    </button>
+                    <button className="mini-btn mini-btn--ghost" type="button" onClick={() => setAfkeuren(klus)}>
+                      Afkeuren
+                    </button>
+                  </div>
+                </footer>
+              </article>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {afkeuren ? (
         <RedenVenster

@@ -12,8 +12,8 @@ import { COORDINATOR, klus, naTeKijken, NU, profiel } from './testdata'
 
 const BEWONER = { id: 'b1', naam: 'Anja de Vries', telefoon: '06 1234 5678', adres: 'Kerkstraat 1', plaats: 'Tiel', aangemeldOp: '2026-09-19T08:00:00.000Z' }
 
-function meldkamer(data: FakeBeheerData) {
-  render(<Meldkamer data={data} filters={{}} zetFilters={vi.fn()} nu={() => NU} />)
+function meldkamer(data: FakeBeheerData, filters: Record<string, string> = {}) {
+  render(<Meldkamer data={data} filters={filters} zetFilters={vi.fn()} nu={() => NU} />)
 }
 
 describe('B11 meldkamer: nog bellen', () => {
@@ -78,7 +78,7 @@ describe('B11 meldkamer: nakijken en chat', () => {
       },
       COORDINATOR,
     )
-    meldkamer(data)
+    meldkamer(data, { filter: 'alle' })
 
     const knoppen = await screen.findAllByRole('button', { name: /^Chat lezen/ })
     expect(knoppen).toHaveLength(1)
@@ -130,7 +130,7 @@ describe('B11 systeem: minimale leeftijd en partners', () => {
     const keuze = await screen.findByLabelText('Minimale leeftijd Tuin')
     expect(keuze).toHaveValue('13')
     await user.selectOptions(keuze, '16')
-    await user.click(screen.getByRole('button', { name: 'Opslaan' }))
+    await user.click(screen.getByRole('button', { name: 'Opslaan Tuin' }))
     expect(data.aanroepen).toContainEqual({ methode: 'wijzigKlustype', args: ['t1', { richtduur: 60, richtvergoeding: 1500, minLeeftijd: 16 }] })
   })
 

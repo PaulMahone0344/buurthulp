@@ -45,9 +45,47 @@ describe('D4 systeembeheer', () => {
     await user.type(vergoeding, '17,50')
     await user.clear(screen.getByLabelText('Richtduur tuin (minuten)'))
     await user.type(screen.getByLabelText('Richtduur tuin (minuten)'), '90')
-    await user.click(screen.getByRole('button', { name: 'Opslaan' }))
+    await user.click(screen.getByRole('button', { name: 'Opslaan tuin' }))
 
     expect(data.aanroepen).toContainEqual({ methode: 'wijzigKlustype', args: ['t1', { richtduur: 90, richtvergoeding: 1750, minLeeftijd: 13 }] })
+  })
+
+  it('toont de klustypes als tabel: één regel per type, kolomkoppen één keer', async () => {
+    const data = new FakeBeheerData(
+      {
+        klustypes: [
+          { id: 't1', naam: 'Tuin', icoon: '', richtduur: 60, richtvergoeding: 1500, minLeeftijd: 13 },
+          { id: 't2', naam: 'Boodschappen', icoon: '', richtduur: 30, richtvergoeding: 1000, minLeeftijd: 10 },
+        ],
+      },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'klustypes' })
+
+    const tabel = await screen.findByRole('table', { name: 'Klustypes' })
+    await within(tabel).findByRole('row', { name: /Tuin/ })
+    expect(within(tabel).getAllByRole('columnheader').map((kop) => kop.textContent)).toEqual([
+      'Naam',
+      'Minuten',
+      'Euro',
+      'Vanaf',
+      'Opslaan',
+    ])
+    expect(within(tabel).getAllByRole('row')).toHaveLength(3)
+  })
+
+  it('zet Opslaan pas aan als er in die regel iets is veranderd', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      { klustypes: [{ id: 't1', naam: 'Tuin', icoon: '', richtduur: 60, richtvergoeding: 1500, minLeeftijd: 13 }] },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'klustypes' })
+
+    const knop = await screen.findByRole('button', { name: 'Opslaan Tuin' })
+    expect(knop).toBeDisabled()
+    await user.type(screen.getByLabelText('Richtduur Tuin (minuten)'), '0')
+    expect(knop).toBeEnabled()
   })
 
   it('B2: toont de werkgebied-markering van de server', async () => {
@@ -64,6 +102,7 @@ describe('D4 systeembeheer', () => {
     opzet(data, { tab: 'gebruikers' })
 
     expect(within(await screen.findByLabelText('Gebruiker Ver')).getByText('Buiten werkgebied')).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Gebruikers' })).toBeInTheDocument()
     expect(within(screen.getByLabelText('Gebruiker Zoek')).getByText('Adres niet gevonden')).toBeInTheDocument()
     expect(within(screen.getByLabelText('Gebruiker Hier')).queryByText(/werkgebied|niet gevonden/)).not.toBeInTheDocument()
   })
@@ -153,7 +192,11 @@ describe('D4 systeembeheer', () => {
     )
     const zetFilters = opzet(data, { tab: 'auditlog', actie: 'wijzigen' })
 
-    expect(await screen.findByText(/Coordinator Een · wijzigen/)).toBeInTheDocument()
+    const tabel = await screen.findByRole('table', { name: 'Auditregels' })
+    const rij = await within(tabel).findByRole('row', { name: /Coordinator Een.*wijzigen.*hh_users/ })
+    // kort: alleen welke velden; de ruwe regel zit achter een uitklapper
+    expect(within(rij).getByText('u1 · geblokkeerd')).toBeInTheDocument()
+    expect(within(rij).getByText('{"velden":["geblokkeerd"]}')).not.toBeVisible()
     expect(screen.queryByText(/Coordinator Twee/)).not.toBeInTheDocument()
 
     await user.selectOptions(screen.getByLabelText('Actie'), 'aanmaken')

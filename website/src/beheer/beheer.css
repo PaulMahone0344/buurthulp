@@ -37,6 +37,25 @@
   align-items: start;
 }
 
+/* Een blok waar niets te doen is: kop en melding op één regel. */
+.admin-card--kort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 20px;
+  padding-block: 14px;
+}
+
+.admin-card--kort .admin-card__header {
+  margin-bottom: 0;
+}
+
+.admin-card--kort .empty-note {
+  padding: 0;
+}
+
+
 .request-row--beheer,
 .helper-row--beheer {
   grid-template-columns: 1fr auto auto;
@@ -461,3 +480,199 @@
   gap: 6px;
   margin-top: 6px !important;
 }
+
+/* ---------- tabellen: één regel per ding ---------- */
+/* het hoofdvlak mag niet met een brede tabel meegroeien; de tabel schuift dan zelf */
+.dashboard-main {
+  min-width: 0;
+}
+
+.beheer-tabel-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.beheer-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.beheer-tabel th,
+.beheer-tabel td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.beheer-tabel thead th {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 820;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.beheer-tabel tbody th {
+  font-weight: 720;
+}
+
+.beheer-tabel tbody tr:hover {
+  background: rgba(32, 88, 79, 0.04);
+}
+
+.beheer-tabel input,
+.beheer-tabel select {
+  width: 100%;
+  min-width: 84px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+}
+
+.beheer-tabel input:focus,
+.beheer-tabel select:focus {
+  outline: 3px solid rgba(242, 176, 82, 0.34);
+  border-color: var(--accent);
+}
+
+.beheer-tabel__actie {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.beheer-tabel__actie .beheer-acties {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.beheer-tabel__kort {
+  white-space: nowrap;
+}
+
+.beheer-tabel__sub {
+  display: block;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.beheer-tabel__pillen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.beheer-tabel__pillen:not(:empty) {
+  margin-top: 6px;
+}
+
+.beheer-tabel__detail {
+  max-width: 0; /* laat de kolom de restruimte nemen in plaats van de tabel op te rekken */
+  width: 45%;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.beheer-tabel__detail summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.beheer-tabel__detail pre {
+  margin: 8px 0 4px;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.beheer-tabel .mini-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+.beheer-tussenkop {
+  margin: 28px 0 0;
+  font-size: 1.05rem;
+}
+
+/* alleen voor schermlezers */
+.beheer-alleen-lezer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* hulpvraag die te lang wacht: zelfde oranje rand als op de kaarten */
+.beheer-tabel__rij--wacht > td:first-child {
+  box-shadow: inset 4px 0 0 var(--beheer-wacht-rand);
+}
+
+.beheer-tabel__signaal {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+/* Hulpvragen: vaste kolommen, de bewoner met omschrijving krijgt de rest. */
+.beheer-tabel--hulpvragen {
+  min-width: 860px;
+  table-layout: fixed;
+}
+
+.beheer-kolom--klus {
+  width: 17%;
+}
+
+.beheer-kolom--wanneer {
+  width: 122px;
+}
+
+.beheer-kolom--helper {
+  width: 12%;
+}
+
+.beheer-kolom--status {
+  width: 136px;
+}
+
+.beheer-tabel .status-pill {
+  white-space: nowrap;
+}
+
+.beheer-tabel--hulpvragen .beheer-tabel__actie {
+  width: 232px;
+  white-space: normal;
+}
+
+.beheer-tabel--hulpvragen .beheer-acties {
+  flex-wrap: wrap;
+}
+
+/* alleen breken als een woord echt niet past */
+.beheer-tabel--hulpvragen td {
+  overflow-wrap: break-word;
+}
+
+/* omschrijving: hooguit twee regels */
+.beheer-tabel__sub--kort {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+

@@ -35,6 +35,88 @@ describe('D1 meldkamer', () => {
     expect(screen.getByRole('article', { name: 'Incidenten open' })).toHaveTextContent('1')
   })
 
+  describe('volgorde: wat nu moet staat bovenaan', () => {
+    const BEWONER = { id: 'b1', naam: 'Anja de Vries', telefoon: '06 1234 5678', adres: 'Kerkstraat 1', plaats: 'Tiel', aangemeldOp: '2026-09-19T08:00:00.000Z' }
+
+    it('zet de incidenten boven nog bellen, nakijken en de hulpvragen', async () => {
+      const data = new FakeBeheerData({ incidenten: [incident({ id: 'i1' })], klussen: [klus({ id: 'a' })] }, COORDINATOR)
+      opzet(data)
+
+      await screen.findByRole('article', { name: /Melding van/ })
+      const koppen = screen.getAllByRole('heading', { level: 2 }).map((kop) => kop.textContent ?? '')
+      const plek = (begin: string) => koppen.findIndex((kop) => kop.startsWith(begin))
+      expect(plek('Incidenten')).toBe(0)
+      expect(plek('Nog bellen')).toBeGreaterThan(plek('Incidenten'))
+      expect(plek('Klussen na te kijken')).toBeGreaterThan(plek('Nog bellen'))
+      expect(plek('Hulpvragen')).toBeGreaterThan(plek('Klussen na te kijken'))
+    })
+
+    it('laat zonder filter in de URL alleen de nieuwe hulpvragen zien', async () => {
+      const data = new FakeBeheerData(
+        { klussen: [klus({ id: 'a', hulpvragerNaam: 'Jansen' }), klus({ id: 'b', status: 'afgerond', hulpvragerNaam: 'De Vries' })] },
+        COORDINATOR,
+      )
+      opzet(data)
+
+      expect(await screen.findByRole('row', { name: 'Hulpvraag van Jansen' })).toBeInTheDocument()
+      expect(screen.queryByRole('row', { name: 'Hulpvraag van De Vries' })).not.toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /Nieuw/ })).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('toont met filter alle ook de afgeronde hulpvragen', async () => {
+      const data = new FakeBeheerData({ klussen: [klus({ id: 'b', status: 'afgerond', hulpvragerNaam: 'De Vries' })] }, COORDINATOR)
+      opzet(data, { filter: 'alle' })
+
+      expect(await screen.findByRole('row', { name: 'Hulpvraag van De Vries' })).toBeInTheDocument()
+    })
+
+    it('toont de hulpvragen als tabel: één regel per klus, kolomkoppen één keer', async () => {
+      const data = new FakeBeheerData(
+        {
+          klussen: [
+            klus({ id: 'a', hulpvragerNaam: 'Jansen', aangemaaktOp: '2026-09-19T05:00:00.000Z' }),
+            klus({ id: 'b', hulpvragerNaam: 'De Vries', status: 'geaccepteerd', jongereId: 'j1', jongereNaam: 'Sami' }),
+          ],
+        },
+        COORDINATOR,
+      )
+      opzet(data, { filter: 'alle' })
+
+      const tabel = await screen.findByRole('table', { name: 'Hulpvragen' })
+      const jansen = await within(tabel).findByRole('row', { name: 'Hulpvraag van Jansen' })
+      expect(within(tabel).getAllByRole('columnheader').map((kop) => kop.textContent)).toEqual([
+        'Bewoner',
+        'Klus',
+        'Wanneer',
+        'Helper',
+        'Status',
+        'Acties',
+      ])
+      expect(within(tabel).getAllByRole('row')).toHaveLength(3)
+      expect(within(jansen).getByText(/Wacht langer dan 2 uur/)).toBeInTheDocument()
+      expect(within(jansen).getByRole('button', { name: 'Koppelen' })).toBeInTheDocument()
+      const deVries = within(tabel).getByRole('row', { name: 'Hulpvraag van De Vries' })
+      expect(deVries).toHaveTextContent('Sami')
+      expect(within(deVries).getByRole('button', { name: /^Chat lezen/ })).toBeInTheDocument()
+    })
+
+    it('houdt lege blokken kort: alleen de kop en dat er niets te doen is', async () => {
+      opzet(new FakeBeheerData({}, COORDINATOR))
+
+      expect(await screen.findByText('Iedereen is gebeld.')).toBeInTheDocument()
+      expect(screen.getByText('Er is niets na te kijken.')).toBeInTheDocument()
+      expect(screen.queryByText(/bel ze even/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Helpers zien een klus pas/)).not.toBeInTheDocument()
+    })
+
+    it('legt een blok wel uit als er iets te doen is', async () => {
+      opzet(new FakeBeheerData({ nogTeBellen: [BEWONER], naTeKijken: [naTeKijken({ id: 'n1' })] }, COORDINATOR))
+
+      expect(await screen.findByText(/bel ze even/)).toBeInTheDocument()
+      expect(screen.getByText(/Helpers zien een klus pas/)).toBeInTheDocument()
+    })
+  })
+
   it('filtert de hulpvragen via de URL', async () => {
     const user = userEvent.setup()
     const data = new FakeBeheerData(
@@ -43,8 +125,8 @@ describe('D1 meldkamer', () => {
     )
     const zetFilters = opzet(data, { filter: 'in_uitvoering' })
 
-    expect(await screen.findByRole('article', { name: 'Hulpvraag van De Vries' })).toBeInTheDocument()
-    expect(screen.queryByRole('article', { name: 'Hulpvraag van Jansen' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('row', { name: 'Hulpvraag van De Vries' })).toBeInTheDocument()
+    expect(screen.queryByRole('row', { name: 'Hulpvraag van Jansen' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: /Nieuw/ }))
     expect(zetFilters).toHaveBeenCalledWith({ filter: 'nieuw' })
@@ -59,7 +141,7 @@ describe('D1 meldkamer', () => {
     data.stand.klussen.push(klus({ id: 'nieuw', hulpvragerNaam: 'Bakker' }))
     await act(async () => data.meldWijziging())
 
-    expect(await screen.findByRole('article', { name: 'Hulpvraag van Bakker' })).toBeInTheDocument()
+    expect(await screen.findByRole('row', { name: 'Hulpvraag van Bakker' })).toBeInTheDocument()
   })
 
   it('koppelt handmatig met een waarschuwing voor een andere wijk', async () => {
@@ -86,7 +168,10 @@ describe('D1 meldkamer', () => {
     await user.click(within(venster).getByRole('button', { name: 'Koppelen' }))
 
     expect(data.aanroepen).toContainEqual({ methode: 'koppelen', args: ['k1', 'j2'] })
-    expect(await screen.findByRole('article', { name: 'Hulpvraag van Mevrouw Jansen' })).toHaveTextContent('Aangenomen')
+    // de klus verhuist van Nieuw naar Gematcht; de meldkamer leest waar hij nu staat
+    expect(await screen.findByText(/is gekoppeld. Hij staat nu onder Gematcht/)).toBeInTheDocument()
+    expect(screen.queryByRole('row', { name: 'Hulpvraag van Mevrouw Jansen' })).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Gematcht/ })).toHaveTextContent('1')
   })
 
   it('annuleert met een verplichte reden en toont een weigering van de server', async () => {
@@ -203,7 +288,7 @@ describe('telefonische aanmelding', () => {
       wanneer_van: '2026-09-20T08:00:00.000Z',
       wanneer_tot: '2026-09-20T09:00:00.000Z',
     })
-    expect(await screen.findByRole('article', { name: 'Hulpvraag van Mevrouw Bakker' })).toHaveTextContent('telefonisch')
+    expect(await screen.findByRole('row', { name: 'Hulpvraag van Mevrouw Bakker' })).toHaveTextContent('telefonisch')
   })
 
   it('adres niet gevonden: rustige melding en niet aanmaken; uitzondering handmatig kan wel', async () => {

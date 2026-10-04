@@ -40,49 +40,74 @@ export function Gebruikers({ data, zoek, zetZoek }: { data: BeheerData; zoek: st
         </button>
       </form>
       <Foutmelding melding={gebruikers.fout} />
-      <div className="request-table" aria-label="Gebruikers">
-        {gebruikers.waarde.map((g) => {
-          const rol = rollen[g.id] ?? g.rol
-          return (
-            <div className="request-row request-row--beheer" key={g.id} aria-label={`Gebruiker ${g.naam}`}>
-              <div>
-                <strong>{g.naam}</strong>
-                <span>
-                  {g.email}
-                  {g.telefoon ? ` · ${g.telefoon}` : ''}
-                </span>
-                {g.geblokkeerd ? <Pil toon="fout">Geblokkeerd</Pil> : null}
-                {/* B2: markering van de server (geen wijk). B11 maakt hier een wachtrij van. */}
-                {g.werkgebiedStatus === 'onbekend' ? <Pil toon="fout">Adres niet gevonden</Pil> : null}
-                {g.werkgebiedStatus === 'buiten' ? <Pil toon="stop">Buiten werkgebied</Pil> : null}
-                <AdresBronPil bron={g.adresBron} />
-              </div>
-              <label className="field">
-                <span>Rol van {g.naam}</span>
-                <select value={rol} onChange={(e) => setRollen({ ...rollen, [g.id]: e.target.value as Rol })}>
-                  {ROLLEN.map((r) => (
-                    <option key={r} value={r}>
-                      {ROL_LABEL[r]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="beheer-acties">
-                <button
-                  className="mini-btn"
-                  type="button"
-                  disabled={!rol || rol === g.rol}
-                  onClick={() => rol && setHandeling({ soort: 'rol', gebruiker: g, rol })}
-                >
-                  Rol opslaan
-                </button>
-                <button className="mini-btn mini-btn--ghost" type="button" onClick={() => setHandeling({ soort: 'blok', gebruiker: g })}>
-                  {g.geblokkeerd ? `Deblokkeer ${g.naam}` : `Blokkeer ${g.naam}`}
-                </button>
-              </div>
-            </div>
-          )
-        })}
+      <div className="beheer-tabel-wrap">
+        <table className="beheer-tabel" aria-label="Gebruikers">
+          <thead>
+            <tr>
+              <th scope="col">Naam</th>
+              <th scope="col">Rol</th>
+              <th scope="col" className="beheer-tabel__actie">
+                <span className="beheer-alleen-lezer">Acties</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {gebruikers.waarde.map((g) => {
+              const rol = rollen[g.id] ?? g.rol
+              return (
+                <tr key={g.id} aria-label={`Gebruiker ${g.naam}`}>
+                  <td>
+                    <strong>{g.naam}</strong>
+                    <span className="beheer-tabel__sub">
+                      {g.email}
+                      {g.telefoon ? ` · ${g.telefoon}` : ''}
+                    </span>
+                    <span className="beheer-tabel__pillen">
+                      {g.geblokkeerd ? <Pil toon="fout">Geblokkeerd</Pil> : null}
+                      {/* B2: markering van de server (geen wijk). B11 maakt hier een wachtrij van. */}
+                      {g.werkgebiedStatus === 'onbekend' ? <Pil toon="fout">Adres niet gevonden</Pil> : null}
+                      {g.werkgebiedStatus === 'buiten' ? <Pil toon="stop">Buiten werkgebied</Pil> : null}
+                      <AdresBronPil bron={g.adresBron} />
+                    </span>
+                  </td>
+                  <td>
+                    <select
+                      aria-label={`Rol van ${g.naam}`}
+                      value={rol}
+                      onChange={(e) => setRollen({ ...rollen, [g.id]: e.target.value as Rol })}
+                    >
+                      {ROLLEN.map((r) => (
+                        <option key={r} value={r}>
+                          {ROL_LABEL[r]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="beheer-tabel__actie">
+                    <div className="beheer-acties">
+                      <button
+                        className="mini-btn"
+                        type="button"
+                        disabled={!rol || rol === g.rol}
+                        onClick={() => rol && setHandeling({ soort: 'rol', gebruiker: g, rol })}
+                      >
+                        Rol opslaan
+                      </button>
+                      <button
+                        className="mini-btn mini-btn--ghost"
+                        type="button"
+                        aria-label={g.geblokkeerd ? `Deblokkeer ${g.naam}` : `Blokkeer ${g.naam}`}
+                        onClick={() => setHandeling({ soort: 'blok', gebruiker: g })}
+                      >
+                        {g.geblokkeerd ? 'Deblokkeer' : 'Blokkeer'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
         {gebruikers.geladen && gebruikers.waarde.length === 0 ? <p className="empty-note">Niemand gevonden.</p> : null}
       </div>
 
