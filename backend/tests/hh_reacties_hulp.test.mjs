@@ -76,7 +76,9 @@ function wereld(extra = {}) {
     hh_klus_status: [],
     hh_beoordelingen: [],
     hh_incidenten: [],
-    hh_instellingen: [],
+    // Antwoord Ibrahim 5: helpers onder 18 pas als de site online is. De
+    // meeste tests draaien met de schakelaar AAN; zie de test "onder 18 dicht".
+    hh_instellingen: [{ id: 'i-o18', sleutel: 'b5_onder18_reageren_open', waarde: true }],
   };
   for (const [k, v] of Object.entries(extra)) rijen[k] = [...(rijen[k] || []), ...v];
   return rijen;
@@ -149,7 +151,7 @@ test('instellingAan: alleen waarde true (ook als json-tekst), anders uit', () =>
   assert.equal(hulp.instellingAan(env.app, hulp.INSTELLING_ALLEEN_BESCHIKBAAR), false, 'zonder rij uit');
   // De JSVM geeft een json-veld als bytes; getString geeft de json-tekst.
   const app2 = omgeving(wereld({ hh_instellingen: [{ id: 'i3', sleutel: 'y', waarde: [116, 114, 117, 101] }] })).app;
-  app2.db.hh_instellingen[0].getString = () => 'true';
+  app2.db.hh_instellingen.find((r) => r.get('sleutel') === 'y').getString = () => 'true';
   assert.equal(hulp.instellingAan(app2, 'y'), true);
 });
 
@@ -227,6 +229,20 @@ test('reageren: dezelfde voorwaarden als accepteren', () => {
   geenWijk.app.db.hh_users.find((u) => u.id === 'h25').set('wijk', '');
   assert.equal(reageer(geenWijk, 'h25', 'k1').body.reden, 'geenwijk');
   assert.equal(reacties(env).length, 0, 'niets aangemaakt');
+});
+
+test('onder 18 dicht (schakelaar uit, standaard): 409 onder18 met een vriendelijke tekst; 18+ gewoon', () => {
+  const env = omgeving();
+  env.app.db.hh_instellingen = [];
+  const jong = reageer(env, 'h14', 'k1');
+  assert.equal(jong.status, 409);
+  assert.equal(jong.body.reden, 'onder18');
+  assert.equal(jong.body.melding, DEP.teksten.MELDING.onder18);
+  assert.equal(env.mails.length, 0, 'geen ouder-mail');
+  assert.equal(reacties(env).length, 0);
+  // Eerst de gewone weigeringen (zo ziet een kind van 11 bij een tuinklus de leeftijdsgrens).
+  assert.equal(reageer(env, 'h11', 'ktuin').body.reden, 'leeftijd');
+  assert.equal(reageer(env, 'h25', 'k1').status, 200);
 });
 
 test('reageren: hooguit 10 reacties tegelijk open', () => {
@@ -600,13 +616,17 @@ test('telBeschikbaar: alleen het aantal, binnen werkgebied, passende leeftijd, n
   assert.equal(tel('t-tuin').body.aantal, 2, 'tuin 13+: h11 telt niet');
   assert.equal(tel('t-licht', '2026-10-10 18:00:00.000Z', '').body.aantal, 1, '20:00 NL: alleen 18+');
   assert.equal(tel('t-licht', VAN, TOT, { id: 'h25', rol: 'jongere', wijk: 'w-tiel' }).status, 403);
+  // Onder 18 nog dicht: alleen helpers die nu echt kunnen reageren tellen.
+  env.app.db.hh_instellingen = [];
+  assert.equal(tel('t-licht').body.aantal, 1, 'alleen h25');
+  env.app.db.hh_instellingen = [new NepRecord('hh_instellingen', { id: 'i-o18', sleutel: 'b5_onder18_reageren_open', waarde: true })];
   const later = { ...env, nu: () => NU + 4 * UUR };
   assert.equal(hulp.telBeschikbaar(later, { kijker: { id: 'b1', rol: 'hulpvrager', wijk: 'w-tiel' }, klustypeId: 't-licht', van: VAN, tot: TOT }).body.aantal, 0);
 });
 
 // ---------------------------------------------------------------- geheime vraag
 
-test('geheime vraag: "nee" -> één incident voor de meldkamer, "ja" -> niets', () => {
+test('geheime vraag: "nee" -> één signaal voor de meldkamer (geen probleem), "ja" -> niets', () => {
   const env = omgeving();
   const be = (id, van, naar, alles, toelichting = '') => new NepRecord('hh_beoordelingen', { id, klus: 'k1', van_gebruiker: van, naar_gebruiker: naar, sterren: 4, alles_in_orde: alles, geheim_toelichting: toelichting });
   assert.equal(hulp.verwerkGeheim(env, be('x1', 'b1', 'h25', 'ja')), false);
@@ -615,13 +635,26 @@ test('geheime vraag: "nee" -> één incident voor de meldkamer, "ja" -> niets', 
   assert.equal(inc.length, 1);
   assert.equal(inc[0].get('melder'), 'h25');
   assert.equal(inc[0].get('klus'), 'k1');
-  assert.equal(inc[0].get('soort'), 'probleem');
+  assert.equal(inc[0].get('soort'), 'signaal', 'antwoord Ibrahim 4: eigen, zachtere soort');
   assert.ok(inc[0].get('omschrijving').includes('Voelde je je veilig?'));
   assert.ok(inc[0].get('omschrijving').includes('Hij schreeuwde.'));
   assert.equal(hulp.verwerkGeheim(env, be('x2', 'h25', 'b1', 'nee')), false, 'niet dubbel');
   assert.equal(env.app.db.hh_incidenten.length, 1);
   assert.ok(hulp.verwerkGeheim(env, be('x3', 'b1', 'h25', 'nee')));
   assert.ok(env.app.db.hh_incidenten[1].get('omschrijving').includes('Was alles in orde?'));
+});
+
+test('nakijkenMelding: een signaal geeft GEEN melding (geen alarm), nood/probleem wel', () => {
+  const env = omgeving(wereld({
+    hh_incidenten: [
+      { id: 'inc-s', soort: 'signaal', melder: 'h25', klus: 'k1' },
+      { id: 'inc-p', soort: 'probleem', melder: 'h25', klus: 'k1' },
+    ],
+  }));
+  const melding = (incident) => new NepRecord('hh_meldingen', { ontvanger: 'coord', soort: 'incident', incident, klus: 'k1', sleutel: `incident:${incident}` });
+  assert.deepEqual(hulp.nakijkenMelding(env, melding('inc-s')), { opslaan: false });
+  assert.deepEqual(hulp.nakijkenMelding(env, melding('inc-p')), { opslaan: true });
+  assert.deepEqual(hulp.nakijkenMelding(env, melding('bestaatniet')), { opslaan: true }, 'twijfel: wel melden');
 });
 
 // ---------------------------------------------------------------- verrijken

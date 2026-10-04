@@ -26,6 +26,8 @@ var MELDING = {
     "Dit is je eerste klus bij deze bewoner. Zet het vinkje \"Mijn ouder gaat mee\": je ouder gaat de eerste keer mee.",
   geenouder: "We kunnen je ouder niet mailen. Neem contact op met de meldkamer.",
   mail: "De mail aan je ouder kon niet worden verstuurd. Probeer het later opnieuw.",
+  onder18:
+    "Fijn dat je wilt helpen! Helpers onder de 18 kunnen nog even niet reageren. Binnenkort kan het wel: je krijgt dan een bericht.",
   verstuurd: "Je reactie is verstuurd. De bewoner kiest zelf een helper.",
   verstuurdOuder:
     "Je reactie is verstuurd. Eerst kijkt je ouder of het goed is. Daarna ziet de bewoner je reactie.",
@@ -204,7 +206,8 @@ function ouderKlusMail(g) {
 
 // ---------------------------------------------------------------- incident
 
-/// Omschrijving van het incident bij "Nee" op de geheime vraag.
+/// Omschrijving van het signaal (incident soort "signaal") bij "Nee" op de
+/// geheime vraag.
 var MERK_GEHEIM = "[geheime vraag]";
 function geheimIncident(rol, toelichting) {
   var vraag = GEHEIME_VRAAG[rol] || GEHEIME_VRAAG.hulpvrager;

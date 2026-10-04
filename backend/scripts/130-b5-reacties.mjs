@@ -3,8 +3,8 @@
 // hh_meldingen.soort. Idempotent en additief: bestaat iets al, dan wordt
 // alleen wat ontbreekt bijgemaakt; bestaande velden en keuzewaarden worden
 // nooit gewijzigd of verwijderd. GEEN datamigratie (geen bestaande rij wordt
-// aangeraakt). Raakt alleen hh_reacties, hh_profielen, hh_beoordelingen en
-// hh_meldingen aan (hard-guard op hh_).
+// aangeraakt). Raakt alleen hh_reacties, hh_profielen, hh_beoordelingen,
+// hh_meldingen en hh_incidenten aan (hard-guard op hh_).
 //
 // API-rules van hh_reacties blijven hier op null (= alleen superuser). Die
 // komen in 131-b5-rules.mjs.
@@ -40,6 +40,8 @@
 //                                     alleen gever + meldkamer zien hem
 //   hh_beoordelingen.geheim_toelichting tekst, max 300
 //   hh_meldingen.soort + "reactie"    de live keuzelijst wordt alleen aangevuld
+//   hh_incidenten.soort + "signaal"   antwoord Ibrahim 4: "nee" op de geheime
+//                                     vraag is een zachtere soort, geen probleem
 //
 // DRAAIEN (eerst 00-backup.mjs):
 //   set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
@@ -93,11 +95,18 @@ export const EXTRA_VELDEN = {
   ],
 };
 
-/// De live keuzelijst van hh_meldingen.soort, aangevuld met "reactie".
-/// Niets wordt weggehaald of herschikt.
-export function metSoortReactie(live) {
+export const INCIDENT_SOORT_SIGNAAL = 'signaal';
+
+/// Een live keuzelijst, aangevuld met [waarde]. Niets wordt weggehaald of
+/// herschikt; staat hij er al, dan blijft de lijst gelijk.
+export function metKeuze(live, waarde) {
   const lijst = Array.isArray(live) ? [...live] : [];
-  return lijst.includes(MELDING_SOORT_REACTIE) ? lijst : [...lijst, MELDING_SOORT_REACTIE];
+  return lijst.includes(waarde) ? lijst : [...lijst, waarde];
+}
+
+/// De live keuzelijst van hh_meldingen.soort, aangevuld met "reactie".
+export function metSoortReactie(live) {
+  return metKeuze(live, MELDING_SOORT_REACTIE);
 }
 
 function omschrijf(f) {
@@ -190,28 +199,35 @@ async function extraVelden(pb) {
   return aantal;
 }
 
-async function meldingSoort(pb) {
-  assertHh(MELDINGEN);
-  const col = await pb.collections.getOne(MELDINGEN);
+/// Vult de keuzelijst van [naam].soort aan met [waarde] (de rest blijft
+/// letterlijk staan).
+async function soortErbij(pb, naam, waarde) {
+  assertHh(naam);
+  const col = await pb.collections.getOne(naam);
   const veld = col.fields.find((f) => f.name === 'soort');
-  if (!veld) throw new Error(`${MELDINGEN}.soort bestaat niet — eerst M8 (30-meldingen-collectie.mjs).`);
-  const nieuw = metSoortReactie(veld.values);
+  if (!veld) throw new Error(`${naam}.soort bestaat niet.`);
+  const nieuw = metKeuze(veld.values, waarde);
   if (nieuw.length === veld.values.length) {
-    console.log(`  ✓ ${MELDINGEN}.soort kent "${MELDING_SOORT_REACTIE}" al`);
+    console.log(`  ✓ ${naam}.soort kent "${waarde}" al`);
     return 0;
   }
-  console.log(`  ${APPLY ? '＋ keuze' : '+ ZOU keuze toevoegen'}: ${MELDINGEN}.soort "${MELDING_SOORT_REACTIE}"`);
+  console.log(`  ${APPLY ? '＋ keuze' : '+ ZOU keuze toevoegen'}: ${naam}.soort "${waarde}"`);
   console.log(`      was:    ${veld.values.join(' | ')}`);
   console.log(`      wordt:  ${nieuw.join(' | ')}`);
   if (!APPLY) return 1;
   // Alleen de keuzelijst van dit ene veld; alle andere velden letterlijk terug.
   const velden = col.fields.map((f) => (f.name === 'soort' ? { ...f, values: nieuw } : f));
   await pb.collections.update(col.id, { fields: velden });
-  const na = (await pb.collections.getOne(MELDINGEN)).fields.find((f) => f.name === 'soort');
-  if (!na.values.includes(MELDING_SOORT_REACTIE)) throw new Error('Na apply ontbreekt "reactie" nog.');
-  console.log(`  ✓ ${MELDINGEN}.soort: ${na.values.join(' | ')}`);
+  const na = (await pb.collections.getOne(naam)).fields.find((f) => f.name === 'soort');
+  if (!na.values.includes(waarde)) throw new Error(`Na apply ontbreekt "${waarde}" nog.`);
+  console.log(`  ✓ ${naam}.soort: ${na.values.join(' | ')}`);
   return 1;
 }
+
+const meldingSoort = (pb) => soortErbij(pb, MELDINGEN, MELDING_SOORT_REACTIE);
+
+/// Antwoord Ibrahim 4: "nee" op de geheime vraag = incident soort "signaal".
+const incidentSoort = (pb) => soortErbij(pb, 'hh_incidenten', INCIDENT_SOORT_SIGNAAL);
 
 async function main() {
   const pb = await superuserClient();
@@ -219,7 +235,8 @@ async function main() {
   const a = await reacties(pb);
   const b = await extraVelden(pb);
   const c = await meldingSoort(pb);
-  const n = a + b + c;
+  const d = await incidentSoort(pb);
+  const n = a + b + c + d;
   if (!n) console.log('\nNiets te doen: hh_reacties, de extra velden en de meldingsoort staan er al.');
   else if (!APPLY) console.log(`\nDRY-RUN: ${n} wijziging(en). Draai met --apply.`);
   else console.log('\nKlaar. Rules van hh_reacties: 131-b5-rules.mjs.');

@@ -199,9 +199,30 @@ async function main() {
   const klustype = await su.collection('hh_klustypes').getFirstListItem('naam = "boodschappen"');
   const nu = new Date();
 
+  // B5 (antwoord Ibrahim 2): met b5_nieuwe_klus_alleen_beschikbaar aan krijgt
+  // alleen een helper met "Ik kan nu helpen" een "nieuwe klus". Jongere 1 en 2
+  // staan daarom tijdelijk aan (1 uur; sectie I zet de oude waarde terug).
+  // Zonder het veld (vóór B5) gebeurt er niets.
+  const profielCol = await su.collections.getOne('hh_profielen');
+  const metBeschikbaar = profielCol.fields.some((f) => f.name === 'beschikbaar_tot');
+  const vroeger = [];
+  if (metBeschikbaar) {
+    const profielen = await su.collection('hh_profielen').getFullList({
+      filter: su.filter('gebruiker = {:a} || gebruiker = {:b}', { a: j1Id, b: j2Id }),
+    });
+    for (const p of profielen) {
+      vroeger.push([p.id, p.beschikbaar_tot ?? '']);
+      await su.collection(assertHh('hh_profielen')).update(p.id, { beschikbaar_tot: new Date(Date.now() + 3600 * 1000).toISOString() });
+    }
+  }
+
+  // Sinds B4 eist plaatsen door een bewoner een foto en is de klus eerst
+  // ongekeurd (geen "nieuwe klus"). Daarom plaatst de superuser hem namens
+  // oudere 1 (telefonische ingang: meteen goedgekeurd); de meldingen-trigger
+  // is dezelfde (eerste logregel naar open, door = geplaatst_door).
   async function nieuweKlus(label) {
     const van = new Date(nu.getTime() + 24 * 3600 * 1000);
-    return hv1.collection('hh_klussen').create({
+    return su.collection(assertHh('hh_klussen')).create({
       hulpvrager: oudereId,
       geplaatst_door: oudereId,
       klustype: klustype.id,
@@ -373,6 +394,10 @@ async function main() {
 
   kop('I. Opruimen');
   await opruimen(su);
+  for (const [id, waarde] of vroeger) {
+    await su.collection(assertHh('hh_profielen')).update(id, { beschikbaar_tot: waarde });
+  }
+  if (vroeger.length) check('"Ik kan nu helpen" van jongere 1 en 2 terug zoals het stond', true);
   const over = await su.collection('hh_klussen').getFullList({ filter: su.filter('omschrijving ~ {:merk}', { merk: MERK }) });
   check('geen eigen klussen meer over', over.length === 0);
 

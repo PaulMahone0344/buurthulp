@@ -37,6 +37,12 @@ var TOELICHTING_GEKOZEN = "gekozen door de bewoner";
 var TOELICHTING_GEKOZEN_MELDKAMER = "gekozen door de meldkamer";
 var INSTELLING_ACCEPTEREN_DICHT = "b5_accepteren_dicht";
 var INSTELLING_ALLEEN_BESCHIKBAAR = "b5_nieuwe_klus_alleen_beschikbaar";
+/// Antwoord Ibrahim 5: helpers onder 18 reageren pas als de site (de
+/// ouder-pagina) online is. Standaard uit = 409 "onder18".
+var INSTELLING_ONDER18_OPEN = "b5_onder18_reageren_open";
+/// Antwoord Ibrahim 4: "nee" op de geheime vraag is een eigen, zachtere soort
+/// incident (geen "Probleem gemeld"-alarm; wel in de lijst van het paneel).
+var INCIDENT_SOORT_SIGNAAL = "signaal";
 var GEHEIME_VELDEN = ["alles_in_orde", "geheim_toelichting"];
 var BEZET_STATUSSEN = ["geaccepteerd", "onderweg", "bezig"];
 
@@ -443,6 +449,8 @@ module.exports = {
   TOELICHTING_GEKOZEN_MELDKAMER: TOELICHTING_GEKOZEN_MELDKAMER,
   INSTELLING_ACCEPTEREN_DICHT: INSTELLING_ACCEPTEREN_DICHT,
   INSTELLING_ALLEEN_BESCHIKBAAR: INSTELLING_ALLEEN_BESCHIKBAAR,
+  INSTELLING_ONDER18_OPEN: INSTELLING_ONDER18_OPEN,
+  INCIDENT_SOORT_SIGNAAL: INCIDENT_SOORT_SIGNAAL,
   GEHEIME_VELDEN: GEHEIME_VELDEN,
   BEZET_STATUSSEN: BEZET_STATUSSEN,
   tweeCijfers: tweeCijfers,

@@ -10,6 +10,8 @@ import {
   REACTIE_INDEXEN,
   MELDING_SOORT_REACTIE,
   metSoortReactie,
+  INCIDENT_SOORT_SIGNAAL,
+  metKeuze,
   EXTRA_VELDEN,
 } from '../scripts/130-b5-reacties.mjs';
 import { REACTIE_RULES, LEZEN } from '../scripts/131-b5-rules.mjs';
@@ -67,4 +69,13 @@ test('rules hh_reacties: lezen = eigen helper, bewoner (alleen open/gekozen), co
   assert.equal(r.createRule, null, 'alleen via de routes');
   assert.equal(r.updateRule, null);
   assert.equal(r.deleteRule, null);
+});
+
+test('hh_incidenten.soort krijgt "signaal" erbij (antwoord Ibrahim 4); niets wordt weggehaald', () => {
+  assert.equal(INCIDENT_SOORT_SIGNAAL, 'signaal');
+  assert.equal(INCIDENT_SOORT_SIGNAAL, hulp.INCIDENT_SOORT_SIGNAAL);
+  const live = ['nood', 'probleem', 'overig'];
+  assert.deepEqual(metKeuze(live, 'signaal'), ['nood', 'probleem', 'overig', 'signaal']);
+  assert.deepEqual(metKeuze(metKeuze(live, 'signaal'), 'signaal'), ['nood', 'probleem', 'overig', 'signaal']);
+  assert.deepEqual(metSoortReactie(live), metKeuze(live, 'reactie'));
 });

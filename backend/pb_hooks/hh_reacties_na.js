@@ -10,6 +10,9 @@
 
 var HOOKS = typeof __hooks !== "undefined" ? __hooks : "";
 var basis = require(HOOKS + "/hh_reacties_basis.js");
+var VOLWASSEN = basis.VOLWASSEN;
+var INCIDENT_SOORT_SIGNAAL = basis.INCIDENT_SOORT_SIGNAAL;
+var INSTELLING_ONDER18_OPEN = basis.INSTELLING_ONDER18_OPEN;
 var COLLECTIE = basis.COLLECTIE;
 var STATUS = basis.STATUS;
 var BESCHIKBAAR_MS = basis.BESCHIKBAAR_MS;
@@ -120,6 +123,14 @@ function nakijkenMelding(env, melding) {
     return { opslaan: tot > env.nu() };
   }
 
+  // Antwoord Ibrahim 4: een signaal (geheime vraag "nee") is geen alarm: de
+  // M8-hook zou elke coordinator "Nieuwe melding" sturen; die slaan we over.
+  // De meldkamer ziet het in de lijst van het paneel (pil "Signaal").
+  if (soort === "incident") {
+    var inc = zoekId(app, "hh_incidenten", tekst(melding.get("incident")));
+    return { opslaan: !(inc && tekst(inc.get("soort")) === INCIDENT_SOORT_SIGNAAL) };
+  }
+
   if (soort === "toegewezen") {
     var sleutel = tekst(melding.get("sleutel"));
     if (sleutel.indexOf("klusstatus:") !== 0) return { opslaan: true };
@@ -177,10 +188,17 @@ function telBeschikbaar(env, invoer) {
     "",
     MAX_TELLEN
   );
+  var onder18Open = instellingAan(app, INSTELLING_ONDER18_OPEN);
+  var vandaag = new Date(env.nu()).toISOString().slice(0, 10);
   var aantal = 0;
   for (var i = 0; i < profielen.length; i++) {
     var helper = zoekId(app, "hh_users", tekst(profielen[i].get("gebruiker")));
     if (!helper || helperBlokkade(env, helper)) continue;
+    // Onder 18 nog dicht (antwoord 5): die kan nu niet reageren, telt niet mee.
+    if (!onder18Open) {
+      var jaren = env.dep.aanmelden.leeftijd(tekst(helper.get("geboortedatum")), vandaag);
+      if (jaren === null || jaren < VOLWASSEN) continue;
+    }
     if (kijker.rol !== "coordinator" && !env.dep.aanmelden.wijkenPassen(bewonerWijk, wijkInfo(app, helper.get("wijk")))) continue;
     if (!p.isOudGenoeg(tekst(helper.get("geboortedatum")), grens)) continue;
     aantal++;
@@ -192,8 +210,9 @@ function telBeschikbaar(env, invoer) {
 // GEHEIME VRAAG (punt 11)
 // --------------------------------------------------------------------------
 
-/// "nee" -> één incident (soort probleem) voor de meldkamer, met de klus en
-/// de gever als melder. De M8-hook stuurt elke coordinator een melding.
+/// "nee" -> één incident van soort "signaal" voor de meldkamer, met de klus
+/// en de gever als melder (antwoord Ibrahim 4: zachter dan "probleem"; geen
+/// melding aan elke coordinator, zie nakijkenMelding; wel in het paneel).
 /// Geeft true als er een incident is gemaakt.
 function verwerkGeheim(env, beoordeling) {
   if (tekst(beoordeling.get("alles_in_orde")) !== "nee") return false;
@@ -210,7 +229,7 @@ function verwerkGeheim(env, beoordeling) {
   var r = new env.Record(app.findCollectionByNameOrId("hh_incidenten"));
   if (klusId) r.set("klus", klusId);
   r.set("melder", melder);
-  r.set("soort", "probleem");
+  r.set("soort", INCIDENT_SOORT_SIGNAAL);
   r.set("omschrijving", env.dep.teksten.geheimIncident(rol, beoordeling.get("geheim_toelichting")));
   app.save(r);
   return true;

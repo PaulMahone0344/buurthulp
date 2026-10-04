@@ -43,6 +43,8 @@
 
 var HOOKS = typeof __hooks !== "undefined" ? __hooks : "";
 var basis = require(HOOKS + "/hh_reacties_basis.js");
+var instellingAan = basis.instellingAan;
+var INSTELLING_ONDER18_OPEN = basis.INSTELLING_ONDER18_OPEN;
 var COLLECTIE = basis.COLLECTIE;
 var STATUS = basis.STATUS;
 var MAX_ACTIEF_PER_HELPER = basis.MAX_ACTIEF_PER_HELPER;
@@ -122,6 +124,9 @@ function reageer(env, invoer) {
   if (actief.length >= MAX_ACTIEF_PER_HELPER) return antwoord(env, 429, "limiet");
 
   var jaren = env.dep.aanmelden.leeftijd(tekst(helper.get("geboortedatum")), vandaagVan(env.nu()));
+  var minderjarig = jaren === null || jaren < VOLWASSEN;
+  // Antwoord Ibrahim 5: onder 18 pas als de ouder-pagina online is.
+  if (minderjarig && !instellingAan(app, INSTELLING_ONDER18_OPEN)) return antwoord(env, 409, "onder18");
   var bewonerId = tekst(klus.get("hulpvrager"));
   var ouderMee = invoer.ouderGaatMee === true;
   if (jaren !== null && jaren >= OUDER_MEE_VANAF && jaren <= OUDER_MEE_TOT_EN_MET && !ouderMee &&
@@ -129,7 +134,6 @@ function reageer(env, invoer) {
     return antwoord(env, 400, "oudermee");
   }
 
-  var minderjarig = jaren === null || jaren < VOLWASSEN;
   var ouderEmail = minderjarig ? ouderEmailVan(app, helper) : "";
   if (minderjarig && !ouderEmail) return antwoord(env, 409, "geenouder");
 

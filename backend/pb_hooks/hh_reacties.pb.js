@@ -16,7 +16,8 @@
 //        200 {melding, reactie, klus, status}; 400 bericht | oudermee;
 //        401; 403 rol | geenwijk | nietgoedgekeurd | ouder | vog | leeftijd ...;
 //        404; 409 bezet | wijk | nietgekeurd | begonnen | algereageerd |
-//        geenouder; 429 limiet (10 open); 502 mail
+//        geenouder | onder18 (schakelaar b5_onder18_reageren_open uit);
+//        429 limiet (10 open); 502 mail
 //   POST /api/hh/reacties/{id}/intrekken  helper, eigen reactie, vóór kiezen.
 //        200; 404 nietvanjou; 409 status
 //   GET  /api/hh/klussen/{id}/reacties   bewoner van de klus (of meldkamer):
@@ -49,11 +50,12 @@
 //   onRecordCreate hh_meldingen (model-hook): "toegewezen" na een keuze van de
 //     bewoner wordt "Het is een match!" (de bewoner zelf krijgt hem niet: die
 //     koos net); "nieuwe klus" alleen aan wie nu kan helpen ALS de schakelaar
-//     b5_nieuwe_klus_alleen_beschikbaar (hh_instellingen) aan staat.
+//     b5_nieuwe_klus_alleen_beschikbaar (hh_instellingen) aan staat; een
+//     incident van soort "signaal" (geheime vraag) geeft GEEN melding.
 //   onRecordCreateRequest/UpdateRequest hh_profielen: beschikbaar_tot in de
 //     body van een gewone gebruiker -> 400 (alleen de route zet hem).
 //   onRecordCreateRequest/UpdateRequest hh_beoordelingen: na e.next() de
-//     geheime vraag: alles_in_orde = nee -> incident voor de meldkamer.
+//     geheime vraag: alles_in_orde = nee -> incident soort "signaal".
 //   onRecordEnrich hh_beoordelingen: alles_in_orde en geheim_toelichting
 //     alleen voor de gever, de coordinator en de superuser.
 //   onRecordEnrich hh_klussen: reacties_aantal (en voor een helper
@@ -231,7 +233,7 @@ onRecordCreate((e) => {
   let opslaan = true;
   try {
     const soort = String(e.record.get("soort") || "");
-    if (soort === "toegewezen" || soort === "nieuwe_klus") {
+    if (soort === "toegewezen" || soort === "nieuwe_klus" || soort === "incident") {
       const hulp = require(`${__hooks}/hh_reacties_hulp.js`);
       const env = hulp.hookOmgeving({ require: require, hooks: __hooks, app: $app, Record: Record, security: $security, MailerMessage: MailerMessage, os: $os });
       const uit = hulp.nakijkenMelding(env, e.record);

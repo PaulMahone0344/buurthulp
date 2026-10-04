@@ -20,14 +20,15 @@
 //   I. RACE: 2 klikken van dezelfde bewoner tegelijk (20 ronden)
 //   J. RACE: dezelfde helper voor 2 klussen op hetzelfde moment (20 ronden)
 //   K. intrekken, teruggeven, koppelen door de meldkamer, annuleren
-//   L. beoordelen van twee kanten + geheime vraag (nee -> incident)
+//   L. beoordelen van twee kanten + geheime vraag (nee -> signaal, geen alarm)
 //   M. "Ik kan nu helpen": schakelaar, aantal voor de bewoner, veld dicht
-//   N. de twee schakelaars in hh_instellingen (alleen als ze nog niet bestaan;
-//      ze worden na de test weer verwijderd)
+//   N. de schakelaars in hh_instellingen. Wat op de server al staat, blijft
+//      leidend; wat de check tijdelijk aanzet (ook onder 18 in E t/m K), zet
+//      hij aan het eind precies terug (sectie O meet het na)
 //   O. opruimen en nameten
 //
-// LET OP OP PROD: sectie L maakt KORT een incident: elke coordinator krijgt
-// even "Probleem gemeld" (wordt opgeruimd). Sectie N keurt een eigen klus:
+// LET OP OP PROD: sectie L maakt KORT een signaal (incident soort signaal;
+// geen melding aan de coordinatoren, wel even in de lijst van het paneel). Sectie N keurt een eigen klus:
 // helpers in de wijk met "Ik kan nu helpen" aan krijgen even een "nieuwe
 // klus" (opgeruimd). De publieke ouder-route telt 30 per IP per uur: niet
 // twee keer binnen een uur draaien.
@@ -40,7 +41,7 @@
 
 import { randomBytes, createHash } from 'node:crypto';
 import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
-import { COLLECTIE, REACTIE_STATUSSEN, EXTRA_VELDEN, MELDING_SOORT_REACTIE, REACTIE_INDEXEN } from './130-b5-reacties.mjs';
+import { COLLECTIE, REACTIE_STATUSSEN, EXTRA_VELDEN, MELDING_SOORT_REACTIE, REACTIE_INDEXEN, INCIDENT_SOORT_SIGNAAL } from './130-b5-reacties.mjs';
 import { REACTIE_RULES } from './131-b5-rules.mjs';
 import { plaatsHulp } from './100-b4-velden.mjs';
 import { REGIO_WIJK } from './81-b2-werkgebied.mjs';
@@ -50,7 +51,30 @@ const MAIL_DOMEIN = '@heitjehulp.invalid';
 const MERK = '[b5check]';
 const ALLEEN_OPRUIMEN = process.argv.includes('--alleen-opruimen');
 const RONDEN = 20;
-const SCHAKELAARS = ['b5_accepteren_dicht', 'b5_nieuwe_klus_alleen_beschikbaar'];
+const SCHAKELAARS = ['b5_accepteren_dicht', 'b5_nieuwe_klus_alleen_beschikbaar', 'b5_onder18_reageren_open'];
+
+// Schakelaars die de check tijdelijk aanzet (en daarna precies terugzet):
+// { sleutel, id, oud } met oud = undefined (rij bestond niet) of de oude waarde.
+const tijdelijk = [];
+async function zetTijdelijk(su, sleutel) {
+  const rij = (await su.collection('hh_instellingen').getFullList({ filter: su.filter('sleutel = {:s}', { s: sleutel }) }))[0];
+  if (rij) {
+    tijdelijk.push({ sleutel, id: rij.id, oud: rij.waarde });
+    await su.collection(assertHh('hh_instellingen')).update(rij.id, { waarde: true });
+  } else {
+    const nieuw = await su.collection(assertHh('hh_instellingen')).create({ sleutel, waarde: true });
+    tijdelijk.push({ sleutel, id: nieuw.id, oud: undefined });
+  }
+}
+async function herstelTijdelijk(su, sleutel) {
+  for (let i = tijdelijk.length - 1; i >= 0; i--) {
+    const t = tijdelijk[i];
+    if (sleutel && t.sleutel !== sleutel) continue;
+    if (t.oud === undefined) await su.collection(assertHh('hh_instellingen')).delete(t.id).catch(() => {});
+    else await su.collection(assertHh('hh_instellingen')).update(t.id, { waarde: t.oud }).catch(() => {});
+    tijdelijk.splice(i, 1);
+  }
+}
 
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
@@ -191,6 +215,8 @@ async function voorwaarden(su) {
   }
   const soort = (await su.collections.getOne('hh_meldingen')).fields.find((f) => f.name === 'soort');
   check(`hh_meldingen.soort kent "${MELDING_SOORT_REACTIE}"`, !!soort?.values?.includes(MELDING_SOORT_REACTIE), 'draai 130 --apply');
+  const incSoort = (await su.collections.getOne('hh_incidenten')).fields.find((f) => f.name === 'soort');
+  check(`hh_incidenten.soort kent "${INCIDENT_SOORT_SIGNAAL}"`, !!incSoort?.values?.includes(INCIDENT_SOORT_SIGNAAL), 'draai 130 --apply');
   const r = await route(anonClient(), '/api/hh/klussen/bestaatniet/reageren');
   check(`route reageren bestaat (anoniem 401, kreeg ${r.status})`, r.status === 401, 'draai 133-hook-deploy.sh');
   const k = await route(anonClient(), '/api/hh/klussen/bestaatniet/kiezen');
@@ -214,8 +240,9 @@ async function main() {
     console.log(`  · tijdelijke accounts (${MAIL_PREFIX}...${MAIL_DOMEIN}, nooit mail): coordinator, 2 bewoners, helpers van 11, 14, 17, 25 en 30;`);
     console.log('  · ±10 eigen klussen met een testfoto, als superuser goedgekeurd (geen "nieuwe klus"-meldingen, behalve sectie N);');
     console.log(`  · reageren, ouder (token als superuser gezet), kiezen, 2x ${RONDEN} race-ronden, beoordelen, "Ik kan nu helpen";`);
-    console.log('  · sectie L: kort één incident (elke coordinator krijgt even "Probleem gemeld");');
-    console.log('  · sectie N: de 2 schakelaars ALLEEN als ze nog niet bestaan, en daarna weer weg;');
+    console.log('  · sectie L: kort één signaal (geen melding, wel even in de lijst van het paneel);');
+    console.log('  · schakelaars: onder 18 tijdelijk aan in E t/m K, accepteren dicht kort in N (alleen');
+    console.log('    als hij nog niet bestaat); alles precies terug zoals het stond;');
     console.log('  · alles opruimen en nameten.');
     console.log(`\n${groen} groen, ${rood} rood (leescontroles).`);
     if (rood > 0) console.log('Rood is verwacht zolang 130, 131 en 133 nog niet uitgerold zijn.');
@@ -242,6 +269,10 @@ async function main() {
     await secties(su, regio, tuin, licht, instellingen);
   } finally {
     kop('O. Opruimen en nameten');
+    await herstelTijdelijk(su);
+    const naSchakelaars = await su.collection('hh_instellingen').getFullList({ filter: su.filter('sleutel ~ {:p}', { p: 'b5_' }) });
+    const tekstVan = (lijst) => JSON.stringify(lijst.map((i) => [i.sleutel, i.waarde]).sort());
+    check('schakelaars precies zoals vóór de check', tekstVan(naSchakelaars) === tekstVan(instellingen), `${tekstVan(instellingen)} -> ${tekstVan(naSchakelaars)}`);
     await opruimen(su);
     const rest = await su.collection('hh_users').getFullList({ filter: su.filter('email ~ {:p}', { p: MAIL_PREFIX }) });
     check('geen tijdelijke accounts meer', rest.length === 0, `${rest.length} over`);
@@ -367,6 +398,18 @@ async function secties(su, regio, tuin, licht, instellingen) {
 
   // ---------------------------------------------------------------- E
   kop('E. Helper onder 18: eerst de ouder');
+  // Antwoord Ibrahim 5: onder 18 pas als de site online is (schakelaar
+  // b5_onder18_reageren_open, bij de uitrol UIT). Eerst "dicht" bewijzen,
+  // dan tijdelijk aan voor E t/m K (de ouder-stroom), daarna weer terug.
+  const o18 = instellingen.find((i) => i.sleutel === 'b5_onder18_reageren_open');
+  if (o18?.waarde === true) {
+    sla('onder 18 dicht: de schakelaar staat op deze server al aan');
+  } else {
+    r = await reageer(h14, k1);
+    check(`onder 18 dicht (schakelaar uit): 409 onder18 (kreeg ${r.status} ${r.body?.reden})`, r.status === 409 && r.body?.reden === 'onder18' && /onder de 18/.test(r.body?.melding ?? ''), r.body?.melding);
+    check('  er is geen reactie gemaakt en geen ouder gemaild', !(await reactieVan(h14, k1)));
+    await zetTijdelijk(su, 'b5_onder18_reageren_open');
+  }
   r = await reageer(h14, k1, { bericht: 'Ik help graag!' });
   check(`helper van 14 reageert -> 200 wacht_op_ouder (kreeg ${r.status} ${r.body?.status})`, r.status === 200 && r.body?.status === 'wacht_op_ouder', JSON.stringify(r.body));
   check('  melding "Eerst kijkt je ouder"', /ouder/.test(r.body?.melding ?? ''));
@@ -568,6 +611,12 @@ async function secties(su, regio, tuin, licht, instellingen) {
   const rAnn = await reactieVan(h30, kAnn);
   check('  reactie vervallen, Sanne krijgt "Klus gaat niet door"', rAnn.status === 'vervallen' && (await meldingen(h30, ' && soort = "reactie"')).some((m) => m.sleutel === `vervallen:${rAnn.id}`));
 
+  if (o18?.waarde !== true) {
+    await herstelTijdelijk(su, 'b5_onder18_reageren_open');
+    r = await reageer(h14, kRace);
+    check(`schakelaar onder 18 weer zoals hij stond: 409 onder18 (kreeg ${r.status} ${r.body?.reden})`, r.status === 409 && r.body?.reden === 'onder18');
+  }
+
   // ---------------------------------------------------------------- L
   kop('L. Beoordelen van twee kanten + geheime vraag');
   for (const naar of ['onderweg', 'bezig', 'afgerond']) {
@@ -579,8 +628,11 @@ async function secties(su, regio, tuin, licht, instellingen) {
   const beHelper = await mag('Ruud beoordeelt de bewoner: 4 sterren + "Voelde je je veilig?" nee', () =>
     h25.client.collection('hh_beoordelingen').create({ klus: k1.id, van_gebruiker: h25.id, naar_gebruiker: bewoner.id, sterren: 4, tekst: 'Aardige mevrouw.', alles_in_orde: 'nee', geheim_toelichting: 'De hond blafte erg.' }));
   const inc = await su.collection('hh_incidenten').getFullList({ filter: su.filter('klus = {:k}', { k: k1.id }) });
-  check('  "nee" -> één incident voor de meldkamer (melder Ruud, soort probleem)', inc.length === 1 && inc[0].melder === h25.id && inc[0].soort === 'probleem' && /Voelde je je veilig\?/.test(inc[0].omschrijving) && /hond/.test(inc[0].omschrijving), JSON.stringify(inc));
-  check('  de coordinator krijgt een melding', (await meldingen(coord, ' && soort = "incident"')).some((m) => m.incident === inc[0]?.id));
+  check('  "nee" -> één signaal voor de meldkamer (melder Ruud, soort signaal, geen probleem)', inc.length === 1 && inc[0].melder === h25.id && inc[0].soort === INCIDENT_SOORT_SIGNAAL && /Voelde je je veilig\?/.test(inc[0].omschrijving) && /hond/.test(inc[0].omschrijving), JSON.stringify(inc));
+  await new Promise((klaar) => setTimeout(klaar, 500));
+  check('  GEEN "Probleem gemeld"-alarm: de coordinator krijgt geen melding', !(await meldingen(coord, ' && soort = "incident"')).some((m) => m.incident === inc[0]?.id));
+  check('  de meldkamer ziet het signaal wel in de lijst', (await coord.client.collection('hh_incidenten').getFullList({ filter: `id = "${inc[0]?.id}"` })).length === 1);
+  check('  en mag (zoals bij elk incident, B6) de chat van die klus lezen', (await coord.client.collection('hh_berichten').getFullList({ filter: `klus = "${k1.id}"` })).length >= 2);
   if (beHelper) {
     const zietBewoner = await bewoner.client.collection('hh_beoordelingen').getOne(beHelper.id);
     check('  de bewoner leest de beoordeling van Ruud, maar NIET het antwoord op de geheime vraag', zietBewoner.sterren === 4 && zietBewoner.alles_in_orde === undefined && zietBewoner.geheim_toelichting === undefined, JSON.stringify(zietBewoner));
@@ -607,6 +659,10 @@ async function secties(su, regio, tuin, licht, instellingen) {
   kop('M. "Ik kan nu helpen"');
   const tel = async (type, van = dag.om(14), tot = dag.om(15)) =>
     (await route(bewoner.client, `/api/hh/beschikbaar?klustype=${type.id}&van=${encodeURIComponent(van)}&tot=${encodeURIComponent(tot)}`, {}, 'GET')).body?.aantal;
+  // De leeftijdsgrens meten met de helper van 11: daarvoor moet onder 18
+  // (tijdelijk) open staan; daarna bewijzen dat hij bij "dicht" niet telt.
+  const o18Open = o18?.waarde === true;
+  if (!o18Open) await zetTijdelijk(su, 'b5_onder18_reageren_open');
   const voorLicht = await tel(licht);
   const voorTuin = await tel(tuin);
   r = await route(h11.client, '/api/hh/beschikbaar', { aan: true });
@@ -620,29 +676,40 @@ async function secties(su, regio, tuin, licht, instellingen) {
   const antwoord = await route(bewoner.client, `/api/hh/beschikbaar?klustype=${licht.id}`, {}, 'GET');
   check('  het antwoord is alleen een aantal', JSON.stringify(Object.keys(antwoord.body ?? {})) === '["aantal"]');
   check('  een helper mag niet tellen (403)', (await route(h25.client, `/api/hh/beschikbaar?klustype=${licht.id}`, {}, 'GET')).status === 403);
+  if (!o18Open) {
+    await herstelTijdelijk(su, 'b5_onder18_reageren_open');
+    const dicht = await tel(licht);
+    check(`  onder 18 nog dicht: de helper van 11 telt niet mee (${dicht} = ${voorLicht})`, dicht === voorLicht);
+    await zetTijdelijk(su, 'b5_onder18_reageren_open');
+  }
   r = await route(h11.client, '/api/hh/beschikbaar', { aan: false });
   check('  weer uit', r.status === 200 && r.body?.beschikbaar_tot === '' && (await tel(licht)) === voorLicht);
   check('  een bewoner kan het niet aanzetten (403)', (await route(bewoner.client, '/api/hh/beschikbaar', { aan: true })).status === 403);
+  if (!o18Open) await herstelTijdelijk(su, 'b5_onder18_reageren_open');
 
   // ---------------------------------------------------------------- N
   kop('N. De schakelaars (hh_instellingen)');
-  const bestaand = new Set(instellingen.map((i) => i.sleutel));
-  if (SCHAKELAARS.some((s) => bestaand.has(s))) {
-    sla(`schakelaars bestaan al op deze server (${[...bestaand].join(', ')}): niet aangeraakt`);
-    return;
-  }
-  const gezet = [];
-  try {
-    gezet.push(await su.collection('hh_instellingen').create({ sleutel: 'b5_accepteren_dicht', waarde: true }));
+  const stand = new Map(instellingen.map((i) => [i.sleutel, i.waarde]));
+  // 1. accepteren dicht (bij de uitrol: UIT; antwoord Ibrahim 1).
+  if (stand.has('b5_accepteren_dicht')) {
+    sla(`b5_accepteren_dicht bestaat al (${JSON.stringify(stand.get('b5_accepteren_dicht'))}): niet aangeraakt`);
+  } else {
+    await zetTijdelijk(su, 'b5_accepteren_dicht');
     const kAcc = await plaats(bewoner, { wanneer_van: dag.om(7), wanneer_tot: dag.om(8), omschrijving: `${MERK} accepteren dicht` });
     r = await route(h30.client, `/api/hh/klussen/${kAcc.id}/accepteren`);
     check(`b5_accepteren_dicht aan: accepteren -> 409 reageren (kreeg ${r.status} ${r.body?.reden})`, r.status === 409 && r.body?.reden === 'reageren');
-    await su.collection('hh_instellingen').delete(gezet.pop().id);
+    await herstelTijdelijk(su, 'b5_accepteren_dicht');
     r = await route(h30.client, `/api/hh/klussen/${kAcc.id}/accepteren`);
     check(`  schakelaar weg: accepteren werkt weer zoals in M5 (kreeg ${r.status})`, r.status === 200);
-
-    gezet.push(await su.collection('hh_instellingen').create({ sleutel: 'b5_nieuwe_klus_alleen_beschikbaar', waarde: true }));
+  }
+  // 2. "nieuwe klus" alleen aan wie nu kan helpen (bij de uitrol: AAN; antwoord 2).
+  const nieuweKlusSchakelaar = stand.get('b5_nieuwe_klus_alleen_beschikbaar');
+  if (stand.has('b5_nieuwe_klus_alleen_beschikbaar') && nieuweKlusSchakelaar !== true) {
+    sla('b5_nieuwe_klus_alleen_beschikbaar staat op uit: niet aangeraakt');
+  } else {
+    if (nieuweKlusSchakelaar !== true) await zetTijdelijk(su, 'b5_nieuwe_klus_alleen_beschikbaar');
     await route(h25.client, '/api/hh/beschikbaar', { aan: true });
+    await route(h30.client, '/api/hh/beschikbaar', { aan: false });
     const kMeld = await bewoner.client.collection('hh_klussen').create({
       hulpvrager: bewoner.id, geplaatst_door: bewoner.id, bron: 'app', status: 'open', klustype: licht.id,
       omschrijving: `${MERK} melding nieuwe klus`, adres: 'Teststraat 1, 4001 MA Tiel', lat: 51.88, lon: 5.42,
@@ -655,10 +722,7 @@ async function secties(su, regio, tuin, licht, instellingen) {
     check('  "nieuwe klus" voor Ruud (kan nu helpen)', aan.has(h25.id), [...aan].join(','));
     check('  GEEN "nieuwe klus" voor Sanne (niet beschikbaar: alleen de lijst)', !aan.has(h30.id));
     check('  Sanne ziet de klus wel in de lijst', (await h30.client.collection('hh_klussen').getList(1, 5, { filter: `id = "${kMeld.id}"` })).totalItems === 1);
-  } finally {
-    for (const g of gezet) await su.collection('hh_instellingen').delete(g.id).catch(() => {});
-    const over = await su.collection('hh_instellingen').getFullList({ filter: su.filter('sleutel ~ {:p}', { p: 'b5_' }) });
-    check('schakelaars weer weg (zoals vóór de check)', over.length === 0, JSON.stringify(over.map((i) => i.sleutel)));
+    await herstelTijdelijk(su, 'b5_nieuwe_klus_alleen_beschikbaar');
   }
 }
 

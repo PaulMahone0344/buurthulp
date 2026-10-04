@@ -234,6 +234,11 @@ async function main() {
     });
     await su.collection(assertHh('hh_profielen')).create({
       gebruiker: h.id, verificatiestatus: 'goedgekeurd', ...(volwassen ? { vog_gezien_op: nu() } : {}),
+      // B5 (antwoord Ibrahim 2): met b5_nieuwe_klus_alleen_beschikbaar aan
+      // krijgt alleen wie "Ik kan nu helpen" aan heeft een "nieuwe klus"-
+      // melding. Deze check meet de leeftijdsgrens van B4, dus elke helper
+      // staat aan; vóór B5 (veld nog niet op de server) negeert PocketBase het.
+      beschikbaar_tot: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
     });
     return h;
   }
