@@ -111,8 +111,8 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
                   </div>
                   <Pil toon={r.reden === 'geen' ? 'nieuw' : 'fout'}>{r.reden === 'geen' ? 'Geen VOG' : 'Verlopen'}</Pil>
                   <div className="beheer-acties">
-                    <button className="mini-btn" type="button" onClick={() => setVogGezien(r)}>
-                      VOG gezien: {r.naam}
+                    <button className="mini-btn" type="button" aria-label={`VOG gezien: ${r.naam}`} onClick={() => setVogGezien(r)}>
+                      VOG gezien
                     </button>
                     <button className="mini-btn mini-btn--ghost" type="button" onClick={() => zetFilters({ lijst, jongere: r.profielId })}>
                       Bekijk {r.naam}
