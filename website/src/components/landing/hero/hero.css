@@ -1,0 +1,535 @@
+/* Kop (logo, menu) en hero. Compositie naar "Rally": groot woord, een schuine
+   foto die eroverheen valt en een paar glazen kaartjes. */
+
+/* ---------- kop ---------- */
+.lp-kop {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px clamp(20px, 3.4vw, 48px);
+  color: #fff;
+}
+
+.lp-logo {
+  font: 800 2rem/1 var(--lp-font);
+  letter-spacing: -0.04em;
+}
+
+.lp-nav {
+  display: flex;
+  gap: clamp(16px, 2vw, 34px);
+  font-size: 0.95rem;
+}
+
+.lp-nav a {
+  padding-block: 6px;
+  opacity: 0.92;
+}
+
+.lp-nav a:hover,
+.lp-nav a[aria-current='page'] {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.lp-nav a[aria-current='page'] {
+  text-decoration-color: var(--lp-limoen);
+  text-decoration-thickness: 2px;
+}
+
+.lp-kop__acties {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lp-kop__acties .lp-pil {
+  padding: 12px 20px;
+}
+
+/* eigen ondergrond, zodat de baanlijn niet door het woord loopt */
+.lp-kop__acties .lp-pil--rand {
+  padding: 10.5px 18px;
+  background: rgba(19, 56, 36, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.lp-kop__acties .lp-pil--rand:hover {
+  background: rgba(19, 56, 36, 0.95);
+}
+
+.lp-menuknop {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--lp-groen-diep);
+  background: #fff;
+  cursor: pointer;
+  transition:
+    transform var(--lp-duur) var(--lp-ease),
+    background-color var(--lp-duur);
+}
+
+.lp-menuknop:hover,
+.lp-menuknop[aria-expanded='true'] {
+  background: var(--lp-limoen);
+}
+
+.lp-menuknop:active {
+  transform: scale(0.94);
+}
+
+.lp-menupaneel {
+  position: absolute;
+  top: 94px;
+  right: clamp(20px, 3.4vw, 48px);
+  width: min(300px, 100% - 40px);
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border-radius: var(--lp-r-m);
+  color: var(--lp-inkt);
+  background: var(--lp-papier);
+  box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.6);
+}
+
+.lp-menupaneel__rij {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px;
+  border-radius: var(--lp-r-s);
+  font: 600 1.05rem/1.2 var(--lp-font);
+  transition: background-color var(--lp-duur);
+}
+
+.lp-menupaneel__rij:hover {
+  background: var(--lp-groen-zacht);
+}
+
+.lp-menupaneel__rij[aria-current='page'] {
+  background: var(--lp-groen-zacht);
+}
+
+.lp-menupaneel__acties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.lp-menupaneel__acties .lp-pil {
+  justify-content: center;
+}
+
+/* ---------- hero ---------- */
+.lp-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: clamp(620px, min(100svh, 64vw), 900px);
+  color: #fff;
+  background: radial-gradient(120% 90% at 70% 40%, #2b6a45, var(--lp-groen) 55%, #133824);
+}
+
+/* de witte baanlijnen */
+.lp-hero__lijn {
+  position: absolute;
+  z-index: 0;
+  width: 6px;
+  rotate: 28deg;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.lp-hero__lijn--1 {
+  top: -30%;
+  left: 66%;
+  height: 170%;
+}
+
+.lp-hero__lijn--2 {
+  top: 58%;
+  left: 50%;
+  height: 90%;
+}
+
+.lp-hero__kop {
+  margin: 0;
+  font: inherit;
+}
+
+.lp-hero__woord {
+  position: absolute;
+  z-index: 1;
+  top: 11%;
+  left: 3%;
+  font: 800 clamp(6rem, 19.5vw, 18.5rem) / 0.8 var(--lp-font);
+  letter-spacing: -0.07em;
+  white-space: nowrap;
+  color: var(--lp-creme);
+  user-select: none;
+}
+
+/* maakt de zin af: "heitje / voor een karweitje, in jouw buurt." */
+.lp-hero__slogan {
+  position: absolute;
+  z-index: 3;
+  top: 60%;
+  left: 18.5%;
+  max-width: 11em;
+  font: 500 clamp(1.1rem, 0.7rem + 1.1vw, 1.75rem) / 1.2 var(--lp-font);
+  letter-spacing: -0.02em;
+  color: var(--lp-creme);
+  text-wrap: balance;
+}
+
+.lp-hero__foto {
+  position: absolute;
+  z-index: 2;
+  top: 21%;
+  left: 47%;
+  width: clamp(280px, 30vw, 440px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 34px;
+  rotate: -9deg;
+  background: linear-gradient(165deg, #d9c7a5, #a8804f 60%, #6f4f2e);
+  box-shadow: 0 50px 80px -30px rgba(0, 0, 0, 0.6);
+}
+
+.lp-hero__foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* heitje = kwartje: limoen munt met de h, half in beeld */
+.lp-hero__munt {
+  position: absolute;
+  z-index: 3;
+  top: 34%;
+  left: -3%;
+  width: clamp(150px, 18vw, 260px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  rotate: -14deg;
+  filter: blur(1.5px);
+  background: radial-gradient(circle at 35% 30%, #f4ff8a, var(--lp-limoen) 60%, var(--lp-limoen-donker));
+  box-shadow: 0 30px 50px -24px rgba(0, 0, 0, 0.55);
+}
+
+.lp-hero__munt::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border: 3px solid rgba(11, 52, 44, 0.3);
+  border-radius: 50%;
+}
+
+.lp-hero__munt::after {
+  content: 'h';
+  font: 800 clamp(5rem, 11vw, 10rem) / 1 var(--lp-font);
+  letter-spacing: -0.06em;
+  color: var(--lp-groen-diep);
+  translate: 0 -6%;
+}
+
+/* ---------- glazen kaartjes ---------- */
+.lp-glas {
+  position: absolute;
+  z-index: 4;
+  border: 1px solid var(--lp-glas-rand);
+  border-radius: var(--lp-r-m);
+  color: #fff;
+  background: var(--lp-glas);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  transition: border-color var(--lp-duur);
+}
+
+/* de rand licht op; het glas zelf niet, anders wordt de witte tekst te flets */
+.lp-glas:hover {
+  border-color: var(--lp-limoen);
+}
+
+.lp-glas--helper {
+  top: 25%;
+  right: 3.6%;
+  width: 200px;
+  padding: 16px;
+}
+
+.lp-glas__regel {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.lp-glas__regel > span {
+  max-width: 8.5em;
+}
+
+.lp-koppen {
+  display: flex;
+}
+
+.lp-koppen span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  margin-right: -9px;
+  border: 2px solid var(--lp-groen);
+  border-radius: 50%;
+  font: 700 0.75rem/1 var(--lp-font);
+  color: var(--lp-groen-diep);
+  background: var(--lp-limoen-fel);
+}
+
+.lp-koppen span:nth-child(2) {
+  background: var(--lp-groen-zacht);
+}
+
+.lp-koppen span:nth-child(3) {
+  background: #f5d3b8;
+}
+
+.lp-koppen .lp-koppen__plus {
+  border-color: rgba(255, 255, 255, 0.7);
+  color: #fff;
+  background: transparent;
+}
+
+.lp-glas--klus {
+  bottom: 9%;
+  left: 3.6%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px 10px 10px;
+}
+
+.lp-glas__duim {
+  width: 84px;
+  height: 58px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.lp-glas--klus strong {
+  display: block;
+  font: 500 1rem/1.3 var(--lp-font);
+}
+
+.lp-glas--klus small {
+  font-size: 0.78rem;
+  opacity: 0.88;
+}
+
+.lp-stip {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--lp-limoen);
+}
+
+.lp-glas__pijl {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.lp-hero__rond {
+  position: absolute;
+  z-index: 4;
+  top: 59%;
+  right: 3.6%;
+}
+
+.lp-hero__uitleg {
+  position: absolute;
+  z-index: 4;
+  right: 3.6%;
+  bottom: 8%;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.lp-hero__uitleg > span {
+  max-width: 4.6em;
+}
+
+.lp-hero__uitleg-duim {
+  width: 140px;
+  height: 88px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  object-fit: cover;
+  transition: border-color var(--lp-duur);
+}
+
+.lp-hero__uitleg:hover .lp-hero__uitleg-duim {
+  border-color: var(--lp-limoen);
+}
+
+/* ---------- beweging ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-in {
+    animation: lp-in 900ms var(--lp-ease) both;
+  }
+
+  .lp-in--2 {
+    animation-delay: 150ms;
+  }
+
+  .lp-in--3 {
+    animation-delay: 300ms;
+  }
+
+  .lp-menupaneel {
+    animation: lp-menu-in var(--lp-duur) var(--lp-ease) both;
+  }
+
+  @keyframes lp-in {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+  }
+
+  @keyframes lp-menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+}
+
+/* ---------- tablet / mobiel ---------- */
+@media (max-width: 1240px) {
+  .lp-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .lp-glas--helper {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .lp-kop {
+    padding: 18px 16px;
+  }
+
+  /* Inloggen en Aanmelden staan op smal scherm in het menu */
+  .lp-kop__acties .lp-pil {
+    display: none;
+  }
+
+  .lp-logo {
+    font-size: 1.6rem;
+  }
+
+  .lp-menupaneel {
+    top: 78px;
+    right: 16px;
+  }
+
+  .lp-hero {
+    height: 740px;
+  }
+
+  /* op smal scherm is één baanlijn genoeg, en die loopt rechts langs de slogan */
+  .lp-hero__lijn--1 {
+    left: 92%;
+  }
+
+  .lp-hero__lijn--2 {
+    display: none;
+  }
+
+  .lp-hero__woord {
+    top: 12%;
+    font-size: 33vw;
+  }
+
+  /* foto lager dan op breed scherm, zodat de j van "heitje" leesbaar blijft */
+  .lp-hero__foto {
+    top: 32%;
+    left: 26%;
+    width: 60vw;
+  }
+
+  .lp-hero__munt {
+    top: 44%;
+    left: -9%;
+    width: 120px;
+  }
+
+  .lp-hero__munt::after {
+    font-size: 4rem;
+  }
+
+  .lp-hero__slogan {
+    top: auto;
+    bottom: 126px;
+    left: 16px;
+    font-size: 1.25rem;
+  }
+
+  .lp-hero__uitleg {
+    display: none;
+  }
+
+  .lp-glas--klus {
+    right: 96px;
+    bottom: 28px;
+    left: 16px;
+  }
+
+  .lp-glas__duim {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* kort kaartje, anders valt het op een smalle telefoon over de slogan */
+  .lp-glas__pijl,
+  .lp-glas--klus small {
+    display: none;
+  }
+
+  .lp-hero__rond {
+    top: auto;
+    right: 16px;
+    bottom: 35px;
+  }
+}

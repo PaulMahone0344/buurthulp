@@ -40,13 +40,29 @@ export interface Vraag {
 
 export const SLOGAN = 'Heitje voor een karweitje, in jouw buurt.'
 
+// Elke link heeft een eigen pagina; de adressen horen bij PAGINAS in LandingPage.tsx.
 export const navLinks: NavLink[] = [
-  { href: '#werkwijze', label: 'Zo werkt het' },
-  { href: '#voor-wie', label: 'Voor wie' },
-  { href: '#helpers', label: 'Helpers' },
-  { href: '#veiligheid', label: 'Veiligheid' },
-  { href: '#partners', label: 'Partners' },
-  { href: '#vragen', label: 'Vragen' },
+  { href: '/zo-werkt-het', label: 'Zo werkt het' },
+  { href: '/voor-wie', label: 'Voor wie' },
+  { href: '/helpers', label: 'Helpers' },
+  { href: '/veiligheid', label: 'Veiligheid' },
+  { href: '/partners', label: 'Partners' },
+  { href: '/vragen', label: 'Vragen' },
+]
+
+export interface Wegwijzer {
+  icon: string
+  titel: string
+  tekst: string
+  href: string
+}
+
+// Voorpagina, blok "Voor de buurt": per groep de weg naar de eigen pagina.
+export const wegwijzers: Wegwijzer[] = [
+  { icon: 'House', titel: 'Bewoners', tekst: 'Plaats een klus en kies zelf je helper.', href: '/zo-werkt-het' },
+  { icon: 'Sparkles', titel: 'Helpers', tekst: 'Verdien zakgeld in je eigen buurt.', href: '/helpers' },
+  { icon: 'Users', titel: 'Ouders', tekst: 'Lees hoe we het veilig houden.', href: '/veiligheid' },
+  { icon: 'Handshake', titel: 'Jongerenwerk', tekst: 'Word partner van HeitjeHulp.', href: '/partners' },
 ]
 
 export const heroPoints: string[] = [
@@ -58,15 +74,6 @@ export const heroPoints: string[] = [
 export const introText: string[] = [
   'Je heg moet gesnoeid worden. Je hond moet uit. Of je wilt hulp met je nieuwe telefoon. Kleine klussen, maar ze blijven liggen. En vaak woont er iemand om de hoek die je graag helpt.',
   'HeitjeHulp brengt die twee bij elkaar. Jij plaatst een klus. Helpers uit je buurt reageren. Jij kiest wie het doet. HeitjeHulp regelt het contact, de betaling en de veiligheid.',
-]
-
-export const klusTypes: string[] = [
-  'Tuin bijhouden of onkruid wieden',
-  'Boodschappen doen',
-  'Hond uitlaten of planten water geven',
-  'Auto of fiets wassen',
-  'Hulp met telefoon, tablet of computer',
-  'Kleine klusjes in en om het huis',
 ]
 
 export const verhaal = {
