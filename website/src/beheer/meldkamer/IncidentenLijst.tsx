@@ -50,7 +50,7 @@ export function IncidentenLijst({ data, incidenten, filter, zetFilter, opGewijzi
       <div className="incident-list" aria-label="Incidenten">
         {zichtbaar.map((incident) => (
           <article className="incident-row incident-row--beheer" key={incident.id} aria-label={`Melding van ${incident.melderNaam}`}>
-            <span className={`sev ${incident.soort === 'nood' ? 'sev--hoog' : incident.soort === 'probleem' ? 'sev--middel' : 'sev--laag'}`}>
+            <span className={`sev ${sevKlasse(incident.soort)}`}>
               {SOORT_LABEL[incident.soort] ?? 'Melding'}
             </span>
             <div>
@@ -103,4 +103,13 @@ export function IncidentenLijst({ data, incidenten, filter, zetFilter, opGewijzi
       ) : null}
     </>
   )
+}
+
+/** Kleur van de soort-pil. B5: een signaal (geheime vraag) is rustig maar
+ * apart te herkennen; geen alarm zoals nood. */
+function sevKlasse(soort: string): string {
+  if (soort === 'nood') return 'sev--hoog'
+  if (soort === 'probleem') return 'sev--middel'
+  if (soort === 'signaal') return 'sev--signaal'
+  return 'sev--laag'
 }

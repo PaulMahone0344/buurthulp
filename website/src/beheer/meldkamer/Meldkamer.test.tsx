@@ -121,6 +121,18 @@ describe('D1 meldkamer', () => {
     expect(data.stand.incidenten[0].afhandeling).toBe('Oudere gebeld, andere jongere gestuurd.')
   })
 
+  it('B5: een signaal na de klus staat in de lijst met een eigen pil', async () => {
+    const data = new FakeBeheerData(
+      { incidenten: [incident({ id: 's1', soort: 'signaal', omschrijving: '[geheime vraag] Na de klus: "Voelde je je veilig?" Antwoord: nee.' })] },
+      COORDINATOR,
+    )
+    opzet(data)
+    const pil = await screen.findByText('Signaal na de klus')
+    expect(pil).toHaveClass('sev', 'sev--signaal')
+    expect(screen.getByText(/Voelde je je veilig/)).toBeInTheDocument()
+    expect(screen.getByRole('article', { name: 'Incidenten open' })).toHaveTextContent('1')
+  })
+
   it('zet de incidenten op volgorde, nieuwste bovenaan', async () => {
     const data = new FakeBeheerData(
       {

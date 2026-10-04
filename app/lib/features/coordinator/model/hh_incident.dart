@@ -4,11 +4,15 @@ import 'package:pocketbase/pocketbase.dart';
 import '../../../l10n/teksten_coordinator_nl.dart';
 import '../../jongere/model/hh_profiel.dart' show HhProfiel;
 
-/// De drie soorten melding uit hh_incidenten.soort.
+/// De soorten melding uit hh_incidenten.soort.
 enum HhIncidentSoort {
   nood('nood'),
   probleem('probleem'),
-  overig('overig');
+  overig('overig'),
+
+  /// B5: "nee" op de geheime vraag na de klus. Zachter dan probleem: geen
+  /// melding aan elke coordinator, wel in de lijst.
+  signaal('signaal');
 
   const HhIncidentSoort(this.code);
 
@@ -27,6 +31,7 @@ enum HhIncidentSoort {
     HhIncidentSoort.nood => TekstenCoordinatorNl.soortNood,
     HhIncidentSoort.probleem => TekstenCoordinatorNl.soortProbleem,
     HhIncidentSoort.overig => TekstenCoordinatorNl.soortOverig,
+    HhIncidentSoort.signaal => TekstenCoordinatorNl.soortSignaal,
   };
 }
 

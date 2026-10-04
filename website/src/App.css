@@ -1399,6 +1399,12 @@ button.button,
   background: #ffe0da;
 }
 
+/* B5: signaal na de klus (geheime vraag "nee"): rustig, wel opvallend */
+.sev--signaal {
+  color: #14556f;
+  background: #dcedf5;
+}
+
 /* Rapportage */
 .report-list {
   display: grid;

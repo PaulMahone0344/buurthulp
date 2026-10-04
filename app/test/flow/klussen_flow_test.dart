@@ -141,6 +141,28 @@ void main() {
     expect(find.text(TekstenReactiesNl.ingetrokken), findsOneWidget);
   });
 
+  testWidgets('onder 18 nog dicht: een rustige balk, geen foutmelding', (
+    tester,
+  ) async {
+    final reacties = FakeReactieGateway(helperId: jongereId)
+      ..reageerUitkomst = const ReageerGeweigerd(
+        'onder18',
+        'Fijn dat je wilt helpen! Helpers onder de 18 kunnen nog even niet '
+            'reageren.',
+      );
+    await pompKlussenApp(
+      tester,
+      klussenGateway: fakeKlussen(),
+      reactieGateway: reacties,
+    );
+    await tikEersteTegel(tester);
+    await tikKnop(tester, TekstenReactiesNl.reageerKnop);
+    final balk = tester.widget<HhMeldBalk>(find.byType(HhMeldBalk));
+    expect(balk.soort, HhMeldSoort.informatie);
+    expect(find.textContaining('Fijn dat je wilt helpen'), findsOneWidget);
+    expect(find.byType(ReactieVerstuurdScreen), findsNothing);
+  });
+
   testWidgets('een weigering toont de melding van de server', (tester) async {
     final reacties = FakeReactieGateway(helperId: jongereId)
       ..reageerUitkomst = const ReageerGeweigerd(

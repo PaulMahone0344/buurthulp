@@ -56,7 +56,8 @@ export type Klus = {
 export type Incident = {
   id: string
   gemeldOp: string
-  soort: 'nood' | 'probleem' | 'overig' | ''
+  // B5: 'signaal' = "nee" op de geheime vraag na de klus (zachter dan probleem)
+  soort: 'nood' | 'probleem' | 'overig' | 'signaal' | ''
   omschrijving: string
   afhandeling: string
   melderId: string

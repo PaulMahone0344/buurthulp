@@ -31,6 +31,8 @@ abstract final class TekstenCoordinatorNl {
   static const soortNood = 'Noodmelding';
   static const soortProbleem = 'Probleem';
   static const soortOverig = 'Overig';
+  // B5: "nee" op de geheime vraag ("Was alles in orde?" / "Voelde je je veilig?").
+  static const soortSignaal = 'Signaal na de klus';
 
   /// Het label van een rij in de lijst, voor de schermlezer.
   static String c1RijSemantiek(String soort, String melder, String wanneer) =>

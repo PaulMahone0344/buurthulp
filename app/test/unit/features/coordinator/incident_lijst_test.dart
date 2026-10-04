@@ -115,5 +115,8 @@ void main() {
   test('een onbekende soort van de server telt als overig', () {
     expect(HhIncidentSoort.vanCode('ramp'), HhIncidentSoort.overig);
     expect(HhIncidentSoort.vanCode('nood'), HhIncidentSoort.nood);
+    // B5 (antwoord Ibrahim 4): "nee" op de geheime vraag is een signaal.
+    expect(HhIncidentSoort.vanCode('signaal'), HhIncidentSoort.signaal);
+    expect(HhIncidentSoort.signaal.naam, 'Signaal na de klus');
   });
 }

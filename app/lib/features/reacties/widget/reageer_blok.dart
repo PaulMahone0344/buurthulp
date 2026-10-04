@@ -105,6 +105,13 @@ class _ReageerBlokState extends ConsumerState<ReageerBlok> {
           _melding = melding;
           _meldSoort = HhMeldSoort.waarschuwing;
         });
+      // Antwoord Ibrahim 5: onder 18 nog dicht (tot de site online is). Geen
+      // fout van het kind: een rustige, vriendelijke balk.
+      case ReageerGeweigerd(:final melding) when uitkomst.isOnder18Dicht:
+        setState(() {
+          _melding = melding;
+          _meldSoort = HhMeldSoort.informatie;
+        });
       case ReageerGeweigerd(:final melding):
         setState(() {
           _melding = melding;

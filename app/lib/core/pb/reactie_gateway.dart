@@ -34,6 +34,9 @@ final class ReageerGeweigerd extends ReageerUitkomst {
   final String melding;
 
   bool get vraagtOuderMee => reden == 'oudermee';
+
+  /// B5: helpers onder 18 kunnen nog niet reageren (schakelaar op de server).
+  bool get isOnder18Dicht => reden == 'onder18';
 }
 
 final class ReageerFout extends ReageerUitkomst {

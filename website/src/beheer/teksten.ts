@@ -34,6 +34,8 @@ export const SOORT_LABEL: Record<string, string> = {
   nood: 'Noodmelding',
   probleem: 'Probleem',
   overig: 'Overig',
+  // B5: geheime vraag na de klus ("Was alles in orde?" / "Voelde je je veilig?") = nee
+  signaal: 'Signaal na de klus',
 }
 
 export const ROL_LABEL: Record<Rol, string> = {
