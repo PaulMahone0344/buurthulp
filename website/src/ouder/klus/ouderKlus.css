@@ -1,0 +1,58 @@
+/* B5 — de ouder-kluspagina (#/ouder/klus). Bouwt op ouder.css (zelfde
+   tokens: --o-*), alleen de klusregels en de twee knoppen naast elkaar. */
+
+.ouder-klus {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.ouder-klus > div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.ouder-klus dt {
+  color: var(--o-muted);
+  font-size: 15px;
+}
+
+.ouder-klus dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+
+.ouder-klus__omschrijving {
+  color: var(--o-muted);
+}
+
+.ouder-klus__mee {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--o-radius);
+  background: var(--o-soft);
+  border-left: 4px solid var(--o-accent);
+}
+
+.ouder-klus__knoppen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 360px) {
+  .ouder-klus > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .ouder-klus__knoppen {
+    grid-template-columns: 1fr;
+  }
+}
