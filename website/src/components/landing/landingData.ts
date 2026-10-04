@@ -277,7 +277,7 @@ export const kaders: Kader[] = [
       'Telefoonnummers blijven verborgen. Je praat via de chat in de app.',
       // B11: de meldkamer kan elke chat lezen (besluit 4 okt).
       'De meldkamer kan chats lezen om strijders en bewoners veilig te houden.',
-      'Je gegevens staan versleuteld op servers in Europa.',
+      'Je gegevens staan op servers in Duitsland. De verbinding is versleuteld.',
     ],
   },
 ]

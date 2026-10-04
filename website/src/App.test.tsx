@@ -219,6 +219,9 @@ describe('HeitjeHulp voorpagina', () => {
     const paneel = screen.getByRole('tabpanel')
     expect(paneel).toHaveTextContent('De meldkamer kan chats lezen om strijders en bewoners veilig te houden.')
     expect(paneel).not.toHaveTextContent(/alleen mee als iemand een melding doet/)
+    // 4 okt: de schijf zelf is niet versleuteld, alleen de verbinding.
+    expect(paneel).toHaveTextContent('Je gegevens staan op servers in Duitsland. De verbinding is versleuteld.')
+    expect(paneel).not.toHaveTextContent(/staan versleuteld/)
   })
 
   it('heeft een partners-pagina met een oproep om partner te worden', () => {
