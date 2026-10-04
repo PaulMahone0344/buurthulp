@@ -415,6 +415,8 @@ test('reacties voor de bewoner: alleen open, voornaam/leeftijd/niveau/sterren/ID
   assert.equal(k.voornaam, 'Ruud');
   assert.equal(k.leeftijd, 25);
   assert.equal(k.niveau, 'Nieuw');
+  assert.equal(k.niveau_code, 'nieuw');
+  assert.equal(k.nieuw_in_de_buurt, true, 'B9: nog geen afgeronde klus');
   assert.equal(k.sterren, 4.6);
   assert.equal(k.beoordelingen, 2);
   assert.equal(k.id_gecontroleerd, true);
@@ -426,6 +428,14 @@ test('reacties voor de bewoner: alleen open, voornaam/leeftijd/niveau/sterren/ID
   }
   assert.equal(hulp.reactiesVoorBewoner(env, { kijker: { id: 'b2', rol: 'hulpvrager' }, klusId: 'k1' }).status, 403);
   assert.equal(hulp.reactiesVoorBewoner(env, { kijker: { id: 'h25', rol: 'jongere' }, klusId: 'k1' }).status, 403);
+  // B9: een recensie die de meldkamer verborg, telt niet en wordt niet getoond.
+  rec(env, 'hh_beoordelingen', 'be1').set('verborgen_op', '2026-10-04 09:00:00.000Z');
+  const verborgen = hulp.reactiesVoorBewoner(env, { kijker: { id: 'b1', rol: 'hulpvrager' }, klusId: 'k1' }).body.reacties[0];
+  assert.equal(verborgen.beoordelingen, 1);
+  assert.equal(verborgen.laatste_recensie, '');
+  // B9: echt niveau van het profiel.
+  rec(env, 'hh_profielen', 'p25').set('niveau', 'ervaren');
+  assert.equal(hulp.reactiesVoorBewoner(env, { kijker: { id: 'b1', rol: 'hulpvrager' }, klusId: 'k1' }).body.reacties[0].niveau, 'Ervaren');
   assert.equal(hulp.reactiesVoorBewoner(env, { kijker: { id: 'coord', rol: 'coordinator' }, klusId: 'k1' }).status, 200);
   // Een helper die intussen geblokkeerd raakt (ouder trok in), valt eruit.
   rec(env, 'hh_users', 'h25').set('geblokkeerd', true);

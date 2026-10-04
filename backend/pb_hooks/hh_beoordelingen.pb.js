@@ -45,7 +45,10 @@
 // ELK pad, record.get() eerst naar String/Number dwingen, findRecordsByFilter
 // met {:naam}-parameters (geen injectie), limit 0 = alles.
 //
-// DEPLOY: scripts/23-hook-deploy.sh (kopie van dit bestand EN hh_reputatie.js
+// B9: na de reputatie ook XP voor de helper die de beoordeling kreeg
+// (hh_xp_hulp.js). DEPLOY sinds B9: scripts/143-hook-deploy.sh.
+//
+// DEPLOY (M7): scripts/23-hook-deploy.sh (kopie van dit bestand EN hh_reputatie.js
 // naar /root/pb_hooks/, geen restart; PocketBase herlaadt hooks bij een
 // bestandswijziging). 10-hook-deploy.sh kent alleen hh_klussen.pb.js.
 // ROLLBACK: 23-hook-deploy.sh --rollback. Het laadt alfabetisch vóór
@@ -65,6 +68,17 @@ onRecordCreateRequest((e) => {
   } catch (err) {
     console.log("[hh_beoordelingen] reputatie bijwerken na aanmaken mislukt:", String(err));
   }
+
+  // B9: XP van de helper die de beoordeling KREEG (alleen een jongere telt;
+  // werkXpBij slaat een bewoner over). Na de reputatie: niveau Top kijkt
+  // naar de sterren.
+  try {
+    const xp = require(`${__hooks}/hh_xp_hulp.js`);
+    const env = { app: $app, Record: Record, nu: () => Date.now() };
+    xp.beloningMelden(env, xp.werkXpBij(env, String(e.record.get("naar_gebruiker") || "")), String(e.record.get("klus") || ""));
+  } catch (err) {
+    console.log("[hh_beoordelingen] XP bijwerken na aanmaken mislukt:", String(err));
+  }
 }, "hh_beoordelingen");
 
 // --------------------------------------------------------------------------
@@ -80,5 +94,16 @@ onRecordUpdateRequest((e) => {
     reputatie.werkReputatieBij($app, String(e.record.get("van_gebruiker") || ""));
   } catch (err) {
     console.log("[hh_beoordelingen] reputatie bijwerken na wijzigen mislukt:", String(err));
+  }
+
+  // B9: XP van de helper die de beoordeling KREEG (alleen een jongere telt;
+  // werkXpBij slaat een bewoner over). Na de reputatie: niveau Top kijkt
+  // naar de sterren.
+  try {
+    const xp = require(`${__hooks}/hh_xp_hulp.js`);
+    const env = { app: $app, Record: Record, nu: () => Date.now() };
+    xp.beloningMelden(env, xp.werkXpBij(env, String(e.record.get("naar_gebruiker") || "")), String(e.record.get("klus") || ""));
+  } catch (err) {
+    console.log("[hh_beoordelingen] XP bijwerken na wijzigen mislukt:", String(err));
   }
 }, "hh_beoordelingen");

@@ -130,7 +130,10 @@
 // verandert niet: kiezen zet de klus op precies dezelfde manier op
 // geaccepteerd (zelfde velden, zelfde soort logregel).
 //
-// DEPLOY: sinds B5 scripts/133-hook-deploy.sh (eerder 10/83/103/123; kopie naar /root/pb_hooks/, geen restart;
+// B9 (4 okt): na afgerond ook XP/niveau/badges (hh_xp_hulp.js); het
+// statusantwoord krijgt dan { beloning } erbij. Statusverloop ongewijzigd.
+//
+// DEPLOY: sinds B9 scripts/143-hook-deploy.sh (eerder 10/83/103/123/133; kopie naar /root/pb_hooks/, geen restart;
 // PocketBase herlaadt hooks bij een bestandswijziging). ROLLBACK: het bestand
 // weer verwijderen uit /root/pb_hooks/.
 
@@ -424,6 +427,10 @@ routerAdd(
       // M7: een afgeronde klus telt meteen mee in klussen_aantal, ook als
       // er (nog) niemand beoordeelt. Na de transactie: de klus staat er dan
       // al op afgerond, en een fout hier mag de stap nooit terugdraaien.
+      // B9: daarna XP, niveau en badges; de app toont de beloning
+      // (HBeloning) uit het antwoord. Zonder B9-bestanden (rollback van
+      // 143) of bij een fout: geen beloning, de stap blijft staan.
+      let beloning = null;
       if (naar === "afgerond") {
         try {
           const reputatie = require(`${__hooks}/hh_reputatie.js`);
@@ -432,8 +439,17 @@ routerAdd(
         } catch (err) {
           console.log("[hh_klussen] reputatie bijwerken na afgerond mislukt:", String(err));
         }
+        try {
+          const xp = require(`${__hooks}/hh_xp_hulp.js`);
+          const env = { app: $app, Record: Record, nu: () => Date.now() };
+          const uitkomst = xp.werkXpBij(env, jongereId);
+          xp.beloningMelden(env, uitkomst, klusId);
+          beloning = xp.beloning(uitkomst);
+        } catch (err) {
+          console.log("[hh_klussen] XP bijwerken na afgerond mislukt:", String(err));
+        }
       }
-      return e.json(200, { klus: klusId, status: naar });
+      return e.json(200, beloning ? { klus: klusId, status: naar, beloning: beloning } : { klus: klusId, status: naar });
     }
     if (uitkomst === "nietgevonden") {
       return e.json(404, { melding: MELDING_NIET_GEVONDEN, reden: "nietgevonden" });
@@ -839,6 +855,17 @@ onRecordUpdateRequest((e) => {
         reputatie.werkReputatieBij($app, jongeren[i]);
       }
       reputatie.werkReputatieBij($app, String(e.record.get("hulpvrager") || ""));
+      // B9: XP mee (ook terug als de klus van afgerond af gaat).
+      try {
+        const xp = require(`${__hooks}/hh_xp_hulp.js`);
+        const env = { app: $app, Record: Record, nu: () => Date.now() };
+        for (let i = 0; i < jongeren.length; i++) {
+          if (!jongeren[i]) continue;
+          xp.beloningMelden(env, xp.werkXpBij(env, jongeren[i]), e.record.id);
+        }
+      } catch (err) {
+        console.log("[hh_klussen] XP bijwerken na statuswissel mislukt:", String(err));
+      }
     }
   } catch (err) {
     console.log("[hh_klussen] reputatie bijwerken na statuswissel mislukt:", String(err));

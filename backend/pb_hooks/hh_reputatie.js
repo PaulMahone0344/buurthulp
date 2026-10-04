@@ -13,7 +13,8 @@
 //
 // WAT HET UITREKENT, voor één persoon:
 //   sterren_gemiddeld = gemiddelde van alle hh_beoordelingen met
-//                       naar_gebruiker = die persoon, afgerond op 1 decimaal
+//                       naar_gebruiker = die persoon en NIET verborgen door
+//                       de meldkamer (B9: verborgen_op leeg), op 1 decimaal
 //                       (0 als er nog geen beoordeling is)
 //   klussen_aantal    = aantal hh_klussen met status afgerond waarin die
 //                       persoon meedeed (als toegewezen jongere of als oudere)
@@ -39,7 +40,8 @@ function werkReputatieBij(app, gebruikerId) {
 
   const beoordelingen = app.findRecordsByFilter(
     "hh_beoordelingen",
-    "naar_gebruiker = {:gebruiker}",
+    // B9: een recensie die de meldkamer verborg, telt niet mee.
+    'naar_gebruiker = {:gebruiker} && verborgen_op = ""',
     "",
     0,
     0,

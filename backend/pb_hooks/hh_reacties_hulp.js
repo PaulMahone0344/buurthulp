@@ -401,21 +401,37 @@ function magKiezen(kijker, klus) {
 
 /// De laatste recensie MET tekst, één regel, hooguit 120 tekens.
 function laatsteRecensie(app, helperId) {
-  var lijst = zoekAlle(app, "hh_beoordelingen", 'naar_gebruiker = {:h} && tekst != ""', { h: helperId }, "-created", 1);
+  var lijst = zoekAlle(app, "hh_beoordelingen", 'naar_gebruiker = {:h} && tekst != "" && verborgen_op = ""', { h: helperId }, "-created", 1);
   if (!lijst.length) return "";
   return tekst(String(lijst[0].get("tekst")).split(/\r?\n/)[0]).slice(0, 120);
 }
 
+/// B9-info voor de kaart; zonder B9-bestanden (rollback van 143) blijft het
+/// "Nieuw" zoals in B5.
+function kaartB9(env, helperId) {
+  try {
+    var xp = require(HOOKS + "/hh_xp_hulp.js");
+    return xp.kaartInfo({ app: env.app }, helperId);
+  } catch (err) {
+    console.log("[hh_reacties] B9-kaartinfo niet te lezen:", String(err));
+    return { niveau: NIVEAU_NIEUW, niveau_code: "nieuw", nieuw_in_de_buurt: false };
+  }
+}
+
 function helperKaart(env, rij, helper) {
   var app = env.app;
-  var beoordelingen = zoekAlle(app, "hh_beoordelingen", "naar_gebruiker = {:h} && sterren > 0", { h: helper.id });
+  var beoordelingen = zoekAlle(app, "hh_beoordelingen", 'naar_gebruiker = {:h} && sterren > 0 && verborgen_op = ""', { h: helper.id });
   var profiel = profielVan(app, helper.id);
+  // B9: echt niveau + "Nieuw in de buurt" (0 afgeronde klussen).
+  var b9 = kaartB9(env, helper.id);
   return {
     reactie: rij.id,
     helper: helper.id,
     voornaam: voornaam(helper.get("naam")),
     leeftijd: env.dep.aanmelden.leeftijd(tekst(helper.get("geboortedatum")), vandaagVan(env.nu())),
-    niveau: NIVEAU_NIEUW,
+    niveau: b9.niveau,
+    niveau_code: b9.niveau_code,
+    nieuw_in_de_buurt: b9.nieuw_in_de_buurt,
     sterren: Number(helper.get("sterren_gemiddeld") || 0),
     beoordelingen: beoordelingen.length,
     id_gecontroleerd: !!(profiel && tekst(profiel.get("id_gecontroleerd_op"))),
