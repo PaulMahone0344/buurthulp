@@ -421,7 +421,7 @@ async function secties(su, regio, licht) {
     await afgerond(daan);
     let s = await signalen();
     check(`4e klus: één signaal (kreeg ${s.length})`, s.length === 1);
-    check('  soort signaal, tekst met voornamen en leeftijd', s[0]?.soort === 'signaal' && /^\[zelfde paar\] Helper Daan \(15\) en bewoner Kees deden 4 klussen/.test(s[0]?.omschrijving ?? ''), s[0]?.omschrijving);
+    check('  soort signaal, tekst met voornamen en leeftijd', s[0]?.soort === 'signaal' && /^\[zelfde paar\] Strijder Daan \(15\) en bewoner Kees deden 4 klussen/.test(s[0]?.omschrijving ?? ''), s[0]?.omschrijving);
     check('  melder is een coordinator, niet de helper of bewoner', s[0] && s[0].melder !== daan.id && s[0].melder !== kees.id);
     const hZiet = await daan.client.collection('hh_incidenten').getFullList();
     check('  helper ziet het signaal niet', !hZiet.some((x) => x.id === s[0]?.id));
