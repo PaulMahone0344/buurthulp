@@ -854,8 +854,10 @@ isGoedkeuring; deploy met scripts/73-hook-deploy.sh)
   verificatiestatus van iets anders naar "goedgekeurd", dan VOOR het
   opslaan: document_foto leeg (PocketBase verwijdert het bestand),
   id_gecontroleerd_op = nu, id_gecontroleerd_door = de coordinator.
-  Nogmaals goedgekeurd opslaan doet niets; afwijzen wist niet. Superuser
-  of $app (scripts, andere hooks) valt er niet onder. De M14-auditregel
+  Nogmaals goedgekeurd opslaan doet niets. ID-AFKEUR (4 okt, 155-hook-
+  deploy.sh): afwijzen wist document_foto ook (zonder id_gecontroleerd_*).
+  Sinds B2 zit het wissen in hh_aanmelden.pb.js (onRecordUpdate) en geldt
+  het langs elke weg, ook superuser en $app. De M14-auditregel
   noemt document_foto alleen bij naam.
 
 TEKSTEN (hooks, zichtbaar voor gebruikers; rolcodes en veldnamen NIET

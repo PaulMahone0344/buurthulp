@@ -32,7 +32,7 @@
 //       zonder PDOK. lat/lon/adres_bron zelf meesturen: alleen coordinator
 //       en superuser. De superuser (seed, scripts) is verder niet streng.
 //
-// 2. hh_profielen GOEDKEUREN WIST HET ID-DOCUMENT (B1-gat 2)
+// 2. hh_profielen GOEDKEUREN (B1-gat 2) EN AFKEUREN (4 okt) WISSEN HET ID-DOCUMENT
 //    onRecordUpdate (model-hook): draait bij ELKE opslag, ook via de
 //    superuser (beheer-UI), een script of een andere hook via $app. Gaat
 //    verificatiestatus van iets anders naar "goedgekeurd", dan vóór het
@@ -234,24 +234,28 @@ onRecordUpdateRequest((e) => {
 }, "hh_users");
 
 // --------------------------------------------------------------------------
-// 2. Goedkeuren wist het ID-document, langs elke weg (B1-gat 2)
+// 2. Goedkeuren en afkeuren wissen het ID-document, langs elke weg (B1-gat 2)
 // --------------------------------------------------------------------------
 onRecordUpdate((e) => {
   const beheer = require(`${__hooks}/hh_beheer_hulp.js`);
   const oud = String(e.record.original().get("verificatiestatus") || "");
   const nieuw = String(e.record.get("verificatiestatus") || "");
-  const wissen = beheer.isGoedkeuring(oud, nieuw);
-  if (wissen) {
+  const goedgekeurd = beheer.isGoedkeuring(oud, nieuw);
+  // ID-AFKEUR (4 okt): ook bij afkeuren gaat het document weg.
+  const afgekeurd = beheer.isAfkeuring(oud, nieuw);
+  if (goedgekeurd || afgekeurd) {
     // Bewust geen try/catch: lukt het zetten niet, dan liever geen
-    // goedkeuring dan een goedkeuring met het document nog op de server.
+    // besluit dan een besluit met het document nog op de server.
     e.record.set("document_foto", "");
+  }
+  if (goedgekeurd) {
     e.record.set("id_gecontroleerd_op", new DateTime());
   }
 
   e.next();
 
-  if (wissen) {
-    console.log(`[hh_aanmelden] profiel ${e.record.id} goedgekeurd: ID-document gewist`);
+  if (goedgekeurd || afgekeurd) {
+    console.log(`[hh_aanmelden] profiel ${e.record.id} ${goedgekeurd ? "goedgekeurd" : "afgewezen"}: ID-document gewist`);
   }
 }, "hh_profielen");
 

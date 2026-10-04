@@ -317,7 +317,10 @@ async function main() {
       helper2.client.collection('hh_profielen').update(profiel2.id, { document_foto: png('document2.png') }));
     const af = await mag('coordinator wijst af', () =>
       coord.client.collection('hh_profielen').update(profiel2.id, { verificatiestatus: 'afgewezen' }));
-    check('afwijzen wist document_foto NIET (alleen goedkeuren)', !!metDoc2?.document_foto && af?.document_foto === metDoc2.document_foto);
+    // ID-AFKEUR (besluit Ibrahim 4 okt): afwijzen wist het document ook,
+    // maar zet id_gecontroleerd_op niet.
+    check('afwijzen wist document_foto ook', !!metDoc2?.document_foto && af?.document_foto === '');
+    check('afwijzen zet id_gecontroleerd_op niet', !af?.id_gecontroleerd_op);
   }
 
   kop('G. Opruimen en nameten');

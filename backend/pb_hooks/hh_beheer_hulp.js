@@ -165,6 +165,13 @@ function isGoedkeuring(oudeStatus, nieuweStatus) {
   return String(nieuweStatus || "") === "goedgekeurd" && String(oudeStatus || "") !== "goedgekeurd";
 }
 
+/// ID-AFKEUR (besluit Ibrahim 4 okt): is dit de overgang naar "afgewezen"?
+/// Dan wist de hook ook het ID-document; een afgewezen helper die het later
+/// opnieuw probeert, uploadt een nieuwe foto. id_gecontroleerd_op blijft leeg.
+function isAfkeuring(oudeStatus, nieuweStatus) {
+  return String(nieuweStatus || "") === "afgewezen" && String(oudeStatus || "") !== "afgewezen";
+}
+
 module.exports = {
   AUDIT_COLLECTIES: AUDIT_COLLECTIES,
   GEHEIM: GEHEIM,
@@ -172,6 +179,7 @@ module.exports = {
   isHhPad: isHhPad,
   isCoordinator: isCoordinator,
   isGoedkeuring: isGoedkeuring,
+  isAfkeuring: isAfkeuring,
   auditDetail: auditDetail,
   plat: plat,
   kort: kort,

@@ -127,3 +127,13 @@ test('B1 isGoedkeuring: alleen de overgang naar goedgekeurd', () => {
   assert.equal(hulp.isGoedkeuring('goedgekeurd', 'in_behandeling'), false);
   assert.equal(hulp.isGoedkeuring(undefined, undefined), false);
 });
+
+test('ID-AFKEUR isAfkeuring: alleen de overgang naar afgewezen', () => {
+  assert.equal(hulp.isAfkeuring('in_behandeling', 'afgewezen'), true);
+  assert.equal(hulp.isAfkeuring('', 'afgewezen'), true);
+  assert.equal(hulp.isAfkeuring('goedgekeurd', 'afgewezen'), true);
+  assert.equal(hulp.isAfkeuring('afgewezen', 'afgewezen'), false);
+  assert.equal(hulp.isAfkeuring('in_behandeling', 'goedgekeurd'), false);
+  assert.equal(hulp.isAfkeuring('afgewezen', 'in_behandeling'), false);
+  assert.equal(hulp.isAfkeuring(undefined, undefined), false);
+});
