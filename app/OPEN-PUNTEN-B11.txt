@@ -14,3 +14,11 @@ Later (geen vraag nu):
   - partnercode via een link (heitjehulp.app/?p=CODE vult het veld vooraf) — na de webapp.
   - saldo/uitbetalingen in het beheerpaneel — met B7.
   - meldkamer plaatst zelf een klus voor een "nog"-bewoner: die is meteen gekeurd (B4).
+
+ANTWOORDEN IBRAHIM (4 okt avond)
+B11-1 kennismaking-schakelaar: PAS BIJ DE PILOT aan (bij uitrol uit laten).
+B11-2 154: JA, bij de uitrol (4 bewoners op gesproken).
+B11-3 weigeren: ZO LATEN (alleen open klussen zonder helper annuleren).
+B11-4 chat: JA, rustige regel -> gebouwd: "De meldkamer kan meelezen voor je veiligheid"
+      bovenaan de berichtenlijst (scrolt mee; in de vaste kop paste het niet bij 200% op 320).
+B11-5 zelfde-paar-schakelaar: METEEN NA DE UITROL aan.

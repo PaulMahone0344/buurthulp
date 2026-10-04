@@ -295,10 +295,16 @@ class _Berichten extends ConsumerWidget {
       AsyncData<List<HhBericht>>(:final value) when value.isEmpty => Center(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(rand),
-          child: HhLegeStaat(
-            icoon: Icons.chat_bubble_outline,
-            titel: TekstenChatNl.leeg,
-            uitleg: TekstenChatNl.leegUitleg(naam),
+          child: Column(
+            children: [
+              HhLegeStaat(
+                icoon: Icons.chat_bubble_outline,
+                titel: TekstenChatNl.leeg,
+                uitleg: TekstenChatNl.leegUitleg(naam),
+              ),
+              SizedBox(height: tussen),
+              const _MeldkamerNotitie(),
+            ],
           ),
         ),
       ),
@@ -311,22 +317,26 @@ class _Berichten extends ConsumerWidget {
         return ListView.separated(
           reverse: true,
           padding: EdgeInsets.all(rand),
-          itemCount: regels.length,
+          // B11-4: bovenaan (= laatste in een omgekeerde lijst) de notitie
+          // dat de meldkamer kan meelezen; scrolt mee, past dus altijd.
+          itemCount: regels.length + 1,
           separatorBuilder: (_, _) => SizedBox(height: tussen),
-          itemBuilder: (context, i) => switch (regels[i]) {
-            ChatDagKop(:final label) => _DagKop(label: label),
-            ChatBerichtRegel(
-              :final bericht,
-              :final isVanMij,
-              :final toonGelezen,
-            ) =>
-              BerichtBubbel(
-                bericht: bericht,
-                isVanMij: isVanMij,
-                naamAfzender: naam,
-                toonGelezen: toonGelezen,
-              ),
-          },
+          itemBuilder: (context, i) => i == regels.length
+              ? const _MeldkamerNotitie()
+              : switch (regels[i]) {
+                  ChatDagKop(:final label) => _DagKop(label: label),
+                  ChatBerichtRegel(
+                    :final bericht,
+                    :final isVanMij,
+                    :final toonGelezen,
+                  ) =>
+                    BerichtBubbel(
+                      bericht: bericht,
+                      isVanMij: isVanMij,
+                      naamAfzender: naam,
+                      toonGelezen: toonGelezen,
+                    ),
+                },
         );
       }(),
       AsyncError<List<HhBericht>>(:final error) => SingleChildScrollView(
@@ -344,6 +354,31 @@ class _Berichten extends ConsumerWidget {
         child: const HhLaadStaat.skelet(regels: 3),
       ),
     };
+  }
+}
+
+/// B11-4: de meldkamer leest elke chat (besluit 4 okt); dat zeggen we hier
+/// eerlijk, klein en rustig.
+class _MeldkamerNotitie extends StatelessWidget {
+  const _MeldkamerNotitie();
+
+  @override
+  Widget build(BuildContext context) {
+    final tekst = Theme.of(context).textTheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.shield_outlined, size: 16, color: HhKleuren.primair),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            TekstenChatNl.meldkamerLeestMee,
+            textAlign: TextAlign.center,
+            style: tekst.bodySmall?.copyWith(color: HhKleuren.tekstGedempt),
+          ),
+        ),
+      ],
+    );
   }
 }
 

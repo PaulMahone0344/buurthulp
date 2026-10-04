@@ -55,6 +55,8 @@ void main() {
         expect(find.textContaining('Boodschappen · '), findsOneWidget);
         expect(find.byTooltip(TekstenChatNl.meldProbleem), findsOneWidget);
         expect(find.text(TekstenChatNl.verborgen), findsOneWidget);
+        // B11-4: eerlijk zeggen dat de meldkamer kan meelezen.
+        expect(find.text(TekstenChatNl.meldkamerLeestMee), findsOneWidget);
         expect(find.text(TekstenChatNl.leeg), findsOneWidget);
       },
     );

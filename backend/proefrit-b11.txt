@@ -55,8 +55,9 @@ UITROLLIJST (alleen na JA, auto-mode UIT)
   5. node scripts/152-b11check.mjs --apply        verwacht 80 groen, 0 rood
   6. oude checks: 142, 132, 32, 92, 102, 112 (verwacht 123), 82, 72, 62, 04, 50, 122
   7. EIGEN JA (datamigratie): node scripts/154-b11-bewoners-gesproken.mjs --apply
-  8. EIGEN JA: schakelaars (Systeem > Instellingen > Schakelaars of hh_instellingen):
-     b11_kennismaking_verplicht, b11_zelfde_paar_aan
+  8. Schakelaars (antwoorden 4 okt): b11_zelfde_paar_aan = true METEEN na stap 6;
+     b11_kennismaking_verplicht blijft UIT tot de pilot (Systeem > Instellingen > Schakelaars).
+     154 (stap 7): JA gegeven (B11-2).
   Terug: ./scripts/153-hook-deploy.sh --rollback (hooks). Velden/rules blijven; de chat-rule
   terug = 111 --apply (en daarna 141/151-sloten opnieuw).
 

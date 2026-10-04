@@ -22,6 +22,9 @@ abstract final class TekstenChatNl {
   static const titelZonderNaam = 'Chat';
   static const meldProbleem = 'Meld een probleem';
   static const verborgen = 'Je telefoonnummer blijft verborgen';
+  // B11-4: de meldkamer leest elke chat (besluit 4 okt); dat zeggen we eerlijk.
+  static const meldkamerLeestMee =
+      'De meldkamer kan meelezen voor je veiligheid';
 
   // ---- Berichten --------------------------------------------------------
   static const vandaag = 'Vandaag';
