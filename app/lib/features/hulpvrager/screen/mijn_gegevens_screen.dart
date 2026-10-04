@@ -102,7 +102,29 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
     return anders ? keuze.velden : const {};
   }
 
+  final _naamSleutel = GlobalKey();
+  final _adresSleutel = GlobalKey();
+  final _meldingSleutel = GlobalKey();
+
+  /// Scrolt [sleutel] in beeld na de volgende frame (de melding of het veld
+  /// met de fout).
+  void _toon(GlobalKey sleutel) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final doel = sleutel.currentContext;
+      if (doel == null || !doel.mounted) return;
+      Scrollable.ensureVisible(
+        doel,
+        alignment: 0.1,
+        duration: MediaQuery.disableAnimationsOf(doel)
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
+      );
+    });
+  }
+
   Future<void> _opslaan(HhGegevens huidig) async {
+    // Toetsenbord weg, zodat de melding boven de knop te zien is.
+    FocusManager.instance.primaryFocus?.unfocus();
     final invoer = _invoer;
     setState(() {
       _melding = null;
@@ -113,7 +135,14 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
           ? TekstenAdresNl.validatieNietBevestigd
           : null;
     });
-    if (_naamFout != null || _adresFout != null) return;
+    if (_naamFout != null || _adresFout != null) {
+      setState(() {
+        _meldSoort = HhMeldSoort.fout;
+        _melding = TekstenHulpvragerNl.gegevensNakijken;
+      });
+      _toon(_naamFout != null ? _naamSleutel : _adresSleutel);
+      return;
+    }
 
     final adresWijziging = _adresWijziging(huidig);
     final gewijzigd = {...huidig.gewijzigdeVelden(invoer), ...adresWijziging};
@@ -122,6 +151,7 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
         _meldSoort = HhMeldSoort.informatie;
         _melding = TekstenHulpvragerNl.gegevensNietsGewijzigd;
       });
+      _toon(_meldingSleutel);
       return;
     }
 
@@ -147,6 +177,7 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
           _melding = fout.melding;
       }
     });
+    _toon(_meldingSleutel);
   }
 
   @override
@@ -161,10 +192,6 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_melding != null) ...[
-            HhMeldBalk(soort: _meldSoort!, tekst: _melding!),
-            SizedBox(height: tussen),
-          ],
           switch (gegevens) {
             AsyncData(:final value) => _formulier(value),
             AsyncError(:final error) => Column(
@@ -206,6 +233,7 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
         Text(TekstenHulpvragerNl.gegevensUitleg, style: tekst.bodyLarge),
         SizedBox(height: tussen),
         HhInvoer(
+          key: _naamSleutel,
           label: TekstenNl.veldNaam,
           controller: _velden[HhGegevens.veldNaam],
           isVerplicht: true,
@@ -225,6 +253,7 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
         ),
         SizedBox(height: tussen),
         HhKaart(
+          key: _adresSleutel,
           kop: TekstenHulpvragerNl.gegevensKaartAdres,
           child: AdresZoeker(
             beginPostcode: gegevens.postcode,
@@ -276,6 +305,16 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
           ),
         ),
         SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+        // De uitkomst staat vlak boven de knop, niet bovenaan: anders zie je
+        // na "Opslaan" niets gebeuren (Ibrahim 4 okt).
+        if (_melding != null) ...[
+          HhMeldBalk(
+            key: _meldingSleutel,
+            soort: _meldSoort!,
+            tekst: _melding!,
+          ),
+          SizedBox(height: tussen),
+        ],
         HhKnop(
           label: TekstenNl.opslaan,
           icoon: Icons.save_outlined,

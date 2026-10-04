@@ -781,6 +781,44 @@ void main() {
       expect(find.text(TekstenHulpvragerNl.gegevensOpgeslagen), findsOneWidget);
     });
 
+    testWidgets(
+      'opslaan met een niet gecontroleerd adres: melding boven de knop, in beeld',
+      (tester) async {
+        final klusGateway = fakeKlusGateway();
+        await tester.pumpWidget(
+          hhHulpvragerWikkel(
+            const MijnGegevensScreen(),
+            klusGateway: klusGateway,
+          ),
+        );
+        await tester.pumpAndSettle();
+        // Huisnummer wijzigen = adres aangeraakt, maar nog niet gecontroleerd.
+        final huisnummer = find.byType(TextField).at(3);
+        await tester.ensureVisible(huisnummer);
+        await tester.enterText(huisnummer, '86');
+        await tester.pump();
+        await tester.ensureVisible(find.text(TekstenNl.opslaan));
+        await tester.tap(find.text(TekstenNl.opslaan));
+        await tester.pumpAndSettle();
+        expect(klusGateway.laatsteGegevensBody, isNull);
+        final melding = find.text(TekstenHulpvragerNl.gegevensNakijken);
+        expect(melding, findsOneWidget);
+        // Boven de knop, niet bovenaan het scherm.
+        expect(
+          tester.getTopLeft(melding).dy,
+          lessThan(tester.getTopLeft(find.text(TekstenNl.opslaan)).dy),
+        );
+        expect(
+          tester.getTopLeft(melding).dy,
+          greaterThan(
+            tester
+                .getTopLeft(find.text(TekstenHulpvragerNl.gegevensKaartAdres))
+                .dy,
+          ),
+        );
+      },
+    );
+
     testWidgets('niets gewijzigd stuurt niets', (tester) async {
       final klusGateway = fakeKlusGateway();
       await tester.pumpWidget(

@@ -125,4 +125,9 @@ abstract final class TekstenHulpvragerNl {
     'november',
     'december',
   ];
+
+  /// Mijn gegevens: na "Opslaan" met een fout (naam leeg of adres niet
+  /// gecontroleerd). Staat boven de knop; het scherm scrolt naar het veld.
+  static const gegevensNakijken =
+      'Nog niet opgeslagen. Kijk het veld met de rode tekst na.';
 }

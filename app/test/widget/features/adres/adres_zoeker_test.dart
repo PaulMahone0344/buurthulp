@@ -241,4 +241,61 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  group('iPhone-bevindingen 4 okt', () {
+    testWidgets(
+      'drie vakken naast elkaar staan op dezelfde hoogte, of onder elkaar',
+      (tester) async {
+        // Breedtes waar "Huisnummer *" krap past of net niet (kaart binnen een scherm).
+        for (final breedte in [330.0, 360.0, 380.0, 400.0, 440.0]) {
+          tester.view.physicalSize = Size(breedte, 900);
+          tester.view.devicePixelRatio = 1.0;
+          await _Proef().pomp(tester);
+          await tester.pumpAndSettle();
+          final p = tester.getTopLeft(_veld(TekstenAdresNl.veldPostcode));
+          final h = tester.getTopLeft(_veld(TekstenAdresNl.veldHuisnummer));
+          final t = tester.getTopLeft(_veld(TekstenAdresNl.veldToevoeging));
+          final naastElkaar =
+              (p.dy - h.dy).abs() < 1 && (p.dy - t.dy).abs() < 1;
+          final onderElkaar = h.dy > p.dy + 1;
+          expect(
+            naastElkaar || onderElkaar,
+            isTrue,
+            reason: 'breedte $breedte',
+          );
+          if (onderElkaar) {
+            expect(
+              (h.dy - t.dy).abs() < 1 || t.dy > h.dy + 1,
+              isTrue,
+              reason:
+                  'nummer en toevoeging op één lijn of onder elkaar ($breedte)',
+            );
+          }
+          expect(tester.takeException(), isNull);
+        }
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      },
+    );
+
+    testWidgets(
+      'huisnummer: toetsenbord met een return-toets (iOS heeft anders geen Klaar)',
+      (tester) async {
+        await _Proef().pomp(tester);
+        await tester.pumpAndSettle();
+        final veld = tester.widget<TextField>(
+          _veld(TekstenAdresNl.veldHuisnummer),
+        );
+        expect(
+          veld.keyboardType,
+          const TextInputType.numberWithOptions(signed: true),
+        );
+        expect(
+          veld.onTapOutside,
+          isNotNull,
+          reason: 'naast het veld tikken haalt het toetsenbord weg',
+        );
+      },
+    );
+  });
 }

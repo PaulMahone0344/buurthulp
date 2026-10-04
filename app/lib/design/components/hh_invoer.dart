@@ -101,6 +101,11 @@ class HhInvoer extends StatelessWidget {
               textCapitalization: textCapitalization,
               onChanged: onChanged,
               onSubmitted: onSubmitted,
+              // Naast het veld tikken haalt het toetsenbord weg. Nodig voor
+              // het cijfer- en telefoonblok van iOS: die hebben geen Klaar
+              // (Ibrahim 4 okt).
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               style: tekst.bodyLarge,
               decoration: InputDecoration(
                 helperText: hulptekst,

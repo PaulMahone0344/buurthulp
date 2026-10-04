@@ -106,10 +106,6 @@ class _MijnAdresScreenState extends ConsumerState<MijnAdresScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_melding != null) ...[
-            HhMeldBalk(soort: _meldSoort!, tekst: _melding!),
-            SizedBox(height: tussen),
-          ],
           Text(TekstenAdresNl.mijnAdresUitleg, style: tekst.bodyLarge),
           SizedBox(height: tussen),
           AdresZoeker(
@@ -126,11 +122,20 @@ class _MijnAdresScreenState extends ConsumerState<MijnAdresScreen> {
             }),
           ),
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+          // De uitkomst vlak boven de knop (Ibrahim 4 okt: bovenaan zag je
+          // na "Opslaan" niets gebeuren).
+          if (_melding != null) ...[
+            HhMeldBalk(soort: _meldSoort!, tekst: _melding!),
+            SizedBox(height: tussen),
+          ],
           HhKnop(
             label: TekstenNl.opslaan,
             icoon: Icons.save_outlined,
             isBezig: _isBezig,
-            onPressed: _opslaan,
+            onPressed: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+              _opslaan();
+            },
           ),
         ],
       ),

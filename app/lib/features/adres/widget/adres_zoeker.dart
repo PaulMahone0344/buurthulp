@@ -229,7 +229,9 @@ class _AdresZoekerState extends ConsumerState<AdresZoeker> {
       controller: _huisnummer,
       isVerplicht: true,
       isActief: actief,
-      keyboardType: TextInputType.number,
+      // signed: true geeft op iOS het toetsenbord met een return-toets
+      // ("Volgende"); het gewone cijferblok heeft geen Klaar (Ibrahim 4 okt).
+      keyboardType: const TextInputType.numberWithOptions(signed: true),
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(5),
@@ -348,6 +350,29 @@ class _DrieVelden extends StatelessWidget {
   /// Minimale breedte per veld bij gewone tekstgrootte.
   static const minVeldBreedte = 104.0;
 
+  /// Past [label] (met " *" als hij verplicht is) op één regel in
+  /// [breedte]? Anders zakt dat vak lager dan de andere (Ibrahim 4 okt:
+  /// "Huisnummer *" brak af en het vak stond scheef).
+  static bool _pastOpEenRegel(
+    BuildContext context,
+    String label,
+    double breedte, {
+    bool verplicht = false,
+  }) {
+    final stijl = Theme.of(
+      context,
+    ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600);
+    final schilder = TextPainter(
+      text: TextSpan(text: verplicht ? '$label *' : label, style: stijl),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final past = schilder.width <= breedte;
+    schilder.dispose();
+    return past;
+  }
+
   @override
   Widget build(BuildContext context) {
     final dichtheid = HhDichtheidScope.van(context);
@@ -355,9 +380,24 @@ class _DrieVelden extends StatelessWidget {
     final schaal = MediaQuery.textScalerOf(context).scale(1);
     return LayoutBuilder(
       builder: (context, maat) {
+        // Breedtes zoals de Row hieronder ze uitdeelt (flex 4 : 3 : 3).
+        final rest = maat.maxWidth - 2 * tussen;
         final drie =
-            (maat.maxWidth - 2 * tussen) / 3 >= minVeldBreedte * schaal &&
-            dichtheid == HhDichtheid.normaal;
+            rest / 3 >= minVeldBreedte * schaal &&
+            dichtheid == HhDichtheid.normaal &&
+            _pastOpEenRegel(
+              context,
+              TekstenAdresNl.veldPostcode,
+              rest * 0.4,
+              verplicht: true,
+            ) &&
+            _pastOpEenRegel(
+              context,
+              TekstenAdresNl.veldHuisnummer,
+              rest * 0.3,
+              verplicht: true,
+            ) &&
+            _pastOpEenRegel(context, TekstenAdresNl.veldToevoeging, rest * 0.3);
         if (drie) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,9 +410,17 @@ class _DrieVelden extends StatelessWidget {
             ],
           );
         }
+        final helft = (maat.maxWidth - tussen) / 2;
         final twee =
-            (maat.maxWidth - tussen) / 2 >= minVeldBreedte * schaal &&
-            dichtheid == HhDichtheid.normaal;
+            helft >= minVeldBreedte * schaal &&
+            dichtheid == HhDichtheid.normaal &&
+            _pastOpEenRegel(
+              context,
+              TekstenAdresNl.veldHuisnummer,
+              helft,
+              verplicht: true,
+            ) &&
+            _pastOpEenRegel(context, TekstenAdresNl.veldToevoeging, helft);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
