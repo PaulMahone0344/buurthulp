@@ -1,0 +1,50 @@
+HeitjeHulp ADRES — open punten (4 okt 2026, branch adres/streng)
+================================================================
+
+VRAGEN VOOR IBRAHIM (max 5)
+
+1. Grens op het opzoeken: nu 60 adressen per uur per wifi-netwerk zonder
+   account, 120 met account, de meldkamer zonder grens. Bij een
+   aanmeldmiddag in een buurthuis (veel mensen op één wifi) kan 60 te krap
+   zijn. Zo laten, of hoger (bv. 200)?
+
+2. Uitzondering "adres handmatig" (alleen meldkamer, bv. woonwagen of nieuwbouw
+   die nog niet in het register staat): zo'n account krijgt de markering
+   "handmatig" en de wijk die de meldkamer kiest. Wil je in het paneel een
+   lijstje/pil "adres handmatig" of "adres niet gecontroleerd" (PDOK was even
+   weg), zodat de meldkamer ze terugvindt? (Nu nog niet gebouwd.)
+
+3. Het punt op de kaart is nu precies het huis (PDOK). Dat was met Nominatim
+   ook al bijna zo. Moet een helper die een klus nog NIET heeft aangenomen het
+   punt een beetje vager zien (bv. op straatniveau), of is precies goed?
+
+4. Oude app in de winkels: na de server-uitrol geeft die bij een fout adres
+   een algemene melding ("controleer je invoer"). Server en nieuwe app op
+   dezelfde dag uitrollen, of eerst de server (veiliger: dan kan niemand
+   meer een fout adres invoeren)?
+
+5. Helpers: hun adres staat nu op een eigen scherm "Mijn adres" (via de gele
+   balk). Wil je dat ook vast in het profiel van de helper (Profiel -> Mijn
+   adres), zodat een helper die verhuist het zelf kan aanpassen?
+
+NOTITIES (geen vraag)
+
+- Bestaande accounts: op prod hebben alle 7 bewoners/helpers een onvolledig
+  adres (6 seed-accounts zonder postcode, 1 echt account met "4001"). Zij
+  zien na inloggen de gele balk "Vul je adres aan". Geen datamigratie.
+  Script 121 zet later alleen het punt (lat/lon) bij accounts met een al
+  volledig adres; nu heeft het niets te doen.
+
+- Al bestaand, niet door ADRES (Riverpod 3.3.2): verandert de sessie (naam,
+  taal, adres) terwijl Start eronder ligt, dan geeft de debug-app bij
+  terugkomen "markNeedsBuild() called during build" (alleen debug; release
+  bouwt gewoon opnieuw). Na te bootsen met Instellingen -> taal wijzigen ->
+  terug als helper. De adres-schermen omzeilen het (de sessie wordt pas
+  bijgewerkt als het adres-scherm weg is). Voor Instellingen: aparte klus
+  (riverpod bijwerken naar 3.4.x of hetzelfde patroon).
+
+- Klus plaatsen gebruikt het adres uit Mijn gegevens; het vrije adresveld in
+  "Waar?" verschijnt alleen nog als dat adres onbekend is (oud gedrag). Een
+  klus op een ANDER adres dan thuis gaat nog via Nominatim.
+
+- PDOK geeft huisletters soms klein ("1a-01"); we tonen ze zoals BAG ze kent.

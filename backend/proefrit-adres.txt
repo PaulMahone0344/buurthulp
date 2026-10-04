@@ -1,0 +1,153 @@
+HeitjeHulp ADRES — proefrit (DRY-RUN tegen prod, niets geschreven) 4 okt 2026
+Branch adres/streng (worktree ~/flutter-builds/hh-adres, vanaf main 4d3057a).
+NOG NIET OP PROD. Uitrol alleen na JA van Ibrahim, auto-mode uit voor 123.
+
+WAT VERANDERT ER OP PROD (na JA)
+  Velden (120, additief): hh_users toevoeging, lat, lon, adres_bron.
+  Rules: GEEN. De hook weigert lat/lon/adres_bron van een gewone gebruiker.
+  Hooks (123): NIEUW hh_adres_hulp.js + hh_adres.pb.js (GET /api/hh/adres);
+    GEWIJZIGD hh_aanmelden_hulp.js (werkgebiedUitPunt, 4 velden verborgen
+    voor anderen), hh_aanmelden.pb.js (adres via PDOK bij aanmelden/wijzigen,
+    werkgebied uit het PDOK-punt), hh_klussen.pb.js (klus op het adres van de
+    bewoner krijgt zijn PDOK-punt).
+  Data: GEEN datamigratie. 121 (alleen punt zetten) heeft op prod nu niets te
+    doen (zie telling hieronder).
+  Nieuw gedrag:
+    - aanmelden (bewoner en helper) en adres wijzigen kan alleen nog met een
+      adres dat bij PDOK bestaat; straat en plaats komen van PDOK;
+    - "4001" zonder letters, een huisnummer met letters erin (zonder vakje
+      toevoeging: oude app "12a" wordt 12 + a), een verzonnen adres: 400 met
+      een Nederlandse melding;
+    - bestaande accounts met een onvolledig adres blijven werken (naam,
+      telefoon enz. wijzigen mag), tot ze hun adres aanpassen;
+    - werkgebied uit het exacte punt; Nominatim alleen nog als terugval.
+
+LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie; schema + data = de lokale
+proef van de integratie B3+B4+B6 (prod-schema van 4 okt, alleen gelezen);
+hooks van main als startpunt, dan PRECIES de 5 bestanden van 123; nep-PDOK
+met echte BAG-gegevens van 4 adressen + een flat met toevoegingen; nep-
+Nominatim; nep-SMTP)
+  120 dry-run -> --apply -> nogmaals: "Niets te doen" (idempotent)
+  122 --apply: 64 groen, 0 rood (2x gedraaid; tweede keer na een herstart,
+      want de rate-limit telt per uur). 6 PDOK-verzoeken (4 adressen + 2 tijdens
+      de nep-storing), elke volgende opzoeking uit de cache.
+  121 dry-run en --apply op 4 lokale "oude" accounts: 1 gezet (alleen lat, lon,
+      adres_bron; postcode "4001ma" bleef staan), 3 overgeslagen met reden
+      (3 adressen/toevoeging kiezen, straat wijkt af, niet gevonden).
+  Bestaande checks met de ADRES-hooks: 82 79 groen (was 80: de "onbekend"-
+  registratie is nu een weigering), 72 54, 62 118, 04 223, 50 60, 92 89,
+  102 144, 112 124. Allemaal 0 rood.
+  App tegen dezelfde lokale server (test/smoke/adres_lokaal_smoke_test.dart):
+  opzoeken (1, 3, niet gevonden, ongeldig), aanmelden met de keuze (wijk uit
+  het punt), aanmelden met een niet-bestaand adres -> de melding van de server.
+
+=== DRY-RUNS TEGEN PROD (alleen lezen) ===
+
+=== node scripts/120-adres-velden.mjs
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+  ✓ bestaat al (eerdere milestone): hh_users.adres
+  ✓ bestaat al (eerdere milestone): hh_users.postcode
+  ✓ bestaat al (eerdere milestone): hh_users.plaats
+  ✓ bestaat al (eerdere milestone): hh_users.huisnummer
+  ✓ bestaat al (eerdere milestone): hh_users.wijk
+  ✓ bestaat al (eerdere milestone): hh_users.werkgebied_status
+  + ZOU toevoegen: hh_users.toevoeging (text, max 6)
+  + ZOU toevoegen: hh_users.lat (number)
+  + ZOU toevoegen: hh_users.lon (number)
+  + ZOU toevoegen: hh_users.adres_bron (select: pdok | handmatig | ongecontroleerd)
+
+DRY-RUN: 4 veld(en) zouden worden toegevoegd. Draai met --apply.
+
+=== node scripts/122-adrescheck.mjs
+Verbonden met https://api.qawayahbase.com (DRY-RUN) 
+
+DRY-RUN: er wordt NIETS geschreven (ook geen PDOK-verzoek).
+
+B. Voorwaarden op de server (alleen lezen)
+  ✗ hh_users.toevoeging bestaat — draai 120 --apply
+  ✗ hh_users.lat bestaat — draai 120 --apply
+  ✗ hh_users.lon bestaat — draai 120 --apply
+  ✗ hh_users.adres_bron bestaat — draai 120 --apply
+  ✗ de route /api/hh/adres bestaat (ongeldige postcode -> 400 postcode, kreeg 404 undefined) — draai 123-hook-deploy.sh
+  ✓ wijk "Tiel en omstreken" bestaat (actief, regio)
+
+Wat --apply ZOU doen:
+  · tijdelijke accounts (adrescheck-...@heitjehulp.invalid): coordinator, ~6 bewoners, ~3 helpers;
+  · hooguit 4 PDOK-verzoeken (Tiel, Ochten, Amsterdam, niet-bestaand), 10 minuten onthouden;
+  · een klus op het adres van een bewoner (punt = PDOK-punt, geen Nominatim);
+  · rate-limit: tot 61 anonieme opzoekingen met een ONGELDIGE postcode (dit IP daarna een uur geen anonieme opzoekingen);
+  · PDOK-storing alleen lokaal (HH_NEP_PDOK_BEDIENING); op prod overgeslagen;
+  · alles opruimen en nameten.
+
+1 groen, 5 rood (leescontroles).
+Rood is verwacht zolang 120 en 123 nog niet uitgerold zijn.
+
+=== telling bewoners/helpers op prod (alleen lezen, los scriptje in de scratch-map)
+7 bewoners/helpers
+  1x hulpvrager echt: onvolledig (gele balk) [postcode "4001"]
+  3x hulpvrager test/seed: onvolledig (gele balk) [postcode ""]
+  3x jongere test/seed: onvolledig (gele balk) [postcode ""]
+  -> 121 zou nu niets zetten (geen enkel account heeft een volledig adres).
+     Na de uitrol zien deze 7 accounts de gele balk "Vul je adres aan" (de 6
+     seed-accounts hebben geen postcode; het echte account heeft "4001").
+  121 zelf kan pas na 120 + 123 draaien (filtert op adres_bron, vraagt de route).
+
+---------------------------------------------------------------------
+UITROLLIJST (volgorde; na JA, auto-mode UIT)
+---------------------------------------------------------------------
+  0. cd "<repo>/backend"   (branch adres/streng, of main na de merge)
+     set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+  1. node scripts/00-backup.mjs
+       verwacht: pad van backups/<datum>.json (bewaren voor rollback)
+  2. node scripts/120-adres-velden.mjs
+       verwacht: 4x "+ ZOU toevoegen" (toevoeging, lat, lon, adres_bron)
+     node scripts/120-adres-velden.mjs --apply
+       verwacht: "4 veld(en) toegevoegd"
+  3. ./scripts/123-hook-deploy.sh      (DIRECT na 2)
+       verwacht stap 2: + NIEUW hh_adres_hulp.js, + NIEUW hh_adres.pb.js
+       verwacht 2b: alleen ADRES-regels in hh_aanmelden_hulp.js
+       (werkgebiedUitPunt + lat/lon/toevoeging/adres_bron verborgen),
+       hh_aanmelden.pb.js (blok "ADRES" in aanmaken/bijwerken) en
+       hh_klussen.pb.js (puntVanBewoner); stap 6: alleen de 2 nieuwe erbij.
+  4. node scripts/122-adrescheck.mjs --apply
+       verwacht: 60 groen, 0 rood, 1 overgeslagen (H PDOK-storing: alleen
+       lokaal). Max 4 PDOK-verzoeken. LET OP: sectie I (rate-limit) maakt dat
+       dit IP een uur lang ANONIEM geen adres kan opzoeken (aanmelden in de app
+       vanaf hetzelfde wifi dus pas over een uur, of draai eerst
+       "--apply --zonder-limiet" en de rate-limit later). Niet 2x binnen een uur.
+  5. node scripts/121-adres-coordinaten.mjs
+       verwacht: "0 zou(den) gezet worden ... 7 onvolledig". Geen --apply nodig.
+  6. Bestaande checks (allemaal lokaal groen):
+       node scripts/82-b2check.mjs --apply                        verwacht  79 groen
+       node scripts/72-b1check.mjs --apply                        verwacht  54 groen
+       node scripts/62-beheercheck.mjs --apply                    verwacht 118 groen
+       node scripts/04-rulecheck.mjs --apply                      verwacht 223 groen
+       node scripts/50-koppelcheck.mjs --apply                    verwacht  60 groen
+       node scripts/92-b3check.mjs --apply                        verwacht  89 groen
+       node scripts/102-b4check.mjs --apply                       verwacht 144 groen
+       node --experimental-eventsource scripts/112-b6check.mjs --apply  verwacht 124 groen
+     82/72/04/62 gebruiken nu echte adressen (scripts/_adressen.mjs); binnen
+     10 minuten na 122 komen die uit de cache (geen extra PDOK-verzoek).
+  7. Paneel (website, telefonische aanmelding) en app (EAS-build) uitrollen.
+     Ze werken pas goed MET stap 3 (de route). Zonder route: de app laat
+     aanmelden toch toe ("ongecontroleerd"), het paneel meldt "PDOK niet
+     bereikbaar" en biedt "adres handmatig".
+
+OUDE APP (in de winkels) NA STAP 3
+  - helper aanmelden: postcode + huisnummer ("12a" wordt 12 + a) -> werkt als
+    het adres bestaat; anders een algemene foutmelding (de oude app kent de
+    nieuwe melding niet);
+  - bewoner aanmelden: straat/plaats worden door PDOK overschreven; bestaat
+    het adres niet -> algemene foutmelding;
+  - oude "Mijn gegevens" (straat/postcode/plaats vrij): de server houdt PDOK
+    aan (straat/plaats terug naar PDOK) of weigert zonder huisnummer.
+  Advies: nieuwe app kort na stap 3.
+
+ROLLBACK
+  ./scripts/123-hook-deploy.sh --rollback   (3 gewijzigde terug, 2 nieuwe weg;
+     daarna gedraagt alles zich als vóór ADRES; Nominatim weer voor alles)
+  De 4 velden mogen blijven (additief, niemand leest ze zonder hook). Zonder
+  hook kan een gebruiker lat/lon/adres_bron wel zelf zetten: onschadelijk
+  (alleen de hook leest ze), maar draai 123 dan snel opnieuw of laat ze leeg.
+  Verwijderen van de velden alleen met een apart besluit.

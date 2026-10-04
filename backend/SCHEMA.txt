@@ -1406,3 +1406,99 @@ INTEGRATIE B3+B4+B6 (antwoorden Ibrahim 4 okt): GESPREK VERWIJDEREN EN AVG
 UITROLLEN (volgorde)
   00-backup.mjs -> 110 --apply -> 111 --apply -> 113-hook-deploy.sh ->
   112 --apply -> (72, 62 ter controle) -> app
+
+================================================================
+ADRES - STRENGER ADRES + SUGGESTIE ZOALS BOL.COM (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-adres.txt)
+================================================================
+
+Aanleiding: testaccount met postcode "4001" (zonder letters) en geen wijk.
+Besluit Ibrahim: postcode + huisnummer invullen -> straat en plaats komen
+vanzelf (PDOK Locatieserver, BAG, overheid, gratis, geen sleutel).
+
+VELDEN (scripts/120-adres-velden.mjs, additief, idempotent; geen datamigratie)
+  hh_users  toevoeging   tekst, max 6: huisletter + "-" + toevoeging zoals BAG
+                         ("A", "2", "a-01")
+            lat, lon     getal: het exacte PDOK-punt (0/leeg = onbekend)
+            adres_bron   keuze: pdok | handmatig | ongecontroleerd
+                         (leeg = van vóór ADRES). lat/lon/adres_bron zet
+                         alleen de server, de coordinator of de superuser.
+  GEEN rule-wijziging: de hook weigert lat/lon/adres_bron van anderen (400).
+  Zo hoeven de gewikkelde hh_users-rules (71/80) niet opnieuw.
+
+REGELS (de server is de waarheid; hh_adres_hulp.js, getest zonder server)
+  - postcode: 4 cijfers (niet 0 vooraan) + 2 letters, opgeslagen als "4001 MA"
+  - huisnummer: alleen cijfers (1-99999); "12a" uit de oude app wordt
+    huisnummer 12 + toevoeging a
+  - toevoeging: leeg, of letters/cijfers (met - of spatie), max 6
+  - het adres moet bij PDOK bestaan; straat (adres), plaats, punt en
+    adres_bron = pdok komen van PDOK en overschrijven vrije invoer
+  - geen toevoeging en meer adressen op het nummer: het kale nummer als dat
+    bestaat, anders 400 "Kies je toevoeging"
+  Geldt voor rol hulpvrager en jongere: bij aanmaken altijd (ook door de
+  coordinator), bij bijwerken alleen als een adresveld (adres, postcode,
+  huisnummer, toevoeging, plaats) verandert. Bestaande accounts met een
+  onvolledig adres kunnen dus gewoon hun naam enz. wijzigen.
+  Uitzonderingen:
+    coordinator/superuser met adres_bron = "handmatig": geen PDOK (markering)
+    PDOK onbereikbaar: aanmelden gaat door, adres_bron = ongecontroleerd,
+      lat/lon 0, werkgebied via Nominatim op de postcode (B2-weg)
+    superuser (seed, scripts): niet streng; alleen een postcode -> B2-weg
+  Weigering: 400 met message = de Nederlandse melding en
+  data.adres.code = "hh_adres_<reden>" (verplicht, postcode, huisnummer,
+  toevoeging, kiestoevoeging, nietgevonden, servervelden). De app toont de
+  melding (HhFoutSoort.adresOngeldig).
+
+WERKGEBIED (hh_aanmelden.pb.js)
+  Met een PDOK-adres komt het werkgebied uit het EXACTE punt
+  (werkgebiedUitPunt, Tiel + 20 km), zonder Nominatim. Nominatim alleen nog
+  als terugval (PDOK weg, uitzondering handmatig, superuser zonder adres).
+
+ROUTE  GET /api/hh/adres?postcode=&huisnummer=&toevoeging=  (hh_adres.pb.js)
+  PUBLIEK (ook bij aanmelden). Rate-limit per IP per uur ($app.store, zoals
+  B3): anoniem 60, ingelogd 120, coordinator/superuser geen grens.
+  PDOK: free?q=postcode:4001MA and huisnummer:1&fq=type:adres&rows=50, time-out
+  5 s, User-Agent HeitjeHulp. Antwoord 10 minuten in de cache (ook "niet
+  gevonden"; een storing niet), zodat opzoeken en daarna aanmelden PDOK
+  maar één keer vragen.
+    200 { gevonden: true, adressen: [{ straat, huisnummer, toevoeging,
+          postcode "4001 MA", plaats, gemeente, lat, lon, adres, weergave,
+          binnen_werkgebied }] }
+    200 { gevonden: false, reden: nietgevonden | toevoeging (+ adressen) |
+          dienst, melding }
+    400 { gevonden: false, reden: postcode | huisnummer | toevoeging, melding }
+    429 { gevonden: false, reden: limiet, melding }
+  HH_PDOK_URL (omgeving) alleen voor een lokale proef; op prod leeg.
+
+KLUSSEN (hh_klussen.pb.js, M5-geocoding)
+  Staat een klus op het adres van de bewoner ("Kerkstraat 1, 4001 MA Tiel",
+  zoals app en paneel hem samenstellen) en heeft de bewoner adres_bron = pdok
+  met een punt, dan krijgt de klus dat punt en vraagt de hook Nominatim niets.
+  Gekozen: het punt staat op hh_users (lat/lon), niet in een aparte tabel:
+  het hoort bij het adres en verandert mee als het adres verandert.
+
+VERRIJKEN  lat, lon, toevoeging en adres_bron horen bij VERBORGEN_VOOR_ANDEREN
+  van een helper (een bewoner ziet ze niet).
+
+SCRIPTS
+  120-adres-velden.mjs     velden (dry-run standaard)
+  121-adres-coordinaten.mjs bestaande accounts met geldige 6-tekens-postcode +
+                           huisnummer en lege adres_bron: via de route het
+                           PDOK-punt; zet ALLEEN lat, lon, adres_bron = pdok
+                           (straat wijkt af / meer toevoegingen / niet
+                           gevonden: overslaan + lijst). Dry-run standaard.
+  122-adrescheck.mjs       bewijs (dry-run standaard; --zonder-limiet slaat de
+                           rate-limit over). Lokaal 64 groen.
+  123-hook-deploy.sh       5 bestanden (2 nieuw: hh_adres_hulp.js, hh_adres.pb.js;
+                           3 gewijzigd: hh_aanmelden_hulp.js, hh_aanmelden.pb.js,
+                           hh_klussen.pb.js), backupmap /root/hh_hook_backups/adres
+  _adressen.mjs            vaste echte adressen voor de checks (Kerkstraat 1
+                           Tiel, Kerkstraat 2 Ochten, Dam 1 Amsterdam)
+  Aangepast: 04, 62, 72, 82 (registraties met een echt adres; 62 telefonische
+  oudere = uitzondering handmatig; 82 verwacht een weigering voor een
+  niet-bestaand adres i.p.v. status onbekend).
+  Test zonder server: node --test backend/tests/*.test.mjs (332 tests).
+
+UITROLLEN (volgorde; zie proefrit-adres.txt)
+  00-backup.mjs -> 120 --apply -> 123-hook-deploy.sh -> 122 --apply ->
+  121 (dry-run) -> 82, 72, 62, 04, 50, 92, 102, 112 -> paneel + app
