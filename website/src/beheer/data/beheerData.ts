@@ -6,6 +6,7 @@
 // die zo op het scherm kan.
 
 import type {
+  AdresZoekUitkomst,
   Auditregel,
   Betaling,
   Coordinator,
@@ -53,6 +54,8 @@ export interface BeheerData {
   /** Realtime op hh_klussen en hh_incidenten. Geeft de afmeld-functie terug. */
   abonneer(opWijziging: () => void): () => void
   zoekOuderen(zoek: string): Promise<Oudere[]>
+  /** ADRES: GET /api/hh/adres (PDOK), dezelfde route als de app. */
+  zoekAdres(postcode: string, huisnummer: string, toevoeging: string): Promise<AdresZoekUitkomst>
   maakOudere(oudere: NieuweOudere): Promise<Oudere>
   /** Klus met bron telefoon, status open; geeft het id terug. */
   maakTelefonischeKlus(klus: NieuweKlus): Promise<string>

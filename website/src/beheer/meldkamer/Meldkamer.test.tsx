@@ -159,14 +159,18 @@ describe('telefonische aanmelding', () => {
     await user.click(screen.getByRole('button', { name: 'Nieuwe oudere aanmaken' }))
     expect(screen.getByLabelText('Telefoon')).toHaveValue('0612345678')
     await user.type(screen.getByLabelText('Naam'), 'Mevrouw Bakker')
-    await user.type(screen.getByLabelText('Adres'), 'Kerkstraat 1')
-    await user.type(screen.getByLabelText('Plaats'), 'Tiel')
-    await user.selectOptions(screen.getByLabelText('Wijk'), 'w1')
+    // ADRES: zoals in de app, postcode + huisnummer -> straat en plaats (PDOK).
+    expect(screen.queryByLabelText('Adres')).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText('Postcode'), '4001ma')
+    expect(screen.getByLabelText('Postcode')).toHaveValue('4001 MA')
+    await user.type(screen.getByLabelText('Huisnummer'), '1')
+    expect(await screen.findByText('Kerkstraat 1, 4001 MA Tiel')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Oudere aanmaken' }))
 
     expect(await screen.findByText(/Hulpvraag voor/)).toHaveTextContent('Mevrouw Bakker')
     expect(data.stand.ouderen[0].email).toBe('0612345678@telefonisch.heitjehulp.invalid')
-    expect(screen.getByLabelText('Adres van de klus')).toHaveValue('Kerkstraat 1, Tiel')
+    expect(data.adresVerzoeken).toEqual([{ postcode: '4001 MA', huisnummer: '1', toevoeging: '' }])
+    expect(screen.getByLabelText('Adres van de klus')).toHaveValue('Kerkstraat 1, 4001 MA Tiel')
 
     await user.selectOptions(screen.getByLabelText('Soort klus'), 't1')
     await user.type(screen.getByLabelText('Omschrijving'), 'Boodschappen bij de Jumbo')
@@ -188,6 +192,33 @@ describe('telefonische aanmelding', () => {
       wanneer_tot: '2026-09-20T09:00:00.000Z',
     })
     expect(await screen.findByRole('article', { name: 'Hulpvraag van Mevrouw Bakker' })).toHaveTextContent('telefonisch')
+  })
+
+  it('adres niet gevonden: rustige melding en niet aanmaken; uitzondering handmatig kan wel', async () => {
+    const user = userEvent.setup()
+    const data = new FakeBeheerData(
+      { wijken: [{ id: 'w1', gemeente: 'Tiel', wijk: 'Tiel en omstreken', postcodes: [], actief: true }] },
+      COORDINATOR,
+    )
+    opzet(data)
+    await user.click(screen.getByRole('button', { name: 'Telefonische aanmelding' }))
+    await user.click(screen.getByRole('button', { name: 'Nieuwe oudere aanmaken' }))
+    await user.type(screen.getByLabelText('Naam'), 'Meneer Visser')
+    await user.type(screen.getByLabelText('Telefoon'), '0612345679')
+    await user.type(screen.getByLabelText('Postcode'), '4001 MA')
+    await user.type(screen.getByLabelText('Huisnummer'), '999')
+    expect(await screen.findByText('We vinden dit adres niet. Klopt de postcode en het huisnummer?')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Oudere aanmaken' }))
+    expect(screen.getByRole('alert')).toHaveTextContent(/adres/)
+    expect(data.stand.ouderen).toHaveLength(0)
+
+    await user.click(screen.getByLabelText('Adres handmatig invoeren (uitzondering, zonder controle)'))
+    await user.type(screen.getByLabelText('Straat en huisnummer'), 'Woonwagenkamp 1')
+    await user.type(screen.getByLabelText('Plaats'), 'Tiel')
+    await user.selectOptions(screen.getByLabelText('Wijk'), 'w1')
+    await user.click(screen.getByRole('button', { name: 'Oudere aanmaken' }))
+    expect(await screen.findByText(/Hulpvraag voor/)).toHaveTextContent('Meneer Visser')
+    expect(data.aanroepen.find((a) => a.methode === 'maakOudere')?.args[0]).toMatchObject({ handmatig: true, wijkId: 'w1' })
   })
 
   it('kiest een bestaande oudere', async () => {

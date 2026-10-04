@@ -9,7 +9,7 @@ import PocketBase, { ClientResponseError, type RecordModel } from 'pocketbase'
 import { BeheerFout, type BeheerData, type Inlogresultaat } from './beheerData'
 import { isVogVerlopen } from './filters'
 import { besluitBody } from './screening'
-import { nieuweOudereBody, telefonischeKlusBody, willekeurigWachtwoord } from './telefonisch'
+import { leesAdresAntwoord, nieuweOudereBody, telefonischeKlusBody, willekeurigWachtwoord } from './telefonisch'
 import { naarIso } from './tijd'
 import type {
   Auditregel,
@@ -347,6 +347,17 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
           : 'rol = "hulpvrager"'
         return (await col('hh_users').getList(1, 20, { filter, sort: 'naam' })).items.map(naarOudere)
       }),
+
+    // ADRES: dezelfde route als de app; de meldkamer heeft geen rate-limit.
+    zoekAdres: async (postcode, huisnummer, toevoeging) => {
+      try {
+        const body = await pb.send('/api/hh/adres', { method: 'GET', query: { postcode, huisnummer, toevoeging } })
+        return leesAdresAntwoord(200, body)
+      } catch (fout) {
+        if (fout instanceof ClientResponseError) return leesAdresAntwoord(fout.status, fout.response)
+        return { soort: 'dienst' }
+      }
+    },
 
     maakOudere: (oudere) =>
       metFout(async () => naarOudere(await col('hh_users').create(nieuweOudereBody(oudere, willekeurigWachtwoord())))),

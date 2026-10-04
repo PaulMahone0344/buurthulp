@@ -8,6 +8,8 @@ import { BeheerFout, type BeheerData, type Inlogresultaat, type NieuweWijk, type
 import { besluitBody } from './screening'
 import { telefonischEmail, telefonischeKlusBody } from './telefonisch'
 import type {
+  AdresSuggestie,
+  AdresZoekUitkomst,
   Auditregel,
   Betaling,
   Coordinator,
@@ -47,6 +49,30 @@ export type FakeStand = {
 }
 
 export type Aanroep = { methode: string; args: unknown[] }
+
+const nepAdres = (straat: string, nr: string, toev: string, postcode: string, plaats: string, binnen: boolean): AdresSuggestie => {
+  const regel = `${straat} ${nr}${toev}`
+  return {
+    straat,
+    huisnummer: nr,
+    toevoeging: toev,
+    postcode,
+    plaats,
+    gemeente: plaats,
+    lat: 51.88,
+    lon: 5.43,
+    adres: regel,
+    weergave: `${regel}, ${postcode} ${plaats}`,
+    binnenWerkgebied: binnen,
+  }
+}
+
+/** ADRES: de adressen die de nep-PDOK kent (zelfde als de app-fake). */
+const NEP_ADRESSEN: Record<string, AdresSuggestie[]> = {
+  '4001MA:1': [nepAdres('Kerkstraat', '1', '', '4001 MA', 'Tiel', true)],
+  '4001JS:1': [nepAdres('Nieuwe Tielseweg', '1', 'a-01', '4001 JS', 'Tiel', true), nepAdres('Nieuwe Tielseweg', '1', 'a-02', '4001 JS', 'Tiel', true)],
+  '1012JS:1': [nepAdres('Dam', '1', '', '1012 JS', 'Amsterdam', false)],
+}
 
 export function legeStand(): FakeStand {
   return {
@@ -159,16 +185,34 @@ export class FakeBeheerData implements BeheerData {
     )
   }
 
+  /** ADRES: elke opzoeking, voor tests ("geen dubbele verzoeken"). */
+  adresVerzoeken: { postcode: string; huisnummer: string; toevoeging: string }[] = []
+
+  async zoekAdres(postcode: string, huisnummer: string, toevoeging: string): Promise<AdresZoekUitkomst> {
+    this.adresVerzoeken.push({ postcode, huisnummer, toevoeging })
+    const alle = NEP_ADRESSEN[`${postcode.replace(/\s/g, '').toUpperCase()}:${huisnummer}`] ?? []
+    if (!alle.length) {
+      return { soort: 'nietgevonden', melding: 'We vinden dit adres niet. Klopt de postcode en het huisnummer?', keuzes: [] }
+    }
+    const s = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '')
+    const passend = toevoeging.trim() ? alle.filter((a) => s(a.toevoeging) === s(toevoeging)) : alle
+    if (!passend.length) {
+      return { soort: 'nietgevonden', melding: 'Deze toevoeging kennen we niet op dit huisnummer. Kies er een uit de lijst.', keuzes: alle }
+    }
+    return { soort: 'gevonden', adressen: passend }
+  }
+
   async maakOudere(oudere: NieuweOudere) {
     this.schrijf('maakOudere', oudere)
+    const a = oudere.handmatig ? null : oudere.gekozen
     const nieuw: Oudere = {
       id: this.nieuwId('o'),
       naam: oudere.naam.trim(),
       email: oudere.email.trim() || telefonischEmail(oudere.telefoon),
       telefoon: oudere.telefoon.trim(),
-      adres: oudere.adres.trim(),
-      postcode: oudere.postcode.trim(),
-      plaats: oudere.plaats.trim(),
+      adres: a ? a.adres : oudere.adres.trim(),
+      postcode: a ? a.postcode : oudere.postcode.trim(),
+      plaats: a ? a.plaats : oudere.plaats.trim(),
       wijkId: oudere.wijkId,
     }
     this.stand.ouderen.push(nieuw)

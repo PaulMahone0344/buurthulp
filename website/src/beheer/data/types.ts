@@ -167,12 +167,47 @@ export type Oudere = {
   wijkId: string
 }
 
+/** ADRES (4 okt): een adres zoals GET /api/hh/adres het van PDOK teruggeeft. */
+export type AdresSuggestie = {
+  straat: string
+  huisnummer: string
+  /** Huisletter en toevoeging zoals BAG: "A", "2", "a-01". */
+  toevoeging: string
+  /** Altijd "4001 MA". */
+  postcode: string
+  plaats: string
+  gemeente: string
+  lat: number
+  lon: number
+  /** Regel voor hh_users.adres: "Kerkstraat 1a-01". */
+  adres: string
+  /** Regel op het kaartje: "Kerkstraat 1, 4001 MA Tiel". */
+  weergave: string
+  binnenWerkgebied: boolean
+}
+
+export type AdresZoekUitkomst =
+  | { soort: 'gevonden'; adressen: AdresSuggestie[] }
+  | { soort: 'nietgevonden'; melding: string; keuzes: AdresSuggestie[] }
+  | { soort: 'ongeldig'; melding: string }
+  | { soort: 'limiet'; melding: string }
+  | { soort: 'dienst' }
+
+/**
+ * Nieuwe telefonische oudere. ADRES: postcode + huisnummer (+ toevoeging) en
+ * het daarmee bij PDOK gevonden adres ([gekozen]). Alleen als uitzondering
+ * ([handmatig]) vrij getypt [adres] en [plaats], met een [wijkId].
+ */
 export type NieuweOudere = {
   naam: string
   telefoon: string
   email: string
-  adres: string
   postcode: string
+  huisnummer: string
+  toevoeging: string
+  gekozen: AdresSuggestie | null
+  handmatig: boolean
+  adres: string
   plaats: string
   wijkId: string
 }

@@ -4,11 +4,12 @@
 
 import { useCallback, useState, type FormEvent } from 'react'
 import type { BeheerData } from '../data/beheerData'
-import { controleerKlus, controleerOudere } from '../data/telefonisch'
+import { controleerKlus, controleerOudere, klusAdresVoor } from '../data/telefonisch'
 import { nlTijdNaarIso, toonBedrag } from '../data/tijd'
 import type { Klustype, NieuweOudere, Oudere, Wijk } from '../data/types'
 import { Foutmelding } from '../gedeeld/Meldbalk'
 import { useLaden } from '../gedeeld/useLaden'
+import { AdresZoekVeld } from './AdresZoekVeld'
 
 type Props = {
   data: BeheerData
@@ -18,7 +19,19 @@ type Props = {
 
 const GEEN_WIJKEN: Wijk[] = []
 const GEEN_TYPES: Klustype[] = []
-const LEGE_OUDERE: NieuweOudere = { naam: '', telefoon: '', email: '', adres: '', postcode: '', plaats: '', wijkId: '' }
+const LEGE_OUDERE: NieuweOudere = {
+  naam: '',
+  telefoon: '',
+  email: '',
+  postcode: '',
+  huisnummer: '',
+  toevoeging: '',
+  gekozen: null,
+  handmatig: false,
+  adres: '',
+  plaats: '',
+  wijkId: '',
+}
 
 export function TelefonischeAanmelding({ data, opSluit, opGeplaatst }: Props) {
   const laadWijken = useCallback(() => data.wijken(), [data])
@@ -41,7 +54,8 @@ export function TelefonischeAanmelding({ data, opSluit, opGeplaatst }: Props) {
 
   function kies(o: Oudere) {
     setOudere(o)
-    setAdres([o.adres, o.plaats].filter(Boolean).join(', '))
+    // ADRES: zelfde regel als de app, dan krijgt de klus het PDOK-punt.
+    setAdres(klusAdresVoor(o))
     setFout('')
   }
 
@@ -96,7 +110,8 @@ export function TelefonischeAanmelding({ data, opSluit, opGeplaatst }: Props) {
   }
 
   const type = klustypes.waarde.find((t) => t.id === klustypeId)
-  const zetNieuw = (veld: keyof NieuweOudere, waarde: string) => setNieuw((n) => (n ? { ...n, [veld]: waarde } : n))
+  const zetNieuw = (veld: 'naam' | 'telefoon' | 'email' | 'adres' | 'plaats' | 'wijkId', waarde: string) =>
+    setNieuw((n) => (n ? { ...n, [veld]: waarde } : n))
 
   return (
     <div className="beheer-venster-achtergrond">
@@ -153,28 +168,42 @@ export function TelefonischeAanmelding({ data, opSluit, opGeplaatst }: Props) {
               <span>E-mail (mag leeg)</span>
               <input type="email" value={nieuw.email} onChange={(e) => zetNieuw('email', e.target.value)} />
             </label>
-            <label className="field">
-              <span>Adres</span>
-              <input value={nieuw.adres} onChange={(e) => zetNieuw('adres', e.target.value)} />
-            </label>
-            <label className="field">
-              <span>Postcode</span>
-              <input value={nieuw.postcode} onChange={(e) => zetNieuw('postcode', e.target.value)} />
-            </label>
-            <label className="field">
-              <span>Plaats</span>
-              <input value={nieuw.plaats} onChange={(e) => zetNieuw('plaats', e.target.value)} />
-            </label>
-            <label className="field">
-              <span>Wijk</span>
-              <select value={nieuw.wijkId} onChange={(e) => zetNieuw('wijkId', e.target.value)}>
-                <option value="">Kies een wijk</option>
-                {wijken.waarde.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.wijk} ({w.gemeente})
-                  </option>
-                ))}
-              </select>
+            {nieuw.handmatig ? (
+              <>
+                <label className="field">
+                  <span>Straat en huisnummer</span>
+                  <input value={nieuw.adres} onChange={(e) => zetNieuw('adres', e.target.value)} />
+                </label>
+                <label className="field">
+                  <span>Plaats</span>
+                  <input value={nieuw.plaats} onChange={(e) => zetNieuw('plaats', e.target.value)} />
+                </label>
+                <label className="field">
+                  <span>Wijk</span>
+                  <select value={nieuw.wijkId} onChange={(e) => zetNieuw('wijkId', e.target.value)}>
+                    <option value="">Kies een wijk</option>
+                    {wijken.waarde.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.wijk} ({w.gemeente})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            ) : (
+              <AdresZoekVeld
+                data={data}
+                waarde={nieuw}
+                opWijziging={(a) => setNieuw((n) => (n ? { ...n, ...a } : n))}
+              />
+            )}
+            <label className="adres-handmatig">
+              <input
+                type="checkbox"
+                checked={nieuw.handmatig}
+                onChange={(e) => setNieuw((n) => (n ? { ...n, handmatig: e.target.checked } : n))}
+              />
+              <span>Adres handmatig invoeren (uitzondering, zonder controle)</span>
             </label>
             <button className="mini-btn" type="submit" disabled={bezig}>
               Oudere aanmaken

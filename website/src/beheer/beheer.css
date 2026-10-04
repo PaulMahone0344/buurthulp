@@ -368,3 +368,51 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ADRES (4 okt) — adres-suggestie in de telefonische aanmelding. */
+.adres-zoek {
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.adres-zoek__velden {
+  display: grid;
+  grid-template-columns: 4fr 3fr 3fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .adres-zoek__velden {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .adres-zoek__velden > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.adres-zoek__kaartje {
+  margin: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  background: var(--page);
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.adres-zoek__keuzes {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.adres-handmatig {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
