@@ -1,0 +1,65 @@
+HeitjeHulp B11 — MELDKAMER EN BEHEERPANEEL — proefrit (DRY-RUN tegen prod, niets geschreven) 4 okt 2026
+Branch b11/meldkamer (worktree ~/flutter-builds/hh-b11, vanaf main cd7c860). Gebouwd in de hoofdsessie.
+NOG NIET OP PROD. Uitrol alleen na JA van Ibrahim, auto-mode UIT voor 153.
+
+WAT VERANDERT ER OP PROD (na JA)
+  Collectie (150, NIEUW): hh_partners (naam, code uniek, actief, notitie).
+  Velden (150, additief): hh_users.kennismaking_status/_op/_door/_notitie, hh_users.partner.
+  Instellingen (150, alleen nieuwe sleutels): b11_kennismaking_verplicht false,
+    b11_zelfde_paar_aan false, b11_zelfde_paar_aantal 4, b11_zelfde_paar_dagen 30.
+  Rules (151): hh_partners alleen coordinator; SLOT op hh_users create/update
+    (kennismaking_* niemand via de API, partner alleen coordinator);
+    hh_berichten list/view: de meldkamer leest ELKE chat (besluit 4 okt).
+  Hooks (153): NIEUW hh_meldkamer_hulp.js, hh_meldkamer.pb.js;
+    GEWIJZIGD hh_klusplaatsen.pb.js (keuren: 409 kennismaking, alleen met schakelaar aan).
+  Nieuw gedrag meteen na uitrol (schakelaars uit):
+    - nieuwe bewoner krijgt kennismaking_status "nog" -> staat in "Nog bellen";
+    - partnercode bij aanmelden helper (onbekend = 400, leeg = gewoon door);
+    - meldkamer leest alle chats (rule) — JURIST + privacyverklaring;
+    - routes meldkamer/kennismaking, /partners, /vog.
+  M6-statusverloop en B5-kiezen: ONGEWIJZIGD (keuren alleen met schakelaar).
+
+LOKAAL BEWEZEN (PocketBase 0.25.9, prod-schema + B9-stand, hooks van deze branch)
+  150 dry-run 10 -> --apply -> "Niets te doen"; 151 --apply -> "al up-to-date"
+  152 --apply: 80 groen, 0 rood (2 fouten in de check zelf gerepareerd: superuser-klus is
+    meteen gekeurd (B4), bericht heeft soort nodig)
+  Oude checks met de B11-hooks, alle 0 rood:
+    142 89, 132 144, 32 39, 92 89, 102 144, 112 123 (kent nu "meldkamer leest alles"),
+    82 79, 72 54, 62 118, 04 223, 50 60, 122 85
+  154 droog 2 / --apply / daarna niets te doen
+  App-smoke (test/smoke/b11_lokaal_smoke_test.dart, ECHTE PocketBaseMeldkamerGateway): groen.
+  Webpaneel in de browser tegen de lokale server: Nog bellen -> Gesproken (melding, lijst leeg),
+    Screening "VOG nodig", Systeem "Partners" met teller 1 aangemeld.
+
+TESTS (zonder server)
+  backend  node --test tests/*.test.mjs   431 groen (was 407)
+  app      flutter test                   1160 groen, ~8 overgeslagen (was 1137); analyze schoon;
+           sweep "Te doen" 320/390/430 x 100/200% 0 bevindingen
+  website  npx vitest run                 201 groen (was 180); tsc, eslint, build schoon
+
+DRY-RUN TEGEN PROD (4 okt, alleen lezen)
+  150: 10 wijzigingen (zie boven). 151: 4 rules (users create/update, berichten list/view);
+  hh_partners bestaat nog niet. 152: 1 groen 11 rood (verwacht vóór 150/151/153).
+  154: veld bestaat nog niet; na 150 zou het 4 bewoners op gesproken zetten:
+    hh-seed-hulpvrager1, hh-seed-hulpvrager2, hh-m2test-1, belf@gmail.com (jan).
+
+UITROLLIJST (alleen na JA, auto-mode UIT)
+  1. set -a; . /Users/h/Desktop/qawayhabase/.env; set +a
+     node scripts/00-backup.mjs
+  2. node scripts/150-b11-velden.mjs --apply      (2e keer: "Niets te doen")
+  3. node scripts/151-b11-rules.mjs --apply       (2e keer: "al up-to-date")
+     Na 151 NOOIT meer 02/06/13/21/61/111 --apply (sloten en chat-rule vallen weg),
+     of daarna 151 opnieuw.
+  4. echo n | ./scripts/153-hook-deploy.sh        (alleen kijken: diff alleen B11-regels
+     in hh_klusplaatsen.pb.js, 2 nieuw), dan yes y | ./scripts/153-hook-deploy.sh
+  5. node scripts/152-b11check.mjs --apply        verwacht 80 groen, 0 rood
+  6. oude checks: 142, 132, 32, 92, 102, 112 (verwacht 123), 82, 72, 62, 04, 50, 122
+  7. EIGEN JA (datamigratie): node scripts/154-b11-bewoners-gesproken.mjs --apply
+  8. EIGEN JA: schakelaars (Systeem > Instellingen > Schakelaars of hh_instellingen):
+     b11_kennismaking_verplicht, b11_zelfde_paar_aan
+  Terug: ./scripts/153-hook-deploy.sh --rollback (hooks). Velden/rules blijven; de chat-rule
+  terug = 111 --apply (en daarna 141/151-sloten opnieuw).
+
+APP EN WEBSITE
+  App: nieuwe build nodig voor "Te doen", de partnercode en "De meldkamer belt je eerst even".
+  De oude app blijft werken (stuurt gewoon geen partner_code). Website: niet online.

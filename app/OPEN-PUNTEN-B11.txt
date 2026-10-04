@@ -1,0 +1,16 @@
+B11 MELDKAMER — open vragen voor Ibrahim (één voor één stellen)
+
+B11-1 Schakelaar "keuren wacht op de kennismaking": meteen aan na de uitrol, of pas
+      bij de pilot? (Aan = klussen van nieuwe bewoners pas na het belletje zichtbaar.)
+B11-2 Script 154: de 4 bestaande bewoners op prod (2 seed, m2test, jan) op "gesproken"
+      zetten? Anders staan ze in "Nog bellen".
+B11-3 Bewoner geweigerd: open klussen zonder helper worden geannuleerd; een klus MET
+      helper blijft lopen en de meldkamer krijgt "kijk zelf na". Goed zo?
+B11-4 Meldkamer leest alle chats: zetten we in de chat zelf een regel "De meldkamer kan
+      meelezen voor je veiligheid"? (eerlijk naar bewoner/helper; jurist kijkt mee)
+B11-5 Signaal "zelfde paar" (helper <18, 4 klussen in 30 dagen): schakelaar meteen aan?
+
+Later (geen vraag nu):
+  - partnercode via een link (heitjehulp.app/?p=CODE vult het veld vooraf) — na de webapp.
+  - saldo/uitbetalingen in het beheerpaneel — met B7.
+  - meldkamer plaatst zelf een klus voor een "nog"-bewoner: die is meteen gekeurd (B4).

@@ -21,6 +21,15 @@ async function main() {
   const pb = await superuserClient();
   logMode();
   assertHh('hh_users');
+  const velden = (await pb.collections.getOne('hh_users')).fields.map((f) => f.name);
+  if (!velden.includes('kennismaking_status')) {
+    const alle = await pb.collection('hh_users').getFullList({ filter: 'rol = "hulpvrager"', fields: 'id,email,naam' });
+    console.log(`! hh_users.kennismaking_status bestaat nog niet — eerst 150-b11-velden.mjs --apply.`);
+    console.log(`  Na 150 zou dit ${alle.length} bewoner(s) op gesproken zetten:`);
+    for (const u of alle) console.log(`    ${u.email} (${u.naam})`);
+    if (APPLY) throw new Error('kennismaking_status ontbreekt.');
+    return;
+  }
   const lijst = await pb.collection('hh_users').getFullList({
     filter: 'rol = "hulpvrager" && kennismaking_status = ""',
     sort: 'created',
