@@ -90,6 +90,8 @@ export type Profiel = {
   ouderAvp: boolean | null
   /** B3: status in hh_ouder_toestemming ('' = geen rij). */
   ouderStatus: string
+  /** ADRES: hh_users.adres_bron van de helper. */
+  adresBron?: AdresBron
 }
 
 export type Wijk = {
@@ -117,7 +119,12 @@ export type Gebruiker = {
   geblokkeerd: boolean
   /** B2: hh_users.werkgebied_status; onbekend = de server vond het adres niet. */
   werkgebiedStatus: Werkgebiedstatus
+  /** ADRES: hh_users.adres_bron ('' = van vóór ADRES). */
+  adresBron?: AdresBron
 }
+
+/** ADRES: pdok = bevestigd; handmatig = uitzondering meldkamer; ongecontroleerd = PDOK was weg. */
+export type AdresBron = '' | 'pdok' | 'handmatig' | 'ongecontroleerd'
 
 export type Werkgebiedstatus = '' | 'binnen' | 'buiten' | 'onbekend'
 

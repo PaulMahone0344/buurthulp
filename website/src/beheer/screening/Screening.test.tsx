@@ -35,6 +35,29 @@ describe('D2 screening', () => {
     expect(knoppen.map((k) => k.textContent)).toEqual(['Bekijk Oudste', 'Bekijk Nieuwste'])
   })
 
+  it('ADRES: pil "adres handmatig" / "niet gecontroleerd" in de lijst en het detail', async () => {
+    const data = new FakeBeheerData(
+      {
+        profielen: [
+          profiel({ id: 'p1', naam: 'Hand', adresBron: 'handmatig' }),
+          profiel({ id: 'p2', naam: 'Weg', adresBron: 'ongecontroleerd' }),
+          profiel({ id: 'p3', naam: 'Goed', adresBron: 'pdok' }),
+        ],
+      },
+      COORDINATOR,
+    )
+    opzet(data, { jongere: 'p2' })
+    const detail = await screen.findByRole('region', { name: 'Screening van Weg' })
+    expect(within(detail).getByText('Adres niet gecontroleerd')).toBeInTheDocument()
+  })
+
+  it('ADRES: pil ook in de lijst', async () => {
+    const data = new FakeBeheerData({ profielen: [profiel({ id: 'p1', naam: 'Hand', adresBron: 'handmatig' }), profiel({ id: 'p2', naam: 'Goed' })] }, COORDINATOR)
+    opzet(data)
+    expect(await screen.findByText('Adres handmatig')).toBeInTheDocument()
+    expect(screen.queryByText('Adres niet gecontroleerd')).not.toBeInTheDocument()
+  })
+
   it('geeft het VOG-signaal binnen 60 dagen', async () => {
     const data = new FakeBeheerData(
       {

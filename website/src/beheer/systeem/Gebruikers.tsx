@@ -7,7 +7,7 @@ import type { BeheerData } from '../data/beheerData'
 import { ROLLEN, type Gebruiker, type Rol } from '../data/types'
 import { Bevestigvenster } from '../gedeeld/Bevestigvenster'
 import { Foutmelding } from '../gedeeld/Meldbalk'
-import { Pil } from '../gedeeld/Pil'
+import { AdresBronPil, Pil } from '../gedeeld/Pil'
 import { useLaden } from '../gedeeld/useLaden'
 import { ROL_LABEL } from '../teksten'
 
@@ -55,6 +55,7 @@ export function Gebruikers({ data, zoek, zetZoek }: { data: BeheerData; zoek: st
                 {/* B2: markering van de server (geen wijk). B11 maakt hier een wachtrij van. */}
                 {g.werkgebiedStatus === 'onbekend' ? <Pil toon="fout">Adres niet gevonden</Pil> : null}
                 {g.werkgebiedStatus === 'buiten' ? <Pil toon="stop">Buiten werkgebied</Pil> : null}
+                <AdresBronPil bron={g.adresBron} />
               </div>
               <label className="field">
                 <span>Rol van {g.naam}</span>

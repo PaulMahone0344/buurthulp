@@ -10,7 +10,7 @@ import { screeningTegels, vogSignaal } from '../data/tegels'
 import { toonDatum } from '../data/tijd'
 import type { Profiel } from '../data/types'
 import { Foutmelding } from '../gedeeld/Meldbalk'
-import { Pil } from '../gedeeld/Pil'
+import { AdresBronPil, Pil } from '../gedeeld/Pil'
 import { Tegel } from '../gedeeld/Tegel'
 import { useLaden } from '../gedeeld/useLaden'
 import { SCREENING_LABEL } from '../teksten'
@@ -101,6 +101,7 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
                         {signaal === 'verlopen' ? 'VOG verlopen' : 'VOG verloopt binnen 60 dagen'} ({toonDatum(p.vogGeldigTot)})
                       </span>
                     ) : null}
+                    <AdresBronPil bron={p.adresBron} />
                   </div>
                   <Pil toon={p.verificatiestatus === 'goedgekeurd' ? 'klaar' : p.verificatiestatus === 'afgewezen' ? 'fout' : 'nieuw'}>
                     {SCREENING_LABEL[p.verificatiestatus]}

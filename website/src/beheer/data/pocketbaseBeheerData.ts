@@ -12,6 +12,7 @@ import { besluitBody } from './screening'
 import { leesAdresAntwoord, nieuweOudereBody, telefonischeKlusBody, willekeurigWachtwoord } from './telefonisch'
 import { naarIso } from './tijd'
 import type {
+  AdresBron,
   Auditregel,
   Betaling,
   Coordinator,
@@ -129,7 +130,14 @@ export function naarProfiel(r: Uitgebreid, bestandUrl: (bestand: string) => stri
     ouderToestemmingOp: naarIso(gebruiker?.ouder_toestemming_op),
     ouderAvp: ouderRij ? ouderRij.avp_verklaard === true : null,
     ouderStatus: tekst(ouderRij?.status),
+    adresBron: naarAdresBron(gebruiker?.adres_bron),
   }
+}
+
+/** ADRES: hh_users.adres_bron; onbekende waarde = ''. */
+export function naarAdresBron(waarde: unknown): AdresBron {
+  const t = tekst(waarde)
+  return t === 'pdok' || t === 'handmatig' || t === 'ongecontroleerd' ? t : ''
 }
 
 export function naarOudere(r: RecordModel): Oudere {
@@ -174,6 +182,7 @@ export function naarGebruiker(r: RecordModel): Gebruiker {
     telefoon: tekst(r.telefoon),
     geblokkeerd: r.geblokkeerd === true,
     werkgebiedStatus: tekst(r.werkgebied_status) as Gebruiker['werkgebiedStatus'],
+    adresBron: naarAdresBron(r.adres_bron),
   }
 }
 

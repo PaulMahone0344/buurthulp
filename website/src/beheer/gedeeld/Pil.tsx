@@ -2,7 +2,7 @@
 // de acht klusstatussen van de app.
 
 import type { ReactNode } from 'react'
-import type { Klusstatus } from '../data/types'
+import type { AdresBron, Klusstatus } from '../data/types'
 import { STATUS_LABEL } from '../teksten'
 
 export type PilToon = 'nieuw' | 'gematcht' | 'actief' | 'klaar' | 'stop' | 'fout'
@@ -33,4 +33,11 @@ export function Pil({ toon, children }: { toon: PilToon; children: ReactNode }) 
 
 export function KlusPil({ status }: { status: Klusstatus }) {
   return <Pil toon={KLUS_TOON[status] ?? 'nieuw'}>{STATUS_LABEL[status] ?? status}</Pil>
+}
+
+/** ADRES: markering bij een adres dat niet door PDOK bevestigd is. Niets bij pdok of leeg. */
+export function AdresBronPil({ bron }: { bron?: AdresBron }) {
+  if (bron === 'handmatig') return <Pil toon="stop">Adres handmatig</Pil>
+  if (bron === 'ongecontroleerd') return <Pil toon="fout">Adres niet gecontroleerd</Pil>
+  return null
 }

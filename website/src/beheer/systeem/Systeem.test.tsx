@@ -68,6 +68,24 @@ describe('D4 systeembeheer', () => {
     expect(within(screen.getByLabelText('Gebruiker Hier')).queryByText(/werkgebied|niet gevonden/)).not.toBeInTheDocument()
   })
 
+  it('ADRES: pil bij een adres dat handmatig of niet gecontroleerd is', async () => {
+    const data = new FakeBeheerData(
+      {
+        gebruikers: [
+          { id: 'u1', naam: 'Hand', email: 'a@x.nl', rol: 'hulpvrager', telefoon: '', geblokkeerd: false, werkgebiedStatus: 'binnen', adresBron: 'handmatig' },
+          { id: 'u2', naam: 'Weg', email: 'b@x.nl', rol: 'jongere', telefoon: '', geblokkeerd: false, werkgebiedStatus: 'binnen', adresBron: 'ongecontroleerd' },
+          { id: 'u3', naam: 'Goed', email: 'c@x.nl', rol: 'jongere', telefoon: '', geblokkeerd: false, werkgebiedStatus: 'binnen', adresBron: 'pdok' },
+        ],
+      },
+      COORDINATOR,
+    )
+    opzet(data, { tab: 'gebruikers' })
+
+    expect(within(await screen.findByLabelText('Gebruiker Hand')).getByText('Adres handmatig')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Gebruiker Weg')).getByText('Adres niet gecontroleerd')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Gebruiker Goed')).queryByText(/Adres/)).not.toBeInTheDocument()
+  })
+
   it('blokkeert een gebruiker en wijzigt een rol, allebei na bevestigen', async () => {
     const user = userEvent.setup()
     const data = new FakeBeheerData(

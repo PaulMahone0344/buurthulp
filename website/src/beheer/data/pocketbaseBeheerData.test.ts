@@ -327,3 +327,14 @@ describe('B4 klussen nakijken', () => {
     expect(naarKlusNaTeKijken({ id: 'k2', collectionId: 'c', collectionName: 'hh_klussen' }, () => 'x').fotoUrl).toBe('')
   })
 })
+
+describe('ADRES: adres_bron', () => {
+  it('leest pdok, handmatig en ongecontroleerd; de rest wordt leeg', async () => {
+    const { naarAdresBron } = await import('./pocketbaseBeheerData')
+    expect(naarAdresBron('handmatig')).toBe('handmatig')
+    expect(naarAdresBron('ongecontroleerd')).toBe('ongecontroleerd')
+    expect(naarAdresBron('pdok')).toBe('pdok')
+    expect(naarAdresBron('iets')).toBe('')
+    expect(naarAdresBron(undefined)).toBe('')
+  })
+})
