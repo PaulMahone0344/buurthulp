@@ -275,7 +275,8 @@ export const kaders: Kader[] = [
     intro: 'We vragen alleen wat nodig is om een klus goed te laten verlopen.',
     points: [
       'Telefoonnummers blijven verborgen. Je praat via de chat in de app.',
-      'De meldkamer leest alleen mee als iemand een melding doet.',
+      // B11: de meldkamer kan elke chat lezen (besluit 4 okt).
+      'De meldkamer kan chats lezen om helpers en bewoners veilig te houden.',
       'Je gegevens staan versleuteld op servers in Europa.',
     ],
   },

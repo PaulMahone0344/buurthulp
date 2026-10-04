@@ -209,6 +209,17 @@ describe('HeitjeHulp voorpagina', () => {
     expect(tekst).toMatch(/iDEAL/)
   })
 
+  it('B11: zegt eerlijk dat de meldkamer chats kan lezen', async () => {
+    const user = userEvent.setup()
+    toonPagina('/veiligheid')
+
+    await user.click(screen.getByRole('tab', { name: 'Privacy' }))
+
+    const paneel = screen.getByRole('tabpanel')
+    expect(paneel).toHaveTextContent('De meldkamer kan chats lezen om helpers en bewoners veilig te houden.')
+    expect(paneel).not.toHaveTextContent(/alleen mee als iemand een melding doet/)
+  })
+
   it('heeft een partners-pagina met een oproep om partner te worden', () => {
     toonPagina('/partners')
 
