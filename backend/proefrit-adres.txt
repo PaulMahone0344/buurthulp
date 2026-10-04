@@ -9,7 +9,9 @@ WAT VERANDERT ER OP PROD (na JA)
     GEWIJZIGD hh_aanmelden_hulp.js (werkgebiedUitPunt, 4 velden verborgen
     voor anderen), hh_aanmelden.pb.js (adres via PDOK bij aanmelden/wijzigen,
     werkgebied uit het PDOK-punt), hh_klussen.pb.js (klus op het adres van de
-    bewoner krijgt zijn PDOK-punt).
+    bewoner krijgt zijn PDOK-punt; VAAG VÓÓR DE MATCH: een helper ziet een
+    open klus ~200 m verschoven, zonder adres, met afstand_m op 100 m;
+    filteren/sorteren op locatie dicht voor helpers, ook realtime).
   Data: GEEN datamigratie. 121 (alleen punt zetten) heeft op prod nu niets te
     doen (zie telling hieronder).
   Nieuw gedrag:
@@ -20,7 +22,10 @@ WAT VERANDERT ER OP PROD (na JA)
       een Nederlandse melding;
     - bestaande accounts met een onvolledig adres blijven werken (naam,
       telefoon enz. wijzigen mag), tot ze hun adres aanpassen;
-    - werkgebied uit het exacte punt; Nominatim alleen nog als terugval.
+    - werkgebied uit het exacte punt; Nominatim alleen nog als terugval;
+    - helpers zien een klus pas na de match exact (punt + adres); daarvoor
+      vaag (antwoord Ibrahim 3). Paneel: pil "Adres handmatig" / "Adres niet
+      gecontroleerd" (antwoord 2). App: "Mijn adres" vast in Profiel (antwoord 5).
 
 LOKAAL BEWEZEN (PocketBase 0.25.9 = prod-versie; schema + data = de lokale
 proef van de integratie B3+B4+B6 (prod-schema van 4 okt, alleen gelezen);
@@ -28,9 +33,14 @@ hooks van main als startpunt, dan PRECIES de 5 bestanden van 123; nep-PDOK
 met echte BAG-gegevens van 4 adressen + een flat met toevoegingen; nep-
 Nominatim; nep-SMTP)
   120 dry-run -> --apply -> nogmaals: "Niets te doen" (idempotent)
-  122 --apply: 64 groen, 0 rood (2x gedraaid; tweede keer na een herstart,
-      want de rate-limit telt per uur). 6 PDOK-verzoeken (4 adressen + 2 tijdens
-      de nep-storing), elke volgende opzoeking uit de cache.
+  122 --apply (node --experimental-eventsource): 85 groen, 0 rood, na elke
+      herstart opnieuw (de rate-limit telt per uur), plus 2x met
+      --zonder-limiet (81 groen, 1 overgeslagen) om de realtime-volgorde te
+      toetsen. 6 PDOK-verzoeken (4 adressen + 2 tijdens de nep-storing).
+      Sectie K: vaag punt 200 m van het echte, stabiel, geen adres,
+      afstand_m 9200 (Ochten -> Tiel), filters op locatie 400 (ook via
+      meldingen en realtime), realtime meldkamer exact / helper vaag, na
+      accepteren exact + adres.
   121 dry-run en --apply op 4 lokale "oude" accounts: 1 gezet (alleen lat, lon,
       adres_bron; postcode "4001ma" bleef staan), 3 overgeslagen met reden
       (3 adressen/toevoeging kiezen, straat wijkt af, niet gevonden).
@@ -110,9 +120,12 @@ UITROLLIJST (volgorde; na JA, auto-mode UIT)
        (werkgebiedUitPunt + lat/lon/toevoeging/adres_bron verborgen),
        hh_aanmelden.pb.js (blok "ADRES" in aanmaken/bijwerken) en
        hh_klussen.pb.js (puntVanBewoner); stap 6: alleen de 2 nieuwe erbij.
-  4. node scripts/122-adrescheck.mjs --apply
-       verwacht: 60 groen, 0 rood, 1 overgeslagen (H PDOK-storing: alleen
-       lokaal). Max 4 PDOK-verzoeken. LET OP: sectie I (rate-limit) maakt dat
+  4. node --experimental-eventsource scripts/122-adrescheck.mjs --apply
+       verwacht: 81 groen, 0 rood, 1 overgeslagen (H PDOK-storing: alleen
+       lokaal). Zonder --experimental-eventsource: 79 groen, 2 overgeslagen
+       (ook realtime). Max 4 PDOK-verzoeken. Sectie K maakt een eigen klus
+       die een tijdelijke helper accepteert: helpers in de wijk krijgen even
+       een "nieuwe klus"-melding (wordt opgeruimd). LET OP: sectie I (rate-limit) maakt dat
        dit IP een uur lang ANONIEM geen adres kan opzoeken (aanmelden in de app
        vanaf hetzelfde wifi dus pas over een uur, of draai eerst
        "--apply --zonder-limiet" en de rate-limit later). Niet 2x binnen een uur.
@@ -129,7 +142,14 @@ UITROLLIJST (volgorde; na JA, auto-mode UIT)
        node --experimental-eventsource scripts/112-b6check.mjs --apply  verwacht 124 groen
      82/72/04/62 gebruiken nu echte adressen (scripts/_adressen.mjs); binnen
      10 minuten na 122 komen die uit de cache (geen extra PDOK-verzoek).
-  7. Paneel (website, telefonische aanmelding) en app (EAS-build) uitrollen.
+  7. Paneel (website) en app (EAS-build) uitrollen OP DEZELFDE DAG als 3
+     (antwoord Ibrahim 4). Na stap 3 ziet de OUDE app bij een helper vóór de
+     match het vage punt en een afstand vanaf het (vage) middelpunt; de nieuwe
+     app gebruikt afstand_m.
+     Optioneel (niet nodig): HH_VAAG_ZOUT=<geheim> in de systemd-env van
+     pocketbase maakt het vage punt onvoorspelbaar zonder het geheim (raakt
+     alle apps: restart op een rustig moment). Zonder zout is de verschuiving
+     uit het klus-id na te rekenen door wie deze code kent.
      Ze werken pas goed MET stap 3 (de route). Zonder route: de app laat
      aanmelden toch toe ("ongecontroleerd"), het paneel meldt "PDOK niet
      bereikbaar" en biedt "adres handmatig".

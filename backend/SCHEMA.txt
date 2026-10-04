@@ -1480,6 +1480,31 @@ KLUSSEN (hh_klussen.pb.js, M5-geocoding)
 VERRIJKEN  lat, lon, toevoeging en adres_bron horen bij VERBORGEN_VOOR_ANDEREN
   van een helper (een bewoner ziet ze niet).
 
+VAAG VÓÓR DE MATCH (antwoord Ibrahim 4 okt, vraag 3; hh_klussen.pb.js sectie 3)
+  onRecordEnrich hh_klussen (elk antwoord: lijst, view, expand, realtime):
+  kijkt een helper (rol jongere) die NIET de toegewezen helper is, dan
+    lat/lon      ~200 m verschoven (vaagPunt): richting uit een hash van het
+                 klus-id (+ HH_VAAG_ZOUT uit de omgeving als die gezet is),
+                 dus elke keer hetzelfde vage punt voor dezelfde klus
+    adres        weg (hide)
+    afstand_m    extra veld: afstand van het eigen PDOK-punt van de helper
+                 (hh_users.lat/lon) tot het ECHTE punt, afgerond op 100 m
+                 (minstens 100); ontbreekt als de helper geen punt heeft
+    locatie_vaag extra veld: ja
+  Na de match (toegewezen_jongere = de helper): alles exact, zoals voorheen.
+  Bewoner, familielid, coordinator en superuser: altijd exact.
+  Raden dicht: een helper die filtert of sorteert op lat, lon, adres,
+  postcode, huisnummer of toevoeging (ook via een relatie, bv.
+  hulpvrager.postcode of klus.lat) krijgt 400 bij lijsten van hh_klussen,
+  hh_meldingen, hh_klus_status, hh_berichten en hh_beoordelingen, en bij een
+  realtime-abonnement met zo'n filter.
+  App: afstandVanKlus gebruikt afstand_m als die er is (lijst, detail,
+  straalfilter); de kaart toont het vage punt; het adres pas na de match.
+
+PANEEL (website)  pil "Adres handmatig" / "Adres niet gecontroleerd"
+  (hh_users.adres_bron) bij Gebruikers, in de screeninglijst en het
+  screeningdetail. Een aparte lijst is B11.
+
 SCRIPTS
   120-adres-velden.mjs     velden (dry-run standaard)
   121-adres-coordinaten.mjs bestaande accounts met geldige 6-tekens-postcode +
@@ -1488,7 +1513,8 @@ SCRIPTS
                            (straat wijkt af / meer toevoegingen / niet
                            gevonden: overslaan + lijst). Dry-run standaard.
   122-adrescheck.mjs       bewijs (dry-run standaard; --zonder-limiet slaat de
-                           rate-limit over). Lokaal 64 groen.
+                           rate-limit over; met node --experimental-eventsource
+                           ook realtime). Lokaal 85 groen.
   123-hook-deploy.sh       5 bestanden (2 nieuw: hh_adres_hulp.js, hh_adres.pb.js;
                            3 gewijzigd: hh_aanmelden_hulp.js, hh_aanmelden.pb.js,
                            hh_klussen.pb.js), backupmap /root/hh_hook_backups/adres
@@ -1497,7 +1523,7 @@ SCRIPTS
   Aangepast: 04, 62, 72, 82 (registraties met een echt adres; 62 telefonische
   oudere = uitzondering handmatig; 82 verwacht een weigering voor een
   niet-bestaand adres i.p.v. status onbekend).
-  Test zonder server: node --test backend/tests/*.test.mjs (332 tests).
+  Test zonder server: node --test backend/tests/*.test.mjs (338 tests).
 
 UITROLLEN (volgorde; zie proefrit-adres.txt)
   00-backup.mjs -> 120 --apply -> 123-hook-deploy.sh -> 122 --apply ->

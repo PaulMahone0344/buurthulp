@@ -1,50 +1,34 @@
 HeitjeHulp ADRES — open punten (4 okt 2026, branch adres/streng)
 ================================================================
 
-VRAGEN VOOR IBRAHIM (max 5)
+ANTWOORDEN IBRAHIM (4 okt) EN WAT ER GEBOUWD IS
+1. Rate-limit blijft 60/uur per IP zonder account, 120 met account.  Ongewijzigd.
+2. JA pil in het paneel: "Adres handmatig" / "Adres niet gecontroleerd" bij
+   Gebruikers, in de screeninglijst en in het screeningdetail. Aparte lijst = B11.
+3. JA vaag vóór de match, op de SERVER (hh_klussen.pb.js, onRecordEnrich):
+   punt ~200 m verschoven (stabiel per klus, uit het klus-id), geen adres,
+   afstand_m = echte afstand vanaf het eigen punt van de helper, op 100 m.
+   Filteren/sorteren op locatie is dicht voor helpers (ook realtime). Na de
+   match exact + adres. App gebruikt afstand_m. Check 122 sectie K.
+4. JA server en nieuwe app dezelfde dag (staat in proefrit-adres.txt).
+5. JA "Mijn adres" vast in het Profiel van de helper (knop onder "Mijn
+   screening"); een nieuw adres bepaalt het werkgebied opnieuw (server).
+Extra: de bug "sessie verandert terwijl Start eronder ligt" is ook in
+   Instellingen opgelost (zelfde patroon: de nieuwe gebruiker pas in de sessie
+   als het scherm weg is). Regressietest test/flow/sessie_wissel_test.dart.
 
-1. Grens op het opzoeken: nu 60 adressen per uur per wifi-netwerk zonder
-   account, 120 met account, de meldkamer zonder grens. Bij een
-   aanmeldmiddag in een buurthuis (veel mensen op één wifi) kan 60 te krap
-   zijn. Zo laten, of hoger (bv. 200)?
+NOG OPEN (geen vraag, ter info)
 
-2. Uitzondering "adres handmatig" (alleen meldkamer, bv. woonwagen of nieuwbouw
-   die nog niet in het register staat): zo'n account krijgt de markering
-   "handmatig" en de wijk die de meldkamer kiest. Wil je in het paneel een
-   lijstje/pil "adres handmatig" of "adres niet gecontroleerd" (PDOK was even
-   weg), zodat de meldkamer ze terugvindt? (Nu nog niet gebouwd.)
-
-3. Het punt op de kaart is nu precies het huis (PDOK). Dat was met Nominatim
-   ook al bijna zo. Moet een helper die een klus nog NIET heeft aangenomen het
-   punt een beetje vager zien (bv. op straatniveau), of is precies goed?
-
-4. Oude app in de winkels: na de server-uitrol geeft die bij een fout adres
-   een algemene melding ("controleer je invoer"). Server en nieuwe app op
-   dezelfde dag uitrollen, of eerst de server (veiliger: dan kan niemand
-   meer een fout adres invoeren)?
-
-5. Helpers: hun adres staat nu op een eigen scherm "Mijn adres" (via de gele
-   balk). Wil je dat ook vast in het profiel van de helper (Profiel -> Mijn
-   adres), zodat een helper die verhuist het zelf kan aanpassen?
-
-NOTITIES (geen vraag)
-
+- Vaag punt zonder geheim: de verschuiving komt uit het klus-id. Wie deze code
+  kent, kan hem terugrekenen. Wil je dat niet, zet dan eenmalig HH_VAAG_ZOUT
+  (een geheim) in de omgeving van de server (zie proefrit, stap 7, optioneel).
+- Filters op locatie zijn dicht voor hh_klussen, hh_meldingen, hh_klus_status,
+  hh_berichten en hh_beoordelingen (de collecties met een klus erin). Een
+  nieuwe collectie met een klus-verwijzing moet in die lijst erbij.
+- Andere schermen die de sessie wijzigen: er zijn er nu geen meer (adres en
+  taal gaan via bijwerkenUitgesteld). Een nieuw scherm dat de sessie wijzigt,
+  moet hetzelfde patroon volgen (of Riverpod bijwerken naar 3.4.x, aparte klus).
 - Bestaande accounts: op prod hebben alle 7 bewoners/helpers een onvolledig
-  adres (6 seed-accounts zonder postcode, 1 echt account met "4001"). Zij
-  zien na inloggen de gele balk "Vul je adres aan". Geen datamigratie.
-  Script 121 zet later alleen het punt (lat/lon) bij accounts met een al
-  volledig adres; nu heeft het niets te doen.
-
-- Al bestaand, niet door ADRES (Riverpod 3.3.2): verandert de sessie (naam,
-  taal, adres) terwijl Start eronder ligt, dan geeft de debug-app bij
-  terugkomen "markNeedsBuild() called during build" (alleen debug; release
-  bouwt gewoon opnieuw). Na te bootsen met Instellingen -> taal wijzigen ->
-  terug als helper. De adres-schermen omzeilen het (de sessie wordt pas
-  bijgewerkt als het adres-scherm weg is). Voor Instellingen: aparte klus
-  (riverpod bijwerken naar 3.4.x of hetzelfde patroon).
-
-- Klus plaatsen gebruikt het adres uit Mijn gegevens; het vrije adresveld in
-  "Waar?" verschijnt alleen nog als dat adres onbekend is (oud gedrag). Een
-  klus op een ANDER adres dan thuis gaat nog via Nominatim.
-
-- PDOK geeft huisletters soms klein ("1a-01"); we tonen ze zoals BAG ze kent.
+  adres (6 seed-accounts zonder postcode, 1 echt account met "4001"). Zij zien
+  na inloggen de gele balk "Vul je adres aan". Geen datamigratie.
+- Een klus op een ANDER adres dan thuis gaat nog via Nominatim.
