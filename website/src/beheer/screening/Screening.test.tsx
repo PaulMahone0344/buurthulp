@@ -35,6 +35,16 @@ describe('D2 screening', () => {
     expect(knoppen.map((k) => k.textContent)).toEqual(['Bekijk Oudste', 'Bekijk Nieuwste'])
   })
 
+  it('koers B: zegt overal "helpers", niet "jongeren"', async () => {
+    opzet(new FakeBeheerData({ profielen: [profiel({ id: 'p1' })] }, COORDINATOR))
+
+    await screen.findByRole('button', { name: 'Bekijk Sami' })
+    expect(screen.getByRole('heading', { name: 'Helpers' })).toBeInTheDocument()
+    expect(screen.getByRole('tablist', { name: 'Welke helpers' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^Alle helpers/ })).toBeInTheDocument()
+    expect(screen.queryByText(/jongere/i)).not.toBeInTheDocument()
+  })
+
   it('ADRES: pil "adres handmatig" / "niet gecontroleerd" in de lijst en het detail', async () => {
     const data = new FakeBeheerData(
       {
@@ -96,7 +106,7 @@ describe('D2 screening', () => {
     expect(within(detail).getByLabelText('VOG gezien op')).toHaveValue('')
     await user.type(within(detail).getByLabelText('VOG gezien op'), '2026-09-19')
     expect(within(detail).getByLabelText('Notitie (verplicht)')).toHaveAccessibleDescription(
-      'De jongere kan deze notitie lezen. Schrijf hem zakelijk.',
+      'De helper kan deze notitie lezen. Schrijf hem zakelijk.',
     )
     await user.type(within(detail).getByLabelText('Notitie (verplicht)'), 'Alles klopt.')
     await user.click(within(detail).getByRole('button', { name: 'Goedkeuren' }))

@@ -1,4 +1,4 @@
-// M14 — D2 SCREENING JONGEREN. Tegels (wachtend | VOG loopt | afgewezen deze
+// M14 — D2 SCREENING HELPERS (koers B: helpers, niet jongeren). Tegels (wachtend | VOG loopt | afgewezen deze
 // maand), de wachtrij (verificatiestatus in_behandeling, oudste eerst), het
 // signaal "VOG verloopt binnen 60 dagen", en per jongere de documenten naast
 // elkaar met goedkeuren of afkeuren (altijd met notitie).
@@ -33,7 +33,7 @@ const LIJSTEN: Array<{ id: Lijst; label: string }> = [
   { id: 'wachtrij', label: 'Wachtrij' },
   { id: 'vog', label: 'VOG nodig' },
   { id: 'signalen', label: 'VOG verloopt' },
-  { id: 'alle', label: 'Alle jongeren' },
+  { id: 'alle', label: 'Alle helpers' },
 ]
 
 const VOG_REDEN = (r: VogRij) => (r.reden === 'geen' ? 'nog geen VOG gezien' : `VOG verlopen op ${toonDatum(r.verlooptOp)}`)
@@ -82,10 +82,10 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
           <div className="admin-card__header">
             <div>
               <Users size={22} />
-              <h2>Jongeren</h2>
+              <h2>Helpers</h2>
             </div>
           </div>
-          <div className="seg" role="tablist" aria-label="Welke jongeren">
+          <div className="seg" role="tablist" aria-label="Welke helpers">
             {LIJSTEN.map((l) => (
               <button
                 key={l.id}
@@ -123,7 +123,7 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
               {vog.geladen && vog.waarde.length === 0 ? <p className="empty-note">Iedereen van 18+ heeft een geldige VOG.</p> : null}
             </div>
           ) : null}
-          <div className="helper-list" aria-label="Jongeren" hidden={lijst === 'vog'}>
+          <div className="helper-list" aria-label="Helpers" hidden={lijst === 'vog'}>
             {zichtbaar.map((p) => {
               const signaal = vogSignaal(p.vogGeldigTot, vandaag)
               return (

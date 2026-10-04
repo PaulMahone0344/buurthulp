@@ -173,9 +173,9 @@ export function ScreeningDetail({ data, profiel, nu, opSluit, opBeoordeeld }: Pr
             onChange={(e) => setNotitie(e.target.value)}
           />
         </label>
-        {/* Besluit 2 okt: de jongere leest zijn eigen profiel, dus ook deze notitie. */}
+        {/* Besluit 2 okt: de helper leest zijn eigen profiel, dus ook deze notitie. */}
         <small id="screening-notitie-uitleg" className="admin-muted">
-          De jongere kan deze notitie lezen. Schrijf hem zakelijk.
+          De helper kan deze notitie lezen. Schrijf hem zakelijk.
         </small>
       </div>
       <Foutmelding melding={fout} />
