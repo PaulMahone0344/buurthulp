@@ -1528,3 +1528,119 @@ SCRIPTS
 UITROLLEN (volgorde; zie proefrit-adres.txt)
   00-backup.mjs -> 120 --apply -> 123-hook-deploy.sh -> 122 --apply ->
   121 (dry-run) -> 82, 72, 62, 04, 50, 92, 102, 112 -> paneel + app
+
+================================================================
+B5 - REAGEREN EN KIEZEN (MATCH) (4 okt 2026)
+*** NOG NIET OP PROD *** (alleen proefrit: backend/proefrit-b5.txt)
+================================================================
+
+Helpers nemen een klus niet meer aan, maar REAGEREN ("Ik wil helpen" + een
+berichtje); de bewoner KIEST er een ("Het is een match!"). Besluiten
+onderzoek buitenland punt 1 (ouder keurt per klus), 10 (eerste klus 10-12:
+ouder mee), 11 (twee kanten beoordelen + geheime vraag) en 12 ("Ik kan nu
+helpen"). Het M6-statusverloop verandert NIET: kiezen zet de klus precies zo
+op geaccepteerd als accepteren (zelfde velden, logregel open -> geaccepteerd).
+GEEN datamigratie: geen bestaande rij wordt aangeraakt.
+
+hh_reacties  NIEUW (scripts/130-b5-reacties.mjs; 12 eigen velden + created/updated)
+  klus               relatie hh_klussen, verplicht; verdwijnt mee met de klus
+  helper             relatie hh_users, verplicht; verdwijnt mee met het account
+  bericht            tekst, max 200 (optioneel; chatfilter: nummers/mail/links
+                     -> "•••", zelfde filter als B6)
+  bericht_gefilterd  ja/nee
+  status             wacht_op_ouder | open | gekozen | afgewezen | ingetrokken |
+                     vervallen
+  ouder_akkoord_op   datum ("Goed" van de ouder)
+  ouder_besluit      goed | liever_niet
+  ouder_gaat_mee     ja/nee (vinkje eerste klus, helper 10-12)
+  ouder_gemaild_op   datum
+  token_hash         tekst, HIDDEN: sha256("hh-ouder-klus:" + token)
+  klus_samenvatting  tekst, max 200 ("Tuin, zaterdag 10 oktober om 10:00")
+  gekozen_op         datum
+  Indexen: UNIEK (klus, helper) = één reactie per helper per klus; helper;
+  token_hash.
+  Regels (scripts/131-b5-rules.mjs; nieuwe collectie, gezet):
+    lezen   de helper zelf (alles), de bewoner (klus.hulpvrager) alleen status
+            open of gekozen, de coordinator alles
+    schrijven niemand via de API (null): alles via de routes ($app).
+EXTRA VELDEN (130, additief)
+  hh_profielen.beschikbaar_tot       datum ("Ik kan nu helpen"; de hook weigert
+                                     hem in de body van een gewone gebruiker)
+  hh_beoordelingen.alles_in_orde     ja | nee (de geheime vraag)
+  hh_beoordelingen.geheim_toelichting tekst, max 300
+  hh_meldingen.soort + "reactie"
+  GEEN bestaande rule verandert.
+
+HOOKS (deploy met scripts/133-hook-deploy.sh; 5 nieuwe bestanden, 1 gewijzigd)
+  hh_reacties_teksten.js, hh_reacties_basis.js, hh_reacties_na.js,
+  hh_reacties_hulp.js (geen hooks; getest zonder server:
+  backend/tests/hh_reacties_hulp.test.mjs met tests/_nep_app.mjs) en
+  hh_reacties.pb.js:
+  POST /api/hh/klussen/{id}/reageren  {bericht?, ouder_gaat_mee?}  helper.
+    Zelfde voorwaarden als accepteren (goedgekeurd, werkgebied, ouder/VOG,
+    keuring, leeftijd + tijdvenster; plus: klus nog niet begonnen). Klus
+    blijft OPEN. Onder 18 (vandaag): wacht_op_ouder + mail aan de ouder (adres
+    uit de gegeven B3-toestemming, anders hh_users.ouder_email; B3-mailpad,
+    afzender HeitjeHulp; .invalid/.test krijgt nooit mail; mail mislukt = 502
+    en geen reactie). 18+: open + gebundelde melding aan de bewoner. Helper
+    10-12, eerste klus bij deze bewoner (geen eerdere klus op geaccepteerd/
+    onderweg/bezig/afgerond/probleem): zonder vinkje 400 oudermee. Hooguit 10
+    reacties tegelijk open (429 limiet). Opnieuw na intrekken/afwijzen: zelfde
+    rij.
+  POST /api/hh/reacties/{id}/intrekken  eigen reactie, alleen wacht/open.
+  GET  /api/hh/klussen/{id}/reacties    bewoner (of coordinator): KiesHelper-
+    kaarten van status open (en een helper die intussen niet meer mag valt
+    weg): voornaam, leeftijd, niveau "Nieuw", sterren, aantal beoordelingen,
+    id_gecontroleerd, laatste recensie (1 regel), berichtje, ouder_gaat_mee.
+    NOOIT achternaam, geboortedatum, adres of e-mail.
+  POST /api/hh/klussen/{id}/kiezen {reactie}  bewoner (of de meldkamer namens
+    hem). EEN transactie: klus open + zonder helper, reactie open, de helper
+    heeft op dat moment geen andere klus (geaccepteerd/onderweg/bezig,
+    overlappend; zonder eindtijd 2 uur) -> klus geaccepteerd + helper,
+    reactie gekozen, andere open -> afgewezen, wachtende -> vervallen,
+    logregel (door = bewoner, toelichting "gekozen door de bewoner" of "...
+    meldkamer"). 409 klusbezet | reactieweg | helperbezet.
+  POST /api/hh/ouder/klus {token} en /api/hh/ouder/klus/besluit {token,
+    besluit: goed | lieverniet}: PUBLIEK, 30 per IP per uur. Stand + wat/waar
+    (straat zonder huisnummer, of de plaats)/wanneer/voornaam bewoner. Goed ->
+    open (bewoner krijgt melding), liever niet -> afgewezen. Verloopt als de
+    klus begint, of niet meer open is (dan vervallen).
+  POST /api/hh/beschikbaar {aan}  helper: beschikbaar_tot = nu + 3 uur (of leeg).
+  GET  /api/hh/beschikbaar?klustype=&van=&tot=  bewoner: {aantal} helpers die
+    nu kunnen, in zijn werkgebied, oud genoeg voor categorie en tijd.
+  Na elke logregel (onRecordAfterCreateSuccess hh_klus_status; ook koppelen,
+    accepteren, annuleren, afkeuren, ouder trekt in): naar geaccepteerd ->
+    open reacties afgewezen ("De bewoner koos iemand anders"), die van de
+    helper zelf gekozen; naar geannuleerd -> vervallen ("Klus gaat niet
+    door"); terug naar open -> de gekozen reactie ingetrokken.
+  onRecordCreate hh_meldingen: "toegewezen" na een keuze -> voor de helper
+    "Het is een match!" (de bewoner zelf krijgt hem niet: hij koos net);
+    "nieuwe_klus" alleen aan wie nu kan helpen ALS hh_instellingen
+    b5_nieuwe_klus_alleen_beschikbaar = true (standaard uit: 32/102 blijven
+    groen).
+  Geheime vraag: alles_in_orde = nee (aanmaken of wijzigen) -> één incident
+    (soort probleem, melder = de gever, klus erbij, "[geheime vraag] ...");
+    de M8-hook meldt het elke coordinator. onRecordEnrich: het antwoord zien
+    alleen de gever, de coordinator en de superuser; filteren/sorteren erop
+    400 (ook realtime).
+  onRecordEnrich hh_klussen: reacties_aantal (bewoner: open; helper: open +
+    wacht) en voor de helper mijn_reactie.
+  Filteren op de locatie van een klus via hh_reacties (helper): 400.
+  cronAdd hh_reacties_vervallen (elke 10 min): wachtende reacties van een
+    begonnen klus vervallen.
+  hh_klussen.pb.js accepteren: zolang hh_instellingen b5_accepteren_dicht
+    niet true is, werkt hij zoals in M5 (oude app, meldkamer-checks); daarna
+    409 {reden: "reageren"} voor elke helper. Koppelen blijft werken.
+
+CHECK  scripts/132-b5check.mjs (dry-run standaard). Met --apply: tijdelijke
+  accounts b5check-...@heitjehulp.invalid, eigen klussen; reageren, ouder
+  (bekende token als superuser), eerste-klus-regel, KiesHelper, kiezen,
+  RACE 20 ronden dezelfde bewoner twee klikken + 20 ronden twee bewoners
+  dezelfde helper op hetzelfde moment, intrekken/teruggeven/koppelen/
+  annuleren, beoordelen twee kanten + geheime vraag, "Ik kan nu helpen",
+  schakelaars (alleen als ze nog niet bestaan). Lokaal 137 groen.
+  Test zonder server: node --test backend/tests/*.test.mjs (370 tests).
+
+UITROLLEN (volgorde; zie proefrit-b5.txt)
+  00-backup.mjs -> 130 --apply -> 131 --apply -> 133-hook-deploy.sh ->
+  132 --apply -> 92, 102, 112, 82, 72, 62, 04, 50, 122 -> app + website

@@ -11,11 +11,17 @@ import { fileURLToPath } from 'node:url';
 
 const hier = path.dirname(fileURLToPath(import.meta.url));
 
-/// Laadt een hulpbestand uit pb_hooks zoals de JSVM (module.exports).
+/// Laadt een hulpbestand uit pb_hooks zoals de JSVM (module.exports). Een
+/// require() binnen het bestand (B5: hh_reacties_basis.js) laadt het andere
+/// hulpbestand op dezelfde manier; __hooks bestaat hier niet.
+const geladen = new Map();
 export function laadHulp(naam) {
+  if (geladen.has(naam)) return geladen.get(naam);
   const bron = readFileSync(path.join(hier, '..', 'pb_hooks', naam), 'utf8');
   const module_ = { exports: {} };
-  new Function('module', 'exports', bron)(module_, module_.exports);
+  const eis = (pad) => laadHulp(path.basename(pad));
+  new Function('module', 'exports', 'require', bron)(module_, module_.exports, eis);
+  geladen.set(naam, module_.exports);
   return module_.exports;
 }
 

@@ -3,16 +3,21 @@
 # server (root@178.104.171.224, map /root/pb_hooks/):
 #   NIEUW     hh_reacties_teksten.js  alle zichtbare teksten van B5 (meldingen,
 #                                     ouder-mail, incident bij de geheime vraag)
-#   NIEUW     hh_reacties_hulp.js     rekenwerk: reageren, ouder per klus,
-#                                     kiezen, intrekken, meldingen, "Ik kan nu
-#                                     helpen", geheime vraag
+#   NIEUW     hh_reacties_basis.js    gedeeld: constanten, lezen, meldingen,
+#                                     de omgeving voor de hooks
+#   NIEUW     hh_reacties_na.js       na een statuswissel, meldingen nakijken,
+#                                     "Ik kan nu helpen", geheime vraag,
+#                                     verrijken
+#   NIEUW     hh_reacties_hulp.js     reageren, intrekken, ouder per klus,
+#                                     KiesHelper, kiezen (exporteert ook de
+#                                     andere twee)
 #   NIEUW     hh_reacties.pb.js       routes reageren/intrekken/reacties/kiezen,
 #                                     ouder/klus(+besluit), beschikbaar; hooks na
 #                                     elke logregel, meldingen nakijken, velden
 #                                     dicht, verrijken, cron vervallen
 #   GEWIJZIGD hh_klussen.pb.js        accepteren: schakelaar b5_accepteren_dicht
 #                                     (uit = zoals M5; aan = 409 "reageren")
-# Stuurt ALLEEN deze vier bestanden mee.
+# Stuurt ALLEEN deze zes bestanden mee.
 #
 # VOORWAARDE: 130-b5-reacties.mjs --apply (hh_reacties + velden + soort
 # "reactie"; zonder collectie geven de routes 500) en 131-b5-rules.mjs --apply.
@@ -22,19 +27,19 @@
 #   2. lijst /root/pb_hooks/ VOOR de kopie
 #   2b. verschil serverversie -> lokaal per bestaand bestand. Verwacht: alleen
 #       B5-regels in hh_klussen.pb.js (schakelaar in accepteren + kopcommentaar);
-#       de 3 nieuwe hebben geen diff.
+#       de 5 nieuwe hebben geen diff.
 #   3. bevestiging (y)
 #   4. backup op de server naar /root/hh_hook_backups/b5/<tijd>/ (plus
 #      NIEUW.txt met de nieuwe bestanden), dan via /tmp/ naar /root/pb_hooks/
 #      (eerst de hulpbestanden, dan de hooks)
 #   5. GEEN systemctl restart: PocketBase herlaadt hooks bij een wijziging
-#   6. lijst NA de kopie; alleen de 3 nieuwe bestanden mogen erbij
+#   6. lijst NA de kopie; alleen de 5 nieuwe bestanden mogen erbij
 #   7. verify: journalctl -n 20 (let op laadfouten). Het echte bewijs is
 #      132-b5check.mjs --apply.
 #
 #   ./133-hook-deploy.sh            deployen
 #   ./133-hook-deploy.sh --rollback laatste backup terugzetten (hh_klussen.pb.js
-#                                   terug, de 3 nieuwe weg)
+#                                   terug, de 5 nieuwe weg)
 #   ./133-hook-deploy.sh --verify   alleen stap 7
 
 set -euo pipefail
@@ -44,7 +49,7 @@ SLEUTEL="$HOME/.ssh/id_ed25519"
 DOELMAP="/root/pb_hooks"
 BACKUPMAP="/root/hh_hook_backups/b5"  # eigen submap: --rollback pakt nooit een backup van B2/B3/B4/B6/ADRES
 # Volgorde telt: hulpbestanden eerst.
-BESTANDEN=("hh_reacties_teksten.js" "hh_reacties_hulp.js" "hh_reacties.pb.js" "hh_klussen.pb.js")
+BESTANDEN=("hh_reacties_teksten.js" "hh_reacties_basis.js" "hh_reacties_na.js" "hh_reacties_hulp.js" "hh_reacties.pb.js" "hh_klussen.pb.js")
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BRONMAP="$HIER/../pb_hooks"
 VOOR=/tmp/hh_hooks_voor_133.txt
