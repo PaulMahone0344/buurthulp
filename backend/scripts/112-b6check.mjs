@@ -48,6 +48,12 @@ import { randomBytes } from 'node:crypto';
 import { superuserClient, userClient, anonClient, assertHh, APPLY, fail, PB_URL } from './_lib.mjs';
 import { COLLECTIE, berichtVelden, MELDING_SOORT_BERICHT } from './110-b6-berichten.mjs';
 import { BERICHTEN_RULES } from './111-b6-rules.mjs';
+import { chatVoorMeldkamer, BERICHTEN_NIEUW } from './151-b11-rules.mjs';
+
+// B11 (besluit Ibrahim 4 okt): de meldkamer leest ELKE chat. Staat 151 op de
+// server, dan verwacht deze check die rule en leest de coordinator ook
+// zonder incident mee (maar schrijft nog steeds niet).
+let MELDKAMER_LEEST_ALLES = false;
 
 const MAIL_PREFIX = 'b6check-';
 const MAIL_DOMEIN = '@heitjehulp.invalid';
@@ -159,8 +165,11 @@ async function voorwaarden(su) {
     const namen = new Set(col.fields.map((f) => f.name));
     const mist = berichtVelden({ hh_users: '', hh_klussen: '' }).filter((f) => !namen.has(f.name)).map((f) => f.name);
     check(`${COLLECTIE} heeft alle velden van 110`, !mist.length, `mist: ${mist.join(', ')}`);
+    MELDKAMER_LEEST_ALLES = String(col.listRule ?? '').includes(BERICHTEN_NIEUW);
+    if (MELDKAMER_LEEST_ALLES) console.log('  (B11 staat erop: de meldkamer leest elke chat)');
     for (const [k, v] of Object.entries(BERICHTEN_RULES)) {
-      check(`${COLLECTIE}.${k} is gelijk aan 111`, (col[k] ?? null) === v, 'draai 111 --apply');
+      const verwacht = MELDKAMER_LEEST_ALLES && (k === 'listRule' || k === 'viewRule') ? chatVoorMeldkamer(v) : v;
+      check(`${COLLECTIE}.${k} is gelijk aan 111${MELDKAMER_LEEST_ALLES ? ' (+ B11)' : ''}`, (col[k] ?? null) === verwacht, 'draai 111 (en 151) --apply');
     }
   }
   const meld = await su.collections.getOne('hh_meldingen');
@@ -289,10 +298,16 @@ async function main() {
 
   // ---- D -------------------------------------------------------------------
   kop('D. Derden lezen en schrijven niets');
-  for (const [naam, wie] of [['vreemde bewoner', vb], ['vreemde helper', vh], ['andere helper', h2], ['coordinator zonder incident', c]]) {
+  const derden = [['vreemde bewoner', vb], ['vreemde helper', vh], ['andere helper', h2]];
+  if (!MELDKAMER_LEEST_ALLES) derden.push(['coordinator zonder incident', c]);
+  for (const [naam, wie] of derden) {
     check(`${naam} ziet 0 berichten`, (await lijst(wie.client, k1.id)).length === 0);
     await magNiet(`${naam} kan een bericht niet openen`, () => wie.client.collection(COLLECTIE).getOne(m1.id), [404]);
     await magNiet(`${naam} kan niet schrijven`, () => schrijf(wie, k1.id, 'Hallo?'));
+  }
+  if (MELDKAMER_LEEST_ALLES) {
+    check('B11: coordinator leest zonder incident 2 berichten', (await lijst(c.client, k1.id)).length === 2);
+    await magNiet('B11: coordinator kan nog steeds niet schrijven', () => schrijf(c, k1.id, 'Hallo?'));
   }
   check('anoniem ziet 0 berichten', (await lijst(anon, k1.id).catch(() => [])).length === 0);
   await magNiet('anoniem kan niet schrijven', () =>
@@ -494,7 +509,8 @@ async function main() {
     check('realtime-bericht zonder contactverzoek-veld', binnen.b.every((ev) => !('contactverzoek' in (ev.record ?? {}))));
     await wacht(500);
     check('vreemde bewoner krijgt niets', binnen.vb.length === 0, `aantal=${binnen.vb.length}`);
-    check('coordinator (zonder incident op deze klus) krijgt niets', binnen.c.every((ev) => ev.record?.klus !== kR.id));
+    if (MELDKAMER_LEEST_ALLES) check('B11: coordinator krijgt het bericht ook realtime', binnen.c.some((ev) => ev.record?.klus === kR.id));
+    else check('coordinator (zonder incident op deze klus) krijgt niets', binnen.c.every((ev) => ev.record?.klus !== kR.id));
     for (const stop of stops) await stop();
   }
 

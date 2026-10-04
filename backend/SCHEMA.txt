@@ -1758,3 +1758,64 @@ CHECK  scripts/142-b9check.mjs (dry-run standaard). Met --apply: tijdelijke
   opzoeken, KiesHelper, naberekenen ALLEEN droog. Lokaal: 89 groen.
 UITROLLEN  zie proefrit-b9.txt: 00 -> 140 -> 141 -> 143 -> 142 -> oude checks
   -> (144 met eigen ja) -> app + website.
+
+
+=============================================================================
+B11 MELDKAMER EN BEHEERPANEEL (4 okt 2026; scripts 150-154, besluiten Ibrahim
+4 okt in app-plan/PROMPT-B11-MELDKAMER.txt)
+=============================================================================
+hh_partners  NIEUW (jongerenwerk-organisaties; ALLEEN TELLEN)
+  naam     tekst, verplicht, 2-80
+  code     tekst, verplicht, ^[A-Z0-9-]{3,20}$, UNIEK
+  actief   ja/nee (niet actief = code werkt niet meer bij aanmelden)
+  notitie  tekst, max 500
+  Regels: alles alleen coordinator.
+
+hh_users  EXTRA (additief, script 150)
+  kennismaking_status   nog | gesproken | geweigerd (leeg = van vóór B11, zie 154)
+  kennismaking_op       datum
+  kennismaking_door     relatie hh_users, geen cascade
+  kennismaking_notitie  tekst, max 500
+  partner               relatie hh_partners, geen cascade (partner weg = veld leeg)
+  Sloten (151) op create/update: kennismaking_* niemand via de API (route);
+  partner alleen coordinator (helper: partner_code bij aanmelden, hook).
+  Verrijken (hh_meldkamer.pb.js): kennismaking_notitie/_door alleen voor
+  coordinator en superuser; kennismaking_status/_op en partner ook voor de
+  gebruiker zelf, niet voor anderen.
+
+hh_instellingen  NIEUWE SLEUTELS (150, alleen als ze ontbreken)
+  b11_kennismaking_verplicht  false  keuren wacht op het belletje
+  b11_zelfde_paar_aan         false  signaal zelfde paar
+  b11_zelfde_paar_aantal      4      bij de hoeveelste klus
+  b11_zelfde_paar_dagen       30     binnen hoeveel dagen
+
+hh_berichten  RULE (151): list/view - de coordinator leest ELKE chat (was:
+  alleen met een incident op de klus). Rest van de rule ongewijzigd.
+  112-b6check kent dit (MELDKAMER_LEEST_ALLES).
+
+HOOKS (pb_hooks/hh_meldkamer.pb.js + hh_meldkamer_hulp.js)
+  hh_users aanmaken: helper + partner_code (body, geen veld) -> partner;
+    onbekend/niet actief -> 400 data.partner_code.code "hh_partner_code".
+    Bewoner door de meldkamer aangemeld -> meteen "gesproken"; anders "nog".
+  POST /api/hh/meldkamer/kennismaking/{id} {besluit gesproken|geweigerd,
+    notitie}  coordinator. Geweigerd: geblokkeerd + open/concept-klussen
+    zonder helper geannuleerd (logregel); lopende klussen met helper blijven
+    (antwoord: lopend). Auditregel. Deblokkeren gaat apart (Gebruikers).
+  GET  /api/hh/meldkamer/partners  coordinator: per partner aangemeld/goedgekeurd.
+  GET  /api/hh/meldkamer/vog       coordinator: helpers 18+ (in behandeling of
+    goedgekeurd) zonder VOG (reden geen) of verlopen (3 jaar, reden verlopen).
+  hh_klus_status na aanmaken (naar afgerond): zelfde paar -> één incident
+    soort "signaal" per paar per periode, melder = eerste coordinator,
+    omschrijving "[zelfde paar] ... (zp:<helper>:<bewoner>)".
+  hh_klussen verrijken: wacht_op_kennismaking = true (open/concept, niet
+    gekeurd, schakelaar aan, bewoner niet gesproken).
+  hh_klusplaatsen.pb.js keuren: 409 {reden: "kennismaking"} bij goedkeuren
+    zolang wacht_op_kennismaking geldt. Afkeuren mag altijd. Een klus die de
+    meldkamer/superuser zelf plaatst is meteen gekeurd (B4) - telefonisch =
+    de meldkamer sprak de bewoner al.
+
+CHECK  scripts/152-b11check.mjs (dry-run standaard). Met --apply: tijdelijke
+  b11check-...@heitjehulp.invalid, partners B11CHK..., klussen door de
+  superuser; schakelaars hooguit seconden aan, in finally terug. Lokaal: 80 groen.
+DATAMIGRATIE  scripts/154 (eigen JA): bewoners zonder status -> gesproken.
+UITROLLEN  zie proefrit-b11.txt.

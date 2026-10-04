@@ -43,7 +43,9 @@
 //                  punt 4 maakt daar "Je klus is afgekeurd: <reden>" van.
 //    Antwoorden: 200 { klus, besluit, status }; 400 { melding, reden:
 //    "besluit" | "reden" }; 401 anoniem; 403 { reden: "rol" }; 404;
-//    409 { reden: "status" | "algoedgekeurd" }.
+//    409 { reden: "status" | "algoedgekeurd" | "kennismaking" }. B11: met
+//      b11_kennismaking_verplicht aan en de bewoner nog niet "gesproken"
+//      -> 409 kennismaking (hh_meldkamer_hulp.wachtOpKennismaking).
 //
 // 4. hh_meldingen aanmaken (onRecordCreate, model-hook: ook via $app)
 //    - "nieuwe_klus": alleen als de klus goedgekeurd is en de ontvanger oud
@@ -229,6 +231,7 @@ routerAdd(
     const MELDING_AL = "Deze klus is al goedgekeurd.";
 
     const hulp = require(`${__hooks}/hh_klusplaatsen_hulp.js`);
+    const meldkamer = require(`${__hooks}/hh_meldkamer_hulp.js`);
     const klusId = String(e.request.pathValue("id") || "").trim();
     if (!klusId) return e.json(404, { melding: MELDING_NIET_GEVONDEN, reden: "nietgevonden" });
 
@@ -277,6 +280,11 @@ routerAdd(
           uitkomst = "algoedgekeurd";
           return;
         }
+        // B11: met b11_kennismaking_verplicht aan wacht keuren op het belletje.
+        if (meldkamer.wachtOpKennismaking(txApp, String(klus.get("hulpvrager") || ""))) {
+          uitkomst = "kennismaking";
+          return;
+        }
         // Oude klussen (van vóór B4) hebben nog geen grens: nu uitrekenen.
         let typeMin;
         try {
@@ -317,6 +325,7 @@ routerAdd(
     }
     if (uitkomst === "nietgevonden") return e.json(404, { melding: MELDING_NIET_GEVONDEN, reden: "nietgevonden" });
     if (uitkomst === "algoedgekeurd") return e.json(409, { melding: MELDING_AL, reden: "algoedgekeurd" });
+    if (uitkomst === "kennismaking") return e.json(409, { melding: meldkamer.MELDING_KEUREN, reden: "kennismaking" });
     return e.json(409, { melding: MELDING_STATUS, reden: "status" });
   },
   $apis.requireAuth("hh_users")
