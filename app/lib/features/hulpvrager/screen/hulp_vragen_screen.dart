@@ -23,6 +23,7 @@ import '../provider/hulpvraag_plaatser.dart';
 import '../provider/hulpvrager_providers.dart';
 import '../widget/hulpvraag_waar_sectie.dart';
 import '../widget/hulpvraag_wanneer_sectie.dart';
+import '../../reacties/widget/helpers_kunnen_nu_regel.dart';
 import '../widget/hulpvraag_wat_sectie.dart';
 import '../widget/klus_foto_sectie.dart';
 import '../widget/klus_herhalen_sectie.dart';
@@ -149,6 +150,8 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
             const _Kop(TekstenKlusNl.wanneerTitel),
             SizedBox(height: tussen),
             const HulpvraagWanneerSectie(),
+            // B5 (punt 12): "4 helpers kunnen nu helpen" (alleen een aantal).
+            const _HelpersNu(),
             SizedBox(height: blok),
             const _Kop(TekstenKlusNl.herhalenTitel),
             SizedBox(height: tussen),
@@ -227,6 +230,31 @@ class _Kop extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// B5: hoeveel helpers nu kunnen, voor de gekozen categorie en tijd.
+class _HelpersNu extends ConsumerWidget {
+  const _HelpersNu();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final concept = ref.watch(conceptProvider);
+    final type = concept.klustype;
+    if (type == null) return const SizedBox.shrink();
+    final dag = concept.dag;
+    final vanaf = concept.vanafMinuten;
+    final van = dag != null && vanaf != null ? momentOp(dag, vanaf) : null;
+    final totMin = concept.totMinuten;
+    final tot = dag != null && concept.heeftEindtijd && totMin != null
+        ? momentOp(dag, totMin)
+        : null;
+    return Padding(
+      padding: EdgeInsets.only(
+        top: HhRuimte.voor(HhRuimte.m, HhDichtheidScope.van(context)),
+      ),
+      child: HelpersKunnenNuRegel(klustypeId: type.id, van: van, tot: tot),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:heitjehulp_app/l10n/teksten_reacties_nl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/app/router.dart';
@@ -11,7 +12,6 @@ import 'package:heitjehulp_app/features/jongere/reputatie/paden_reputatie.dart';
 import 'package:heitjehulp_app/features/jongere/reputatie/widget/sterren_kiezer.dart';
 import 'package:heitjehulp_app/features/jongere/uitvoeren/paden_uitvoeren.dart';
 import 'package:heitjehulp_app/l10n/teksten_beoordelen_nl.dart';
-import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
 
@@ -59,6 +59,7 @@ void main() {
       await tikKnop(tester, TekstenBeoordelenNl.j15Beoordelen);
       await _tikSter(tester, 5);
       await vulVeld(tester, 0, 'Lieve mevrouw, koffie gehad.');
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
       expect(find.text(TekstenBeoordelenNl.j17Gelukt), findsOneWidget);
       expect(beoordeling.alleBeoordelingen.single.sterren, 5);
@@ -94,6 +95,7 @@ void main() {
       );
 
       await _tikSter(tester, 4);
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
       expect(find.text(TekstenBeoordelenNl.j17AlGegeven), findsOneWidget);
       expect(beoordeling.alleBeoordelingen, hasLength(1));
@@ -127,12 +129,13 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
+      await tikTekst(tester, TekstenReactiesNl.tabKlaar);
       await tikKnop(tester, TekstenBeoordelenNl.j14NogBeoordelen);
       await _tikSter(tester, 4);
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
       await tikKnop(tester, TekstenBeoordelenNl.j17NaarMijnKlussen);
-      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
+      await tikTekst(tester, TekstenReactiesNl.tabKlaar);
       expect(
         find.widgetWithText(HhKnop, TekstenBeoordelenNl.j14NogBeoordelen),
         findsNothing,
@@ -159,6 +162,7 @@ void main() {
 
       await tikKnop(tester, TekstenBeoordelenNl.o7HoeGingHet);
       await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmhoog);
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
       expect(find.text(TekstenBeoordelenNl.o9Bedankt), findsOneWidget);
 
@@ -193,6 +197,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmlaag);
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
       expect(find.text('Je hebt al een beoordeling gegeven.'), findsOneWidget);
       expect(find.text(TekstenBeoordelenNl.o9Bedankt), findsNothing);

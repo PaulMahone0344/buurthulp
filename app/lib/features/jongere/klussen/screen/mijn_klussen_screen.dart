@@ -30,11 +30,16 @@ import '../paden_klussen.dart';
 import '../provider/klussen_providers.dart';
 import '../widget/jongere_tabbalk.dart';
 import '../widget/klus_tegel.dart';
+import '../../../../l10n/teksten_reacties_nl.dart';
+import '../../../reacties/domein/reactie_regels.dart';
+import '../../../reacties/model/hh_reactie.dart';
+import '../../../reacties/provider/reactie_providers.dart';
+import '../../../reacties/widget/reactie_tegel.dart';
 
-/// J14. De klussen die aan de jongere zijn toegewezen, in drie tabbladen:
-/// vandaag, gepland, historie (status en wanneer_van, lokale dag). Tik op
-/// een klus die loopt (geaccepteerd, onderweg, bezig) opent J15; de rest
-/// opent J13.
+/// J14 / HMijnKlussen (B5). Drie tabbladen: Gereageerd (de eigen reacties
+/// die nog lopen of net niet doorgingen), Gepland (klussen waarvoor de
+/// bewoner jou koos) en Klaar. Tik op een klus die loopt (geaccepteerd,
+/// onderweg, bezig) opent J15; de rest opent J13.
 class MijnKlussenScreen extends ConsumerStatefulWidget {
   const MijnKlussenScreen({super.key});
 
@@ -43,9 +48,51 @@ class MijnKlussenScreen extends ConsumerStatefulWidget {
 }
 
 class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
-  MijnKlussenTab _tab = MijnKlussenTab.vandaag;
+  MijnKlussenTab _tab = MijnKlussenTab.gepland;
 
-  Future<void> _vernieuw() => ref.read(mijnKlussenProvider.notifier).vernieuw();
+  Future<void> _vernieuw() async {
+    await ref.read(mijnKlussenProvider.notifier).vernieuw();
+    await ref.read(mijnReactiesProvider.notifier).vernieuw();
+  }
+
+  /// B5: tab Gereageerd, uit de eigen reacties (hh_reacties).
+  List<Widget> _gereageerd(double tussen) {
+    return switch (ref.watch(mijnReactiesProvider)) {
+      AsyncData<List<HhReactie>>(:final value) => () {
+        final lijst = gereageerdLijst(value);
+        if (lijst.isEmpty) {
+          return const <Widget>[
+            HhLegeStaat(
+              icoon: Icons.mark_email_unread_outlined,
+              titel: TekstenReactiesNl.leegGereageerd,
+              uitleg: TekstenReactiesNl.leegGereageerdUitleg,
+            ),
+          ];
+        }
+        return <Widget>[
+          for (final r in lijst) ...[
+            ReactieTegel(
+              reactie: r,
+              onTik: r.status.isActief
+                  ? () => context.push(HhPadenKlussen.klusDetail(r.klusId))
+                  : null,
+            ),
+            SizedBox(height: tussen),
+          ],
+        ];
+      }(),
+      AsyncError<List<HhReactie>>(:final error) => <Widget>[
+        HhLegeStaat(
+          icoon: Icons.cloud_off_outlined,
+          titel: TekstenReactiesNl.reactiesLadenMislukt,
+          uitleg: meldingVanFout(error),
+          knopLabel: TekstenNl.opnieuwProberen,
+          onKnop: () => ref.read(mijnReactiesProvider.notifier).vernieuw(),
+        ),
+      ],
+      _ => const <Widget>[HhLaadStaat.skelet(regels: 3)],
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,80 +111,78 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
     // knop "Nog beoordelen" (liever geen knop dan een verkeerde).
     final gegeven = ref.watch(gegevenBeoordelingenProvider).value;
 
-    final inhoud = switch (stand) {
-      AsyncData<List<HhKlus>>(:final value) => () {
-        final per = deelIn(value, nu)[_tab]!;
-        if (per.isEmpty) {
-          return <Widget>[
-            switch (_tab) {
-              MijnKlussenTab.vandaag => const HhLegeStaat(
-                icoon: Icons.today_outlined,
-                titel: TekstenKlussenNl.j14LeegVandaag,
-                uitleg: TekstenKlussenNl.j14LeegVandaagUitleg,
-              ),
-              MijnKlussenTab.gepland => const HhLegeStaat(
-                icoon: Icons.event_outlined,
-                titel: TekstenKlussenNl.j14LeegGepland,
-                uitleg: TekstenKlussenNl.j14LeegGeplandUitleg,
-              ),
-              MijnKlussenTab.historie => const HhLegeStaat(
-                icoon: Icons.history,
-                titel: TekstenKlussenNl.j14LeegHistorie,
-                uitleg: TekstenKlussenNl.j14LeegHistorieUitleg,
-              ),
-            },
-          ];
-        }
-        return <Widget>[
-          for (final klus in per) ...[
-            KlusTegel(
-              klus: klus,
-              nu: nu,
-              toonStatus: true,
-              // Een klus die loopt opent meteen J15; de rest het detail.
-              onTik: () => context.push(
-                isInUitvoering(klus.status)
-                    ? HhPadenUitvoeren.uitvoeren(klus.id)
-                    : HhPadenKlussen.klusDetail(klus.id),
-              ),
-            ),
-            // B6: de chat met de bewoner, met de ongelezen-teller.
-            if (heeftChat(klus)) ...[
-              SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
-              ChatKnop(
-                klusId: klus.id,
-                naam: chatVoornaam(klus.oudereNaam),
-                label: TekstenChatNl.chat,
+    final inhoud = _tab == MijnKlussenTab.gereageerd
+        ? _gereageerd(tussen)
+        : switch (stand) {
+            AsyncData<List<HhKlus>>(:final value) => () {
+              final per = deelIn(value, nu)[_tab]!;
+              if (per.isEmpty) {
+                return <Widget>[
+                  switch (_tab) {
+                    MijnKlussenTab.gepland ||
+                    MijnKlussenTab.gereageerd => const HhLegeStaat(
+                      icoon: Icons.event_outlined,
+                      titel: TekstenReactiesNl.leegGepland,
+                      uitleg: TekstenReactiesNl.leegGeplandUitleg,
+                    ),
+                    MijnKlussenTab.klaar => const HhLegeStaat(
+                      icoon: Icons.history,
+                      titel: TekstenReactiesNl.leegKlaar,
+                      uitleg: TekstenReactiesNl.leegKlaarUitleg,
+                    ),
+                  },
+                ];
+              }
+              return <Widget>[
+                for (final klus in per) ...[
+                  KlusTegel(
+                    klus: klus,
+                    nu: nu,
+                    toonStatus: true,
+                    // Een klus die loopt opent meteen J15; de rest het detail.
+                    onTik: () => context.push(
+                      isInUitvoering(klus.status)
+                          ? HhPadenUitvoeren.uitvoeren(klus.id)
+                          : HhPadenKlussen.klusDetail(klus.id),
+                    ),
+                  ),
+                  // B6: de chat met de bewoner, met de ongelezen-teller.
+                  if (heeftChat(klus)) ...[
+                    SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+                    ChatKnop(
+                      klusId: klus.id,
+                      naam: chatVoornaam(klus.oudereNaam),
+                      label: TekstenChatNl.chat,
+                    ),
+                  ],
+                  if (_tab == MijnKlussenTab.klaar &&
+                      klus.status == HhKlusStatus.afgerond &&
+                      gegeven != null &&
+                      !gegeven.containsKey(klus.id)) ...[
+                    SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
+                    HhKnop(
+                      label: TekstenBeoordelenNl.j14NogBeoordelen,
+                      icoon: Icons.star_outline_rounded,
+                      soort: HhKnopSoort.tweedeKeus,
+                      onPressed: () =>
+                          context.push(HhPadenReputatie.beoordelen(klus.id)),
+                    ),
+                  ],
+                  SizedBox(height: tussen),
+                ],
+              ];
+            }(),
+            AsyncError<List<HhKlus>>(:final error) => <Widget>[
+              HhLegeStaat(
+                icoon: Icons.cloud_off_outlined,
+                titel: TekstenKlussenNl.j14LadenMislukt,
+                uitleg: meldingVanFout(error),
+                knopLabel: TekstenNl.opnieuwProberen,
+                onKnop: _vernieuw,
               ),
             ],
-            if (_tab == MijnKlussenTab.historie &&
-                klus.status == HhKlusStatus.afgerond &&
-                gegeven != null &&
-                !gegeven.containsKey(klus.id)) ...[
-              SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
-              HhKnop(
-                label: TekstenBeoordelenNl.j14NogBeoordelen,
-                icoon: Icons.star_outline_rounded,
-                soort: HhKnopSoort.tweedeKeus,
-                onPressed: () =>
-                    context.push(HhPadenReputatie.beoordelen(klus.id)),
-              ),
-            ],
-            SizedBox(height: tussen),
-          ],
-        ];
-      }(),
-      AsyncError<List<HhKlus>>(:final error) => <Widget>[
-        HhLegeStaat(
-          icoon: Icons.cloud_off_outlined,
-          titel: TekstenKlussenNl.j14LadenMislukt,
-          uitleg: meldingVanFout(error),
-          knopLabel: TekstenNl.opnieuwProberen,
-          onKnop: _vernieuw,
-        ),
-      ],
-      _ => const <Widget>[HhLaadStaat.skelet(regels: 3)],
-    };
+            _ => const <Widget>[HhLaadStaat.skelet(regels: 3)],
+          };
 
     return JongereTabScherm(
       actief: JongereTab.mijnKlussen,
@@ -173,9 +218,10 @@ class _MijnKlussenScreenState extends ConsumerState<MijnKlussenScreen> {
                               waarde: tab,
                               label: tab.naam,
                               icoon: switch (tab) {
-                                MijnKlussenTab.vandaag => Icons.today_outlined,
+                                MijnKlussenTab.gereageerd =>
+                                  Icons.mark_email_unread_outlined,
                                 MijnKlussenTab.gepland => Icons.event_outlined,
-                                MijnKlussenTab.historie => Icons.history,
+                                MijnKlussenTab.klaar => Icons.history,
                               },
                             ),
                         ],

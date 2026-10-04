@@ -15,6 +15,7 @@ import '../../jongere/widget/helper_wacht_start.dart' show WachtBalk;
 import '../../toegang/domein/werkgebied.dart';
 import '../../toegang/model/hh_rol.dart';
 import '../../meldingen/widget/laatste_melding_regel.dart';
+import '../../reacties/widget/helpers_willen_kaart.dart';
 import '../../toegang/provider/sessie_providers.dart';
 import '../paden_hulpvrager.dart';
 import '../provider/concept_controller.dart';
@@ -73,6 +74,8 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
             // M8: de laatste melding, rustig, zonder teller.
             const LaatsteMeldingRegel(),
             SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+            // B5: "3 helpers willen je helpen" per open klus met reacties.
+            const HelpersWillenKaart(),
             // B2: buiten het werkgebied (of adres niet gevonden) geen klus.
             if (gebruiker.magKlusPlaatsen)
               HhKnop(

@@ -49,20 +49,28 @@ final class BeoordelingFout extends BeoordelingUitkomst {
 abstract interface class BeoordelingGateway {
   /// Nieuwe beoordeling. [vanId] moet de ingelogde gebruiker zijn; de rule
   /// eist dat expliciet.
+  /// B5: [allesInOrde] is het antwoord op de geheime vraag ("Was alles in
+  /// orde?" / "Voelde je je veilig?"); null = niet beantwoord. Alleen de
+  /// meldkamer ziet het; "nee" maakt op de server een melding.
   Future<BeoordelingUitkomst> geef({
     required String klusId,
     required String vanId,
     required String naarId,
     required int sterren,
     String tekst = '',
+    bool? allesInOrde,
+    String geheimToelichting = '',
   });
 
   /// Eigen beoordeling aanpassen: alleen sterren en tekst (de updateRule
-  /// verbiedt klus, van_ en naar_gebruiker).
+  /// verbiedt klus, van_ en naar_gebruiker), en (B5) eventueel de geheime
+  /// vraag.
   Future<BeoordelingUitkomst> wijzig(
     String beoordelingId, {
     required int sterren,
     required String tekst,
+    bool? allesInOrde,
+    String geheimToelichting = '',
   });
 
   /// Alle beoordelingen die [vanId] gaf: welke klussen nog beoordeeld
@@ -91,6 +99,8 @@ class PocketBaseBeoordelingGateway implements BeoordelingGateway {
     required String naarId,
     required int sterren,
     String tekst = '',
+    bool? allesInOrde,
+    String geheimToelichting = '',
   }) {
     return _schrijf(
       (client) => client
@@ -102,23 +112,39 @@ class PocketBaseBeoordelingGateway implements BeoordelingGateway {
               'naar_gebruiker': naarId,
               'sterren': sterren,
               'tekst': tekst.trim(),
+              ..._geheim(allesInOrde, geheimToelichting),
             },
           ),
     );
   }
+
+  /// B5: de geheime vraag alleen meesturen als hij beantwoord is.
+  static Map<String, dynamic> _geheim(bool? allesInOrde, String toelichting) =>
+      allesInOrde == null
+      ? const {}
+      : {
+          'alles_in_orde': allesInOrde ? 'ja' : 'nee',
+          'geheim_toelichting': allesInOrde ? '' : toelichting.trim(),
+        };
 
   @override
   Future<BeoordelingUitkomst> wijzig(
     String beoordelingId, {
     required int sterren,
     required String tekst,
+    bool? allesInOrde,
+    String geheimToelichting = '',
   }) {
     return _schrijf(
       (client) => client
           .collection(HhBeoordeling.collectie)
           .update(
             beoordelingId,
-            body: {'sterren': sterren, 'tekst': tekst.trim()},
+            body: {
+              'sterren': sterren,
+              'tekst': tekst.trim(),
+              ..._geheim(allesInOrde, geheimToelichting),
+            },
           ),
     );
   }

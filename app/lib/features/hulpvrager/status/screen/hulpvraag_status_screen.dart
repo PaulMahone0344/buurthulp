@@ -31,6 +31,8 @@ import '../paden_status.dart';
 import '../provider/status_providers.dart';
 import '../widget/oudere_annuleer_dialoog.dart';
 import '../../../../l10n/teksten_klus_nl.dart';
+import '../../../../l10n/teksten_reacties_nl.dart';
+import '../../../reacties/paden_reacties.dart';
 
 /// O7. Waar de hulpvraag staat, in gewone taal: "Sanne is onderweg naar u."
 /// Ouderenregel: hooguit drie acties (chat, bellen, stoppen; zonder helper
@@ -242,6 +244,17 @@ class _Inhoud extends StatelessWidget {
               // Hooguit drie acties, groot en onder elkaar. B6: zodra er een
               // helper is, neemt de chat de plaats van "Vernieuwen" in (die
               // blijft als pull-to-refresh; realtime loopt door).
+              // B5: helpers reageerden; de bewoner kiest er een.
+              if (klus.isOpen &&
+                  !klus.wordtNagekeken &&
+                  klus.reactiesAantal > 0) ...[
+                HhKnop(
+                  label: TekstenReactiesNl.helpersWillen(klus.reactiesAantal),
+                  icoon: Icons.arrow_forward_rounded,
+                  onPressed: () => context.push(HhPadenReacties.kies(klus.id)),
+                ),
+                SizedBox(height: tussen),
+              ],
               if (toonChat) ...[
                 ChatKnop(
                   klusId: klus.id,

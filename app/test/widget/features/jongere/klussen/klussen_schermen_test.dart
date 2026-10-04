@@ -1,3 +1,4 @@
+import 'package:heitjehulp_app/l10n/teksten_reacties_nl.dart';
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
@@ -379,7 +380,7 @@ void main() {
     });
 
     testWidgets(
-      'open klus: wijk en afstand, geen adres of naam, knop aannemen',
+      'open klus: wijk en afstand, geen adres of naam, knop "Ik wil helpen"',
       (tester) async {
         await _pomp(tester, _gevallen[3]);
 
@@ -401,9 +402,14 @@ void main() {
           findsOneWidget,
         );
         expect(find.textContaining('Prins Bernhardlaan'), findsNothing);
+        // B5: niet meer aannemen, maar reageren; de bewoner kiest.
+        expect(
+          find.widgetWithText(HhKnop, TekstenReactiesNl.reageerKnop),
+          findsOneWidget,
+        );
         expect(
           find.widgetWithText(HhKnop, TekstenKlussenNl.j13Aannemen),
-          findsOneWidget,
+          findsNothing,
         );
         expect(find.byType(KlusStatusPil), findsNothing);
       },
@@ -423,7 +429,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.widgetWithText(HhKnop, TekstenKlussenNl.j13Aannemen),
+        find.widgetWithText(HhKnop, TekstenReactiesNl.reageerKnop),
         findsNothing,
       );
     });
@@ -442,29 +448,31 @@ void main() {
   });
 
   group('J14 mijn klussen', () {
-    testWidgets('drie tabbladen: vandaag, gepland, historie', (tester) async {
+    // B5: Gereageerd / Gepland / Klaar (mockup HMijnKlussen), Gepland eerst.
+    testWidgets('drie tabbladen: gereageerd, gepland, klaar', (tester) async {
       await _pomp(tester, _gevallen[5]);
 
-      expect(find.byType(KlusTegel), findsOneWidget);
+      // Gepland: vandaag en later, oplopend.
+      expect(find.byType(KlusTegel), findsNWidgets(2));
       expect(find.text('vandaag van 15:00 tot 16:00'), findsOneWidget);
-      expect(find.byType(KlusStatusPil), findsOneWidget);
-
-      await tikTekst(tester, TekstenKlussenNl.j14TabGepland);
-      expect(find.byType(KlusTegel), findsOneWidget);
       expect(find.text('Tuin'), findsOneWidget);
 
-      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
+      await tikTekst(tester, TekstenReactiesNl.tabKlaar);
       expect(find.byType(KlusTegel), findsOneWidget);
       expect(find.text(TekstenKlussenNl.statusAfgerond), findsOneWidget);
+
+      await tikTekst(tester, TekstenReactiesNl.tabGereageerd);
+      expect(find.byType(KlusTegel), findsNothing);
+      expect(find.text(TekstenReactiesNl.leegGereageerd), findsOneWidget);
     });
 
     testWidgets('lege staten per tabblad', (tester) async {
       await _pomp(tester, _gevallen[6]);
-      expect(find.text(TekstenKlussenNl.j14LeegVandaag), findsOneWidget);
-      await tikTekst(tester, TekstenKlussenNl.j14TabGepland);
-      expect(find.text(TekstenKlussenNl.j14LeegGepland), findsOneWidget);
-      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
-      expect(find.text(TekstenKlussenNl.j14LeegHistorie), findsOneWidget);
+      expect(find.text(TekstenReactiesNl.leegGepland), findsOneWidget);
+      await tikTekst(tester, TekstenReactiesNl.tabGereageerd);
+      expect(find.text(TekstenReactiesNl.leegGereageerd), findsOneWidget);
+      await tikTekst(tester, TekstenReactiesNl.tabKlaar);
+      expect(find.text(TekstenReactiesNl.leegKlaar), findsOneWidget);
     });
 
     // M6: een klus die loopt (geaccepteerd/onderweg/bezig) opent J15; een
@@ -481,7 +489,7 @@ void main() {
       tester,
     ) async {
       await _pomp(tester, _gevallen[5]);
-      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
+      await tikTekst(tester, TekstenReactiesNl.tabKlaar);
       await tester.ensureVisible(find.byType(KlusTegel).first);
       await tester.tap(find.byType(KlusTegel).first);
       await tester.pumpAndSettle();

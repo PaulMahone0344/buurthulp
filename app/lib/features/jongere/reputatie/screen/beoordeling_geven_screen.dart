@@ -19,6 +19,8 @@ import '../../../toegang/provider/sessie_providers.dart';
 import '../../klussen/paden_klussen.dart';
 import '../../provider/screening_providers.dart' show meldingVanFout;
 import '../domein/sterren.dart';
+import '../../../../l10n/teksten_reacties_nl.dart';
+import '../../../reacties/widget/geheime_vraag.dart';
 import '../provider/beoordeling_providers.dart';
 import '../widget/sterren_kiezer.dart';
 
@@ -40,6 +42,10 @@ class BeoordelingGevenScreen extends ConsumerStatefulWidget {
 class _BeoordelingGevenScreenState
     extends ConsumerState<BeoordelingGevenScreen> {
   final _tekst = TextEditingController();
+  // B5 (punt 11): de geheime vraag "Voelde je je veilig?".
+  final _geheim = TextEditingController();
+  bool? _veilig;
+  String? _geheimFout;
   int? _sterren;
   bool _isIngevuld = false;
   bool _isBezig = false;
@@ -51,6 +57,7 @@ class _BeoordelingGevenScreenState
   @override
   void dispose() {
     _tekst.dispose();
+    _geheim.dispose();
     super.dispose();
   }
 
@@ -76,7 +83,15 @@ class _BeoordelingGevenScreenState
           : TekstenBeoordelenNl.kiesSterren;
       _meldSoort = HhMeldSoort.fout;
     });
-    if (!tekstGoed || sterren == null || !isGeldigAantalSterren(sterren)) {
+    // Nieuw: de geheime vraag is verplicht (bij wijzigen mag hij blijven).
+    final geheimNodig = doel.bestaande == null && _veilig == null;
+    setState(
+      () => _geheimFout = geheimNodig ? TekstenReactiesNl.geheimKies : null,
+    );
+    if (!tekstGoed ||
+        sterren == null ||
+        !isGeldigAantalSterren(sterren) ||
+        geheimNodig) {
       return;
     }
 
@@ -86,6 +101,8 @@ class _BeoordelingGevenScreenState
       doel,
       sterren: sterren,
       tekst: tekst,
+      allesInOrde: _veilig,
+      geheimToelichting: _geheim.text,
     );
     if (!mounted) return;
     setState(() {
@@ -94,7 +111,9 @@ class _BeoordelingGevenScreenState
         case BeoordelingOpgeslagen():
           _isOpgeslagen = true;
           _meldSoort = HhMeldSoort.geslaagd;
-          _melding = wasWijzigen
+          _melding = _veilig == false
+              ? TekstenReactiesNl.geheimNeeBedankt
+              : wasWijzigen
               ? TekstenBeoordelenNl.j17Gewijzigd
               : TekstenBeoordelenNl.j17Gelukt;
         case BeoordelingGeweigerd(:final reden):
@@ -212,6 +231,18 @@ class _BeoordelingGevenScreenState
             controller: _tekst,
             isActief: !_isBezig,
             maxRegels: 5,
+          ),
+          SizedBox(height: tussen),
+          GeheimeVraag(
+            vraag: TekstenReactiesNl.geheimVraagHelper,
+            antwoord: _veilig,
+            toelichting: _geheim,
+            isActief: !_isBezig,
+            fout: _geheimFout,
+            onAntwoord: (ja) => setState(() {
+              _veilig = ja;
+              _geheimFout = null;
+            }),
           ),
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           HhKnop(

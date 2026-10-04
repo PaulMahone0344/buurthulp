@@ -1,3 +1,4 @@
+import 'package:heitjehulp_app/l10n/teksten_reacties_nl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/core/pb/uitvoer_gateway.dart';
@@ -233,9 +234,9 @@ void main() {
         mijn.first.copyWith(status: HhKlusStatus.open, toegewezenJongereId: ''),
       );
       await tikTekst(tester, TekstenNl.terug);
-      await tikTekst(tester, TekstenKlussenNl.j14TabVandaag);
+      await tikTekst(tester, TekstenReactiesNl.tabGepland);
       expect(find.byType(KlusTegel), findsNothing);
-      expect(find.text(TekstenKlussenNl.j14LeegVandaag), findsOneWidget);
+      expect(find.text(TekstenReactiesNl.leegGepland), findsOneWidget);
     });
   });
 

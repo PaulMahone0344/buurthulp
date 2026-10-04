@@ -4,12 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigatie.dart';
 import '../../../../app/paden.dart';
-import '../../../../core/pb/klussen_gateway.dart';
 import '../../../../design/components/hh_kaart.dart';
 import '../../../../design/components/hh_knop.dart';
 import '../../../../design/components/hh_laad_staat.dart';
 import '../../../../design/components/hh_lege_staat.dart';
-import '../../../../design/components/hh_meld_balk.dart';
 import '../../../../design/components/hh_scherm.dart';
 import '../../../../design/dichtheid_scope.dart';
 import '../../../../l10n/teksten_klus_nl.dart';
@@ -24,7 +22,6 @@ import '../../../hulpvrager/provider/hulpvrager_providers.dart'
 import '../../../toegang/provider/sessie_providers.dart';
 import '../../model/hh_profiel.dart';
 import '../../uitvoeren/paden_uitvoeren.dart';
-import '../../uitvoeren/widget/annuleer_dialoog.dart';
 import '../../model/screening_stap.dart';
 import '../../provider/screening_providers.dart';
 import '../domein/afstand.dart';
@@ -33,14 +30,13 @@ import '../domein/wanneer_tekst.dart';
 import '../model/hh_klus.dart';
 import '../paden_klussen.dart';
 import '../provider/klussen_providers.dart';
+import '../../../reacties/widget/reageer_blok.dart';
 import '../widget/klus_status_pil.dart';
 
-/// J13. Alles van de klus; adres en naam/foto van de oudere pas NA het
-/// accepteren (de hh_users-rule geeft de expand dan pas mee). De knop
-/// "Klus aannemen" vraagt eerst om een bevestiging (M5 OPEN-PUNT 80) en
-/// gaat dan via de hook-route; een 409 toont de melding van de server,
-/// ververst de lijst en laat de knop verdwijnen (M5 OPEN-PUNT 81). Is de
-/// klus van mij, dan gaat de hoofdknop naar J15 (uitvoeren).
+/// J13 / HKlusBekijken. Alles van de klus; adres en naam van de bewoner pas
+/// NA de match (de hh_users-rule geeft de expand dan pas mee). B5: onderaan
+/// "Ik wil helpen" met een berichtje (ReageerBlok); de bewoner kiest zelf.
+/// Is de klus van mij, dan gaat de hoofdknop naar J15 (uitvoeren).
 class KlusDetailScreen extends ConsumerStatefulWidget {
   const KlusDetailScreen({required this.klusId, super.key});
 
@@ -51,52 +47,6 @@ class KlusDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _KlusDetailScreenState extends ConsumerState<KlusDetailScreen> {
-  bool _isBezig = false;
-  bool _isAangenomen = false;
-  bool _isGeweigerd = false;
-  String? _melding;
-  HhMeldSoort _meldSoort = HhMeldSoort.fout;
-
-  Future<void> _aannemen() async {
-    final ja = await vraagAannemenBevestiging(
-      context,
-      vraag: TekstenUitvoerenNl.j13BevestigVraag,
-      uitleg: TekstenUitvoerenNl.j13BevestigUitleg,
-      jaLabel: TekstenUitvoerenNl.j13BevestigJa,
-    );
-    if (!ja || !mounted) return;
-    setState(() {
-      _isBezig = true;
-      _melding = null;
-    });
-    final uitkomst = await ref.read(accepteerProvider)(widget.klusId);
-    if (!mounted) return;
-    setState(() {
-      _isBezig = false;
-      switch (uitkomst) {
-        case Geaccepteerd():
-          _isAangenomen = true;
-          _meldSoort = HhMeldSoort.geslaagd;
-          _melding = TekstenKlussenNl.j13Aangenomen;
-        case Geweigerd(:final reden, :final melding):
-          // De klus is voor deze jongere niet meer op te halen (rule geeft
-          // 404), dus de knop verdwijnt; een tweede tik heeft geen zin.
-          _isGeweigerd = true;
-          _meldSoort = HhMeldSoort.fout;
-          _melding =
-              melding ??
-              switch (reden) {
-                AccepteerReden.bezet => TekstenKlussenNl.j13Bezet,
-                AccepteerReden.geenToegang => TekstenKlussenNl.j13GeenToegang,
-                AccepteerReden.nietGevonden => TekstenKlussenNl.j13NietGevonden,
-              };
-        case AccepteerFout(:final fout):
-          _meldSoort = HhMeldSoort.fout;
-          _melding = fout.melding;
-      }
-    });
-  }
-
   /// De naam van de eigen wijk (de klus ligt per definitie in die wijk).
   String _wijkNaam() {
     final account = switch (ref.watch(screeningControllerProvider)) {
@@ -130,12 +80,6 @@ class _KlusDetailScreenState extends ConsumerState<KlusDetailScreen> {
         middelpunt: middelpunt,
         wijkNaam: _wijkNaam(),
         isMijn: value.isToegewezenAan(gebruiker?.id ?? ''),
-        isBezig: _isBezig,
-        isAangenomen: _isAangenomen,
-        isGeweigerd: _isGeweigerd,
-        melding: _melding,
-        meldSoort: _meldSoort,
-        onAannemen: _aannemen,
       ),
       AsyncError<HhKlus>(:final error) => HhScherm(
         titel: TekstenKlussenNl.j13Titel,
@@ -164,12 +108,6 @@ class _Detail extends StatelessWidget {
     required this.middelpunt,
     required this.wijkNaam,
     required this.isMijn,
-    required this.isBezig,
-    required this.isAangenomen,
-    required this.isGeweigerd,
-    required this.melding,
-    required this.meldSoort,
-    required this.onAannemen,
   });
 
   final HhKlus klus;
@@ -177,12 +115,6 @@ class _Detail extends StatelessWidget {
   final HhPunt? middelpunt;
   final String wijkNaam;
   final bool isMijn;
-  final bool isBezig;
-  final bool isAangenomen;
-  final bool isGeweigerd;
-  final String? melding;
-  final HhMeldSoort meldSoort;
-  final VoidCallback onAannemen;
 
   @override
   Widget build(BuildContext context) {
@@ -202,15 +134,11 @@ class _Detail extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (isMijn || isAangenomen) ...[
+          if (isMijn) ...[
             Align(
               alignment: Alignment.centerLeft,
               child: KlusStatusPil(status: klus.status),
             ),
-            SizedBox(height: tussen),
-          ],
-          if (melding != null) ...[
-            HhMeldBalk(soort: meldSoort, tekst: melding!),
             SizedBox(height: tussen),
           ],
           HhKaart(
@@ -321,7 +249,7 @@ class _Detail extends StatelessWidget {
             ),
           ],
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
-          if (isMijn || isAangenomen) ...[
+          if (isMijn) ...[
             Text(TekstenKlussenNl.j13AangenomenUitleg, style: tekst.bodyMedium),
             SizedBox(height: tussen),
             HhKnop(
@@ -345,13 +273,9 @@ class _Detail extends StatelessWidget {
               soort: HhKnopSoort.tweedeKeus,
               onPressed: () => context.go(HhPadenKlussen.mijnKlussen),
             ),
-          ] else if (klus.isOpen && !isGeweigerd)
-            HhKnop(
-              label: TekstenKlussenNl.j13Aannemen,
-              icoon: Icons.check_circle_outline,
-              isBezig: isBezig,
-              onPressed: onAannemen,
-            ),
+          ] else
+            // B5: niet meer aannemen maar reageren; de bewoner kiest.
+            ReageerBlok(klus: klus),
         ],
       ),
     );

@@ -15,6 +15,11 @@ enum HhMeldingSoort {
   /// B6: een nieuw chatbericht (hook hh_chat.pb.js).
   bericht('bericht'),
 
+  /// B5: rond een reactie (hook hh_reacties.pb.js): "Daan wil je helpen"
+  /// (bewoner), "De bewoner koos iemand anders" of het besluit van de ouder
+  /// (helper).
+  reactie('reactie'),
+
   /// Een waarde die de app (nog) niet kent: de melding blijft zichtbaar.
   onbekend('');
 

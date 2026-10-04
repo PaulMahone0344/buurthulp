@@ -1,3 +1,6 @@
+import 'package:heitjehulp_app/features/reacties/widget/geheime_vraag.dart';
+import 'package:heitjehulp_app/l10n/teksten_reacties_nl.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -112,4 +115,16 @@ Widget hhBeoordelenWikkel(
     beoordelingGateway: beoordelingGateway,
   );
   return _app(router, container, dichtheid, tekstschaal);
+}
+
+/// B5: de geheime vraag ("Was alles in orde?" / "Voelde je je veilig?")
+/// beantwoorden; bij een nieuwe beoordeling is hij verplicht.
+Future<void> beantwoordGeheim(WidgetTester tester, {bool ja = true}) async {
+  final keuze = find.descendant(
+    of: find.byType(GeheimeVraag),
+    matching: find.text(ja ? TekstenReactiesNl.ja : TekstenReactiesNl.nee),
+  );
+  await tester.ensureVisible(keuze);
+  await tester.tap(keuze);
+  await tester.pumpAndSettle();
 }

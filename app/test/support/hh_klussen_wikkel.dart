@@ -1,3 +1,5 @@
+import 'package:heitjehulp_app/core/pb/fake_reactie_gateway.dart';
+import 'package:heitjehulp_app/features/reacties/reacties_routes.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -163,6 +165,7 @@ ProviderContainer klussenContainer({
   DateTime? nu,
   FakeUitvoerGateway? uitvoerGateway,
   FakeBeoordelingGateway? beoordelingGateway,
+  FakeReactieGateway? reactieGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -178,6 +181,7 @@ ProviderContainer klussenContainer({
         klussenGateway: klussenGateway,
         uitvoerGateway: uitvoerGateway,
         beoordelingGateway: beoordelingGateway,
+        reactieGateway: reactieGateway,
       ),
       klokProvider.overrideWithValue(() => nu ?? klussenNu),
       kaartTegelsProvider.overrideWithValue(NepTegels.new),
@@ -199,6 +203,7 @@ Widget hhKlussenWikkel(
   double tekstschaal = 1.0,
   ProviderContainer? container,
   FakeUitvoerGateway? uitvoerGateway,
+  FakeReactieGateway? reactieGateway,
 }) {
   final router = GoRouter(
     initialLocation: pad,
@@ -210,6 +215,7 @@ Widget hhKlussenWikkel(
       ...jongereRoutes(),
       ...klussenRoutes(),
       ...uitvoerenRoutes(),
+      ...reactiesRoutes(),
     ],
   );
   return UncontrolledProviderScope(
@@ -221,6 +227,7 @@ Widget hhKlussenWikkel(
           sessie: sessie ?? SessieIngelogd(testGebruiker(HhRol.jongere)),
           nu: nu,
           uitvoerGateway: uitvoerGateway,
+          reactieGateway: reactieGateway,
         ),
     child: MaterialApp.router(
       theme: hhThema(dichtheid),
@@ -244,6 +251,7 @@ Future<ProviderContainer> pompKlussenApp(
   DateTime? nu,
   FakeUitvoerGateway? uitvoerGateway,
   FakeBeoordelingGateway? beoordelingGateway,
+  FakeReactieGateway? reactieGateway,
 }) async {
   final opslag = GeheugenKeyValueStore({
     'hh_auth_token': testToken(HhRol.jongere),
@@ -255,6 +263,7 @@ Future<ProviderContainer> pompKlussenApp(
     nu: nu,
     uitvoerGateway: uitvoerGateway,
     beoordelingGateway: beoordelingGateway,
+    reactieGateway: reactieGateway,
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(

@@ -89,6 +89,11 @@ class FakeBeoordelingGateway implements BeoordelingGateway {
 
   var _volgnummer = 0;
 
+  /// B5: wat er bij de geheime vraag werd meegestuurd (klus-id bij geef,
+  /// beoordeling-id bij wijzig).
+  final List<({String klusId, bool? allesInOrde, String toelichting})> geheim =
+      [];
+
   @override
   Future<BeoordelingUitkomst> geef({
     required String klusId,
@@ -96,8 +101,15 @@ class FakeBeoordelingGateway implements BeoordelingGateway {
     required String naarId,
     required int sterren,
     String tekst = '',
+    bool? allesInOrde,
+    String geheimToelichting = '',
   }) async {
     aantalGegeven++;
+    geheim.add((
+      klusId: klusId,
+      allesInOrde: allesInOrde,
+      toelichting: geheimToelichting,
+    ));
     final fout = _neemFout();
     if (fout != null) return BeoordelingFout(fout);
     final gezet = _neemUitkomst();
@@ -143,8 +155,15 @@ class FakeBeoordelingGateway implements BeoordelingGateway {
     String beoordelingId, {
     required int sterren,
     required String tekst,
+    bool? allesInOrde,
+    String geheimToelichting = '',
   }) async {
     aantalGewijzigd++;
+    geheim.add((
+      klusId: beoordelingId,
+      allesInOrde: allesInOrde,
+      toelichting: geheimToelichting,
+    ));
     final fout = _neemFout();
     if (fout != null) return BeoordelingFout(fout);
     final gezet = _neemUitkomst();

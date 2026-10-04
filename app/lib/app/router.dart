@@ -21,6 +21,7 @@ import '../features/jongere/screen/jongere_stub_screen.dart';
 import '../features/jongere/screening_guard.dart';
 import '../features/jongere/uitvoeren/uitvoeren_routes.dart';
 import '../features/meldingen/meldingen_routes.dart';
+import '../features/reacties/reacties_routes.dart';
 import '../features/toegang/model/sessie_state.dart';
 import '../features/toegang/provider/sessie_providers.dart';
 import '../features/toegang/screen/bevestig_email_screen.dart';
@@ -161,6 +162,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ...veiligheidRoutes(),
       // B6: de chat per klus (bewoner en helper).
       ...chatRoutes(),
+      // B5: reactie verstuurd (helper) en kies je helper (bewoner).
+      ...reactiesRoutes(),
       // Alleen in debug-builds; een release kent dit pad niet.
       if (kDebugMode)
         GoRoute(

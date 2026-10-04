@@ -41,6 +41,8 @@ class HhKlus {
     this.klusFotoUrl = '',
     this.afstandMeter,
     this.isLocatieVaag = false,
+    this.reactiesAantal = 0,
+    this.mijnReactie = '',
   });
 
   final String id;
@@ -102,6 +104,15 @@ class HhKlus {
 
   /// ADRES: het punt is bewust vaag (vóór de match).
   final bool isLocatieVaag;
+
+  /// B5: hoeveel helpers reageerden (extra veld reacties_aantal van de
+  /// server). Voor de bewoner: alleen wat hij al mag zien (status open);
+  /// voor een helper: alle reacties die nog lopen.
+  final int reactiesAantal;
+
+  /// B5: de stand van de EIGEN reactie van de helper op deze klus
+  /// (hh_reacties.status, bv. "open" of "wacht_op_ouder"); leeg = nog niet.
+  final String mijnReactie;
 
   static const veldStatus = 'status';
   static const veldToegewezenJongere = 'toegewezen_jongere';
@@ -190,6 +201,10 @@ class HhKlus {
           ? (record.data['afstand_m'] as num).round()
           : null,
       isLocatieVaag: record.getBoolValue('locatie_vaag'),
+      reactiesAantal: record.data['reacties_aantal'] is num
+          ? (record.data['reacties_aantal'] as num).toInt()
+          : 0,
+      mijnReactie: record.getStringValue('mijn_reactie'),
     );
   }
 
@@ -211,6 +226,8 @@ class HhKlus {
     String? jongereNaam,
     bool? isJongereIdGecontroleerd,
     String? geplaatstDoorId,
+    int? reactiesAantal,
+    String? mijnReactie,
   }) {
     return HhKlus(
       id: id,
@@ -241,6 +258,8 @@ class HhKlus {
       klusFotoUrl: klusFotoUrl,
       afstandMeter: afstandMeter,
       isLocatieVaag: isLocatieVaag,
+      reactiesAantal: reactiesAantal ?? this.reactiesAantal,
+      mijnReactie: mijnReactie ?? this.mijnReactie,
     );
   }
 
@@ -257,7 +276,9 @@ class HhKlus {
       other.wanneerVan == wanneerVan &&
       other.wordtNagekeken == wordtNagekeken &&
       other.afkeurReden == afkeurReden &&
-      other.klusFotoUrl == klusFotoUrl;
+      other.klusFotoUrl == klusFotoUrl &&
+      other.reactiesAantal == reactiesAantal &&
+      other.mijnReactie == mijnReactie;
 
   @override
   int get hashCode => Object.hash(
@@ -272,5 +293,7 @@ class HhKlus {
     wordtNagekeken,
     afkeurReden,
     klusFotoUrl,
+    reactiesAantal,
+    mijnReactie,
   );
 }

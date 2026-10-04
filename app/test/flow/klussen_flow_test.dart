@@ -1,5 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:heitjehulp_app/core/pb/klussen_gateway.dart';
+import 'package:flutter/material.dart';
+import 'package:heitjehulp_app/core/pb/fake_reactie_gateway.dart';
+import 'package:heitjehulp_app/core/pb/reactie_gateway.dart';
+import 'package:heitjehulp_app/features/reacties/screen/reactie_verstuurd_screen.dart';
+import 'package:heitjehulp_app/features/reacties/widget/reactie_tegel.dart';
+import 'package:heitjehulp_app/l10n/teksten_reacties_nl.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_meld_balk.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/provider/klussen_providers.dart';
@@ -11,7 +16,6 @@ import 'package:heitjehulp_app/features/jongere/klussen/widget/klussen_kaart.dar
 import 'package:heitjehulp_app/features/jongere/screen/screening_overzicht_screen.dart';
 import 'package:heitjehulp_app/features/toegang/screen/inloggen_screen.dart';
 import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
-import 'package:heitjehulp_app/l10n/teksten_uitvoeren_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 
 import '../support/hh_jongere_wikkel.dart';
@@ -66,99 +70,142 @@ void main() {
     );
   });
 
+  // B5: niet meer aannemen maar reageren; de bewoner kiest.
   testWidgets(
-    'accepteren slaagt: naam en adres komen tevoorschijn, klus staat bij gepland',
+    'reageren: berichtje mee, "Reactie verstuurd", daarna bij Gereageerd',
     (tester) async {
-      final fake = fakeKlussen();
-      await pompKlussenApp(tester, klussenGateway: fake);
+      final reacties = FakeReactieGateway(helperId: jongereId);
+      await pompKlussenApp(
+        tester,
+        klussenGateway: fakeKlussen(),
+        reactieGateway: reacties,
+      );
 
       await tikEersteTegel(tester);
       expect(find.byType(KlusDetailScreen), findsOneWidget);
       expect(find.text(TekstenKlussenNl.buurtbewoner), findsOneWidget);
-
-      // M6 (M5 OPEN-PUNT 80): eerst de bevestigingsvraag.
-      await tikKnop(tester, TekstenKlussenNl.j13Aannemen);
-      expect(find.text(TekstenUitvoerenNl.j13BevestigVraag), findsOneWidget);
-      await tikKnop(tester, TekstenUitvoerenNl.j13BevestigJa);
-
-      expect(fake.geaccepteerdeIds, ['k-ochtend']);
-      expect(find.text(TekstenKlussenNl.j13Aangenomen), findsOneWidget);
-      expect(find.text('Mevrouw de Vries'), findsOneWidget);
-      expect(find.textContaining('Prins Bernhardlaan'), findsOneWidget);
-      expect(find.text(TekstenKlussenNl.statusGeaccepteerd), findsOneWidget);
       expect(
         find.widgetWithText(HhKnop, TekstenKlussenNl.j13Aannemen),
         findsNothing,
       );
 
-      await tikKnop(tester, TekstenKlussenNl.j13NaarMijnKlussen);
+      await tester.enterText(
+        find.byType(TextField).first,
+        'Ik heb al vaker boodschappen gedaan.',
+      );
+      await tikKnop(tester, TekstenReactiesNl.reageerKnop);
+
+      expect(reacties.verstuurd.single.klusId, 'k-ochtend');
+      expect(
+        reacties.verstuurd.single.bericht,
+        'Ik heb al vaker boodschappen gedaan.',
+      );
+      expect(find.byType(ReactieVerstuurdScreen), findsOneWidget);
+      expect(find.text(TekstenReactiesNl.verstuurdKop), findsOneWidget);
+      expect(find.text(TekstenReactiesNl.verstuurdUitleg), findsOneWidget);
+
+      await tikKnop(tester, TekstenReactiesNl.naarMijnKlussen);
       expect(find.byType(MijnKlussenScreen), findsOneWidget);
-      await tikTekst(tester, TekstenKlussenNl.j14TabGepland);
-      expect(find.byType(KlusTegel), findsOneWidget);
-      expect(find.text('morgen van 09:00 tot 10:00'), findsOneWidget);
-
-      // Terug naar de klussen: de aangenomen klus staat niet meer in de lijst.
-      await tikTekst(tester, TekstenKlussenNl.tabKlussen);
-      expect(find.byType(KlusTegel), findsNWidgets(3));
+      await tikTekst(tester, TekstenReactiesNl.tabGereageerd);
+      expect(find.byType(ReactieTegel), findsOneWidget);
+      expect(find.text(TekstenReactiesNl.standWachtBewoner), findsOneWidget);
     },
   );
 
-  testWidgets(
-    'accepteren met 409 toont de melding van de server en ververst de lijst',
-    (tester) async {
-      final fake = fakeKlussen();
-      await pompKlussenApp(tester, klussenGateway: fake);
-      expect(fake.aantalOpenAanvragen, 1);
-
-      await tikEersteTegel(tester);
-
-      // Intussen neemt iemand anders de klus aan; de server antwoordt 409.
-      fake.neemAanDoorAnder('k-ochtend');
-      fake.accepteerUitkomst = const Geweigerd(
-        AccepteerReden.bezet,
-        melding: 'Deze klus is net door iemand anders aangenomen.',
-      );
-
-      await tikKnop(tester, TekstenKlussenNl.j13Aannemen);
-      await tikKnop(tester, TekstenUitvoerenNl.j13BevestigJa);
-
-      expect(fake.geaccepteerdeIds, isEmpty);
-      expect(find.byType(HhMeldBalk), findsOneWidget);
-      expect(
-        find.text('Deze klus is net door iemand anders aangenomen.'),
-        findsOneWidget,
-      );
-      expect(find.byType(KlusDetailScreen), findsOneWidget);
-      // M5 OPEN-PUNT 81: na een 409 verdwijnt de knop.
-      expect(
-        find.widgetWithText(HhKnop, TekstenKlussenNl.j13Aannemen),
-        findsNothing,
-      );
-      // De lijst is opnieuw opgehaald ...
-      expect(fake.aantalOpenAanvragen, 2);
-
-      // ... en toont bij terugkeer nog drie klussen.
-      // De terugknop staat links; tik op het woord, niet op het midden van
-      // de (volle) rij.
-      await tikTekst(tester, TekstenNl.terug);
-      expect(find.byType(KlussenHomeScreen), findsOneWidget);
-      expect(find.byType(KlusTegel), findsNWidgets(3));
-    },
-  );
-
-  testWidgets('accepteren zonder verbinding toont de netwerkmelding', (
+  testWidgets('helper onder 18: "Wacht op je ouder", en intrekken kan', (
     tester,
   ) async {
-    final fake = fakeKlussen();
-    await pompKlussenApp(tester, klussenGateway: fake);
+    final reacties = FakeReactieGateway(
+      helperId: jongereId,
+      helperOnder18: true,
+    );
+    await pompKlussenApp(
+      tester,
+      klussenGateway: fakeKlussen(),
+      reactieGateway: reacties,
+    );
+    await tikEersteTegel(tester);
+    await tikKnop(tester, TekstenReactiesNl.reageerKnop);
+    expect(find.text(TekstenReactiesNl.verstuurdOuderUitleg), findsOneWidget);
+    expect(find.text(TekstenReactiesNl.pilOuder), findsOneWidget);
+
+    // Terug gaat naar de lijst; de klus opnieuw openen toont de stand.
+    await tikTekst(tester, TekstenNl.terug);
+    expect(find.byType(KlussenHomeScreen), findsOneWidget);
+    await tikEersteTegel(tester);
+    expect(find.text(TekstenReactiesNl.gereageerdKop), findsOneWidget);
+    expect(find.text(TekstenReactiesNl.gereageerdOuder), findsOneWidget);
+    await tikKnop(tester, TekstenReactiesNl.intrekken);
+    await tikTekst(tester, TekstenReactiesNl.intrekkenJa);
+    expect(reacties.ingetrokken, hasLength(1));
+    expect(find.text(TekstenReactiesNl.ingetrokken), findsOneWidget);
+  });
+
+  testWidgets('een weigering toont de melding van de server', (tester) async {
+    final reacties = FakeReactieGateway(helperId: jongereId)
+      ..reageerUitkomst = const ReageerGeweigerd(
+        'bezet',
+        'Deze klus heeft al een helper.',
+      );
+    await pompKlussenApp(
+      tester,
+      klussenGateway: fakeKlussen(),
+      reactieGateway: reacties,
+    );
+    await tikEersteTegel(tester);
+    await tikKnop(tester, TekstenReactiesNl.reageerKnop);
+    expect(find.byType(HhMeldBalk), findsOneWidget);
+    expect(find.text('Deze klus heeft al een helper.'), findsOneWidget);
+    expect(find.byType(KlusDetailScreen), findsOneWidget);
+  });
+
+  testWidgets(
+    'eerste klus (10-12 jaar): de server vraagt het vinkje, daarna gaat het mee',
+    (tester) async {
+      final reacties = FakeReactieGateway(helperId: jongereId)
+        ..reageerUitkomst = const ReageerGeweigerd(
+          'oudermee',
+          'Dit is je eerste klus bij deze bewoner. Zet het vinkje.',
+        );
+      await pompKlussenApp(
+        tester,
+        klussenGateway: fakeKlussen(),
+        reactieGateway: reacties,
+      );
+      await tikEersteTegel(tester);
+      await tikKnop(tester, TekstenReactiesNl.reageerKnop);
+      expect(find.text(TekstenReactiesNl.ouderMeeVinkje), findsOneWidget);
+
+      // Zonder vinkje stuurt de app niets nog eens.
+      await tikKnop(tester, TekstenReactiesNl.reageerKnop);
+      expect(find.text(TekstenReactiesNl.ouderMeeNodig), findsOneWidget);
+      expect(reacties.verstuurd, hasLength(1));
+
+      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.tap(find.byType(CheckboxListTile));
+      await tester.pumpAndSettle();
+      await tikKnop(tester, TekstenReactiesNl.reageerKnop);
+      expect(reacties.verstuurd.last.ouderGaatMee, isTrue);
+      expect(find.byType(ReactieVerstuurdScreen), findsOneWidget);
+    },
+  );
+
+  testWidgets('reageren zonder verbinding toont de netwerkmelding', (
+    tester,
+  ) async {
+    final reacties = FakeReactieGateway(helperId: jongereId);
+    await pompKlussenApp(
+      tester,
+      klussenGateway: fakeKlussen(),
+      reactieGateway: reacties,
+    );
     await tikEersteTegel(tester);
 
-    fake.isOffline = true;
-    await tikKnop(tester, TekstenKlussenNl.j13Aannemen);
-    await tikKnop(tester, TekstenUitvoerenNl.j13BevestigJa);
+    reacties.isOffline = true;
+    await tikKnop(tester, TekstenReactiesNl.reageerKnop);
     expect(find.text(TekstenNl.foutGeenVerbinding), findsOneWidget);
     expect(
-      find.widgetWithText(HhKnop, TekstenKlussenNl.j13Aannemen),
+      find.widgetWithText(HhKnop, TekstenReactiesNl.reageerKnop),
       findsOneWidget,
     );
   });

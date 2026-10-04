@@ -1,3 +1,5 @@
+import 'package:heitjehulp_app/core/pb/fake_reactie_gateway.dart';
+import 'package:heitjehulp_app/features/reacties/provider/reactie_providers.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -188,6 +190,7 @@ ProviderContainer hulpvragerContainer({
   FakeIncidentGateway? incidentGateway,
   FakeFotoKiezer? fotoKiezer,
   FakeChatGateway? chatGateway,
+  FakeReactieGateway? reactieGateway,
 }) {
   final container = ProviderContainer(
     // Geen automatische retry (Riverpod 3): een fake die bewust faalt zou
@@ -212,6 +215,10 @@ ProviderContainer hulpvragerContainer({
       ),
       // B6: de Chat-knop op O7. Standaard een lege fake.
       chatGatewayProvider.overrideWithValue(chatGateway ?? FakeChatGateway()),
+      // B5: "N helpers kunnen nu" bij plaatsen en KiesHelper. Standaard leeg.
+      reactieGatewayProvider.overrideWithValue(
+        reactieGateway ?? FakeReactieGateway(),
+      ),
       // ADRES: nep-PDOK in Mijn gegevens; nooit een echt verzoek.
       adresGatewayProvider.overrideWithValue(FakeAdresGateway()),
       klokProvider.overrideWithValue(() => nu ?? testNu),

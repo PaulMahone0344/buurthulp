@@ -22,6 +22,7 @@ class HhProfiel {
     this.vogAangevraagdOp,
     this.vogGezienOp,
     this.idGecontroleerdOp,
+    this.beschikbaarTot,
   });
 
   final String id;
@@ -41,6 +42,10 @@ class HhProfiel {
   /// De meldkamer controleerde het ID (en de server wiste de foto).
   final DateTime? idGecontroleerdOp;
 
+  /// B5: "Ik kan nu helpen" staat aan tot dit moment (zet alleen de route
+  /// POST /api/hh/beschikbaar; daarna vanzelf uit).
+  final DateTime? beschikbaarTot;
+
   factory HhProfiel.vanRecord(RecordModel record) {
     return HhProfiel(
       id: record.id,
@@ -58,6 +63,7 @@ class HhProfiel {
       idGecontroleerdOp: datumVanServer(
         record.getStringValue('id_gecontroleerd_op'),
       ),
+      beschikbaarTot: datumVanServer(record.getStringValue('beschikbaar_tot')),
     );
   }
 
@@ -78,6 +84,7 @@ class HhProfiel {
     DateTime? Function()? vogAangevraagdOp,
     DateTime? Function()? vogGezienOp,
     DateTime? Function()? idGecontroleerdOp,
+    DateTime? Function()? beschikbaarTot,
   }) {
     return HhProfiel(
       id: id,
@@ -93,6 +100,9 @@ class HhProfiel {
       idGecontroleerdOp: idGecontroleerdOp != null
           ? idGecontroleerdOp()
           : this.idGecontroleerdOp,
+      beschikbaarTot: beschikbaarTot != null
+          ? beschikbaarTot()
+          : this.beschikbaarTot,
     );
   }
 
@@ -107,7 +117,8 @@ class HhProfiel {
       other.documentFoto == documentFoto &&
       other.vogAangevraagdOp == vogAangevraagdOp &&
       other.vogGezienOp == vogGezienOp &&
-      other.idGecontroleerdOp == idGecontroleerdOp;
+      other.idGecontroleerdOp == idGecontroleerdOp &&
+      other.beschikbaarTot == beschikbaarTot;
 
   @override
   int get hashCode => Object.hash(
@@ -120,6 +131,7 @@ class HhProfiel {
     vogAangevraagdOp,
     vogGezienOp,
     idGecontroleerdOp,
+    beschikbaarTot,
   );
 }
 

@@ -16,6 +16,8 @@ import '../../../../l10n/teksten_beoordelen_nl.dart';
 import '../../../../l10n/teksten_nl.dart';
 import '../../../../theme.dart';
 import '../../../jongere/reputatie/domein/sterren.dart';
+import '../../../../l10n/teksten_reacties_nl.dart';
+import '../../../reacties/widget/geheime_vraag.dart';
 import '../../../jongere/reputatie/provider/beoordeling_providers.dart';
 import '../../../jongere/reputatie/widget/sterren_kiezer.dart';
 import '../../../toegang/provider/sessie_providers.dart';
@@ -45,6 +47,10 @@ class HulpvraagBeoordelenScreen extends ConsumerStatefulWidget {
 class _HulpvraagBeoordelenScreenState
     extends ConsumerState<HulpvraagBeoordelenScreen> {
   final _tekst = TextEditingController();
+  // B5 (punt 11): de geheime vraag "Was alles in orde?".
+  final _geheim = TextEditingController();
+  bool? _inOrde;
+  String? _geheimFout;
   _Stap _stap = _Stap.duim;
   int? _sterren;
   bool _isIngevuld = false;
@@ -57,6 +63,7 @@ class _HulpvraagBeoordelenScreenState
   @override
   void dispose() {
     _tekst.dispose();
+    _geheim.dispose();
     super.dispose();
   }
 
@@ -103,7 +110,15 @@ class _HulpvraagBeoordelenScreenState
           : TekstenBeoordelenNl.o9KiesSterren;
       _meldSoort = HhMeldSoort.waarschuwing;
     });
-    if (!tekstGoed || sterren == null || !isGeldigAantalSterren(sterren)) {
+    // Nieuw: de geheime vraag is verplicht (bij wijzigen mag hij blijven).
+    final geheimNodig = doel.bestaande == null && _inOrde == null;
+    setState(
+      () => _geheimFout = geheimNodig ? TekstenReactiesNl.geheimKies : null,
+    );
+    if (!tekstGoed ||
+        sterren == null ||
+        !isGeldigAantalSterren(sterren) ||
+        geheimNodig) {
       return;
     }
 
@@ -112,6 +127,8 @@ class _HulpvraagBeoordelenScreenState
       doel,
       sterren: sterren,
       tekst: _tekst.text,
+      allesInOrde: _inOrde,
+      geheimToelichting: _geheim.text,
     );
     if (!mounted) return;
     setState(() {
@@ -256,6 +273,18 @@ class _HulpvraagBeoordelenScreenState
             isActief: !_isBezig,
             maxRegels: 4,
           ),
+          SizedBox(height: tussen),
+          GeheimeVraag(
+            vraag: TekstenReactiesNl.geheimVraagBewoner,
+            antwoord: _inOrde,
+            toelichting: _geheim,
+            isActief: !_isBezig,
+            fout: _geheimFout,
+            onAntwoord: (ja) => setState(() {
+              _inOrde = ja;
+              _geheimFout = null;
+            }),
+          ),
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           HhKnop(
             label: doel.bestaande != null
@@ -280,7 +309,9 @@ class _HulpvraagBeoordelenScreenState
           ),
           SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
           Text(
-            TekstenBeoordelenNl.o9BedanktUitleg,
+            _inOrde == false
+                ? TekstenReactiesNl.geheimNeeBedankt
+                : TekstenBeoordelenNl.o9BedanktUitleg,
             style: tekst.bodyLarge,
             textAlign: TextAlign.center,
           ),

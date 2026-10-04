@@ -1,3 +1,4 @@
+import 'package:heitjehulp_app/l10n/teksten_reacties_nl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/core/pb/fake_beoordeling_gateway.dart';
@@ -12,7 +13,6 @@ import 'package:heitjehulp_app/features/jongere/reputatie/widget/sterren_kiezer.
 import 'package:heitjehulp_app/features/jongere/uitvoeren/paden_uitvoeren.dart';
 import 'package:heitjehulp_app/l10n/teksten_beoordelen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_jongere_nl.dart';
-import 'package:heitjehulp_app/l10n/teksten_klussen_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_uitvoeren_nl.dart';
 import 'package:heitjehulp_app/theme.dart';
@@ -189,6 +189,7 @@ void main() {
       await _pomp(tester, _gevallen[4], tekstschaal: 2.0);
       await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmhoog);
       expect(tester.takeException(), isNull);
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
       expect(find.text(TekstenBeoordelenNl.o9Bedankt), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -244,6 +245,7 @@ void main() {
       );
       await tikSter(tester, 4);
       await vulVeld(tester, 0, 'Gezellig gesprek gehad.');
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
 
       final b = fake.alleBeoordelingen.single;
@@ -254,8 +256,40 @@ void main() {
       expect(find.text(TekstenBeoordelenNl.j17Gelukt), findsOneWidget);
     });
 
+    // B5 (punt 11): de geheime vraag, alleen voor de meldkamer.
+    testWidgets('zonder antwoord op "Voelde je je veilig?" gaat er niets weg', (
+      tester,
+    ) async {
+      final fake = await _pomp(tester, _gevallen[0]);
+      expect(find.text(TekstenReactiesNl.geheimVraagHelper), findsOneWidget);
+      expect(find.text(TekstenReactiesNl.geheimUitleg), findsOneWidget);
+      await tikSter(tester, 4);
+      await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
+      expect(fake.aantalGegeven, 0);
+      expect(find.text(TekstenReactiesNl.geheimKies), findsOneWidget);
+    });
+
+    testWidgets('"Nee" met uitleg gaat mee naar de server (alleen meldkamer)', (
+      tester,
+    ) async {
+      final fake = await _pomp(tester, _gevallen[0]);
+      await tikSter(tester, 3);
+      await beantwoordGeheim(tester, ja: false);
+      expect(
+        find.text(TekstenReactiesNl.geheimToelichtingLabel),
+        findsOneWidget,
+      );
+      await vulVeld(tester, 1, 'Hij werd boos.');
+      await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
+      final g = fake.geheim.single;
+      expect(g.allesInOrde, isFalse);
+      expect(g.toelichting, 'Hij werd boos.');
+      expect(find.text(TekstenReactiesNl.geheimNeeBedankt), findsOneWidget);
+    });
+
     testWidgets('zonder sterren gaat er niets weg', (tester) async {
       final fake = await _pomp(tester, _gevallen[0]);
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
       expect(fake.aantalGegeven, 0);
       expect(find.text(TekstenBeoordelenNl.kiesSterren), findsOneWidget);
@@ -267,6 +301,7 @@ void main() {
       final fake = await _pomp(tester, _gevallen[0]);
       await tikSter(tester, 5);
       await vulVeld(tester, 0, 'a' * 501);
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.j17Versturen);
       expect(fake.aantalGegeven, 0);
       expect(find.text(TekstenBeoordelenNl.tekstTeLang), findsOneWidget);
@@ -361,8 +396,25 @@ void main() {
       expect(_keuzes(), lessThanOrEqualTo(3), reason: 'stap sterren');
       expect(find.text(TekstenNl.terug), findsOneWidget);
 
+      await beantwoordGeheim(tester);
+
       await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
       expect(_keuzes(), lessThanOrEqualTo(3), reason: 'stap bedankt');
+    });
+
+    testWidgets('O9: "Was alles in orde?" nee -> de meldkamer belt', (
+      tester,
+    ) async {
+      final fake = await _pomp(tester, _gevallen[4]);
+      await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmlaag);
+      expect(find.text(TekstenReactiesNl.geheimVraagBewoner), findsOneWidget);
+      await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
+      expect(fake.aantalGegeven, 0, reason: 'eerst Ja of Nee');
+      await beantwoordGeheim(tester, ja: false);
+      await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
+      expect(fake.geheim.single.allesInOrde, isFalse);
+      expect(find.text(TekstenBeoordelenNl.o9Bedankt), findsOneWidget);
+      expect(find.text(TekstenReactiesNl.geheimNeeBedankt), findsOneWidget);
     });
 
     testWidgets('duim omhoog vult vijf sterren voor', (tester) async {
@@ -394,6 +446,7 @@ void main() {
       expect(cijfer, findsNothing, reason: 'stap duim');
       await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmhoog);
       expect(cijfer, findsNothing, reason: 'stap sterren');
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
       expect(cijfer, findsNothing, reason: 'stap bedankt');
     });
@@ -403,6 +456,7 @@ void main() {
       await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmlaag);
       await tikSter(tester, 3);
       await vulVeld(tester, 0, 'Kwam wat laat.');
+      await beantwoordGeheim(tester);
       await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
       final b = fake.alleBeoordelingen.single;
       expect(b.sterren, 3);
@@ -474,7 +528,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
+      await tikTekst(tester, TekstenReactiesNl.tabKlaar);
       await tikKnop(tester, TekstenBeoordelenNl.j14NogBeoordelen);
       expect(find.text(TekstenBeoordelenNl.j17Titel), findsOneWidget);
     });
@@ -492,7 +546,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tikTekst(tester, TekstenKlussenNl.j14TabHistorie);
+      await tikTekst(tester, TekstenReactiesNl.tabKlaar);
       expect(
         find.widgetWithText(HhKnop, TekstenBeoordelenNl.j14NogBeoordelen),
         findsNothing,

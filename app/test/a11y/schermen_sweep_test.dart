@@ -15,6 +15,7 @@ import 'package:heitjehulp_app/features/hulpvrager/veiligheid/paden_veiligheid.d
 import 'package:heitjehulp_app/features/jongere/klussen/paden_klussen.dart';
 import 'package:heitjehulp_app/features/jongere/paden_jongere.dart';
 import 'package:heitjehulp_app/features/meldingen/paden_meldingen.dart';
+import 'package:heitjehulp_app/features/reacties/paden_reacties.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 
 import 'sweep_steun.dart';
@@ -37,6 +38,7 @@ final schermenPerRol = <HhRol?, List<String>>{
     HhPadenVeiligheid.probleem,
     HhPadenMeldingen.overzicht,
     HhPaden.instellingen,
+    HhPadenReacties.kies('k-sweep'), // B5 (leeg: geen reacties)
   ],
   HhRol.jongere: [
     HhPaden.jongere,
@@ -47,6 +49,7 @@ final schermenPerRol = <HhRol?, List<String>>{
     HhPadenJongere.binnen,
     HhPadenOuder.ouder, // B3
     HhPadenKlussen.mijnKlussen,
+    HhPadenReacties.verstuurd('k-sweep', ouder: true), // B5
     HhPadenKlussen.profiel,
     HhPadenKlussen.instellingen,
     HhPadenMeldingen.overzicht,

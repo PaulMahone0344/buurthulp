@@ -32,6 +32,7 @@ import '../provider/klussen_providers.dart';
 import '../widget/jongere_tabbalk.dart';
 import '../widget/klus_tegel.dart';
 import '../widget/klussen_kaart.dart';
+import '../../../reacties/widget/kan_nu_helpen_schakelaar.dart';
 
 /// Lijst (J11) of kaart (J12).
 enum KlussenWeergave { lijst, kaart }
@@ -100,7 +101,7 @@ class _KlussenHomeScreenState extends ConsumerState<KlussenHomeScreen> {
     final gefilterd = ref.watch(gefilterdeKlussenProvider);
     final nu = ref.watch(klokProvider)();
 
-    final schakelaar = HhKeuzerij<KlussenWeergave>(
+    final weergave = HhKeuzerij<KlussenWeergave>(
       semantiekLabel: TekstenKlussenNl.weergaveLabel,
       keuzes: const [
         HhKeuze(
@@ -116,6 +117,15 @@ class _KlussenHomeScreenState extends ConsumerState<KlussenHomeScreen> {
       ],
       geselecteerd: {_weergave},
       onGewijzigd: (keuze) => setState(() => _weergave = keuze.first),
+    );
+    // B5: "Ik kan nu helpen" (punt 12) boven de lijst/kaart-keuze.
+    final schakelaar = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const KanNuHelpenSchakelaar(),
+        SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
+        weergave,
+      ],
     );
 
     return JongereTabScherm(
@@ -133,10 +143,11 @@ class _KlussenHomeScreenState extends ConsumerState<KlussenHomeScreen> {
             onKlus: _openKlus,
             onVernieuw: _vernieuw,
           ),
+          // De kaart houdt al zijn ruimte: de schakelaar staat bij de lijst.
           KlussenWeergave.kaart => _Kaart(
             stand: gefilterd,
             rand: rand,
-            schakelaar: schakelaar,
+            schakelaar: weergave,
             onKlus: _openKlus,
             onNaarLijst: () =>
                 setState(() => _weergave = KlussenWeergave.lijst),

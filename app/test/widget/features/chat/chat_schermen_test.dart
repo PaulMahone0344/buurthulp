@@ -390,7 +390,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.widgetWithText(HhKnop, TekstenChatNl.chat), findsOneWidget);
+      // B5: vandaag en later staan samen bij Gepland; elke klus met een
+      // helper heeft een Chat-knop, alleen die van vandaag heeft berichten.
+      expect(find.widgetWithText(HhKnop, TekstenChatNl.chat), findsNWidgets(2));
       expect(find.text('2'), findsOneWidget);
       expect(
         find.bySemanticsLabel(RegExp('2 nieuwe berichten')),
@@ -404,7 +406,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('3'), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(HhKnop, TekstenChatNl.chat));
+      await tester.tap(find.widgetWithText(HhKnop, TekstenChatNl.chat).first);
       await tester.pumpAndSettle();
       expect(find.text(TekstenChatNl.verborgen), findsOneWidget);
     });

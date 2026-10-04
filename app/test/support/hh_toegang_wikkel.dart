@@ -1,3 +1,6 @@
+import 'package:heitjehulp_app/core/pb/fake_reactie_gateway.dart';
+import 'package:heitjehulp_app/core/pb/reactie_gateway.dart';
+import 'package:heitjehulp_app/features/reacties/provider/reactie_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -134,7 +137,13 @@ List<dynamic> toegangOverrides({
   OuderGateway? ouderGateway,
   ChatGateway? chatGateway,
   AdresGateway? adresGateway,
+  ReactieGateway? reactieGateway,
 }) => [
+  // B5: reageren en kiezen. Standaard een lege fake zonder netwerk; de
+  // B5-tests geven hun eigen fake mee.
+  reactieGatewayProvider.overrideWithValue(
+    reactieGateway ?? FakeReactieGateway(),
+  ),
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
   urlOpenerProvider.overrideWithValue((_) async => urlOpenerLukt),

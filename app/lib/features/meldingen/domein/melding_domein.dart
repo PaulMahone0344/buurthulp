@@ -1,11 +1,13 @@
 import '../../../l10n/teksten_chat_nl.dart';
 import '../../../l10n/teksten_meldingen_nl.dart';
+import '../../../l10n/teksten_reacties_nl.dart';
 import '../../chat/paden_chat.dart';
 import '../../coordinator/paden_coordinator.dart';
 import '../../hulpvrager/status/paden_status.dart';
 import '../../jongere/klussen/domein/wanneer_tekst.dart';
 import '../../jongere/klussen/paden_klussen.dart';
 import '../../jongere/uitvoeren/paden_uitvoeren.dart';
+import '../../reacties/paden_reacties.dart';
 import '../../toegang/model/hh_rol.dart';
 import '../model/hh_melding.dart';
 
@@ -35,6 +37,7 @@ String titelVan(HhMelding melding, HhRol rol) {
           : TekstenMeldingenNl.soortGeannuleerdOudere,
     HhMeldingSoort.incident => TekstenMeldingenNl.soortIncident,
     HhMeldingSoort.bericht => TekstenChatNl.meldingTitel,
+    HhMeldingSoort.reactie => TekstenReactiesNl.kiesTitel,
     HhMeldingSoort.onbekend => TekstenMeldingenNl.soortOnbekend,
   };
 }
@@ -48,6 +51,14 @@ String? doelVan(HhMelding melding, HhRol rol) {
       klus.isNotEmpty &&
       (rol == HhRol.jongere || rol == HhRol.hulpvrager)) {
     return HhPadenChat.chat(klus);
+  }
+  // B5: een reactie-melding. De bewoner gaat naar KiesHelper (zolang de klus
+  // open is laat dat scherm de helpers zien), de helper naar Mijn klussen.
+  if (melding.soort == HhMeldingSoort.reactie) {
+    if (rol == HhRol.hulpvrager && klus.isNotEmpty) {
+      return HhPadenReacties.kies(klus);
+    }
+    if (rol == HhRol.jongere) return HhPadenKlussen.mijnKlussen;
   }
   switch (rol) {
     case HhRol.jongere:

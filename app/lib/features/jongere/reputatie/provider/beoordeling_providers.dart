@@ -102,18 +102,28 @@ Future<BeoordelingUitkomst> slaBeoordelingOp(
   TeBeoordelen doel, {
   required int sterren,
   required String tekst,
+  bool? allesInOrde,
+  String geheimToelichting = '',
 }) async {
   final gateway = ref.read(beoordelingGatewayProvider);
   final ikId = ref.read(huidigeGebruikerProvider)?.id ?? '';
   final bestaande = doel.bestaande;
   final uitkomst = bestaande != null
-      ? await gateway.wijzig(bestaande.id, sterren: sterren, tekst: tekst)
+      ? await gateway.wijzig(
+          bestaande.id,
+          sterren: sterren,
+          tekst: tekst,
+          allesInOrde: allesInOrde,
+          geheimToelichting: geheimToelichting,
+        )
       : await gateway.geef(
           klusId: doel.klus.id,
           vanId: ikId,
           naarId: doel.naarVoor(ikId),
           sterren: sterren,
           tekst: tekst,
+          allesInOrde: allesInOrde,
+          geheimToelichting: geheimToelichting,
         );
   switch (uitkomst) {
     case BeoordelingOpgeslagen():
@@ -134,9 +144,23 @@ final slaBeoordelingOpProvider =
         TeBeoordelen doel, {
         required int sterren,
         required String tekst,
+        bool? allesInOrde,
+        String geheimToelichting,
       })
     >(
       (ref) =>
-          (doel, {required sterren, required tekst}) =>
-              slaBeoordelingOp(ref, doel, sterren: sterren, tekst: tekst),
+          (
+            doel, {
+            required sterren,
+            required tekst,
+            allesInOrde,
+            geheimToelichting = '',
+          }) => slaBeoordelingOp(
+            ref,
+            doel,
+            sterren: sterren,
+            tekst: tekst,
+            allesInOrde: allesInOrde,
+            geheimToelichting: geheimToelichting,
+          ),
     );
