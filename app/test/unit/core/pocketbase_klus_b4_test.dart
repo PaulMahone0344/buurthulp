@@ -144,6 +144,23 @@ void main() {
       'foto': foto,
     };
 
+    test('ADRES: vaag vóór de match leest afstand_m en locatie_vaag', () {
+      final vaag = HhKlus.vanRecord(
+        RecordModel.fromJson({
+          ...record(),
+          'lat': 51.889,
+          'lon': 5.437,
+          'locatie_vaag': true,
+          'afstand_m': 9200,
+        }),
+      );
+      expect(vaag.afstandMeter, 9200);
+      expect(vaag.isLocatieVaag, isTrue);
+      final exact = HhKlus.vanRecord(RecordModel.fromJson(record()));
+      expect(exact.afstandMeter, isNull);
+      expect(exact.isLocatieVaag, isFalse);
+    });
+
     test('open en ongekeurd: wordt nagekeken', () {
       final klus = HhKlus.vanRecord(RecordModel.fromJson(record()));
       expect(klus.wordtNagekeken, isTrue);

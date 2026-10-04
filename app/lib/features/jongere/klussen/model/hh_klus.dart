@@ -39,6 +39,8 @@ class HhKlus {
     this.wordtNagekeken = false,
     this.afkeurReden = '',
     this.klusFotoUrl = '',
+    this.afstandMeter,
+    this.isLocatieVaag = false,
   });
 
   final String id;
@@ -91,6 +93,15 @@ class HhKlus {
   /// B4: de foto van de klus (beschermd bestand) als URL met een kortlevend
   /// bestandstoken; leeg als er geen foto is of hij niet is meegevraagd.
   final String klusFotoUrl;
+
+  /// ADRES (antwoord Ibrahim 3): vóór de match stuurt de server een vaag punt
+  /// (~200 m verschoven) en [afstandMeter] = de afstand van het eigen punt van
+  /// de helper tot het ECHTE punt, afgerond op 100 m. Null = niet meegegeven
+  /// (dan rekent de app zoals voorheen).
+  final int? afstandMeter;
+
+  /// ADRES: het punt is bewust vaag (vóór de match).
+  final bool isLocatieVaag;
 
   static const veldStatus = 'status';
   static const veldToegewezenJongere = 'toegewezen_jongere';
@@ -175,6 +186,10 @@ class HhKlus {
       klusFotoUrl: klusFotos.isNotEmpty && klusFotoUrl != null
           ? klusFotoUrl(record, klusFotos.first)
           : '',
+      afstandMeter: record.data['afstand_m'] is num
+          ? (record.data['afstand_m'] as num).round()
+          : null,
+      isLocatieVaag: record.getBoolValue('locatie_vaag'),
     );
   }
 
@@ -224,6 +239,8 @@ class HhKlus {
       wordtNagekeken: wordtNagekeken,
       afkeurReden: afkeurReden,
       klusFotoUrl: klusFotoUrl,
+      afstandMeter: afstandMeter,
+      isLocatieVaag: isLocatieVaag,
     );
   }
 

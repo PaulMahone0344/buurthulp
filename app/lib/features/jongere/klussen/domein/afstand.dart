@@ -39,8 +39,12 @@ HhPunt? middelpunt(Iterable<HhKlus> klussen) {
   return (lat: somLat / n, lon: somLon / n);
 }
 
-/// Afstand van [klus] tot [punt], of null zonder coördinaten.
+/// Afstand van [klus] tot [punt], of null zonder coördinaten. ADRES: geeft
+/// de server een afstand mee (vóór de match: eigen punt van de helper tot het
+/// echte punt, op 100 m), dan die; het vage punt zelf is ~200 m verschoven.
 double? afstandVanKlus(HhKlus klus, HhPunt? punt) {
+  final meter = klus.afstandMeter;
+  if (meter != null) return meter / 1000;
   if (punt == null || !klus.heeftCoordinaten) return null;
   return afstandKm((lat: klus.lat!, lon: klus.lon!), punt);
 }

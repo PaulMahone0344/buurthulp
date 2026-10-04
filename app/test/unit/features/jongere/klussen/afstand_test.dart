@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/features/jongere/klussen/domein/afstand.dart';
+import 'package:heitjehulp_app/features/jongere/klussen/model/hh_klus.dart';
 import 'package:heitjehulp_app/theme.dart';
 
 import '../../../../support/hh_klussen_wikkel.dart';
@@ -86,6 +87,36 @@ void main() {
       expect(afstandTekst(0.83), 'ca. 850 m');
       expect(afstandTekst(0.31), 'ca. 300 m');
       expect(afstandTekst(0.0), 'ca. 50 m');
+    });
+  });
+
+  // ADRES (antwoord Ibrahim 3): vóór de match stuurt de server een vaag punt
+  // en afstand_m (eigen punt van de helper tot het ECHTE punt, op 100 m).
+  group('afstand van de server (vaag vóór de match)', () {
+    test('afstand_m wint van het (vage) punt', () {
+      const klus = HhKlus(
+        id: 'k',
+        hulpvragerId: 'o',
+        status: HhKlusStatus.open,
+        lat: 51.9,
+        lon: 5.5,
+        afstandMeter: 300,
+        isLocatieVaag: true,
+      );
+      expect(afstandVanKlus(klus, (lat: 51.0, lon: 5.0)), 0.3);
+      expect(afstandVanKlus(klus, null), 0.3, reason: 'ook zonder middelpunt');
+    });
+
+    test('zonder afstand_m: zoals voorheen (middelpunt)', () {
+      const klus = HhKlus(
+        id: 'k',
+        hulpvragerId: 'o',
+        status: HhKlusStatus.open,
+        lat: 51.8865,
+        lon: 5.4126,
+      );
+      expect(afstandVanKlus(klus, (lat: 51.8865, lon: 5.4126)), 0);
+      expect(afstandVanKlus(klus, null), isNull);
     });
   });
 }
