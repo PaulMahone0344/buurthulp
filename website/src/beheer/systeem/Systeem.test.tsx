@@ -34,7 +34,7 @@ describe('D4 systeembeheer', () => {
   it('wijzigt richtduur en richtvergoeding van een klustype', async () => {
     const user = userEvent.setup()
     const data = new FakeBeheerData(
-      { klustypes: [{ id: 't1', naam: 'tuin', icoon: 'tuin', richtduur: 60, richtvergoeding: 1500 }] },
+      { klustypes: [{ id: 't1', naam: 'tuin', icoon: 'tuin', richtduur: 60, richtvergoeding: 1500, minLeeftijd: 13 }] },
       COORDINATOR,
     )
     opzet(data, { tab: 'klustypes' })
@@ -47,7 +47,7 @@ describe('D4 systeembeheer', () => {
     await user.type(screen.getByLabelText('Richtduur tuin (minuten)'), '90')
     await user.click(screen.getByRole('button', { name: 'Opslaan' }))
 
-    expect(data.aanroepen).toContainEqual({ methode: 'wijzigKlustype', args: ['t1', { richtduur: 90, richtvergoeding: 1750 }] })
+    expect(data.aanroepen).toContainEqual({ methode: 'wijzigKlustype', args: ['t1', { richtduur: 90, richtvergoeding: 1750, minLeeftijd: 13 }] })
   })
 
   it('B2: toont de werkgebied-markering van de server', async () => {

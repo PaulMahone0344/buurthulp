@@ -30,7 +30,14 @@ import type {
   Wijk,
   Recensie,
   Verklaring,
+  Chatbericht,
+  Kennismakingbesluit,
+  NieuweBewoner,
+  NieuwePartner,
+  Partner,
+  VogRij,
 } from './types'
+import { MELDING_PARTNERCODE, partnerCode } from './partners'
 
 export type FakeAccount = { email: string; wachtwoord: string; rol: Rol; naam: string; id: string; geblokkeerd?: boolean }
 
@@ -51,6 +58,14 @@ export type FakeStand = {
   /** B9 */
   recensies: Recensie[]
   verklaringen: Verklaring[]
+  /** B11 */
+  vog: VogRij[]
+  nogTeBellen: NieuweBewoner[]
+  /** Chat per klus-id. */
+  chats: Record<string, Chatbericht[]>
+  partners: Partner[]
+  /** Open klussen per bewoner-id (voor "geweigerd": zoveel geannuleerd). */
+  openKlussenVan: Record<string, number>
 }
 
 export type Aanroep = { methode: string; args: unknown[] }
@@ -96,6 +111,11 @@ export function legeStand(): FakeStand {
     naTeKijken: [],
     recensies: [],
     verklaringen: [],
+    vog: [],
+    nogTeBellen: [],
+    chats: {},
+    partners: [],
+    openKlussenVan: {},
   }
 }
 
@@ -423,5 +443,48 @@ export class FakeBeheerData implements BeheerData {
     const schoon = code.toUpperCase().replace(/[^A-Z0-9]/g, '')
     const v = this.stand.verklaringen.find((x) => x.code.replace('-', '') === schoon)
     return v ? structuredClone(v) : null
+  }
+
+  // ---- B11 ------------------------------------------------------------
+  vogWachtrij() {
+    return this.lees(this.stand.vog)
+  }
+
+  async vogGezien(profielId: string) {
+    this.schrijf('vogGezien', profielId)
+    this.stand.vog = this.stand.vog.filter((r) => r.profielId !== profielId)
+  }
+
+  nogTeBellen() {
+    return this.lees(this.stand.nogTeBellen)
+  }
+
+  async kennismaking(bewonerId: string, besluit: Kennismakingbesluit, notitie: string) {
+    this.schrijf('kennismaking', bewonerId, besluit, notitie)
+    this.stand.nogTeBellen = this.stand.nogTeBellen.filter((b) => b.id !== bewonerId)
+    const geannuleerd = besluit === 'geweigerd' ? (this.stand.openKlussenVan[bewonerId] ?? 0) : 0
+    return { geannuleerd, lopend: 0 }
+  }
+
+  async chat(klusId: string) {
+    return this.lees(this.stand.chats[klusId] ?? [])
+  }
+
+  partners() {
+    return this.lees(this.stand.partners)
+  }
+
+  async maakPartner(partner: NieuwePartner) {
+    this.schrijf('maakPartner', partner)
+    const code = partnerCode(partner.code)
+    if (!code) throw new BeheerFout(MELDING_PARTNERCODE)
+    if (this.stand.partners.some((p) => p.code === code)) throw new BeheerFout('Deze code bestaat al.')
+    this.stand.partners.push({ id: this.nieuwId('p'), naam: partner.naam.trim(), code, notitie: partner.notitie.trim(), actief: true, aangemeld: 0, goedgekeurd: 0 })
+  }
+
+  async zetPartnerActief(id: string, actief: boolean) {
+    this.schrijf('zetPartnerActief', id, actief)
+    const p = this.stand.partners.find((x) => x.id === id)
+    if (p) p.actief = actief
   }
 }

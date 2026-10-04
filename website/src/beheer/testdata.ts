@@ -83,6 +83,7 @@ export function naTeKijken(o: Partial<KlusNaTeKijken>): KlusNaTeKijken {
     omschrijving: 'De heg aan de voorkant knippen.',
     markering: [],
     fotoUrl: 'https://api.test/api/files/hh_klussen/n/heg.jpg?token=t',
+    wachtOpKennismaking: false,
     ...o,
   }
 }

@@ -2,14 +2,17 @@
 // maand), de wachtrij (verificatiestatus in_behandeling, oudste eerst), het
 // signaal "VOG verloopt binnen 60 dagen", en per jongere de documenten naast
 // elkaar met goedkeuren of afkeuren (altijd met notitie).
+// B11: lijst "VOG nodig" = helpers 18+ zonder VOG of met een verlopen VOG
+// (GET /api/hh/meldkamer/vog), met de knop "VOG gezien".
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Users } from 'lucide-react'
 import type { BeheerData } from '../data/beheerData'
 import { screeningTegels, vogSignaal } from '../data/tegels'
 import { toonDatum } from '../data/tijd'
-import type { Profiel } from '../data/types'
-import { Foutmelding } from '../gedeeld/Meldbalk'
+import type { Profiel, VogRij } from '../data/types'
+import { Bevestigvenster } from '../gedeeld/Bevestigvenster'
+import { Foutmelding, Gelukt } from '../gedeeld/Meldbalk'
 import { AdresBronPil, Pil } from '../gedeeld/Pil'
 import { Tegel } from '../gedeeld/Tegel'
 import { useLaden } from '../gedeeld/useLaden'
@@ -24,16 +27,24 @@ type Props = {
 }
 
 const GEEN: Profiel[] = []
-type Lijst = 'wachtrij' | 'signalen' | 'alle'
+const GEEN_VOG: VogRij[] = []
+type Lijst = 'wachtrij' | 'vog' | 'signalen' | 'alle'
 const LIJSTEN: Array<{ id: Lijst; label: string }> = [
   { id: 'wachtrij', label: 'Wachtrij' },
+  { id: 'vog', label: 'VOG nodig' },
   { id: 'signalen', label: 'VOG verloopt' },
   { id: 'alle', label: 'Alle jongeren' },
 ]
 
+const VOG_REDEN = (r: VogRij) => (r.reden === 'geen' ? 'nog geen VOG gezien' : `VOG verlopen op ${toonDatum(r.verlooptOp)}`)
+
 export function Screening({ data, filters, zetFilters, nu }: Props) {
   const laad = useCallback(() => data.profielen(), [data])
   const profielen = useLaden(laad, GEEN)
+  const laadVog = useCallback(() => data.vogWachtrij(), [data])
+  const vog = useLaden(laadVog, GEEN_VOG)
+  const [vogGezien, setVogGezien] = useState<VogRij | null>(null)
+  const [gelukt, setGelukt] = useState('')
   const vandaag = nu()
   const tegels = screeningTegels(profielen.waarde, vandaag)
   const lijst: Lijst = LIJSTEN.some((l) => l.id === filters.lijst) ? (filters.lijst as Lijst) : 'wachtrij'
@@ -47,7 +58,8 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
     if (id === 'signalen') return profielen.waarde.filter((p) => vogSignaal(p.vogGeldigTot, vandaag) !== '')
     return profielen.waarde
   }
-  const zichtbaar = perLijst(lijst)
+  const aantal = (id: Lijst) => (id === 'vog' ? vog.waarde.length : perLijst(id).length)
+  const zichtbaar = lijst === 'vog' ? [] : perLijst(lijst)
   const gekozen = profielen.waarde.find((p) => p.id === filters.jongere)
 
   return (
@@ -63,7 +75,8 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
         <Tegel label="VOG loopt" waarde={tegels.vogLoopt} />
         <Tegel label="Afgewezen deze maand" waarde={tegels.afgewezenDezeMaand} />
       </div>
-      <Foutmelding melding={profielen.fout} />
+      <Gelukt melding={gelukt} />
+      <Foutmelding melding={profielen.fout || vog.fout} />
       <div className="beheer-kolommen">
         <section className="admin-card">
           <div className="admin-card__header">
@@ -82,11 +95,35 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
                 className={`seg-btn${lijst === l.id ? ' is-active' : ''}`}
                 onClick={() => zetFilters({ lijst: l.id })}
               >
-                {l.label} <span className="seg-count">{perLijst(l.id).length}</span>
+                {l.label} <span className="seg-count">{aantal(l.id)}</span>
               </button>
             ))}
           </div>
-          <div className="helper-list" aria-label="Jongeren">
+          {lijst === 'vog' ? (
+            <div className="helper-list" aria-label="Helpers die een VOG nodig hebben">
+              {vog.waarde.map((r) => (
+                <article className="helper-row helper-row--beheer" key={r.profielId}>
+                  <div>
+                    <strong>{r.naam}</strong>
+                    <span>
+                      {r.leeftijd} jaar · {VOG_REDEN(r)}
+                    </span>
+                  </div>
+                  <Pil toon={r.reden === 'geen' ? 'nieuw' : 'fout'}>{r.reden === 'geen' ? 'Geen VOG' : 'Verlopen'}</Pil>
+                  <div className="beheer-acties">
+                    <button className="mini-btn" type="button" onClick={() => setVogGezien(r)}>
+                      VOG gezien: {r.naam}
+                    </button>
+                    <button className="mini-btn mini-btn--ghost" type="button" onClick={() => zetFilters({ lijst, jongere: r.profielId })}>
+                      Bekijk {r.naam}
+                    </button>
+                  </div>
+                </article>
+              ))}
+              {vog.geladen && vog.waarde.length === 0 ? <p className="empty-note">Iedereen van 18+ heeft een geldige VOG.</p> : null}
+            </div>
+          ) : null}
+          <div className="helper-list" aria-label="Jongeren" hidden={lijst === 'vog'}>
             {zichtbaar.map((p) => {
               const signaal = vogSignaal(p.vogGeldigTot, vandaag)
               return (
@@ -112,7 +149,7 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
                 </article>
               )
             })}
-            {profielen.geladen && zichtbaar.length === 0 ? <p className="empty-note">Niemand in deze lijst.</p> : null}
+            {profielen.geladen && lijst !== 'vog' && zichtbaar.length === 0 ? <p className="empty-note">Niemand in deze lijst.</p> : null}
           </div>
         </section>
         {gekozen ? (
@@ -122,10 +159,29 @@ export function Screening({ data, filters, zetFilters, nu }: Props) {
             profiel={gekozen}
             nu={nu}
             opSluit={() => zetFilters({ lijst })}
-            opBeoordeeld={() => void profielen.herlaad()}
+            opBeoordeeld={() => {
+              void profielen.herlaad()
+              void vog.herlaad()
+            }}
           />
         ) : null}
       </div>
+      {vogGezien ? (
+        <Bevestigvenster
+          titel={`VOG van ${vogGezien.naam} gezien`}
+          bevestigTekst="VOG gezien"
+          opSluit={() => setVogGezien(null)}
+          opBevestig={async () => {
+            await data.vogGezien(vogGezien.profielId)
+            setGelukt(`VOG van ${vogGezien.naam} staat erin (vandaag gezien, 3 jaar geldig).`)
+            setVogGezien(null)
+            void vog.herlaad()
+            void profielen.herlaad()
+          }}
+        >
+          <p className="admin-muted">Heb je de originele VOG van {vogGezien.naam} gezien? Dan zetten we vandaag als datum.</p>
+        </Bevestigvenster>
+      ) : null}
     </>
   )
 }

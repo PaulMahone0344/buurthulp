@@ -3,6 +3,8 @@
 // het voorfilter (telefoonnummer, e-mail, link, woord uit de nee-lijst) en
 // twee knoppen. Afkeuren vraagt een reden; die krijgt de bewoner te zien.
 // Beide lopen via POST /api/hh/klussen/{id}/keuren (hh_klusplaatsen.pb.js).
+// B11: wacht een klus op de kennismaking (schakelaar aan), dan eerst bellen;
+// goedkeuren staat uit, afkeuren mag wel.
 
 import { useState } from 'react'
 import { CalendarClock, ShieldCheck, UserRound, Wrench } from 'lucide-react'
@@ -64,7 +66,7 @@ export function NaTeKijken({ data, klussen, opGewijzigd, opGelukt }: Props) {
             <article className="klus-kaart klus-kaart--nakijken" aria-label={`Na te kijken: klus van ${klus.hulpvragerNaam}`}>
               <header className="klus-kaart__kop">
                 <h3>{klus.hulpvragerNaam || 'Onbekende bewoner'}</h3>
-                <Pil toon="nieuw">Na te kijken</Pil>
+                {klus.wachtOpKennismaking ? <Pil toon="stop">Eerst bellen</Pil> : <Pil toon="nieuw">Na te kijken</Pil>}
               </header>
               <div className="klus-nakijken">
                 {klus.fotoUrl ? (
@@ -97,12 +99,16 @@ export function NaTeKijken({ data, klussen, opGewijzigd, opGelukt }: Props) {
                 </div>
               </div>
               <footer className="klus-kaart__voet">
-                <span />
+                {klus.wachtOpKennismaking ? (
+                  <span className="beheer-signaal">Bel eerst de bewoner (zie Nog bellen).</span>
+                ) : (
+                  <span />
+                )}
                 <div className="beheer-acties">
                   <button
                     className="mini-btn"
                     type="button"
-                    disabled={bezig === klus.id}
+                    disabled={bezig === klus.id || klus.wachtOpKennismaking}
                     onClick={() => void goedkeuren(klus)}
                   >
                     Goedkeuren

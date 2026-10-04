@@ -2,6 +2,7 @@
 // open zonder jongere -> handmatig koppelen of annuleren; aangenomen of
 // onderweg -> vrijgeven of annuleren. Koppelen en vrijgeven lopen via de
 // routes van M10, annuleren via de route van M6.
+// B11: bij een klus met helper kan de meldkamer de chat lezen.
 
 import { useState } from 'react'
 import { CalendarClock, ClipboardList, Clock, UserRound, Wrench } from 'lucide-react'
@@ -13,6 +14,7 @@ import type { Klus } from '../data/types'
 import { KlusPil } from '../gedeeld/Pil'
 import { HULPVRAAGFILTER_LABEL } from '../teksten'
 import { KoppelVenster } from './KoppelVenster'
+import { ChatVenster } from './ChatVenster'
 import { RedenVenster } from './RedenVenster'
 
 type Props = {
@@ -24,11 +26,13 @@ type Props = {
   opGewijzigd: () => void
 }
 
-type Actie = { soort: 'koppelen' | 'vrijgeven' | 'annuleren'; klus: Klus }
+type Actie = { soort: 'koppelen' | 'vrijgeven' | 'annuleren' | 'chat'; klus: Klus }
 
 const KAN_KOPPELEN = (k: Klus) => k.status === 'open' && !k.jongereId
 const KAN_VRIJGEVEN = (k: Klus) => k.status === 'geaccepteerd' || k.status === 'onderweg'
 const KAN_ANNULEREN = (k: Klus) => k.status === 'open' || KAN_VRIJGEVEN(k)
+// Een chat bestaat pas na de match (B6).
+const KAN_CHAT_LEZEN = (k: Klus) => !!k.jongereId
 
 export function HulpvragenTabel({ data, klussen, filter, zetFilter, nu, opGewijzigd }: Props) {
   const [actie, setActie] = useState<Actie | null>(null)
@@ -91,7 +95,7 @@ export function HulpvragenTabel({ data, klussen, filter, zetFilter, nu, opGewijz
                   ) : null}
                 </p>
                 {klus.omschrijving ? <p className="klus-kaart__tekst">{klus.omschrijving}</p> : null}
-                {zonderMatch || KAN_KOPPELEN(klus) || KAN_VRIJGEVEN(klus) || KAN_ANNULEREN(klus) ? (
+                {zonderMatch || KAN_KOPPELEN(klus) || KAN_VRIJGEVEN(klus) || KAN_ANNULEREN(klus) || KAN_CHAT_LEZEN(klus) ? (
                   <footer className="klus-kaart__voet">
                     {zonderMatch ? (
                       <span className="beheer-signaal">
@@ -101,6 +105,16 @@ export function HulpvragenTabel({ data, klussen, filter, zetFilter, nu, opGewijz
                       <span />
                     )}
                     <div className="beheer-acties">
+                      {KAN_CHAT_LEZEN(klus) ? (
+                        <button
+                          className="mini-btn mini-btn--ghost"
+                          type="button"
+                          aria-label={`Chat lezen: klus van ${klus.hulpvragerNaam}`}
+                          onClick={() => setActie({ soort: 'chat', klus })}
+                        >
+                          Chat
+                        </button>
+                      ) : null}
                       {KAN_KOPPELEN(klus) ? (
                         <button className="mini-btn" type="button" onClick={() => setActie({ soort: 'koppelen', klus })}>
                           Koppelen
@@ -130,6 +144,7 @@ export function HulpvragenTabel({ data, klussen, filter, zetFilter, nu, opGewijz
       </ul>
       {zichtbaar.length === 0 ? <p className="empty-note">Geen hulpvragen in dit filter.</p> : null}
 
+      {actie?.soort === 'chat' ? <ChatVenster data={data} klus={actie.klus} opSluit={() => setActie(null)} /> : null}
       {actie?.soort === 'koppelen' ? (
         <KoppelVenster data={data} klus={actie.klus} opSluit={() => setActie(null)} opGekoppeld={klaar} />
       ) : null}

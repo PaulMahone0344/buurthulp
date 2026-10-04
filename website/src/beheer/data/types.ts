@@ -138,6 +138,8 @@ export type Klustype = {
   icoon: string
   richtduur: number
   richtvergoeding: number
+  /** B4/B11: vanaf welke leeftijd een helper dit soort klus mag doen (10, 13, 16 of 18). */
+  minLeeftijd: number
 }
 
 export type Gebruiker = {
@@ -291,6 +293,74 @@ export type KlusNaTeKijken = {
   markering: Markering[]
   /** Kant-en-klare url met bestandstoken; leeg als er geen foto is. */
   fotoUrl: string
+  /** B11: keuren wacht tot de meldkamer de bewoner belde (schakelaar aan). */
+  wachtOpKennismaking: boolean
 }
 
 export type Klusbesluit = { besluit: 'goedkeuren' } | { besluit: 'afkeuren'; reden: string }
+
+// ---- B11: meldkamer -------------------------------------------------------
+
+/** De leeftijden die een klustype als ondergrens kan hebben (B4). */
+export const MIN_LEEFTIJDEN = [10, 13, 16, 18] as const
+
+/** Een helper van 18+ zonder VOG of met een verlopen VOG (GET /api/hh/meldkamer/vog). */
+export type VogRij = {
+  gebruikerId: string
+  profielId: string
+  naam: string
+  leeftijd: number
+  verificatiestatus: Screeningstatus | ''
+  vogGezienOp: string
+  /** "JJJJ-MM-DD" of leeg. */
+  verlooptOp: string
+  reden: 'geen' | 'verlopen'
+}
+
+/** Een nieuwe bewoner die de meldkamer nog moet bellen (kennismaking). */
+export type NieuweBewoner = {
+  id: string
+  naam: string
+  telefoon: string
+  adres: string
+  plaats: string
+  aangemeldOp: string
+}
+
+export type Kennismakingbesluit = 'gesproken' | 'geweigerd'
+
+/** Antwoord van POST /api/hh/meldkamer/kennismaking/{id}. */
+export type KennismakingUitkomst = {
+  /** Open/concept-klussen zonder helper die geannuleerd zijn (bij geweigerd). */
+  geannuleerd: number
+  /** Klussen met een helper die nog lopen: die kijkt de meldkamer zelf na. */
+  lopend: number
+}
+
+/** Eén bericht uit de chat van een klus (alleen lezen). */
+export type Chatbericht = {
+  id: string
+  afzenderNaam: string
+  vanBewoner: boolean
+  tekst: string
+  verstuurdOp: string
+  /** Het filter haalde een nummer, e-mail of link weg. */
+  gefilterd: boolean
+  /** Iemand vroeg om contact buiten de app. */
+  contactverzoek: boolean
+  /** Tekst gewist (account verwijderd). */
+  gewist: boolean
+}
+
+/** Jongerenwerk-organisatie met een eigen code (alleen tellen). */
+export type Partner = {
+  id: string
+  naam: string
+  code: string
+  actief: boolean
+  notitie: string
+  aangemeld: number
+  goedgekeurd: number
+}
+
+export type NieuwePartner = { naam: string; code: string; notitie: string }

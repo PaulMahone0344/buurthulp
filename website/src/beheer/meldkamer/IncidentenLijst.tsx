@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { Bell } from 'lucide-react'
 import type { BeheerData } from '../data/beheerData'
-import { filterIncidenten, INCIDENTFILTERS, sorteerIncidenten, type Incidentfilter } from '../data/filters'
+import { filterIncidenten, INCIDENTFILTERS, sorteerIncidenten, zonderCode, type Incidentfilter } from '../data/filters'
 import { toonMoment } from '../data/tijd'
 import type { Incident } from '../data/types'
 import { Bevestigvenster } from '../gedeeld/Bevestigvenster'
@@ -60,7 +60,7 @@ export function IncidentenLijst({ data, incidenten, filter, zetFilter, opGewijzi
                 {incident.melderTelefoon ? ` · ${incident.melderTelefoon}` : ''}
                 {incident.klusId ? '' : ' · noodknop, geen klus'}
               </span>
-              {incident.omschrijving ? <span>{incident.omschrijving}</span> : null}
+              {incident.omschrijving ? <span>{zonderCode(incident.omschrijving)}</span> : null}
               {incident.afhandeling ? <span>Afhandeling: {incident.afhandeling}</span> : null}
             </div>
             {incident.afhandeling.trim() ? (
@@ -94,7 +94,7 @@ export function IncidentenLijst({ data, incidenten, filter, zetFilter, opGewijzi
             opGewijzigd()
           }}
         >
-          {open.omschrijving ? <p className="admin-muted">{open.omschrijving}</p> : null}
+          {open.omschrijving ? <p className="admin-muted">{zonderCode(open.omschrijving)}</p> : null}
           <label className="field">
             <span>Wat heb je gedaan</span>
             <textarea rows={3} maxLength={1000} value={afhandeling} onChange={(e) => setAfhandeling(e.target.value)} />

@@ -1,18 +1,20 @@
 // M14 — D1 MELDKAMER. Staat de hele dag open: vijf tegels, de hulpvragen met
 // vier filters, de incidenten aflopend op tijd. Ververst vanzelf zodra er op
 // de server iets aan hh_klussen of hh_incidenten verandert (realtime).
+// B11: bovenaan "Nog bellen" (kennismaking met nieuwe bewoners).
 
 import { useCallback, useEffect, useState } from 'react'
 import { PhoneCall } from 'lucide-react'
 import type { BeheerData } from '../data/beheerData'
 import { isHulpvraagfilter, isIncidentfilter } from '../data/filters'
 import { meldkamerTegels } from '../data/tegels'
-import type { Incident, Klus, KlusNaTeKijken } from '../data/types'
+import type { Incident, Klus, KlusNaTeKijken, NieuweBewoner } from '../data/types'
 import { Foutmelding, Gelukt } from '../gedeeld/Meldbalk'
 import { Tegel } from '../gedeeld/Tegel'
 import { useLaden } from '../gedeeld/useLaden'
 import { HulpvragenTabel } from './HulpvragenTabel'
 import { IncidentenLijst } from './IncidentenLijst'
+import { Kennismaking } from './Kennismaking'
 import { NaTeKijken } from './NaTeKijken'
 import { TelefonischeAanmelding } from './TelefonischeAanmelding'
 
@@ -26,6 +28,7 @@ type Props = {
 const GEEN_KLUSSEN: Klus[] = []
 const GEEN_INCIDENTEN: Incident[] = []
 const NIETS_NA_TE_KIJKEN: KlusNaTeKijken[] = []
+const NIEMAND_TE_BELLEN: NieuweBewoner[] = []
 
 export function Meldkamer({ data, filters, zetFilters, nu }: Props) {
   const laadKlussen = useCallback(() => data.klussen(), [data])
@@ -35,17 +38,21 @@ export function Meldkamer({ data, filters, zetFilters, nu }: Props) {
   const incidenten = useLaden(laadIncidenten, GEEN_INCIDENTEN)
   // B4: elke nieuwe klus eerst langs de meldkamer.
   const naTeKijken = useLaden(laadNaTeKijken, NIETS_NA_TE_KIJKEN)
+  const laadNogTeBellen = useCallback(() => data.nogTeBellen(), [data])
+  const nogTeBellen = useLaden(laadNogTeBellen, NIEMAND_TE_BELLEN)
   const [aanmelden, setAanmelden] = useState(false)
   const [gelukt, setGelukt] = useState('')
 
   const herlaadKlussen = klussen.herlaad
   const herlaadIncidenten = incidenten.herlaad
   const herlaadNaTeKijken = naTeKijken.herlaad
+  const herlaadNogTeBellen = nogTeBellen.herlaad
   const herlaadAlles = useCallback(() => {
     void herlaadKlussen()
     void herlaadIncidenten()
     void herlaadNaTeKijken()
-  }, [herlaadKlussen, herlaadIncidenten, herlaadNaTeKijken])
+    void herlaadNogTeBellen()
+  }, [herlaadKlussen, herlaadIncidenten, herlaadNaTeKijken, herlaadNogTeBellen])
 
   useEffect(() => data.abonneer(herlaadAlles), [data, herlaadAlles])
 
@@ -75,6 +82,9 @@ export function Meldkamer({ data, filters, zetFilters, nu }: Props) {
         <Tegel label="Nu bezig" waarde={tegels.nuBezig} />
         <Tegel label="Incidenten open" waarde={tegels.incidentenOpen} />
       </div>
+
+      <Foutmelding melding={nogTeBellen.fout} />
+      <Kennismaking data={data} bewoners={nogTeBellen.waarde} opGewijzigd={herlaadAlles} opGelukt={setGelukt} />
 
       <Foutmelding melding={naTeKijken.fout} />
       <NaTeKijken data={data} klussen={naTeKijken.waarde} opGewijzigd={herlaadAlles} opGelukt={setGelukt} />

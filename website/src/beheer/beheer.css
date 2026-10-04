@@ -416,3 +416,48 @@
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+/* B11 — chat lezen (alleen lezen, meldkamer) */
+.beheer-chat {
+  display: grid;
+  gap: 10px;
+  max-height: 60vh;
+  margin: 12px 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.beheer-chat__bericht {
+  justify-self: start;
+  max-width: 85%;
+  padding: 10px 12px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 12px 12px 12px 4px;
+}
+
+.beheer-chat__bericht.is-bewoner {
+  justify-self: end;
+  background: var(--paper);
+  border-radius: 12px 12px 4px 12px;
+}
+
+.beheer-chat__bericht p {
+  margin: 0;
+}
+
+.beheer-chat__kop {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.beheer-chat__pillen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px !important;
+}

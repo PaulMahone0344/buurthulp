@@ -27,6 +27,13 @@ import type {
   Wijk,
   Recensie,
   Verklaring,
+  Chatbericht,
+  Kennismakingbesluit,
+  KennismakingUitkomst,
+  NieuweBewoner,
+  NieuwePartner,
+  Partner,
+  VogRij,
 } from './types'
 
 export class BeheerFout extends Error {
@@ -101,4 +108,20 @@ export interface BeheerData {
   verbergRecensie(id: string, verbergen: boolean, reden: string): Promise<void>
   /** GET /api/hh/verklaring/{code}; null als de code onbekend is. */
   zoekVerklaring(code: string): Promise<Verklaring | null>
+
+  // ---- B11 meldkamer ------------------------------------------------------
+  /** GET /api/hh/meldkamer/vog: 18+ zonder VOG of met een verlopen VOG. */
+  vogWachtrij(): Promise<VogRij[]>
+  /** VOG vandaag gezien: vog_gezien_op op het profiel. */
+  vogGezien(profielId: string): Promise<void>
+  /** Bewoners met kennismaking_status "nog", oudste eerst. */
+  nogTeBellen(): Promise<NieuweBewoner[]>
+  /** POST /api/hh/meldkamer/kennismaking/{id}. */
+  kennismaking(bewonerId: string, besluit: Kennismakingbesluit, notitie: string): Promise<KennismakingUitkomst>
+  /** De hele chat van een klus, oudste eerst (alleen lezen). */
+  chat(klusId: string): Promise<Chatbericht[]>
+  /** GET /api/hh/meldkamer/partners: met tellers. */
+  partners(): Promise<Partner[]>
+  maakPartner(partner: NieuwePartner): Promise<void>
+  zetPartnerActief(id: string, actief: boolean): Promise<void>
 }

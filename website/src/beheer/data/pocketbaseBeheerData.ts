@@ -6,15 +6,17 @@
 // ze zonder server te testen zijn.
 
 import PocketBase, { ClientResponseError, type RecordModel } from 'pocketbase'
-import { BeheerFout, type BeheerData, type Inlogresultaat } from './beheerData'
+import { BeheerFout, type BeheerData, type Inlogresultaat, type NieuwKlustype } from './beheerData'
 import { isVogVerlopen } from './filters'
 import { besluitBody } from './screening'
 import { leesAdresAntwoord, nieuweOudereBody, telefonischeKlusBody, willekeurigWachtwoord } from './telefonisch'
+import { MELDING_PARTNERCODE, partnerCode } from './partners'
 import { naarIso } from './tijd'
 import type {
   AdresBron,
   Auditregel,
   Betaling,
+  Chatbericht,
   Coordinator,
   Gebruiker,
   Incident,
@@ -24,11 +26,14 @@ import type {
   Klustype,
   Koppelkandidaat,
   Markering,
+  NieuweBewoner,
   Oudere,
+  Partner,
   Profiel,
   Recensie,
   Rol,
   Verklaring,
+  VogRij,
   Wijk,
 } from './types'
 import { ROLLEN } from './types'
@@ -213,6 +218,66 @@ export function naarKlustype(r: RecordModel): Klustype {
     icoon: tekst(r.icoon),
     richtduur: getal(r.richtduur),
     richtvergoeding: getal(r.richtvergoeding),
+    minLeeftijd: getal(r.min_leeftijd),
+  }
+}
+
+/** Velden van het scherm -> velden op de server (min_leeftijd). */
+export function klustypeBody(k: Partial<NieuwKlustype>): Record<string, unknown> {
+  const { minLeeftijd, ...rest } = k
+  return minLeeftijd === undefined ? rest : { ...rest, min_leeftijd: minLeeftijd }
+}
+
+// ---- B11 -----------------------------------------------------------------
+
+export function naarVogRij(r: Record<string, unknown>): VogRij {
+  return {
+    gebruikerId: tekst(r.gebruiker),
+    profielId: tekst(r.profiel),
+    naam: tekst(r.naam),
+    leeftijd: getal(r.leeftijd),
+    verificatiestatus: tekst(r.verificatiestatus) as VogRij['verificatiestatus'],
+    vogGezienOp: naarIso(tekst(r.vog_gezien_op)),
+    verlooptOp: tekst(r.verloopt_op),
+    reden: tekst(r.reden) === 'verlopen' ? 'verlopen' : 'geen',
+  }
+}
+
+export function naarNieuweBewoner(r: RecordModel): NieuweBewoner {
+  return {
+    id: r.id,
+    naam: tekst(r.naam),
+    telefoon: tekst(r.telefoon),
+    adres: tekst(r.adres),
+    plaats: tekst(r.plaats),
+    aangemeldOp: naarIso(r.created),
+  }
+}
+
+export function naarChatbericht(r: Uitgebreid): Chatbericht {
+  const afzender = uitgebreid(r, 'afzender')
+  const klus = uitgebreid(r, 'klus')
+  return {
+    id: r.id,
+    afzenderNaam: tekst(afzender?.naam),
+    vanBewoner: !!klus && tekst(r.afzender) === tekst(klus.hulpvrager),
+    tekst: tekst(r.tekst),
+    verstuurdOp: naarIso(r.created),
+    gefilterd: r.gefilterd === true,
+    contactverzoek: r.contactverzoek === true,
+    gewist: r.gewist === true,
+  }
+}
+
+export function naarPartner(r: Record<string, unknown>): Partner {
+  return {
+    id: tekst(r.id),
+    naam: tekst(r.naam),
+    code: tekst(r.code),
+    actief: r.actief === true,
+    notitie: tekst(r.notitie),
+    aangemeld: getal(r.aangemeld),
+    goedgekeurd: getal(r.goedgekeurd),
   }
 }
 
@@ -304,6 +369,7 @@ export function naarKlusNaTeKijken(r: Uitgebreid, fotoUrl: (bestand: string) => 
     omschrijving: tekst(r.omschrijving),
     markering: MARKERINGEN.filter((m) => markering.includes(m)),
     fotoUrl: fotos.length ? fotoUrl(fotos[0]) : '',
+    wachtOpKennismaking: r.wacht_op_kennismaking === true,
   }
 }
 
@@ -528,11 +594,11 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
       metFout(async () => (await col('hh_klustypes').getFullList({ sort: 'naam' })).map(naarKlustype)),
     maakKlustype: (klustype) =>
       metFout(async () => {
-        await col('hh_klustypes').create(klustype)
+        await col('hh_klustypes').create(klustypeBody(klustype))
       }),
     wijzigKlustype: (id, klustype) =>
       metFout(async () => {
-        await col('hh_klustypes').update(id, klustype)
+        await col('hh_klustypes').update(id, klustypeBody(klustype))
       }),
 
     zoekGebruikers: (zoek) =>
@@ -602,6 +668,59 @@ export function maakPocketbaseBeheerData(pb: PocketBase): BeheerData {
           if (fout instanceof ClientResponseError && fout.status === 404) return null
           throw fout
         }
+      }),
+
+    // ---- B11 ----------------------------------------------------------
+    vogWachtrij: () =>
+      metFout(async () => {
+        const antwoord = await pb.send<{ helpers?: Record<string, unknown>[] }>('/api/hh/meldkamer/vog', { method: 'GET' })
+        return (antwoord?.helpers ?? []).map(naarVogRij)
+      }),
+    vogGezien: (profielId) =>
+      metFout(async () => {
+        await col('hh_profielen').update(profielId, { vog_gezien_op: new Date().toISOString() })
+      }),
+    nogTeBellen: () =>
+      metFout(async () =>
+        (
+          await col('hh_users').getFullList({
+            filter: 'rol = "hulpvrager" && kennismaking_status = "nog" && geblokkeerd = false',
+            sort: 'created',
+          })
+        ).map(naarNieuweBewoner),
+      ),
+    kennismaking: (bewonerId, besluit, notitie) =>
+      metFout(async () => {
+        const antwoord = await pb.send<{ geannuleerd?: number; lopend?: number }>(
+          `/api/hh/meldkamer/kennismaking/${encodeURIComponent(bewonerId)}`,
+          { method: 'POST', body: { besluit, notitie: notitie.trim() } },
+        )
+        return { geannuleerd: getal(antwoord?.geannuleerd), lopend: getal(antwoord?.lopend) }
+      }),
+    chat: (klusId) =>
+      metFout(async () =>
+        (
+          await col('hh_berichten').getFullList({
+            filter: pb.filter('klus = {:klus}', { klus: klusId }),
+            sort: 'created',
+            expand: 'afzender,klus',
+          })
+        ).map(naarChatbericht),
+      ),
+    partners: () =>
+      metFout(async () => {
+        const antwoord = await pb.send<{ partners?: Record<string, unknown>[] }>('/api/hh/meldkamer/partners', { method: 'GET' })
+        return (antwoord?.partners ?? []).map(naarPartner)
+      }),
+    maakPartner: (partner) =>
+      metFout(async () => {
+        const code = partnerCode(partner.code)
+        if (!code) throw new BeheerFout(MELDING_PARTNERCODE)
+        await col('hh_partners').create({ naam: partner.naam.trim(), code, notitie: partner.notitie.trim(), actief: true })
+      }),
+    zetPartnerActief: (id, actief) =>
+      metFout(async () => {
+        await col('hh_partners').update(id, { actief })
       }),
   }
 }

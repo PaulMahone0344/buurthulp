@@ -157,7 +157,7 @@ describe('telefonische aanmelding', () => {
     const data = new FakeBeheerData(
       {
         wijken: [{ id: 'w1', gemeente: 'Tiel', wijk: 'Tiel-West', postcodes: ['4001'], actief: true }],
-        klustypes: [{ id: 't1', naam: 'boodschappen', icoon: '', richtduur: 60, richtvergoeding: 1250 }],
+        klustypes: [{ id: 't1', naam: 'boodschappen', icoon: '', richtduur: 60, richtvergoeding: 1250, minLeeftijd: 10 }],
       },
       COORDINATOR,
     )
@@ -240,7 +240,7 @@ describe('telefonische aanmelding', () => {
         ouderen: [
           { id: 'o1', naam: 'Mevrouw Jansen', email: 'j@x.nl', telefoon: '0612345678', adres: 'Dorpsstraat 2', postcode: '', plaats: 'Tiel', wijkId: 'w1' },
         ],
-        klustypes: [{ id: 't1', naam: 'tuin', icoon: '', richtduur: 60, richtvergoeding: 1500 }],
+        klustypes: [{ id: 't1', naam: 'tuin', icoon: '', richtduur: 60, richtvergoeding: 1500, minLeeftijd: 13 }],
       },
       COORDINATOR,
     )

@@ -80,3 +80,11 @@ export function filterAuditlog(regels: Auditregel[], filter: Auditfilter): Audit
       (!persoon || r.doorNaam.toLowerCase().includes(persoon)),
   )
 }
+
+/**
+ * B11: het signaal "zelfde paar" eindigt op "(zp:<helper>:<bewoner>)" zodat
+ * de server dubbele signalen herkent; op het scherm laten we die code weg.
+ */
+export function zonderCode(omschrijving: string): string {
+  return omschrijving.replace(/\s*\(zp:[^)]*\)\s*$/, '')
+}

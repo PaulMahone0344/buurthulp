@@ -54,7 +54,7 @@ const handmatig: NieuweOudere = {
   wijkId: 'w1',
 }
 
-const klustype: Klustype = { id: 't1', naam: 'boodschappen', icoon: '', richtduur: 60, richtvergoeding: 1250 }
+const klustype: Klustype = { id: 't1', naam: 'boodschappen', icoon: '', richtduur: 60, richtvergoeding: 1250, minLeeftijd: 10 }
 
 const klus: NieuweKlus = {
   hulpvragerId: 'o1',
