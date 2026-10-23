@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/paden.dart';
+import '../../../demo/demo_knoppen.dart';
+import '../../../demo/demo_modus.dart';
 import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
@@ -38,6 +40,10 @@ class WelkomScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (isDemoModus) ...[
+            const DemoKnoppen(),
+            SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+          ],
           Text(TekstenNl.welkomUitleg, style: tekst.bodyLarge),
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           HhKnop(
