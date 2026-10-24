@@ -4,6 +4,10 @@ abstract final class HhPaden {
   // Toegang (G1-G8)
   static const splash = '/';
   static const welkom = '/welkom';
+  static const kennismaken = '/kennismaken';
+
+  /// Dezelfde pagina's opnieuw, vanuit Hulp (ingelogd; terug = sluiten).
+  static const uitleg = '/uitleg';
   static const inloggen = '/inloggen';
   static const registreren = '/registreren';
   static const bevestigEmail = '/bevestig-email';
@@ -21,6 +25,7 @@ abstract final class HhPaden {
 
   /// Bereikbaar zonder in te loggen.
   static const zonderSessie = {
+    kennismaken,
     welkom,
     inloggen,
     registreren,
@@ -31,6 +36,7 @@ abstract final class HhPaden {
   /// Toegangsschermen waar een ingelogde gebruiker niets te zoeken heeft.
   static const alleenUitgelogd = {
     splash,
+    kennismaken,
     welkom,
     inloggen,
     registreren,

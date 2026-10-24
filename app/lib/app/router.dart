@@ -23,6 +23,8 @@ import '../features/jongere/uitvoeren/uitvoeren_routes.dart';
 import '../features/meldingen/meldingen_routes.dart';
 import '../features/jongere/xp/xp_routes.dart';
 import '../features/reacties/reacties_routes.dart';
+import '../features/toegang/kennismaken/kennismaken_controller.dart';
+import '../features/toegang/kennismaken/kennismaken_screen.dart';
 import '../features/toegang/model/sessie_state.dart';
 import '../features/toegang/provider/sessie_providers.dart';
 import '../features/toegang/screen/bevestig_email_screen.dart';
@@ -76,6 +78,11 @@ class _SessieListenable extends ChangeNotifier {
       screeningControllerProvider,
       (vorige, nieuwe) => notifyListeners(),
     );
+    // Kennismaking: opnieuw kijken zodra bekend is of hij gezien is.
+    ref.listen(
+      kennismakingGezienProvider,
+      (vorige, nieuwe) => notifyListeners(),
+    );
   }
 }
 
@@ -87,6 +94,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: HhPaden.splash,
     refreshListenable: listenable,
     redirect: (context, state) =>
+        // Kennismaking vóór G2, één keer per telefoon. Eerst, zodat de
+        // splash blijft staan tot bekend is of hij al gezien is.
+        kennismakingRedirect(
+          ref.read(sessieControllerProvider),
+          ref.read(kennismakingGezienProvider),
+          state.matchedLocation,
+        ) ??
         toegangRedirect(
           ref.read(sessieControllerProvider),
           state.matchedLocation,
@@ -107,6 +121,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: HhPaden.splash,
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: HhPaden.kennismaken,
+        builder: (context, state) => const KennismakenScreen(),
+      ),
+      GoRoute(
+        path: HhPaden.uitleg,
+        builder: (context, state) => const KennismakenScreen(isOpnieuw: true),
       ),
       GoRoute(
         path: HhPaden.welkom,

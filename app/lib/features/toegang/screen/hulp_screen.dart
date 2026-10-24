@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/navigatie.dart';
@@ -10,6 +11,7 @@ import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_meld_balk.dart';
 import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
+import '../../../l10n/teksten_kennismaken_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
 import '../model/hh_rol.dart';
@@ -88,6 +90,17 @@ class _HulpScreenState extends ConsumerState<HulpScreen> {
           if (_melding != null) ...[
             SizedBox(height: tussen),
             HhMeldBalk(soort: HhMeldSoort.waarschuwing, tekst: _melding!),
+          ],
+          // Kennismaking opnieuw bekijken (alleen ingelogd; uitgelogd zag
+          // je hem net al vóór het welkomscherm).
+          if (gebruiker != null) ...[
+            SizedBox(height: tussen),
+            HhKnop(
+              label: TekstenKennismakenNl.opnieuwKnop,
+              icoon: Icons.auto_stories_outlined,
+              soort: HhKnopSoort.tweedeKeus,
+              onPressed: () => context.push(HhPaden.uitleg),
+            ),
           ],
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
           for (final r in rollen) ...[

@@ -1,3 +1,6 @@
+import 'package:heitjehulp_app/features/toegang/screen/hulp_screen.dart';
+import 'package:heitjehulp_app/features/toegang/kennismaken/kennismaken_screen.dart';
+import 'package:heitjehulp_app/l10n/teksten_kennismaken_nl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -270,6 +273,14 @@ void main() {
       // de website, de bewoner blijft op Meer.
       await _tik(tester, TekstenHulpvragerNl.meerVoorwaardenTitel);
       expect(find.byType(OudereMeerScreen), findsOneWidget);
+
+      // Kennismaking opnieuw via Hulp en uitleg; overslaan gaat terug.
+      await _tik(tester, TekstenHulpvragerNl.meerHulpTitel);
+      await _tik(tester, TekstenKennismakenNl.opnieuwKnop);
+      expect(find.byType(KennismakenScreen), findsOneWidget);
+      await _tik(tester, TekstenKennismakenNl.overslaan);
+      expect(find.byType(HulpScreen), findsOneWidget);
+      await _terug(tester);
 
       await _tik(tester, TekstenHulpvragerNl.tabStart);
       expect(find.byType(HulpvragerHomeScreen), findsOneWidget);

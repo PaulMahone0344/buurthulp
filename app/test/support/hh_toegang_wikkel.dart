@@ -1,3 +1,4 @@
+import 'package:heitjehulp_app/features/toegang/kennismaken/kennismaken_controller.dart';
 import 'package:heitjehulp_app/core/pb/fake_reactie_gateway.dart';
 import 'package:heitjehulp_app/core/pb/reactie_gateway.dart';
 import 'package:heitjehulp_app/features/reacties/provider/reactie_providers.dart';
@@ -132,6 +133,7 @@ List<dynamic> toegangOverrides({
   SessieState? sessie,
   HhRol? gekozenRol,
   bool urlOpenerLukt = true,
+  bool isKennismakingGezien = true,
   ProfielGateway? profielGateway,
   FotoKiezer? fotoKiezer,
   KlussenGateway? klussenGateway,
@@ -156,6 +158,11 @@ List<dynamic> toegangOverrides({
   ),
   authGatewayProvider.overrideWithValue(gateway),
   keyValueStoreProvider.overrideWithValue(opslag ?? GeheugenKeyValueStore()),
+  // Kennismaking (24 okt): standaard al gezien, zodat de toegangstests op
+  // G2 beginnen. De kennismakingstests zetten hem uit en gebruiken de
+  // echte controller met de geheugenopslag.
+  if (isKennismakingGezien)
+    kennismakingGezienProvider.overrideWith(KennismakingAlGezien.new),
   urlOpenerProvider.overrideWithValue((_) async => urlOpenerLukt),
   // M3: screening van de jongere. Standaard een goedgekeurd profiel voor
   // de test-jongere, zodat de landing /jongere bereikbaar blijft; de
@@ -221,6 +228,7 @@ List<dynamic> toegangOverrides({
 ProviderContainer toegangContainer({
   required FakeAuthGateway gateway,
   GeheugenKeyValueStore? opslag,
+  bool isKennismakingGezien = true,
   SessieState? sessie,
   HhRol? gekozenRol,
   bool urlOpenerLukt = true,
@@ -239,6 +247,7 @@ ProviderContainer toegangContainer({
       ...toegangOverrides(
         gateway: gateway,
         opslag: opslag,
+        isKennismakingGezien: isKennismakingGezien,
         sessie: sessie,
         gekozenRol: gekozenRol,
         urlOpenerLukt: urlOpenerLukt,
@@ -295,11 +304,13 @@ Future<ProviderContainer> pompApp(
   required FakeAuthGateway gateway,
   GeheugenKeyValueStore? opslag,
   AdresGateway? adresGateway,
+  bool isKennismakingGezien = true,
 }) async {
   final container = toegangContainer(
     gateway: gateway,
     opslag: opslag,
     adresGateway: adresGateway,
+    isKennismakingGezien: isKennismakingGezien,
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -309,4 +320,10 @@ Future<ProviderContainer> pompApp(
   );
   await tester.pumpAndSettle();
   return container;
+}
+
+/// Kennismaking al gezien, zonder de opslag te lezen.
+class KennismakingAlGezien extends KennismakingController {
+  @override
+  bool? build() => true;
 }
