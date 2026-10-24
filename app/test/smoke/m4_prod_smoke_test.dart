@@ -84,7 +84,7 @@ void main() {
         dagKeuze: HhDagKeuze.morgen,
         dag: dag,
         vanafMinuten: standaardVanaf(dag, nu),
-        isNeeLijstAkkoord: true,
+        totMinuten: standaardVanaf(dag, nu) + 60,
         adres: gegevens.adres.isEmpty ? 'Smoketeststraat 4' : gegevens.adres,
         postcode: gegevens.postcode.isEmpty ? '4001 AA' : gegevens.postcode,
         plaats: gegevens.plaats.isEmpty ? 'Tiel' : gegevens.plaats,

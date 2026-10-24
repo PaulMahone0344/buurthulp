@@ -40,16 +40,23 @@ class ConceptController extends Notifier<HulpvraagConcept> {
 
   void kiesDag(DateTime dag) => _zetDag(HhDagKeuze.andereDag, alleenDag(dag));
 
-  /// Bij de eerste dag krijgt het tijdwiel een begintijd; een gekozen tijd
-  /// blijft staan als je daarna een andere dag kiest.
+  /// Bij de eerste dag krijgen de tijdwielen een begin- en eindtijd (een
+  /// uur later, hooguit 23:45); gekozen tijden blijven staan als je daarna
+  /// een andere dag kiest.
   void _zetDag(HhDagKeuze keuze, DateTime? dag) {
     final vanaf =
         state.vanafMinuten ??
         (dag == null ? null : standaardVanaf(dag, ref.read(klokProvider)()));
+    final tot =
+        state.totMinuten ??
+        (vanaf == null
+            ? null
+            : (vanaf + _standaardDuurMinuten).clamp(0, laatsteVanafMinuten));
     state = state.copyWith(
       dagKeuze: () => keuze,
       dag: () => dag,
       vanafMinuten: () => vanaf,
+      totMinuten: () => tot,
     );
   }
 
@@ -57,23 +64,8 @@ class ConceptController extends Notifier<HulpvraagConcept> {
     state = state.copyWith(vanafMinuten: () => minuten);
   }
 
-  /// Aan: de eindtijd begint een uur na de begintijd (hooguit 23:45).
-  void zetEindtijd(bool aan) {
-    final vanaf = state.vanafMinuten;
-    final tot =
-        state.totMinuten ??
-        (vanaf == null
-            ? null
-            : (vanaf + _standaardDuurMinuten).clamp(0, laatsteVanafMinuten));
-    state = state.copyWith(heeftEindtijd: aan, totMinuten: () => tot);
-  }
-
   void zetTot(int minuten) {
     state = state.copyWith(totMinuten: () => minuten);
-  }
-
-  void zetNeeLijstAkkoord(bool akkoord) {
-    state = state.copyWith(isNeeLijstAkkoord: akkoord);
   }
 
   void zetWaar({

@@ -25,6 +25,10 @@ abstract final class TekstenHulpvragerNl {
   static const meerInstellingenUitleg = 'Taal, meldingen en account';
   static const meerHulpTitel = 'Hulp en uitleg';
   static const meerHulpUitleg = 'Hoe HeitjeHulp werkt';
+  // Feedbackronde 1: juridische stukken los van Hulp en uitleg.
+  static const meerVoorwaardenTitel = 'Voorwaarden & privacy';
+  static const meerVoorwaardenUitleg =
+      'Algemene voorwaarden, privacy en veiligheidsregels';
 
   // "Mijn hulpvragen" is sinds M6 O8 (lib/features/hulpvrager/status);
   // de teksten daarvan staan in teksten_uitvoeren_nl.dart.
@@ -40,10 +44,8 @@ abstract final class TekstenHulpvragerNl {
   // Klus plaatsen: de dag
   static const wanneerDagKeuzerij = 'Welke dag';
   static const dagVandaag = 'Vandaag';
-  static const dagMorgen = 'Morgen';
   static const dagAndere = 'Kies een dag';
   static const dagVandaagSemantiek = 'Kies vandaag';
-  static const dagMorgenSemantiek = 'Kies morgen';
   static const dagAndereSemantiek = 'Kies een andere dag';
   static String dagGekozen(String dag) => 'Gekozen dag: $dag';
   static const dagKiezerTitel = 'Welke dag?';

@@ -36,8 +36,8 @@ abstract final class TekstenNl {
   static const welkomUitleg =
       'Heitje voor een karweitje, in jouw buurt. Bewoners plaatsen een '
       'klus, strijders uit de buurt helpen. Kies wat bij jou past.';
-  static const keuzeZoekHulp = 'Ik zoek hulp';
-  static const keuzeWilHelpen = 'Ik wil helpen';
+  static const keuzeZoekHulp = 'Ik zoek een Strijder';
+  static const keuzeWilHelpen = 'Ik wil strijden';
   static const alEenAccount = 'Ik heb al een account';
 
   // G3 Inloggen
@@ -137,6 +137,14 @@ abstract final class TekstenNl {
       'Wat kost het?',
       'Je ziet het bedrag voordat je een klus plaatst. Je betaalt pas als '
           'de klus klaar is.',
+    ),
+    // Nee-lijst (besluit punt 5); sinds feedbackronde 1 hier i.p.v. in het
+    // formulier "Klus plaatsen".
+    HhVraag(
+      'Welke klussen kunnen niet via HeitjeHulp?',
+      'Alcohol of tabak kopen, werken op een ladder of met machines, zorg '
+          '(zoals wassen of medicijnen geven), echt schoonmaakwerk voor een '
+          'bedrijf en oppassen op kinderen. De meldkamer kijkt elke klus na.',
     ),
     HhVraag(
       'Kan iemand anders het voor mij regelen?',

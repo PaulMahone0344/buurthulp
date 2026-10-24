@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/paden.dart';
+import '../../../core/config.dart';
 import '../../../design/components/hh_meer_rij.dart';
 import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../theme.dart';
+import '../../toegang/screen/hulp_screen.dart' show urlOpenerProvider;
 import '../paden_hulpvrager.dart';
 import '../widget/oudere_tabbalk.dart';
 
 /// Tab Meer van de oudere (3 okt, indeling naar BuurtHeld): mijn gegevens,
-/// instellingen en hulp als lijst kaarten. Deze schermen openen met push,
-/// zodat de oudere met "Terug" weer hier uitkomt.
-class OudereMeerScreen extends StatelessWidget {
+/// instellingen, hulp en (feedbackronde 1) voorwaarden & privacy als lijst
+/// kaarten. Deze schermen openen met push, zodat de oudere met "Terug" weer
+/// hier uitkomt; de voorwaarden openen op de website.
+class OudereMeerScreen extends ConsumerWidget {
   const OudereMeerScreen({super.key});
 
+  Future<void> _leesVoorwaarden(WidgetRef ref) async {
+    try {
+      await ref.read(urlOpenerProvider)(Uri.parse(HhConfig.voorwaardenUrl));
+    } on Exception {
+      // Geen browser: niets aan te doen.
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tussen = HhRuimte.voor(HhRuimte.s, HhDichtheidScope.van(context));
 
     return OudereTabScherm(
@@ -43,6 +55,12 @@ class OudereMeerScreen extends StatelessWidget {
               titel: TekstenHulpvragerNl.meerHulpTitel,
               uitleg: TekstenHulpvragerNl.meerHulpUitleg,
               onTik: () => context.push(HhPaden.hulp),
+            ),
+            SizedBox(height: tussen),
+            HhMeerRij(
+              titel: TekstenHulpvragerNl.meerVoorwaardenTitel,
+              uitleg: TekstenHulpvragerNl.meerVoorwaardenUitleg,
+              onTik: () => _leesVoorwaarden(ref),
             ),
           ],
         ),

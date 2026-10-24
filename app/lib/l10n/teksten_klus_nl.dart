@@ -19,14 +19,30 @@ abstract final class TekstenKlusNl {
       'Deze tijd is al voorbij. Kies een later moment.';
   static const ontbreektTot = 'De eindtijd moet na de begintijd liggen.';
   static const ontbreektWaar = 'Vul eerst je adres in bij Mijn gegevens.';
-  static const ontbreektNeeLijst =
-      'Vink aan dat je klus niet op de lijst hieronder staat.';
 
   // Wat
   static const watTitel = 'Wat moet er gebeuren?';
 
   // Vertel wat je wilt
   static const omschrijvingTitel = 'Vertel wat je wilt';
+
+  /// Feedbackronde 1: de kop past zich aan de gekozen categorie aan (naam
+  /// zoals in hh_klustypes). Onbekend of nog niets gekozen: de gewone kop.
+  static String omschrijvingTitelVoor(String? categorie) => switch (categorie) {
+    'Tuin' => 'Vertel meer over het tuinwerk',
+    'Schoonmaak' => 'Vertel meer over de schoonmaak',
+    'Boodschappen' => 'Vertel meer over de boodschappen',
+    'Auto & fiets' => 'Vertel meer over de auto of fiets',
+    'Opruimen' => 'Vertel meer over het opruimen',
+    'Dieren' => 'Vertel meer over het dier',
+    'Computer' => 'Vertel meer over de computerhulp',
+    'Rondom huis' => 'Vertel meer over de klus rond je huis',
+    'Helpende hand' => 'Vertel waarmee je een helpende hand wilt',
+    'Creatief' => 'Vertel meer over het creatieve klusje',
+    'Kleine klusjes' => 'Vertel meer over het klusje',
+    'Hulp & kennis' => 'Vertel waarbij je hulp of uitleg wilt',
+    _ => omschrijvingTitel,
+  };
   static const omschrijvingHulp =
       'Bijvoorbeeld: de heg aan de voorkant knippen, het afval mag in de '
       'groene bak. Geen telefoonnummer of e-mail: die deelt de meldkamer.';
@@ -57,9 +73,6 @@ abstract final class TekstenKlusNl {
   static const vanaf = 'Vanaf';
   static const tot = 'Tot';
   static String tijdGekozen(String welke, String tijd) => '$welke $tijd';
-  static const eindtijd = 'Eindtijd';
-  static const eindtijdOptioneel = 'Optioneel';
-  static const eindtijdSemantiek = 'Eindtijd instellen';
   static String vanafSemantiek(String tijd) => 'Begintijd, nu $tijd';
   static String totSemantiek(String tijd) => 'Eindtijd, nu $tijd';
   static const alleen18Plus =
@@ -93,17 +106,6 @@ abstract final class TekstenKlusNl {
   static const waarAnders =
       'Klopt het adres niet? Pas het aan bij Mijn gegevens.';
   static const waarUitleg = 'Vul het adres in waar de klus is.';
-
-  // Nee-lijst (besluit punt 5)
-  static const neeLijstTitel = 'Dit kan niet via HeitjeHulp';
-  static const neeLijst = [
-    'Alcohol of tabak kopen',
-    'Werken op een ladder of met machines',
-    'Zorg, zoals wassen of medicijnen geven',
-    'Echt schoonmaakwerk voor een bedrijf',
-    'Oppassen op kinderen',
-  ];
-  static const neeLijstAkkoord = 'Mijn klus valt hier niet onder';
 
   // Prijs (prijzen komen in B7)
   static const prijsJijBetaalt = 'Jij betaalt';

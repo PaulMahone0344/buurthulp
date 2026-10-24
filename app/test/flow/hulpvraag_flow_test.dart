@@ -126,12 +126,15 @@ void main() {
       expect(body['adres'], 'Prins Bernhardlaan 12, 4003 AB Tiel');
       expect(body['nee_lijst_akkoord'], isTrue);
       expect(klus.foto.bestandsnaam, 'klus.png');
-      // Morgen, het tijdwiel op 10:00, zonder eindtijd.
+      // Morgen, de tijdwielen op 10:00 en 11:00 (eindtijd verplicht).
       expect(
         DateTime.parse(body['wanneer_van'] as String).toLocal(),
         DateTime(2026, 9, 16, 10),
       );
-      expect(body.containsKey('wanneer_tot'), isFalse);
+      expect(
+        DateTime.parse(body['wanneer_tot'] as String).toLocal(),
+        DateTime(2026, 9, 16, 11),
+      );
       // M6: de app schrijft geen logregel meer; de hook doet dat.
 
       // Terug bestaat niet meer; naar het begin.
@@ -177,7 +180,6 @@ void main() {
     expect(concept.adres, 'Prins Bernhardlaan 12');
     expect(concept.omschrijving, 'Heg knippen');
     expect(concept.heeftFoto, isTrue);
-    expect(concept.isNeeLijstAkkoord, isTrue);
     expect(concept.isCompleet, isTrue);
   });
 
@@ -263,6 +265,11 @@ void main() {
       await _tik(tester, TekstenHulpvragerNl.homeInstellingen);
       expect(find.byType(InstellingenScreen), findsOneWidget);
       await _terug(tester);
+
+      // Feedbackronde 1: Voorwaarden & privacy los van Hulp en uitleg; opent
+      // de website, de bewoner blijft op Meer.
+      await _tik(tester, TekstenHulpvragerNl.meerVoorwaardenTitel);
+      expect(find.byType(OudereMeerScreen), findsOneWidget);
 
       await _tik(tester, TekstenHulpvragerNl.tabStart);
       expect(find.byType(HulpvragerHomeScreen), findsOneWidget);

@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import '../../jongere/foto_kiezer.dart';
 import 'hh_klustype.dart';
 
-/// De dagkeuze op "Klus plaatsen": vandaag, morgen of een zelf gekozen dag.
+/// De dagkeuze op "Klus plaatsen". Sinds feedbackronde 1 (23 okt) toont de
+/// pagina alleen "Vandaag" en "Kies een dag"; [morgen] blijft voor de
+/// tekst "morgen" bij een gekozen dag.
 enum HhDagKeuze { vandaag, morgen, andereDag }
 
 /// Minstens zoveel tekens in "Vertel wat je wilt" (zelfde grens als de
@@ -22,9 +24,7 @@ class HulpvraagConcept {
     this.dagKeuze,
     this.dag,
     this.vanafMinuten,
-    this.heeftEindtijd = false,
     this.totMinuten,
-    this.isNeeLijstAkkoord = false,
     this.adres,
     this.postcode,
     this.plaats,
@@ -43,13 +43,10 @@ class HulpvraagConcept {
   final DateTime? dag;
 
   /// Tijdwiel "Vanaf" en "Tot", in minuten na middernacht (lokale tijd).
-  /// Vanaf krijgt een standaardwaarde zodra er een dag is.
+  /// Allebei verplicht (feedbackronde 1); ze krijgen een standaardwaarde
+  /// zodra er een dag is.
   final int? vanafMinuten;
-  final bool heeftEindtijd;
   final int? totMinuten;
-
-  /// Het verplichte vinkje "Mijn klus valt hier niet onder" (nee-lijst).
-  final bool isNeeLijstAkkoord;
 
   /// Null zolang het adres uit Mijn gegevens nog niet geladen is.
   final String? adres;
@@ -57,11 +54,7 @@ class HulpvraagConcept {
   final String? plaats;
 
   bool get isLeeg =>
-      klustype == null &&
-      omschrijving.isEmpty &&
-      foto == null &&
-      dag == null &&
-      !isNeeLijstAkkoord;
+      klustype == null && omschrijving.isEmpty && foto == null && dag == null;
 
   bool get heeftWat => klustype != null;
   bool get heeftOmschrijving =>
@@ -69,12 +62,13 @@ class HulpvraagConcept {
   bool get heeftFoto => foto != null;
   bool get heeftWanneer => dag != null && vanafMinuten != null;
 
-  /// De eindtijd telt alleen als de schakelaar aan staat.
-  int? get eindMinuten => heeftEindtijd ? totMinuten : null;
+  int? get eindMinuten => totMinuten;
+
+  /// De eindtijd is verplicht en ligt na de begintijd.
   bool get heeftGeldigeEindtijd {
-    final eind = eindMinuten;
+    final eind = totMinuten;
     final vanaf = vanafMinuten;
-    return eind == null || (vanaf != null && eind > vanaf);
+    return eind != null && vanaf != null && eind > vanaf;
   }
 
   bool get heeftWaar =>
@@ -90,8 +84,7 @@ class HulpvraagConcept {
       heeftFoto &&
       heeftWanneer &&
       heeftGeldigeEindtijd &&
-      heeftWaar &&
-      isNeeLijstAkkoord;
+      heeftWaar;
 
   HulpvraagConcept copyWith({
     HhKlustype? Function()? klustype,
@@ -100,9 +93,7 @@ class HulpvraagConcept {
     HhDagKeuze? Function()? dagKeuze,
     DateTime? Function()? dag,
     int? Function()? vanafMinuten,
-    bool? heeftEindtijd,
     int? Function()? totMinuten,
-    bool? isNeeLijstAkkoord,
     String? Function()? adres,
     String? Function()? postcode,
     String? Function()? plaats,
@@ -114,9 +105,7 @@ class HulpvraagConcept {
       dagKeuze: dagKeuze != null ? dagKeuze() : this.dagKeuze,
       dag: dag != null ? dag() : this.dag,
       vanafMinuten: vanafMinuten != null ? vanafMinuten() : this.vanafMinuten,
-      heeftEindtijd: heeftEindtijd ?? this.heeftEindtijd,
       totMinuten: totMinuten != null ? totMinuten() : this.totMinuten,
-      isNeeLijstAkkoord: isNeeLijstAkkoord ?? this.isNeeLijstAkkoord,
       adres: adres != null ? adres() : this.adres,
       postcode: postcode != null ? postcode() : this.postcode,
       plaats: plaats != null ? plaats() : this.plaats,
@@ -132,9 +121,7 @@ class HulpvraagConcept {
       other.dagKeuze == dagKeuze &&
       other.dag == dag &&
       other.vanafMinuten == vanafMinuten &&
-      other.heeftEindtijd == heeftEindtijd &&
       other.totMinuten == totMinuten &&
-      other.isNeeLijstAkkoord == isNeeLijstAkkoord &&
       other.adres == adres &&
       other.postcode == postcode &&
       other.plaats == plaats;
@@ -147,9 +134,7 @@ class HulpvraagConcept {
     dagKeuze,
     dag,
     vanafMinuten,
-    heeftEindtijd,
     totMinuten,
-    isNeeLijstAkkoord,
     adres,
     postcode,
     plaats,

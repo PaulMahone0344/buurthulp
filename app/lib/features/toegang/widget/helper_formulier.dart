@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/hh_fout.dart';
-
 import '../../../core/config.dart';
 import '../../../core/result.dart';
 import '../../../design/components/hh_invoer.dart';
@@ -41,7 +39,6 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
   final _geboortedatum = TextEditingController();
   final _email = TextEditingController();
   final _ouder = TextEditingController();
-  final _partner = TextEditingController();
   AdresKeuze? _adres;
   final _wachtwoord = TextEditingController();
   Map<String, String?> _fouten = const {};
@@ -51,14 +48,7 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
 
   @override
   void dispose() {
-    for (final c in [
-      _voornaam,
-      _geboortedatum,
-      _email,
-      _ouder,
-      _partner,
-      _wachtwoord,
-    ]) {
+    for (final c in [_voornaam, _geboortedatum, _email, _ouder, _wachtwoord]) {
       c.dispose();
     }
     super.dispose();
@@ -83,7 +73,6 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
     'ouder': _isMinderjarig
         ? valideerOuderEmail(_ouder.text, eigenEmail: _email.text)
         : null,
-    'partner': valideerPartnerCode(_partner.text),
     'wachtwoord': valideerWachtwoord(_wachtwoord.text),
     'akkoord': _isAkkoord ? null : TekstenAanmeldenNl.validatieAkkoord,
   };
@@ -107,20 +96,11 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
             geboortedatum: parseDatumNl(_geboortedatum.text)!,
             adres: _adres!,
             ouderEmail: _isMinderjarig ? _ouder.text : null,
-            partnerCode: _partner.text,
           ),
         );
     if (!mounted) return;
     setState(() {
       _isBezig = false;
-      // B11: een onbekende partnercode hoort bij het veld zelf.
-      if (result case Err<void>(
-        :final fout,
-      ) when fout.soort == HhFoutSoort.partnerCode) {
-        _fouten = {..._fouten, 'partner': fout.melding};
-        _melding = null;
-        return;
-      }
       _melding = switch (result) {
         Ok<void>() => null,
         Err<void>(:final fout) => fout.melding,
@@ -215,17 +195,9 @@ class _HelperFormulierState extends ConsumerState<HelperFormulier> {
             fouttekst: _fouten['wachtwoord'],
           ),
           SizedBox(height: tussen),
-          // B11: optioneel, onderaan (de meeste helpers hebben geen code).
-          HhInvoer(
-            label: TekstenAanmeldenNl.veldPartnerCode,
-            controller: _partner,
-            hulptekst: TekstenAanmeldenNl.veldPartnerCodeHulp,
-            fouttekst: _fouten['partner'],
-            isActief: actief,
-            textCapitalization: TextCapitalization.characters,
-            textInputAction: TextInputAction.next,
-          ),
-          SizedBox(height: tussen),
+          // Feedbackronde 1 (23 okt): het veld "Code van je jongerenwerk"
+          // is weg. De server kent partner_code nog (B11), de app stuurt hem
+          // niet meer.
           AkkoordVinkje(
             isAkkoord: _isAkkoord,
             fouttekst: _fouten['akkoord'],

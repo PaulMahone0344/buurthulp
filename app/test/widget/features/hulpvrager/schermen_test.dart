@@ -112,8 +112,6 @@ void _vulCompleet(ProviderContainer container) {
     ..zetOmschrijving('Twee tassen boodschappen.')
     ..zetFoto(testKlusFoto)
     ..kiesDagKeuze(HhDagKeuze.morgen)
-    ..zetEindtijd(true)
-    ..zetNeeLijstAkkoord(true)
     ..zetWaar(adres: 'Kerkstraat 1', postcode: '4001 AA', plaats: 'Tiel');
 }
 
@@ -281,15 +279,31 @@ void main() {
         TekstenKlusNl.wanneerTitel,
         TekstenKlusNl.herhalenTitel,
         TekstenKlusNl.waarTitel,
-        TekstenKlusNl.neeLijstTitel,
         TekstenKlusNl.prijsJijBetaalt,
       ]) {
         expect(find.text(kop), findsWidgets, reason: kop);
       }
+      // Feedbackronde 1: geen "Morgen" en geen nee-lijst meer op de pagina.
+      expect(find.text('Morgen'), findsNothing);
+      expect(find.text('Dit kan niet via HeitjeHulp'), findsNothing);
       expect(find.text(TekstenKlusNl.fotoVerplicht), findsOneWidget);
       // Antwoord Ibrahim 4 okt: een korte tip bij de foto.
       expect(find.text(TekstenKlusNl.fotoTip), findsOneWidget);
       expect(_omschrijvingVeld, findsOneWidget);
+    });
+
+    testWidgets('de kop van de omschrijving volgt de gekozen categorie', (
+      tester,
+    ) async {
+      String kop() => tester.widget<HhInvoer>(find.byType(HhInvoer)).label;
+      await _pomp(tester, _gevallen[1]);
+      expect(kop(), TekstenKlusNl.omschrijvingTitel);
+
+      await _tikTekst(tester, 'Tuin');
+      expect(kop(), 'Vertel meer over het tuinwerk');
+
+      await _tikTekst(tester, 'Overig');
+      expect(kop(), 'Vertel wat je wilt');
     });
 
     testWidgets('dertien categorieën op volgorde, in rijen van drie; '
@@ -429,7 +443,8 @@ void main() {
         find.text(TekstenHulpvragerNl.dagGekozen(TekstenHulpvragerNl.vandaag)),
         findsOneWidget,
       );
-      expect(find.byType(CupertinoDatePicker), findsOneWidget);
+      // Feedbackronde 1: begin- en eindtijd, allebei verplicht.
+      expect(find.byType(CupertinoDatePicker), findsNWidgets(2));
       // testNu is 10:00: het wiel begint op 12:00.
       expect(
         find.text(TekstenKlusNl.tijdGekozen(TekstenKlusNl.vanaf, '12:00')),
@@ -437,14 +452,12 @@ void main() {
       );
     });
 
-    testWidgets('eindtijd aan geeft een tweede wiel, een uur later', (
-      tester,
-    ) async {
+    testWidgets('begin- en eindtijd staan er meteen, de eindtijd een uur '
+        'later', (tester) async {
       final container = await _pompMetContainer(tester);
-      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      await kiesMorgen(tester);
 
-      await _tikTekst(tester, TekstenKlusNl.eindtijd);
-
+      expect(find.text('Optioneel'), findsNothing);
       expect(find.byType(CupertinoDatePicker), findsNWidgets(2));
       expect(
         find.text(TekstenKlusNl.tijdGekozen(TekstenKlusNl.tot, '11:00')),
@@ -457,10 +470,10 @@ void main() {
       tester,
     ) async {
       final container = await _pompMetContainer(tester);
-      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      await kiesMorgen(tester);
 
       final wiel = tester.widget<CupertinoDatePicker>(
-        find.byType(CupertinoDatePicker),
+        find.byType(CupertinoDatePicker).first,
       );
       wiel.onDateTimeChanged(DateTime(2000, 1, 1, 14, 30));
       await tester.pumpAndSettle();
@@ -503,16 +516,17 @@ void main() {
       tester,
     ) async {
       final container = await _pompMetContainer(tester);
-      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      await kiesMorgen(tester);
       expect(find.text(TekstenKlusNl.alleen18Plus), findsNothing);
 
-      container.read(conceptProvider.notifier).zetVanaf(20 * 60);
+      container.read(conceptProvider.notifier)
+        ..zetVanaf(20 * 60)
+        ..zetTot(21 * 60);
       await tester.pumpAndSettle();
       expect(find.text(TekstenKlusNl.alleen18Plus), findsOneWidget);
 
       container.read(conceptProvider.notifier)
         ..zetVanaf(13 * 60)
-        ..zetEindtijd(true)
         ..zetTot(16 * 60);
       await tester.pumpAndSettle();
       expect(find.text(TekstenKlusNl.alleen18Plus), findsOneWidget);
@@ -526,10 +540,9 @@ void main() {
       tester,
     ) async {
       final container = await _pompMetContainer(tester);
-      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
+      await kiesMorgen(tester);
       container.read(conceptProvider.notifier)
         ..zetVanaf(17 * 60)
-        ..zetEindtijd(true)
         ..zetTot(18 * 60 + 30);
       await tester.pumpAndSettle();
       expect(find.text(TekstenKlusNl.alleen15Plus), findsOneWidget);
@@ -542,10 +555,8 @@ void main() {
 
     testWidgets('eindtijd voor de begintijd wordt gemeld', (tester) async {
       final container = await _pompMetContainer(tester);
-      await _tikTekst(tester, TekstenHulpvragerNl.dagMorgen);
-      container.read(conceptProvider.notifier)
-        ..zetEindtijd(true)
-        ..zetTot(9 * 60);
+      await kiesMorgen(tester);
+      container.read(conceptProvider.notifier).zetTot(9 * 60);
       await tester.pumpAndSettle();
 
       expect(find.text(TekstenKlusNl.ontbreektTot), findsOneWidget);
@@ -569,17 +580,6 @@ void main() {
         Tristate.isFalse,
       );
       handle.dispose();
-    });
-
-    testWidgets('de nee-lijst staat er helemaal; het vinkje gaat in het '
-        'concept', (tester) async {
-      final container = await _pompMetContainer(tester);
-
-      for (final regel in TekstenKlusNl.neeLijst) {
-        expect(find.text(regel), findsOneWidget);
-      }
-      await _tikTekst(tester, TekstenKlusNl.neeLijstAkkoord);
-      expect(container.read(conceptProvider).isNeeLijstAkkoord, isTrue);
     });
 
     testWidgets('jij betaalt € 0,00, een voorbeeld', (tester) async {
@@ -699,7 +699,8 @@ void main() {
       controller.zetFoto(testKlusFoto);
       await verwacht(TekstenKlusNl.ontbreektWanneer);
       controller.kiesDagKeuze(HhDagKeuze.morgen);
-      await verwacht(TekstenKlusNl.ontbreektNeeLijst);
+      controller.zetTot(9 * 60);
+      await verwacht(TekstenKlusNl.ontbreektTot);
       // Plaatsen zelf (en de stap naar O6) staat in de flowtest.
       expect(klusGateway.aangemaakteKlussen, isEmpty);
     });

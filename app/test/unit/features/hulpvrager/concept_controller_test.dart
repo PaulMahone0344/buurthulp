@@ -33,14 +33,13 @@ void main() {
       expect(naDag.dag, DateTime(2026, 9, 16));
       expect(naDag.vanafMinuten, 10 * 60, reason: 'tijdwiel begint op 10:00');
       expect(naDag.heeftWanneer, isTrue);
-      expect(naDag.isCompleet, isFalse, reason: 'adres en vinkje ontbreken');
+      expect(naDag.isCompleet, isFalse, reason: 'adres ontbreekt');
 
       controller.zetWaar(
         adres: 'Kerkstraat 1',
         postcode: '4001 AA',
         plaats: 'Tiel',
       );
-      controller.zetNeeLijstAkkoord(true);
       final compleet = container.read(conceptProvider);
       expect(compleet.isCompleet, isTrue);
       expect(naWat.adres, isNull, reason: 'tussenstate blijft zoals hij was');
@@ -75,20 +74,17 @@ void main() {
       expect(container.read(conceptProvider).dag, DateTime(2026, 9, 16));
     });
 
-    test('eindtijd aan: een uur na de begintijd; uit: telt niet mee', () {
+    test('eindtijd verplicht: een uur na de begintijd, en na het begin', () {
       final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
       final controller = container.read(conceptProvider.notifier);
-      controller.kiesDagKeuze(HhDagKeuze.morgen);
+      expect(container.read(conceptProvider).heeftGeldigeEindtijd, isFalse);
 
-      controller.zetEindtijd(true);
+      controller.kiesDagKeuze(HhDagKeuze.morgen);
       expect(container.read(conceptProvider).eindMinuten, 11 * 60);
+      expect(container.read(conceptProvider).heeftGeldigeEindtijd, isTrue);
 
       controller.zetTot(9 * 60);
       expect(container.read(conceptProvider).heeftGeldigeEindtijd, isFalse);
-
-      controller.zetEindtijd(false);
-      expect(container.read(conceptProvider).eindMinuten, isNull);
-      expect(container.read(conceptProvider).heeftGeldigeEindtijd, isTrue);
     });
 
     test('omschrijving: hooguit 300 tekens, minstens 5 telt als ingevuld', () {
@@ -115,7 +111,6 @@ void main() {
       final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
       final controller = container.read(conceptProvider.notifier);
       controller.kiesKlustype(testKlustypes.first);
-      controller.zetNeeLijstAkkoord(true);
 
       controller.wis();
 
@@ -133,9 +128,7 @@ void main() {
           dagKeuze: HhDagKeuze.morgen,
           dag: DateTime(2026, 9, 16),
           vanafMinuten: 9 * 60,
-          heeftEindtijd: metEindtijd,
-          totMinuten: 10 * 60 + 30,
-          isNeeLijstAkkoord: true,
+          totMinuten: metEindtijd ? 10 * 60 + 30 : null,
           adres: 'Kerkstraat 1',
           postcode: '4001 AA',
           plaats: 'Tiel',
@@ -194,22 +187,22 @@ void main() {
       },
     );
 
-    test('zonder eindtijd gaat wanneer_tot niet mee', () async {
+    test('zonder eindtijd plaatst niets (feedbackronde 1)', () async {
       final gateway = fakeKlusGateway();
       final container = hulpvragerContainer(klusGateway: gateway);
 
-      await container
+      final result = await container
           .read(hulpvraagPlaatserProvider)
           .plaats(
             concept: compleetConcept(metEindtijd: false),
             gebruikerId: 'id-hulpvrager',
           );
 
-      final body = gateway.aangemaakteKlussen.single.alsBody;
-      expect(body.containsKey('wanneer_tot'), isFalse);
+      expect(result, isA<Err<GeplaatsteHulpvraag>>());
+      expect(gateway.aangemaakteKlussen, isEmpty);
     });
 
-    test('zonder foto of vinkje plaatst niets', () async {
+    test('zonder foto plaatst niets', () async {
       final gateway = fakeKlusGateway();
       final container = hulpvragerContainer(klusGateway: gateway);
       final plaatser = container.read(hulpvraagPlaatserProvider);
@@ -218,13 +211,8 @@ void main() {
         concept: compleetConcept().copyWith(foto: () => null),
         gebruikerId: 'id-hulpvrager',
       );
-      final zonderVinkje = await plaatser.plaats(
-        concept: compleetConcept().copyWith(isNeeLijstAkkoord: false),
-        gebruikerId: 'id-hulpvrager',
-      );
 
       expect(zonderFoto, isA<Err<GeplaatsteHulpvraag>>());
-      expect(zonderVinkje, isA<Err<GeplaatsteHulpvraag>>());
       expect(gateway.aangemaakteKlussen, isEmpty);
     });
 

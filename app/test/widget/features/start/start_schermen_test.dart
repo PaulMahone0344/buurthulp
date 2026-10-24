@@ -171,16 +171,15 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('tegels: aankomend en nieuwe reacties', (tester) async {
+    testWidgets('tegel aankomend; geen tegel nieuwe reacties meer', (
+      tester,
+    ) async {
       await pomp(tester);
       expect(
         find.bySemanticsLabel(TekstenStartNl.aankomendSemantiek(3)),
         findsOneWidget,
       );
-      expect(
-        find.bySemanticsLabel(TekstenStartNl.reactiesSemantiek(3)),
-        findsOneWidget,
-      );
+      expect(find.text('Nieuwe reacties'), findsNothing);
     });
 
     testWidgets(

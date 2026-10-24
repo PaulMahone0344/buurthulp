@@ -16,9 +16,9 @@ import '../model/hulpvraag_concept.dart';
 import '../provider/concept_controller.dart';
 import '../provider/hulpvrager_providers.dart';
 
-/// "Wanneer?" op "Klus plaatsen" (B4). Eerst de dag (vandaag, morgen, kies
-/// een dag), dan een tijdwiel zoals de iPhone-wekker: "Vanaf" (verplicht)
-/// en met de schakelaar "Eindtijd" ook "Tot" (optioneel). Kwartieren,
+/// "Wanneer?" op "Klus plaatsen" (B4). Eerst de dag ("Vandaag" of "Kies een
+/// dag", feedbackronde 1), dan twee tijdwielen zoals de iPhone-wekker:
+/// "Vanaf" en "Tot", allebei verplicht. Kwartieren,
 /// 24-uursklok. Valt de tijd buiten 07:00-19:00 of duurt hij langer dan 2
 /// uur, dan zegt de pagina dat alleen helpers van 18+ hem kunnen doen (de
 /// server beslist, punt 7).
@@ -37,12 +37,6 @@ class HulpvraagWanneerSectie extends ConsumerWidget {
       label: TekstenHulpvragerNl.dagVandaag,
       semantiekLabel: TekstenHulpvragerNl.dagVandaagSemantiek,
       icoon: Icons.today_outlined,
-    ),
-    HhKeuze(
-      waarde: HhDagKeuze.morgen,
-      label: TekstenHulpvragerNl.dagMorgen,
-      semantiekLabel: TekstenHulpvragerNl.dagMorgenSemantiek,
-      icoon: Icons.event_outlined,
     ),
     HhKeuze(
       waarde: HhDagKeuze.andereDag,
@@ -110,19 +104,6 @@ class HulpvraagWanneerSectie extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SwitchListTile(
-                    value: concept.heeftEindtijd,
-                    onChanged: controller.zetEindtijd,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      TekstenKlusNl.eindtijd,
-                      style: tekst.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: const Text(TekstenKlusNl.eindtijdOptioneel),
-                  ),
-                  SizedBox(height: klein),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

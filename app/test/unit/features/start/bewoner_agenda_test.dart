@@ -92,17 +92,6 @@ void main() {
     expect(aantalOpDag(a, DateTime(2026, 10, 3)), 0);
   });
 
-  test('nieuwe reacties tellen alleen op open klussen', () {
-    expect(
-      nieuweReacties([
-        zondag.copyWith(reactiesAantal: 3),
-        vandaag.copyWith(reactiesAantal: 2),
-      ]),
-      3,
-    );
-    expect(nieuweReacties(const []), 0);
-  });
-
   test('status-woord: zoekt strijder, wordt nagekeken, bevestigd, bezig', () {
     expect(agendaStatus(zondag), AgendaStatus.zoektHelper);
     expect(

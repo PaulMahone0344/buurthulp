@@ -27,15 +27,15 @@ import '../../reacties/widget/helpers_kunnen_nu_regel.dart';
 import '../widget/hulpvraag_wat_sectie.dart';
 import '../widget/klus_foto_sectie.dart';
 import '../widget/klus_herhalen_sectie.dart';
-import '../widget/klus_nee_lijst_kaart.dart';
 import '../widget/klus_omschrijving_sectie.dart';
 import '../widget/klus_prijs_blok.dart';
 import 'stroom_verlaten_dialoog.dart';
 
 /// "Klus plaatsen" op één pagina (B4, mockup KlusPlaatsen): categorie,
 /// vertel wat je wilt, foto (verplicht), wanneer met tijdwiel, herhalen
-/// (Plus, nog op slot), waar (uit Mijn gegevens), de nee-lijst met het
-/// verplichte vinkje, de prijs (voorbeeld) en één grote knop. Ontbreekt er
+/// (Plus, nog op slot), waar (uit Mijn gegevens), de prijs (voorbeeld) en
+/// één grote knop. De nee-lijst staat sinds feedbackronde 1 in de FAQ; de
+/// meldkamer keurt elke klus nog steeds na. Ontbreekt er
 /// iets, dan zegt een meldbalk wat. Plaatst de klus (status open; de
 /// meldkamer keurt hem eerst) en gaat naar O6. Terug vraagt "Weet je het
 /// zeker?" zodra er al iets is ingevuld.
@@ -74,7 +74,6 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
     }
     if (!concept.heeftGeldigeEindtijd) return TekstenKlusNl.ontbreektTot;
     if (!concept.heeftWaar) return TekstenKlusNl.ontbreektWaar;
-    if (!concept.isNeeLijstAkkoord) return TekstenKlusNl.ontbreektNeeLijst;
     return null;
   }
 
@@ -161,8 +160,6 @@ class _HulpVragenScreenState extends ConsumerState<HulpVragenScreen> {
             SizedBox(height: tussen),
             HulpvraagWaarSectie(toonFouten: _toonFouten),
             SizedBox(height: blok),
-            KlusNeeLijstKaart(toonFout: _toonFouten),
-            SizedBox(height: blok),
             const KlusPrijsBlok(),
             if (_melding != null) ...[
               SizedBox(height: tussen),
@@ -247,9 +244,7 @@ class _HelpersNu extends ConsumerWidget {
     final vanaf = concept.vanafMinuten;
     final van = dag != null && vanaf != null ? momentOp(dag, vanaf) : null;
     final totMin = concept.totMinuten;
-    final tot = dag != null && concept.heeftEindtijd && totMin != null
-        ? momentOp(dag, totMin)
-        : null;
+    final tot = dag != null && totMin != null ? momentOp(dag, totMin) : null;
     return Padding(
       padding: EdgeInsets.only(
         top: HhRuimte.voor(HhRuimte.m, HhDichtheidScope.van(context)),

@@ -24,9 +24,6 @@ abstract final class TekstenStartNl {
   static String klussenWoord(int n) => n == 1 ? 'klus' : 'klussen';
   static String aankomendSemantiek(int n) =>
       n == 1 ? '1 aankomende klus' : '$n aankomende klussen';
-  static const reactiesTegel = 'Nieuwe reacties';
-  static String reactiesSemantiek(int n) =>
-      n == 1 ? '1 nieuwe reactie' : '$n nieuwe reacties';
   static const aankomendKop = 'Aankomende klussen';
   static const periodeLabel = 'Periode';
   static const dag = 'Dag';

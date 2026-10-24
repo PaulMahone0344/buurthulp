@@ -8,7 +8,7 @@ import '../../../theme.dart';
 import '../provider/concept_controller.dart';
 
 /// "Vertel wat je wilt" (B4): verplicht, hooguit 300 tekens, met een
-/// teller eronder. Elke letter gaat meteen in het concept.
+/// teller eronder. De kop volgt de gekozen categorie (feedbackronde 1). Elke letter gaat meteen in het concept.
 class KlusOmschrijvingSectie extends ConsumerStatefulWidget {
   const KlusOmschrijvingSectie({required this.toonFout, super.key});
 
@@ -54,13 +54,16 @@ class _KlusOmschrijvingSectieState
     final heeftGenoeg = ref.watch(
       conceptProvider.select((c) => c.heeftOmschrijving),
     );
+    final categorie = ref.watch(
+      conceptProvider.select((c) => c.klustype?.naam),
+    );
     final tekst = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HhInvoer(
-          label: TekstenKlusNl.omschrijvingTitel,
+          label: TekstenKlusNl.omschrijvingTitelVoor(categorie),
           controller: _tekst,
           isVerplicht: true,
           hulptekst: TekstenKlusNl.omschrijvingHulp,

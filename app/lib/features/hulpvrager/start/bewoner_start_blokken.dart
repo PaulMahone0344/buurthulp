@@ -14,9 +14,11 @@ import '../status/provider/status_providers.dart';
 import '../status/widget/hulpvraag_tegel.dart';
 import 'bewoner_agenda.dart';
 
-/// Start bewoner (B10, mockup Main): twee tegels naast elkaar ("Aankomend"
-/// en "Nieuwe reacties"). Saldo komt erbij met B7. Tik = Mijn hulpvragen.
-/// Laden of een fout: niets (de rest van Start blijft bruikbaar).
+/// Start bewoner (B10, mockup Main): de tegel "Aankomend". Saldo komt erbij
+/// met B7. Tik = Mijn hulpvragen. De tegel "Nieuwe reacties" is weg sinds
+/// feedbackronde 1: hij opende hetzelfde scherm, en de reacties staan al op
+/// de kaart "N strijders willen je helpen". Laden of een fout: niets (de
+/// rest van Start blijft bruikbaar).
 class BewonerTegels extends ConsumerWidget {
   const BewonerTegels({super.key});
 
@@ -26,13 +28,11 @@ class BewonerTegels extends ConsumerWidget {
     if (klussen == null) return const SizedBox.shrink();
     final nu = ref.watch(klokProvider)();
     final aankomend = aankomendeKlussen(klussen, nu).length;
-    final reacties = nieuweReacties(klussen);
     final dichtheid = HhDichtheidScope.van(context);
-    final tussen = HhRuimte.voor(HhRuimte.m, dichtheid);
-    final groot = MediaQuery.textScalerOf(context).scale(10) > 15;
 
-    final tegels = [
-      _Tegel(
+    return Padding(
+      padding: EdgeInsets.only(bottom: HhRuimte.voor(HhRuimte.l, dichtheid)),
+      child: _Tegel(
         label: TekstenStartNl.aankomendTegel,
         getal: aankomend,
         woord: TekstenStartNl.klussenWoord(aankomend),
@@ -40,37 +40,6 @@ class BewonerTegels extends ConsumerWidget {
         icoon: Icons.event_outlined,
         onTik: () => context.go(HhPadenStatus.hulpvragen),
       ),
-      _Tegel(
-        label: TekstenStartNl.reactiesTegel,
-        getal: reacties,
-        woord: '',
-        semantiek: TekstenStartNl.reactiesSemantiek(reacties),
-        icoon: Icons.forum_outlined,
-        isAccent: reacties > 0,
-        onTik: () => context.go(HhPadenStatus.hulpvragen),
-      ),
-    ];
-    return Padding(
-      padding: EdgeInsets.only(bottom: HhRuimte.voor(HhRuimte.l, dichtheid)),
-      child: groot
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                tegels[0],
-                SizedBox(height: tussen),
-                tegels[1],
-              ],
-            )
-          : IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: tegels[0]),
-                  SizedBox(width: tussen),
-                  Expanded(child: tegels[1]),
-                ],
-              ),
-            ),
     );
   }
 }
@@ -83,7 +52,6 @@ class _Tegel extends StatelessWidget {
     required this.semantiek,
     required this.icoon,
     required this.onTik,
-    this.isAccent = false,
   });
 
   final String label;
@@ -92,7 +60,6 @@ class _Tegel extends StatelessWidget {
   final String semantiek;
   final IconData icoon;
   final VoidCallback onTik;
-  final bool isAccent;
 
   @override
   Widget build(BuildContext context) {
@@ -100,10 +67,7 @@ class _Tegel extends StatelessWidget {
     final tekst = Theme.of(context).textTheme;
     final vorm = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(HhRadius.groot),
-      side: BorderSide(
-        color: isAccent ? HhKleuren.accent : HhKleuren.randZacht,
-        width: HhLijn.dun(context),
-      ),
+      side: BorderSide(color: HhKleuren.randZacht, width: HhLijn.dun(context)),
     );
     return Semantics(
       button: true,
@@ -111,7 +75,7 @@ class _Tegel extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTik,
       child: Material(
-        color: isAccent ? HhKleuren.accentZacht : HhKleuren.oppervlakZacht,
+        color: HhKleuren.oppervlakZacht,
         shape: vorm,
         child: InkWell(
           customBorder: vorm,

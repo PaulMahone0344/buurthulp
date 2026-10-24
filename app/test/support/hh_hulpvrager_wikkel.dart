@@ -17,6 +17,7 @@ import 'package:heitjehulp_app/core/pb/fake_meldingen_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_klus_gateway.dart';
 import 'package:heitjehulp_app/core/pb/fake_uitvoer_gateway.dart';
 import 'package:heitjehulp_app/core/pb/gateway_providers.dart';
+import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/dichtheid_scope.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_gegevens.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hh_klustype.dart';
@@ -326,6 +327,20 @@ Future<void> vulKlusIn(
   await tester.enterText(veld, omschrijving);
   await tester.pumpAndSettle();
   await tik(find.text(TekstenKlusNl.fotoKiezen));
-  await tik(find.text(TekstenHulpvragerNl.dagMorgen));
-  await tik(find.text(TekstenKlusNl.neeLijstAkkoord));
+  await kiesMorgen(tester);
+}
+
+/// "Kies een dag" en dan de tweede knop in de dagkiezer (morgen). Sinds
+/// feedbackronde 1 is er geen eigen knop "Morgen" meer.
+Future<void> kiesMorgen(WidgetTester tester) async {
+  final kies = find.text(TekstenHulpvragerNl.dagAndere);
+  await tester.ensureVisible(kies);
+  await tester.tap(kies);
+  await tester.pumpAndSettle();
+  final morgen = find
+      .descendant(of: find.byType(Dialog), matching: find.byType(HhKnop))
+      .at(1);
+  await tester.ensureVisible(morgen);
+  await tester.tap(morgen);
+  await tester.pumpAndSettle();
 }

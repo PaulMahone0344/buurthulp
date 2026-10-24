@@ -22,8 +22,8 @@ import '../provider/concept_controller.dart';
 import '../start/bewoner_start_blokken.dart';
 import '../widget/oudere_tabbalk.dart';
 
-/// O1. Het begin voor de bewoner (B10, mockup Main): tegels Aankomend en
-/// Nieuwe reacties, de grote knop "Hulp vragen", "N helpers willen je
+/// O1. Het begin voor de bewoner (B10, mockup Main): tegel Aankomend, de
+/// grote knop "Hulp vragen", "N helpers willen je
 /// helpen" en de aankomende klussen met Dag/Week/Maand en een weekstrook. Mijn
 /// hulpvragen, Bel ons en Meer (gegevens, instellingen) zijn sinds 3 okt
 /// tabs in de balk onderin (indeling naar BuurtHeld). Geen terugknop.
@@ -77,7 +77,7 @@ class _HulpvragerHomeScreenState extends ConsumerState<HulpvragerHomeScreen> {
             // M8: de laatste melding, rustig, zonder teller.
             const LaatsteMeldingRegel(),
             SizedBox(height: HhRuimte.voor(HhRuimte.l, dichtheid)),
-            // B10: tegels "Aankomend" en "Nieuwe reacties" (Saldo met B7).
+            // B10: tegel "Aankomend" (Saldo met B7).
             const BewonerTegels(),
             // B5: "3 strijders willen je helpen" per open klus met reacties.
             const HelpersWillenKaart(),

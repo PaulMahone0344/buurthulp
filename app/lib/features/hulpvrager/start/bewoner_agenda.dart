@@ -70,11 +70,6 @@ int aantalOpDag(List<HhKlus> klussen, DateTime dag) => klussen
     .where((k) => k.wanneerVan != null && _dag(k.wanneerVan!) == _dag(dag))
     .length;
 
-/// Alle nieuwe (open) reacties op de open klussen van de bewoner samen.
-int nieuweReacties(List<HhKlus> klussen) => klussen
-    .where((k) => k.status == HhKlusStatus.open)
-    .fold(0, (som, k) => som + k.reactiesAantal);
-
 /// Het woord bij een aankomende klus (mockup Main): Bevestigd, Zoekt helper,
 /// Wordt nagekeken of Bezig.
 enum AgendaStatus { bevestigd, zoektHelper, wordtNagekeken, bezig }
