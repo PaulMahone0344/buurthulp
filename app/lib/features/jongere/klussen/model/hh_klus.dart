@@ -28,6 +28,7 @@ class HhKlus {
     this.wanneerVan,
     this.wanneerTot,
     this.vergoedingJongereCenten = 0,
+    this.bedragBrutoCenten = 0,
     this.toegewezenJongereId = '',
     this.oudereNaam = '',
     this.oudereFotoUrl = '',
@@ -60,6 +61,9 @@ class HhKlus {
   final DateTime? wanneerVan;
   final DateTime? wanneerTot;
   final int vergoedingJongereCenten;
+
+  /// Wat de bewoner betaalt (bedrag_bruto), in centen; 0 als onbekend.
+  final int bedragBrutoCenten;
   final String toegewezenJongereId;
   final String oudereNaam;
   final String oudereFotoUrl;
@@ -184,6 +188,7 @@ class HhKlus {
         record.getStringValue('wanneer_tot'),
       ),
       vergoedingJongereCenten: record.getIntValue('vergoeding_jongere'),
+      bedragBrutoCenten: record.getIntValue('bedrag_bruto'),
       toegewezenJongereId: record.getStringValue(veldToegewezenJongere),
       oudereNaam: oudere?.getStringValue('naam') ?? '',
       oudereFotoUrl: oudere != null && foto.isNotEmpty && fotoUrl != null
@@ -255,6 +260,7 @@ class HhKlus {
       wanneerVan: wanneerVan,
       wanneerTot: wanneerTot,
       vergoedingJongereCenten: vergoedingJongereCenten,
+      bedragBrutoCenten: bedragBrutoCenten,
       toegewezenJongereId: toegewezenJongereId ?? this.toegewezenJongereId,
       oudereNaam: oudereNaam ?? this.oudereNaam,
       oudereFotoUrl: oudereFotoUrl ?? this.oudereFotoUrl,

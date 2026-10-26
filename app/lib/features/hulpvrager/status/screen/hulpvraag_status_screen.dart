@@ -26,6 +26,7 @@ import '../../../jongere/uitvoeren/widget/bel_actie.dart';
 import '../../../jongere/uitvoeren/widget/persoon_regel.dart';
 import '../../beoordelen/paden_beoordelen.dart';
 import '../../provider/hulpvrager_providers.dart' show klokProvider;
+import '../domein/afgerond_overzicht.dart';
 import '../domein/hulpvraag_indeling.dart';
 import '../paden_status.dart';
 import '../provider/status_providers.dart';
@@ -37,7 +38,8 @@ import '../../../reacties/paden_reacties.dart';
 /// O7. Waar de hulpvraag staat, in gewone taal: "Sanne is onderweg naar u."
 /// Ouderenregel: hooguit drie acties (chat, bellen, stoppen; zonder helper
 /// vernieuwen in plaats van chat), grote tekst en knoppen, altijd een
-/// zichtbare terugknop, geen cijfers of statistiek. De klus wordt live
+/// zichtbare terugknop, geen sterren of statistiek (wel het bedrag in het
+/// overzicht van een afgeronde klus). De klus wordt live
 /// gevolgd; valt dat weg, dan blijft pull-to-refresh werken.
 class HulpvraagStatusScreen extends ConsumerStatefulWidget {
   const HulpvraagStatusScreen({required this.klusId, super.key});
@@ -98,7 +100,7 @@ class _HulpvraagStatusScreenState extends ConsumerState<HulpvraagStatusScreen> {
 
     return switch (stand) {
       AsyncData<KlusMetGeschiedenis>(:final value) => _Inhoud(
-        klus: value.klus,
+        stand: value,
         nu: nu,
         isBezig: _isBezig,
         melding: _melding,
@@ -129,7 +131,7 @@ class _HulpvraagStatusScreenState extends ConsumerState<HulpvraagStatusScreen> {
 
 class _Inhoud extends StatelessWidget {
   const _Inhoud({
-    required this.klus,
+    required this.stand,
     required this.nu,
     required this.isBezig,
     required this.melding,
@@ -139,8 +141,10 @@ class _Inhoud extends StatelessWidget {
     required this.onBelMelding,
   });
 
-  final HhKlus klus;
+  final KlusMetGeschiedenis stand;
   final DateTime nu;
+
+  HhKlus get klus => stand.klus;
   final bool isBezig;
   final String? melding;
   final HhMeldSoort meldSoort;
@@ -225,23 +229,31 @@ class _Inhoud extends StatelessWidget {
                 ),
                 SizedBox(height: tussen),
               ],
-              HhKaart(
-                kop: TekstenUitvoerenNl.o7WanneerKop,
-                child: Text(
-                  wanneer.isEmpty ? TekstenUitvoerenNl.o7GeenTijd : wanneer,
-                  style: tekst.bodyLarge,
+              // Feedbackronde 1 punt C: afgerond = één overzicht.
+              if (klus.status == HhKlusStatus.afgerond)
+                HhKaart(
+                  kop: TekstenUitvoerenNl.o7OverzichtKop,
+                  child: _OverzichtLijst(regels: afgerondOverzicht(stand, nu)),
+                )
+              else ...[
+                HhKaart(
+                  kop: TekstenUitvoerenNl.o7WanneerKop,
+                  child: Text(
+                    wanneer.isEmpty ? TekstenUitvoerenNl.o7GeenTijd : wanneer,
+                    style: tekst.bodyLarge,
+                  ),
                 ),
-              ),
-              SizedBox(height: tussen),
-              HhKaart(
-                kop: TekstenUitvoerenNl.o7WatKop,
-                child: Text(
-                  klus.omschrijving.isEmpty
-                      ? metHoofdletter(klus.klustypeNaam)
-                      : klus.omschrijving,
-                  style: tekst.bodyLarge,
+                SizedBox(height: tussen),
+                HhKaart(
+                  kop: TekstenUitvoerenNl.o7WatKop,
+                  child: Text(
+                    klus.omschrijving.isEmpty
+                        ? metHoofdletter(klus.klustypeNaam)
+                        : klus.omschrijving,
+                    style: tekst.bodyLarge,
+                  ),
                 ),
-              ),
+              ],
               SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
 
               // Hooguit drie acties, groot en onder elkaar. B6: zodra er een
@@ -318,6 +330,43 @@ class _Inhoud extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Kop boven, waarde eronder: leest rustig bij grote tekst en op een smal
+/// scherm, zonder kolommen die afkappen.
+class _OverzichtLijst extends StatelessWidget {
+  const _OverzichtLijst({required this.regels});
+
+  final List<OverzichtRegel> regels;
+
+  @override
+  Widget build(BuildContext context) {
+    final dichtheid = HhDichtheidScope.van(context);
+    final tekst = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < regels.length; i++) ...[
+          if (i > 0) SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
+          MergeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  regels[i].kop,
+                  style: tekst.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(regels[i].waarde, style: tekst.bodyLarge),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

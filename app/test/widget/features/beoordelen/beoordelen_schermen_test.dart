@@ -567,8 +567,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(HhKnop).evaluate().length, lessThanOrEqualTo(3));
-      // Geen sterren van de jongere op O7 (ouderenregel).
-      expect(find.textContaining(RegExp(r'\d,\d')), findsNothing);
+      // Geen sterren van de jongere op O7 (ouderenregel). Een bedrag als
+      // "€ 10,00" in het overzicht (feedbackronde 1 punt C) mag wel; een
+      // ster-cijfer is één cijfer, komma, één cijfer.
+      expect(find.textContaining(RegExp(r'\b\d,\d\b')), findsNothing);
       await tikKnop(tester, TekstenBeoordelenNl.o7HoeGingHet);
       expect(
         find.widgetWithText(HhKnop, TekstenBeoordelenNl.o9DuimOmhoog),

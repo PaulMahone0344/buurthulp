@@ -104,6 +104,24 @@ abstract final class TekstenUitvoerenNl {
   static const o7LadenMislukt = 'Je hulpvraag kon niet worden geladen.';
   static const o7Helper = 'Jouw strijder';
 
+  // Feedbackronde 1 punt C: overzicht van een afgeronde klus.
+  static const o7OverzichtKop = 'Overzicht';
+  static const o7KlaarKop = 'Klaar';
+  static const o7WaarKop = 'Waar';
+  static const o7WieKop = 'Wie';
+  static const o7HoelangKop = 'Hoelang';
+  static const o7BedragKop = 'Bedrag';
+  static const o7BetalingKop = 'Betaling';
+  // Prijzen en saldo komen in B7; tot die tijd eerlijk zeggen.
+  static String o7BedragVoorbeeld(String bedrag) => '$bedrag (voorbeeld)';
+  static const o7BetalingLater = 'Betalen in de app komt binnenkort.';
+
+  static const duurMinderDanMinuut = 'minder dan een minuut';
+  static String duurMinuten(int n) => n == 1 ? '1 minuut' : '$n minuten';
+  static String duurUren(int n) => '$n uur';
+  static String duurUrenMinuten(int uren, int minuten) =>
+      '${duurUren(uren)} en ${duurMinuten(minuten)}';
+
   // Annuleren door de bewoner: drie grote keuzes en "anders", zodat er niet
   // getypt hoeft te worden.
   static const o7AnnuleerTitel = 'Wil je de hulp stoppen?';

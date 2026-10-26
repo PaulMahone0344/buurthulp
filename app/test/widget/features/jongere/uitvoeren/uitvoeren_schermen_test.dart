@@ -253,6 +253,30 @@ void main() {
       expect(find.text(TekstenUitvoerenNl.o7Helper), findsOneWidget);
     });
 
+    // Feedbackronde 1 punt C: afgerond = één overzicht in plaats van de
+    // losse kaarten Wanneer en Wat.
+    testWidgets('afgerond: overzicht met hoelang, bedrag en betaling', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[7], dichtheid: HhDichtheid.groot);
+
+      expect(find.text(TekstenUitvoerenNl.o7OverzichtKop), findsOneWidget);
+      expect(find.text(TekstenUitvoerenNl.o7WanneerKop), findsNothing);
+      expect(find.text('15 minuten'), findsOneWidget);
+      expect(
+        find.text(TekstenUitvoerenNl.o7BedragVoorbeeld('€ 10,00')),
+        findsOneWidget,
+      );
+      expect(find.text(TekstenUitvoerenNl.o7BetalingLater), findsOneWidget);
+    });
+
+    testWidgets('onderweg: geen overzicht, wel Wanneer en Wat', (tester) async {
+      await _pomp(tester, _gevallen[6], dichtheid: HhDichtheid.groot);
+
+      expect(find.text(TekstenUitvoerenNl.o7OverzichtKop), findsNothing);
+      expect(find.text(TekstenUitvoerenNl.o7WanneerKop), findsOneWidget);
+    });
+
     testWidgets('zonder jongere: we zoeken iemand voor u', (tester) async {
       await _pomp(tester, _gevallen[5], dichtheid: HhDichtheid.groot);
       expect(find.text(TekstenUitvoerenNl.o7GeenJongere), findsOneWidget);
