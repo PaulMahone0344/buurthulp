@@ -111,6 +111,9 @@ abstract final class TekstenUitvoerenNl {
   static const o7WieKop = 'Wie';
   static const o7HoelangKop = 'Hoelang';
   static const o7BedragKop = 'Bedrag';
+  // Feedbackronde 1 punt E: samenvatting zolang de klus niet af is.
+  static const o7KlusKop = 'Jouw klus';
+  static const o7HoeveelKop = 'Hoeveel';
   static const o7BetalingKop = 'Betaling';
   // Prijzen en saldo komen in B7; tot die tijd eerlijk zeggen.
   static String o7BedragVoorbeeld(String bedrag) => '$bedrag (voorbeeld)';

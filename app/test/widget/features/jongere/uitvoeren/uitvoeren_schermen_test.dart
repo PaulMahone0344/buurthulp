@@ -280,6 +280,15 @@ void main() {
     testWidgets('zonder jongere: we zoeken iemand voor u', (tester) async {
       await _pomp(tester, _gevallen[5], dichtheid: HhDichtheid.groot);
       expect(find.text(TekstenUitvoerenNl.o7GeenJongere), findsOneWidget);
+      // Punt E: samenvatting wat, wanneer, waar en hoeveel.
+      expect(find.text(TekstenUitvoerenNl.o7KlusKop), findsOneWidget);
+      expect(find.text('Weekboodschappen bij de Jumbo'), findsOneWidget);
+      expect(find.text(testAdres), findsOneWidget);
+      expect(find.text(TekstenUitvoerenNl.o7HoeveelKop), findsOneWidget);
+      expect(
+        find.text(TekstenUitvoerenNl.o7BedragVoorbeeld('€ 10,00')),
+        findsOneWidget,
+      );
       // Bellen kan nog niet; stoppen wel.
       expect(
         find.widgetWithText(HhKnop, TekstenUitvoerenNl.o7Bellen),

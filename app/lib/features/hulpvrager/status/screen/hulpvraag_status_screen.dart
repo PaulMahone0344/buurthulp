@@ -18,7 +18,6 @@ import '../../../../l10n/teksten_uitvoeren_nl.dart';
 import '../../../../theme.dart';
 import '../../../chat/domein/chat_regels.dart';
 import '../../../chat/widget/chat_knop.dart';
-import '../../../jongere/klussen/domein/wanneer_tekst.dart';
 import '../../../jongere/klussen/model/hh_klus.dart';
 import '../../../jongere/uitvoeren/domein/klus_overgang.dart';
 import '../../../jongere/uitvoeren/provider/uitvoeren_providers.dart';
@@ -28,6 +27,7 @@ import '../../beoordelen/paden_beoordelen.dart';
 import '../../provider/hulpvrager_providers.dart' show klokProvider;
 import '../domein/afgerond_overzicht.dart';
 import '../domein/hulpvraag_indeling.dart';
+import '../domein/klus_samenvatting.dart';
 import '../paden_status.dart';
 import '../provider/status_providers.dart';
 import '../widget/oudere_annuleer_dialoog.dart';
@@ -166,7 +166,6 @@ class _Inhoud extends StatelessWidget {
     // weg, dus het blijven hooguit drie acties. Nooit sterren van de jongere
     // op dit scherm (ouderenregel).
     final magBeoordelen = heeftJongere && klus.status == HhKlusStatus.afgerond;
-    final wanneer = wanneerTekst(klus.wanneerVan, klus.wanneerTot, nu);
     final toonChat = heeftJongere && heeftChat(klus);
 
     return HhScherm(
@@ -235,25 +234,12 @@ class _Inhoud extends StatelessWidget {
                   kop: TekstenUitvoerenNl.o7OverzichtKop,
                   child: _OverzichtLijst(regels: afgerondOverzicht(stand, nu)),
                 )
-              else ...[
+              else
+                // Punt E: wat, wanneer, waar en hoeveel in één kaart.
                 HhKaart(
-                  kop: TekstenUitvoerenNl.o7WanneerKop,
-                  child: Text(
-                    wanneer.isEmpty ? TekstenUitvoerenNl.o7GeenTijd : wanneer,
-                    style: tekst.bodyLarge,
-                  ),
+                  kop: TekstenUitvoerenNl.o7KlusKop,
+                  child: _OverzichtLijst(regels: klusSamenvatting(klus, nu)),
                 ),
-                SizedBox(height: tussen),
-                HhKaart(
-                  kop: TekstenUitvoerenNl.o7WatKop,
-                  child: Text(
-                    klus.omschrijving.isEmpty
-                        ? metHoofdletter(klus.klustypeNaam)
-                        : klus.omschrijving,
-                    style: tekst.bodyLarge,
-                  ),
-                ),
-              ],
               SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
 
               // Hooguit drie acties, groot en onder elkaar. B6: zodra er een
