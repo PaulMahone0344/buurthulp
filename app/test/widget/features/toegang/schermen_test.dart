@@ -190,12 +190,13 @@ void main() {
       );
     });
 
-    testWidgets('G8 zonder rol toont alle drie blokken, met rol een', (
+    testWidgets('G8 zonder rol een kaart per rol, met rol alleen de eigen', (
       tester,
     ) async {
       await _pomp(tester, _gevallen[10], dichtheid: HhDichtheid.normaal);
+      // Elke rol als kaartkop bij Hoe werkt het en bij Veelgestelde vragen.
       for (final rol in HhRol.values) {
-        expect(find.text(rol.naam), findsOneWidget, reason: rol.code);
+        expect(find.text(rol.naam), findsNWidgets(2), reason: rol.code);
       }
 
       await _pomp(tester, _gevallen[11], dichtheid: HhDichtheid.normaal);

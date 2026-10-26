@@ -23,9 +23,9 @@ final urlOpenerProvider = Provider<Future<bool> Function(Uri)>(
   (ref) => launchUrl,
 );
 
-/// G8. Belknop naar de meldkamer plus statische veelgestelde vragen. Voor
-/// een ingelogde (of op G2 gekozen) rol alleen het eigen blok; zonder rol
-/// alle blokken.
+/// G8. Belknop naar de meldkamer, daarna drie blokken: Over de app, Hoe
+/// werkt het (stappen) en Veelgestelde vragen. Voor een ingelogde (of op G2
+/// gekozen) rol alleen de eigen kaarten; zonder rol een kaart per rol.
 class HulpScreen extends ConsumerStatefulWidget {
   const HulpScreen({super.key});
 
@@ -40,6 +40,12 @@ class _HulpScreenState extends ConsumerState<HulpScreen> {
     HhRol.hulpvrager => TekstenNl.hulpVragenHulpvrager,
     HhRol.jongere => TekstenNl.hulpVragenJongere,
     HhRol.coordinator => TekstenNl.hulpVragenCoordinator,
+  };
+
+  static List<String> stappenVoor(HhRol rol) => switch (rol) {
+    HhRol.hulpvrager => TekstenNl.hulpStappenHulpvrager,
+    HhRol.jongere => TekstenNl.hulpStappenJongere,
+    HhRol.coordinator => TekstenNl.hulpStappenCoordinator,
   };
 
   Future<void> _bel() async {
@@ -91,25 +97,49 @@ class _HulpScreenState extends ConsumerState<HulpScreen> {
             SizedBox(height: tussen),
             HhMeldBalk(soort: HhMeldSoort.waarschuwing, tekst: _melding!),
           ],
-          // Kennismaking opnieuw bekijken (alleen ingelogd; uitgelogd zag
-          // je hem net al vóór het welkomscherm).
-          if (gebruiker != null) ...[
-            SizedBox(height: tussen),
-            HhKnop(
-              label: TekstenKennismakenNl.opnieuwKnop,
-              icoon: Icons.auto_stories_outlined,
-              soort: HhKnopSoort.tweedeKeus,
-              onPressed: () => context.push(HhPaden.uitleg),
-            ),
-          ],
           SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
-          for (final r in rollen) ...[
-            HhKaart(
-              kop: rollen.length == 1 ? TekstenNl.hulpVeelgesteld : r.naam,
-              child: _VragenLijst(vragen: vragenVoor(r)),
-            ),
-            if (r != rollen.last) SizedBox(height: tussen),
-          ],
+          _Blok(
+            titel: TekstenNl.hulpOverDeApp,
+            children: [
+              HhKaart(
+                child: Text(
+                  TekstenNl.hulpOverDeAppTekst,
+                  style: tekst.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+          _Blok(
+            titel: TekstenNl.hulpHoeWerktHet,
+            children: [
+              for (final r in rollen)
+                HhKaart(
+                  kop: rollen.length == 1 ? null : r.naam,
+                  child: _StappenLijst(stappen: stappenVoor(r)),
+                ),
+              // Kennismaking opnieuw bekijken (alleen ingelogd; uitgelogd
+              // zag je hem net al vóór het welkomscherm).
+              if (gebruiker != null)
+                HhKnop(
+                  label: TekstenKennismakenNl.opnieuwKnop,
+                  icoon: Icons.auto_stories_outlined,
+                  soort: HhKnopSoort.tweedeKeus,
+                  onPressed: () => context.push(HhPaden.uitleg),
+                ),
+            ],
+          ),
+          SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
+          _Blok(
+            titel: TekstenNl.hulpVeelgesteld,
+            children: [
+              for (final r in rollen)
+                HhKaart(
+                  kop: rollen.length == 1 ? null : r.naam,
+                  child: _VragenLijst(vragen: vragenVoor(r)),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -145,6 +175,67 @@ class _VragenLijst extends StatelessWidget {
                 ),
                 SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
                 Text(vragen[i].antwoord, style: tekst.bodyMedium),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Kop van een blok met de kaarten eronder.
+class _Blok extends StatelessWidget {
+  const _Blok({required this.titel, required this.children});
+
+  final String titel;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final dichtheid = HhDichtheidScope.van(context);
+    final tussen = HhRuimte.voor(HhRuimte.m, dichtheid);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(titel, style: Theme.of(context).textTheme.titleLarge),
+        ),
+        for (final kind in children) ...[SizedBox(height: tussen), kind],
+      ],
+    );
+  }
+}
+
+/// Genummerde stappen; het nummer staat los zodat lange zinnen netjes
+/// onder elkaar doorlopen.
+class _StappenLijst extends StatelessWidget {
+  const _StappenLijst({required this.stappen});
+
+  final List<String> stappen;
+
+  @override
+  Widget build(BuildContext context) {
+    final dichtheid = HhDichtheidScope.van(context);
+    final tekst = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < stappen.length; i++) ...[
+          if (i > 0) SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
+          MergeSemantics(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${i + 1}.',
+                  style: tekst.bodyLarge!.copyWith(fontWeight: FontWeight.w600),
+                ),
+                SizedBox(width: HhRuimte.voor(HhRuimte.s, dichtheid)),
+                Expanded(child: Text(stappen[i], style: tekst.bodyMedium)),
               ],
             ),
           ),

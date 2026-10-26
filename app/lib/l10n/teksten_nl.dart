@@ -122,6 +122,36 @@ abstract final class TekstenNl {
       'Bellen lukt niet vanaf dit toestel. Het nummer is $nummer.';
   static const hulpVeelgesteld = 'Veelgestelde vragen';
 
+  // Feedbackronde 1 punt I: Hulp in drie blokken (Over de app / Hoe werkt
+  // het / Veelgestelde vragen).
+  static const hulpOverDeApp = 'Over de app';
+  static const hulpOverDeAppTekst =
+      'HeitjeHulp brengt buren met een karweitje samen met Strijders uit de '
+      'buurt. De meldkamer kijkt elke klus na en controleert elke Strijder.';
+  static const hulpHoeWerktHet = 'Hoe werkt het';
+
+  static const hulpStappenHulpvrager = [
+    'Plaats een karweitje: wat, wanneer en waar.',
+    'De meldkamer kijkt de klus na.',
+    'Strijders uit je buurt reageren. Jij kiest wie het doet.',
+    'Spreek de details af in de chat.',
+    'Klaar? Dan betaal je in de app en vertel je hoe het ging.',
+  ];
+
+  static const hulpStappenJongere = [
+    'Meld je aan. De meldkamer controleert je en een ouder geeft '
+        'toestemming.',
+    'Bekijk klussen in je buurt en reageer op wat je wilt doen.',
+    'Kiest de bewoner jou? Dan spreek je de details af in de chat.',
+    'Doe de klus en verdien de vergoeding en XP.',
+  ];
+
+  static const hulpStappenCoordinator = [
+    'Nieuwe klussen en aanmeldingen komen binnen op het webpaneel.',
+    'Je keurt klussen en screent Strijders.',
+    'In de app zie je het hoognodige en voer je telefonische klussen in.',
+  ];
+
   static const hulpVragenHulpvrager = [
     HhVraag(
       'Hoe vraag ik hulp?',

@@ -314,6 +314,48 @@ void main() {
       expect(find.byType(HhMeldBalk), findsNothing);
     });
 
+    testWidgets('drie blokken in vaste volgorde: over, hoe, vragen', (
+      tester,
+    ) async {
+      await _pomp(
+        tester,
+        const HulpScreen(),
+        gateway: fakeMetAlleRollen(),
+        sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
+      );
+
+      final over = tester.getTopLeft(find.text(TekstenNl.hulpOverDeApp)).dy;
+      final hoe = tester.getTopLeft(find.text(TekstenNl.hulpHoeWerktHet)).dy;
+      final vragen = tester.getTopLeft(find.text(TekstenNl.hulpVeelgesteld)).dy;
+      expect(over, lessThan(hoe));
+      expect(hoe, lessThan(vragen));
+      expect(find.text(TekstenNl.hulpOverDeAppTekst), findsOneWidget);
+    });
+
+    testWidgets('ingelogd: alleen de stappen van de eigen rol', (tester) async {
+      await _pomp(
+        tester,
+        const HulpScreen(),
+        gateway: fakeMetAlleRollen(),
+        sessie: SessieIngelogd(testGebruiker(HhRol.hulpvrager)),
+      );
+
+      expect(find.text(TekstenNl.hulpStappenHulpvrager.first), findsOneWidget);
+      expect(find.text(TekstenNl.hulpStappenJongere.first), findsNothing);
+    });
+
+    testWidgets('zonder rol: stappen van elke rol', (tester) async {
+      await _pomp(tester, const HulpScreen(), gateway: fakeMetAlleRollen());
+
+      for (final stap in [
+        TekstenNl.hulpStappenHulpvrager.first,
+        TekstenNl.hulpStappenJongere.first,
+        TekstenNl.hulpStappenCoordinator.first,
+      ]) {
+        expect(find.text(stap), findsOneWidget);
+      }
+    });
+
     testWidgets('dichtheid groot maakt de belknop 60 hoog', (tester) async {
       await tester.pumpWidget(
         hhToegangWikkel(
