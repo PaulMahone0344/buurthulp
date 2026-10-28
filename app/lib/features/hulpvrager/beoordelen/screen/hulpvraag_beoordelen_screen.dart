@@ -21,7 +21,11 @@ import '../../../reacties/widget/geheime_vraag.dart';
 import '../../../jongere/reputatie/provider/beoordeling_providers.dart';
 import '../../../jongere/reputatie/widget/sterren_kiezer.dart';
 import '../../../toegang/provider/sessie_providers.dart';
+import '../../status/domein/klus_samenvatting.dart';
 import '../../status/paden_status.dart';
+import '../../status/widget/overzicht_lijst.dart';
+import '../../../../design/components/hh_kaart.dart';
+import '../../../../l10n/teksten_uitvoeren_nl.dart';
 
 /// De stappen van O9. Elke stap heeft hooguit drie keuzes (ouderenregel).
 enum _Stap { duim, sterren, bedankt }
@@ -325,13 +329,26 @@ class _HulpvraagBeoordelenScreenState
       };
     }
 
+    // Punt D: zolang er iets te zeggen is, staat bovenaan om welke klus het
+    // gaat. Geen knop erin, dus nog steeds hooguit drie acties.
+    final toonKlus = kanBeoordelen && _stap != _Stap.bedankt;
+
     return HhScherm(
       titel: TekstenBeoordelenNl.o9Titel,
       toonTerug: true,
       onTerug: _terug,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: kinderen,
+        children: [
+          if (toonKlus) ...[
+            HhKaart(
+              kop: TekstenUitvoerenNl.o7KlusKop,
+              child: OverzichtLijst(regels: beoordeelKlusRegels(doel.klus)),
+            ),
+            SizedBox(height: tussen),
+          ],
+          ...kinderen,
+        ],
       ),
     );
   }

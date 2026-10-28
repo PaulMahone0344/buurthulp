@@ -30,6 +30,7 @@ import '../domein/hulpvraag_indeling.dart';
 import '../domein/klus_samenvatting.dart';
 import '../paden_status.dart';
 import '../provider/status_providers.dart';
+import '../widget/overzicht_lijst.dart';
 import '../widget/oudere_annuleer_dialoog.dart';
 import '../../../../l10n/teksten_klus_nl.dart';
 import '../../../../l10n/teksten_reacties_nl.dart';
@@ -232,13 +233,13 @@ class _Inhoud extends StatelessWidget {
               if (klus.status == HhKlusStatus.afgerond)
                 HhKaart(
                   kop: TekstenUitvoerenNl.o7OverzichtKop,
-                  child: _OverzichtLijst(regels: afgerondOverzicht(stand, nu)),
+                  child: OverzichtLijst(regels: afgerondOverzicht(stand, nu)),
                 )
               else
                 // Punt E: wat, wanneer, waar en hoeveel in één kaart.
                 HhKaart(
                   kop: TekstenUitvoerenNl.o7KlusKop,
-                  child: _OverzichtLijst(regels: klusSamenvatting(klus, nu)),
+                  child: OverzichtLijst(regels: klusSamenvatting(klus, nu)),
                 ),
               SizedBox(height: HhRuimte.voor(HhRuimte.xl, dichtheid)),
 
@@ -316,43 +317,6 @@ class _Inhoud extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Kop boven, waarde eronder: leest rustig bij grote tekst en op een smal
-/// scherm, zonder kolommen die afkappen.
-class _OverzichtLijst extends StatelessWidget {
-  const _OverzichtLijst({required this.regels});
-
-  final List<OverzichtRegel> regels;
-
-  @override
-  Widget build(BuildContext context) {
-    final dichtheid = HhDichtheidScope.van(context);
-    final tekst = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < regels.length; i++) ...[
-          if (i > 0) SizedBox(height: HhRuimte.voor(HhRuimte.m, dichtheid)),
-          MergeSemantics(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  regels[i].kop,
-                  style: tekst.bodyMedium!.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(regels[i].waarde, style: tekst.bodyLarge),
-              ],
-            ),
-          ),
-        ],
-      ],
     );
   }
 }

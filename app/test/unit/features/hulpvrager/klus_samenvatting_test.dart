@@ -76,4 +76,27 @@ void main() {
       expect(koppen, isNot(contains(TekstenUitvoerenNl.o7HoeveelKop)));
     });
   });
+
+  group('beoordeelKlusRegels', () {
+    test('wat en wie, zonder tijd of bedrag', () {
+      final metJongere = HhKlus(
+        id: 'k',
+        hulpvragerId: 'o',
+        status: HhKlusStatus.afgerond,
+        klustypeNaam: 'boodschappen',
+        omschrijving: 'Weekboodschappen',
+        wanneerVan: van,
+        vergoedingJongereCenten: 1000,
+        jongereNaam: 'Sanne de Vries',
+      );
+      final regels = beoordeelKlusRegels(metJongere);
+
+      expect(regels.map((r) => r.kop), [
+        TekstenUitvoerenNl.o7WatKop,
+        TekstenUitvoerenNl.o7WieKop,
+      ]);
+      expect(waarde(regels, TekstenUitvoerenNl.o7WieKop), 'Sanne');
+      expect(regels.any((r) => r.waarde.contains(RegExp(r'\d'))), isFalse);
+    });
+  });
 }

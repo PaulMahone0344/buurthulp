@@ -451,6 +451,21 @@ void main() {
       expect(cijfer, findsNothing, reason: 'stap bedankt');
     });
 
+    // Feedbackronde 1 punt D: om welke klus het gaat.
+    testWidgets('bovenaan staat de klus, tot het bedankt', (tester) async {
+      await _pomp(tester, _gevallen[4]);
+      final kaart = find.text(TekstenUitvoerenNl.o7KlusKop);
+      final wat = find.text('Weekboodschappen bij de Jumbo');
+      expect(kaart, findsOneWidget, reason: 'stap duim');
+      expect(wat, findsOneWidget);
+      expect(find.text(TekstenUitvoerenNl.o7WieKop), findsOneWidget);
+      await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmhoog);
+      expect(kaart, findsOneWidget, reason: 'stap sterren');
+      await beantwoordGeheim(tester);
+      await tikKnop(tester, TekstenBeoordelenNl.o9Versturen);
+      expect(kaart, findsNothing, reason: 'stap bedankt');
+    });
+
     testWidgets('opgeslagen wordt alleen sterren en tekst', (tester) async {
       final fake = await _pomp(tester, _gevallen[4]);
       await tikKnop(tester, TekstenBeoordelenNl.o9DuimOmlaag);

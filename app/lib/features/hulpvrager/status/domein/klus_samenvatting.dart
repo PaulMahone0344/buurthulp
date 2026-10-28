@@ -32,3 +32,17 @@ List<OverzichtRegel> klusSamenvatting(HhKlus klus, DateTime nu) {
       ),
   ];
 }
+
+/// Feedbackronde 1 punt D: bovenaan "Hoe ging het?" staat om welke klus
+/// het gaat: wat en wie het deed. Geen tijd: op O9 staat nergens een
+/// cijfer, zodat niets op een score lijkt (ouderenregel).
+List<OverzichtRegel> beoordeelKlusRegels(HhKlus klus) => [
+  OverzichtRegel(
+    TekstenUitvoerenNl.o7WatKop,
+    klus.omschrijving.isEmpty
+        ? metHoofdletter(klus.klustypeNaam)
+        : klus.omschrijving,
+  ),
+  if (klus.jongereVoornaam.isNotEmpty)
+    OverzichtRegel(TekstenUitvoerenNl.o7WieKop, klus.jongereVoornaam),
+];
