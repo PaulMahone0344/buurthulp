@@ -66,6 +66,14 @@ Velden
   Rules ongewijzigd: wie de rij mag zien, ziet ook het adres (een jongere
   dus alleen van een oudere op wie hij is toegewezen). Bewezen met
   scripts/09-adrescheck.mjs (22 controles) en 04-rulecheck (218 groen).
+  Toegevoegd in feedbackronde 1 punt F (scripts/160-woning-velden.mjs,
+  28 okt 2026), "Je woning" op Mijn gegevens; leeg = niet ingevuld:
+  woning_type      keuze: huis | appartement | anders
+  verdieping       tekst, max 10
+  lift             keuze: ja | nee
+  trap             keuze: ja | nee
+  bereikbaarheid   tekst, max 300
+  Rules en hooks ongewijzigd; zelfde zichtbaarheid als het adres.
 Regels
   Lezen       jezelf; de coordinator ziet iedereen; verder alleen mensen
               die bij je horen: de jongere die op jouw klus staat, de

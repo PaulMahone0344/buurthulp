@@ -17,6 +17,11 @@ class HhGegevens {
     this.plaats = '',
     this.contactNaam = '',
     this.contactTelefoon = '',
+    this.woningType = '',
+    this.verdieping = '',
+    this.lift = '',
+    this.trap = '',
+    this.bereikbaarheid = '',
   });
 
   final String id;
@@ -32,6 +37,15 @@ class HhGegevens {
   final String contactNaam;
   final String contactTelefoon;
 
+  /// Feedbackronde 1 punt F: de woning, zodat de strijder weet wat hem
+  /// wacht. Leeg = niet ingevuld. [woningType] is huis, appartement of
+  /// anders; [lift] en [trap] zijn ja of nee.
+  final String woningType;
+  final String verdieping;
+  final String lift;
+  final String trap;
+  final String bereikbaarheid;
+
   /// Veldnamen op de server, ook gebruikt om alleen gewijzigde velden te
   /// sturen.
   static const veldNaam = 'naam';
@@ -43,6 +57,17 @@ class HhGegevens {
   static const veldPlaats = 'plaats';
   static const veldContactNaam = 'contact_naam';
   static const veldContactTelefoon = 'contact_telefoon';
+  static const veldWoningType = 'woning_type';
+  static const veldVerdieping = 'verdieping';
+  static const veldLift = 'lift';
+  static const veldTrap = 'trap';
+  static const veldBereikbaarheid = 'bereikbaarheid';
+
+  static const woningHuis = 'huis';
+  static const woningAppartement = 'appartement';
+  static const woningAnders = 'anders';
+  static const ja = 'ja';
+  static const nee = 'nee';
 
   factory HhGegevens.vanRecord(RecordModel record) {
     return HhGegevens(
@@ -56,6 +81,11 @@ class HhGegevens {
       plaats: record.getStringValue(veldPlaats),
       contactNaam: record.getStringValue(veldContactNaam),
       contactTelefoon: record.getStringValue(veldContactTelefoon),
+      woningType: record.getStringValue(veldWoningType),
+      verdieping: record.getStringValue(veldVerdieping),
+      lift: record.getStringValue(veldLift),
+      trap: record.getStringValue(veldTrap),
+      bereikbaarheid: record.getStringValue(veldBereikbaarheid),
     );
   }
 
@@ -76,6 +106,11 @@ class HhGegevens {
     veldPlaats: plaats,
     veldContactNaam: contactNaam,
     veldContactTelefoon: contactTelefoon,
+    veldWoningType: woningType,
+    veldVerdieping: verdieping,
+    veldLift: lift,
+    veldTrap: trap,
+    veldBereikbaarheid: bereikbaarheid,
   };
 
   /// Alleen de velden waarin [nieuw] afwijkt van deze gegevens. Leeg als
@@ -101,6 +136,11 @@ class HhGegevens {
       contactNaam: (velden[veldContactNaam] as String?) ?? contactNaam,
       contactTelefoon:
           (velden[veldContactTelefoon] as String?) ?? contactTelefoon,
+      woningType: (velden[veldWoningType] as String?) ?? woningType,
+      verdieping: (velden[veldVerdieping] as String?) ?? verdieping,
+      lift: (velden[veldLift] as String?) ?? lift,
+      trap: (velden[veldTrap] as String?) ?? trap,
+      bereikbaarheid: (velden[veldBereikbaarheid] as String?) ?? bereikbaarheid,
     );
   }
 
@@ -116,7 +156,12 @@ class HhGegevens {
       other.postcode == postcode &&
       other.plaats == plaats &&
       other.contactNaam == contactNaam &&
-      other.contactTelefoon == contactTelefoon;
+      other.contactTelefoon == contactTelefoon &&
+      other.woningType == woningType &&
+      other.verdieping == verdieping &&
+      other.lift == lift &&
+      other.trap == trap &&
+      other.bereikbaarheid == bereikbaarheid;
 
   @override
   int get hashCode => Object.hash(
@@ -130,5 +175,10 @@ class HhGegevens {
     plaats,
     contactNaam,
     contactTelefoon,
+    woningType,
+    verdieping,
+    lift,
+    trap,
+    bereikbaarheid,
   );
 }

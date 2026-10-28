@@ -180,11 +180,13 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
               HhKeuze(
                 waarde: false,
                 label: TekstenKlusNl.waarThuis,
+                semantiekLabel: TekstenKlusNl.waarThuisSemantiek,
                 icoon: Icons.home_outlined,
               ),
               HhKeuze(
                 waarde: true,
                 label: TekstenKlusNl.waarElders,
+                semantiekLabel: TekstenKlusNl.waarEldersSemantiek,
                 icoon: Icons.place_outlined,
               ),
             ],

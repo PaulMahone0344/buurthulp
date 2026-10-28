@@ -84,6 +84,27 @@ abstract final class TekstenHulpvragerNl {
   static const gegevensContactUitleg =
       'Iemand die we mogen bellen als we jou niet bereiken, bijvoorbeeld '
       'een familielid of een buurvrouw.';
+  // Feedbackronde 1 punt F: de woning.
+  static const gegevensKaartWoning = 'Je woning';
+  static const woningUitleg =
+      'Zo weet de strijder wat hem wacht. Je hoeft niet alles in te vullen.';
+  static const woningTypeVraag = 'Wat voor woning heb je?';
+  static const woningHuis = 'Huis';
+  static const woningAppartement = 'Appartement';
+  static const woningAnders = 'Anders';
+  static const veldVerdieping = 'Op welke verdieping woon je?';
+  static const woningLiftVraag = 'Is er een lift?';
+  static const woningTrapVraag = 'Moet je een trap op om bij je deur te komen?';
+  static const ja = 'Ja';
+  static const nee = 'Nee';
+  static const woningHuisSemantiek = 'Kies huis';
+  static const woningAppartementSemantiek = 'Kies appartement';
+  static const woningAndersSemantiek = 'Kies anders';
+  static String jaNeeSemantiek(String antwoord, String vraag) =>
+      'Kies ${antwoord.toLowerCase()} bij: $vraag';
+  static const veldBereikbaarheid = 'Hoe kom je bij je deur?';
+  static const bereikbaarheidHint =
+      'Bijvoorbeeld: bel aan bij de achterdeur, parkeren om de hoek.';
   static const veldContactNaam = 'Naam contactpersoon';
   static const veldContactTelefoon = 'Telefoon contactpersoon';
   static const gegevensOpgeslagen = 'Je gegevens zijn opgeslagen.';

@@ -22,6 +22,7 @@ import '../../toegang/provider/sessie_providers.dart';
 import '../domein/adres.dart';
 import '../model/hh_gegevens.dart';
 import '../provider/hulpvrager_providers.dart';
+import '../widget/woning_kaart.dart';
 
 /// O12. Naam, telefoon, adres en contactpersoon. Opslaan stuurt alleen de
 /// gewijzigde velden (backend OPEN-PUNT 10). Bereikbaar vanaf O1 en als
@@ -41,6 +42,15 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
     HhGegevens.veldTelefoon: TextEditingController(),
     HhGegevens.veldContactNaam: TextEditingController(),
     HhGegevens.veldContactTelefoon: TextEditingController(),
+    HhGegevens.veldVerdieping: TextEditingController(),
+    HhGegevens.veldBereikbaarheid: TextEditingController(),
+  };
+
+  /// Punt F: de knop-keuzes van "Je woning" (leeg = niet ingevuld).
+  final _keuzes = {
+    HhGegevens.veldWoningType: '',
+    HhGegevens.veldLift: '',
+    HhGegevens.veldTrap: '',
   };
   bool _isVoorgevuld = false;
   bool _isBezig = false;
@@ -84,11 +94,13 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
     _isVoorgevuld = true;
     for (final veld in gegevens.alsVelden.entries) {
       _velden[veld.key]?.text = veld.value;
+      if (_keuzes.containsKey(veld.key)) _keuzes[veld.key] = veld.value;
     }
   }
 
   Map<String, String> get _invoer => {
     for (final veld in _velden.entries) veld.key: veld.value.text.trim(),
+    ..._keuzes,
   };
 
   /// Alleen de adresvelden die anders zijn dan wat er staat.
@@ -275,6 +287,16 @@ class _MijnGegevensScreenState extends ConsumerState<MijnGegevensScreen> {
               _adresAangeraakt = true;
             }),
           ),
+        ),
+        SizedBox(height: tussen),
+        WoningKaart(
+          woningType: _keuzes[HhGegevens.veldWoningType]!,
+          lift: _keuzes[HhGegevens.veldLift]!,
+          trap: _keuzes[HhGegevens.veldTrap]!,
+          verdieping: _velden[HhGegevens.veldVerdieping]!,
+          bereikbaarheid: _velden[HhGegevens.veldBereikbaarheid]!,
+          isActief: !_isBezig,
+          onKeuze: (veld, waarde) => setState(() => _keuzes[veld] = waarde),
         ),
         SizedBox(height: tussen),
         HhKaart(

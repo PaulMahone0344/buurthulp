@@ -859,13 +859,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(TextField), findsNWidgets(7));
+      // Punt F: "Hoe kom je bij je deur?" staat voor de contactpersoon.
+      expect(find.byType(TextField), findsNWidgets(8));
       expect(
-        tester.widget<TextField>(find.byType(TextField).at(5)).controller?.text,
+        tester.widget<TextField>(find.byType(TextField).at(6)).controller?.text,
         'Dochter Jansen',
       );
 
-      await tester.enterText(find.byType(TextField).at(6), '0699999999');
+      await tester.enterText(find.byType(TextField).at(7), '0699999999');
       await tester.ensureVisible(find.text(TekstenNl.opslaan));
       await tester.tap(find.text(TekstenNl.opslaan));
       await tester.pumpAndSettle();
@@ -874,6 +875,59 @@ void main() {
         'contact_telefoon': '0699999999',
       });
       expect(find.text(TekstenHulpvragerNl.gegevensOpgeslagen), findsOneWidget);
+    });
+
+    testWidgets('punt F: woning invullen stuurt alleen de woonvelden', (
+      tester,
+    ) async {
+      final klusGateway = fakeKlusGateway();
+      await tester.pumpWidget(
+        hhHulpvragerWikkel(
+          const MijnGegevensScreen(),
+          klusGateway: klusGateway,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(TekstenHulpvragerNl.gegevensKaartWoning),
+        findsOneWidget,
+      );
+      // Verdieping en lift alleen bij een appartement.
+      expect(find.text(TekstenHulpvragerNl.woningLiftVraag), findsNothing);
+
+      Future<void> tik(Finder doel) async {
+        await tester.ensureVisible(doel);
+        await tester.tap(doel);
+        await tester.pumpAndSettle();
+      }
+
+      await tik(find.text(TekstenHulpvragerNl.woningAppartement));
+      expect(find.text(TekstenHulpvragerNl.woningLiftVraag), findsOneWidget);
+      final verdieping = find.descendant(
+        of: find
+            .ancestor(
+              of: find.textContaining(
+                TekstenHulpvragerNl.veldVerdieping,
+                findRichText: true,
+              ),
+              matching: find.byType(Column),
+            )
+            .first,
+        matching: find.byType(TextField),
+      );
+      await tester.ensureVisible(verdieping);
+      await tester.enterText(verdieping, '3e');
+      // Lift: Ja is de eerste "Ja" op de kaart, trap de tweede.
+      await tik(find.text(TekstenHulpvragerNl.ja).first);
+      await tik(find.text(TekstenHulpvragerNl.nee).last);
+      await tik(find.text(TekstenNl.opslaan));
+
+      expect(klusGateway.laatsteGegevensBody, {
+        'woning_type': 'appartement',
+        'verdieping': '3',
+        'lift': 'ja',
+        'trap': 'nee',
+      });
     });
 
     testWidgets(

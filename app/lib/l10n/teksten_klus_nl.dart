@@ -110,6 +110,8 @@ abstract final class TekstenKlusNl {
   static const waarKeuzeLabel = 'Waar is de klus';
   static const waarThuis = 'Bij mij thuis';
   static const waarElders = 'Ergens anders';
+  static const waarThuisSemantiek = 'Kies bij mij thuis';
+  static const waarEldersSemantiek = 'Kies ergens anders';
   static const waarEldersUitleg =
       'Vul de postcode en het huisnummer in van de plek waar de klus is.';
   static const waarEldersFout =
