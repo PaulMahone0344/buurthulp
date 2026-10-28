@@ -335,6 +335,38 @@ void main() {
       );
     });
 
+    // Feedbackronde 1 punt A: Overig krijgt een eigen uitleg.
+    testWidgets('ongekeurd Overig: uitleg over de extra controle', (
+      tester,
+    ) async {
+      await _pomp(
+        tester,
+        _Geval(
+          'O7 nagekeken overig',
+          HhPadenStatus.hulpvraag('k-uitvoeren'),
+          () => fakeUitvoer(
+            klussen: [
+              uitvoerKlus(
+                status: HhKlusStatus.open,
+                metJongere: false,
+                wordtNagekeken: true,
+                klustypeNaam: 'Overig',
+              ),
+            ],
+            ikBen: oudereId,
+          ),
+          isOudere: true,
+        ),
+        dichtheid: HhDichtheid.groot,
+      );
+      expect(find.text(TekstenKlusNl.wordtNagekeken), findsOneWidget);
+      expect(
+        find.text(TekstenKlusNl.wordtNagekekenUitlegOverig),
+        findsOneWidget,
+      );
+      expect(find.text(TekstenKlusNl.wordtNagekekenUitleg), findsNothing);
+    });
+
     testWidgets('afgekeurd: de reden van de meldkamer staat erbij', (
       tester,
     ) async {

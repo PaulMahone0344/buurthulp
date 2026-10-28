@@ -115,9 +115,14 @@ abstract final class TekstenKlusNl {
       'Jij betaalt $bedrag, inclusief servicekosten. Dit is een voorbeeld.';
 
   // Status bij de bewoner (O7/O8)
-  static const wordtNagekeken = 'Je klus wordt nagekeken';
+  // Feedbackronde 1 punt A: "Wacht op goedkeuring". De meldkamer keurt elke
+  // klus; bij Overig staat erbij waarom die extra aandacht krijgt.
+  static const wordtNagekeken = 'Je klus wacht op goedkeuring';
   static const wordtNagekekenUitleg =
-      'De meldkamer kijkt je klus na. Daarna zien strijders in je buurt hem.';
+      'De meldkamer keurt elke klus. Daarna zien strijders in je buurt hem.';
+  static const wordtNagekekenUitlegOverig =
+      'Je koos "Overig". De meldkamer kijkt extra goed of deze klus via '
+      'HeitjeHulp kan. Daarna zien strijders in je buurt hem.';
   // B11: nieuwe bewoner, de meldkamer belt eerst.
   static const wachtOpBelletje = 'De meldkamer belt je eerst even';
   static const wachtOpBelletjeUitleg =

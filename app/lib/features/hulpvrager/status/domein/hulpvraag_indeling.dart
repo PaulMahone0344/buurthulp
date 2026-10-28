@@ -78,3 +78,7 @@ String statusZin(HhKlus klus) {
     HhKlusStatus.open => TekstenUitvoerenNl.o7GeenJongere,
   };
 }
+
+/// Punt A: de categorie Overig krijgt bij het keuren een eigen uitleg.
+bool isOverigeKlus(HhKlus klus) =>
+    klus.klustypeNaam.trim().toLowerCase() == 'overig';

@@ -202,6 +202,8 @@ class _Inhoud extends StatelessWidget {
                   // B11: nieuwe bewoner: eerst het belletje.
                   tekst: klus.wachtOpBelletje
                       ? TekstenKlusNl.wachtOpBelletjeUitleg
+                      : isOverigeKlus(klus)
+                      ? TekstenKlusNl.wordtNagekekenUitlegOverig
                       : TekstenKlusNl.wordtNagekekenUitleg,
                 ),
               ] else if (klus.afkeurReden.isNotEmpty) ...[

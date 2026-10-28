@@ -35,7 +35,7 @@ abstract final class TekstenStartNl {
   static const geenAankomend = 'Geen klussen in deze periode.';
   static const statusBevestigd = 'Bevestigd';
   static const statusZoekt = 'Zoekt strijder';
-  static const statusNagekeken = 'Wordt nagekeken';
+  static const statusNagekeken = 'Wacht op goedkeuring';
   static const statusBezig = 'Bezig';
   static const weekdagenKort = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
 }

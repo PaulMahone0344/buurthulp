@@ -40,6 +40,7 @@ HhKlus uitvoerKlus({
   String contactNaam = 'Dochter Jansen',
   bool wordtNagekeken = false,
   String afkeurReden = '',
+  String klustypeNaam = 'boodschappen',
 }) {
   final van = wanneerVan ?? uitvoerNu.add(const Duration(hours: 4));
   return HhKlus(
@@ -47,7 +48,7 @@ HhKlus uitvoerKlus({
     hulpvragerId: oudereId,
     status: status,
     klustypeId: 'type-boodschappen',
-    klustypeNaam: 'boodschappen',
+    klustypeNaam: klustypeNaam,
     klustypeIcoon: 'shopping_cart',
     richtduurMinuten: 60,
     omschrijving: omschrijving,

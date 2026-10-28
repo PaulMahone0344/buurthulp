@@ -156,4 +156,12 @@ void main() {
       }
     });
   });
+
+  group('isOverigeKlus', () {
+    test('alleen de categorie Overig, hoofdletters maken niet uit', () {
+      expect(isOverigeKlus(uitvoerKlus()), isFalse);
+      expect(isOverigeKlus(uitvoerKlus(klustypeNaam: 'Overig')), isTrue);
+      expect(isOverigeKlus(uitvoerKlus(klustypeNaam: 'overig ')), isTrue);
+    });
+  });
 }
