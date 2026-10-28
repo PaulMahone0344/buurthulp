@@ -6,12 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/core/config.dart';
 import 'package:heitjehulp_app/core/hh_fout.dart';
+import 'package:heitjehulp_app/core/pb/fake_adres_gateway.dart';
 import 'package:heitjehulp_app/design/components/hh_invoer.dart';
 import 'package:heitjehulp_app/design/components/hh_keuzerij.dart';
 import 'package:heitjehulp_app/design/components/hh_knop.dart';
 import 'package:heitjehulp_app/design/components/hh_lege_staat.dart';
 import 'package:heitjehulp_app/design/components/hh_scherm.dart';
 import 'package:heitjehulp_app/design/components/hh_stapbalk.dart';
+import 'package:heitjehulp_app/features/adres/domein/adres_invoer.dart';
+import 'package:heitjehulp_app/features/adres/widget/adres_zoeker.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hulpvraag_concept.dart';
 import 'package:heitjehulp_app/features/hulpvrager/provider/concept_controller.dart';
 import 'package:heitjehulp_app/features/jongere/foto_kiezer.dart';
@@ -25,6 +28,7 @@ import 'package:heitjehulp_app/features/toegang/model/hh_gebruiker.dart';
 import 'package:heitjehulp_app/features/toegang/model/hh_rol.dart';
 import 'package:heitjehulp_app/features/toegang/model/sessie_state.dart';
 import 'package:heitjehulp_app/l10n/teksten_aanmelden_nl.dart';
+import 'package:heitjehulp_app/l10n/teksten_adres_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_hulpvrager_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_klus_nl.dart';
 import 'package:heitjehulp_app/l10n/teksten_meldingen_nl.dart';
@@ -55,6 +59,35 @@ const _gevallen = [
 
 /// De maximale keuzes per rij (ouderenregel: drie).
 const _maxPerRij = 3;
+
+/// Punt B: tik "Bij mij thuis" of "Ergens anders".
+Future<void> _kiesWaar(WidgetTester tester, String label) async {
+  final knop = find.text(label);
+  await tester.ensureVisible(knop);
+  await tester.tap(knop);
+  await tester.pumpAndSettle();
+}
+
+/// Postcode en huisnummer in de adreszoeker, dan wachten op PDOK (nep).
+Future<void> _vulAdres(
+  WidgetTester tester,
+  String postcode,
+  String huisnummer,
+) async {
+  Finder veld(String label) => find.descendant(
+    of: find
+        .ancestor(
+          of: find.textContaining(label, findRichText: true),
+          matching: find.byType(Column),
+        )
+        .first,
+    matching: find.byType(TextField),
+  );
+  await tester.enterText(veld(TekstenAdresNl.veldPostcode), postcode);
+  await tester.enterText(veld(TekstenAdresNl.veldHuisnummer), huisnummer);
+  await tester.pump(adresZoekWachttijd);
+  await tester.pumpAndSettle();
+}
 
 Future<void> _pomp(
   WidgetTester tester,
@@ -626,6 +659,67 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller?.text,
         'Twee tassen boodschappen.',
       );
+    });
+
+    testWidgets('punt B: ergens anders gaat via postcode en huisnummer', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[1]);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(HulpVragenScreen)),
+      );
+
+      await _kiesWaar(tester, TekstenKlusNl.waarElders);
+      expect(find.byType(AdresZoeker), findsOneWidget);
+      expect(container.read(conceptProvider).isElders, isTrue);
+      expect(container.read(conceptProvider).heeftWaar, isFalse);
+
+      await _vulAdres(tester, '4001 MA', '1');
+      final concept = container.read(conceptProvider);
+      expect(concept.adres, 'Kerkstraat 1');
+      expect(concept.postcode, '4001 MA');
+      expect(concept.plaats, 'Tiel');
+      expect(concept.eldersAdres, FakeAdresGateway.kerkstraat1);
+
+      // Terug naar thuis: weer het eigen adres, het andere blijft bewaard.
+      await _kiesWaar(tester, TekstenKlusNl.waarThuis);
+      final thuis = container.read(conceptProvider);
+      expect(thuis.isElders, isFalse);
+      expect(thuis.adres, 'Prins Bernhardlaan 12');
+      expect(
+        find.text(
+          TekstenKlusNl.waarAdres('Prins Bernhardlaan 12, 4003 AB Tiel'),
+        ),
+        findsOneWidget,
+      );
+      await _kiesWaar(tester, TekstenKlusNl.waarElders);
+      expect(container.read(conceptProvider).adres, 'Kerkstraat 1');
+    });
+
+    testWidgets('punt B: buiten het werkgebied telt het adres niet', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[1]);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(HulpVragenScreen)),
+      );
+
+      await _kiesWaar(tester, TekstenKlusNl.waarElders);
+      await _vulAdres(tester, '1012 JS', '1');
+
+      expect(find.text(TekstenAanmeldenNl.nietInBuurt), findsOneWidget);
+      expect(container.read(conceptProvider).heeftWaar, isFalse);
+    });
+
+    testWidgets('punt B: ergens anders zonder adres geeft een veldfout', (
+      tester,
+    ) async {
+      await _pomp(tester, _gevallen[1]);
+      await _kiesWaar(tester, TekstenKlusNl.waarElders);
+
+      await _tikPlaatsen(tester);
+
+      expect(find.text(TekstenKlusNl.waarEldersFout), findsOneWidget);
     });
 
     testWidgets('zonder bekend adres: eerst mijn gegevens invullen', (

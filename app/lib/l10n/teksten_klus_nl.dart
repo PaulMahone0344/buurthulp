@@ -106,6 +106,14 @@ abstract final class TekstenKlusNl {
   static const waarAnders =
       'Klopt het adres niet? Pas het aan bij Mijn gegevens.';
   static const waarUitleg = 'Vul het adres in waar de klus is.';
+  // Feedbackronde 1 punt B: bij de bewoner thuis of ergens anders.
+  static const waarKeuzeLabel = 'Waar is de klus';
+  static const waarThuis = 'Bij mij thuis';
+  static const waarElders = 'Ergens anders';
+  static const waarEldersUitleg =
+      'Vul de postcode en het huisnummer in van de plek waar de klus is.';
+  static const waarEldersFout =
+      'Vul de postcode en het huisnummer van de klus in.';
 
   // Prijs (prijzen komen in B7)
   static const prijsJijBetaalt = 'Jij betaalt';

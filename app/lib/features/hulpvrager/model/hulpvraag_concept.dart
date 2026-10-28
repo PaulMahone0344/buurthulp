@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../adres/model/hh_adres.dart';
 import '../../jongere/foto_kiezer.dart';
 import 'hh_klustype.dart';
 
@@ -28,6 +29,8 @@ class HulpvraagConcept {
     this.adres,
     this.postcode,
     this.plaats,
+    this.isElders = false,
+    this.eldersAdres,
   });
 
   final HhKlustype? klustype;
@@ -52,6 +55,14 @@ class HulpvraagConcept {
   final String? adres;
   final String? postcode;
   final String? plaats;
+
+  /// Feedbackronde 1 punt B: de klus is niet bij de bewoner thuis. Dan
+  /// komen [adres], [postcode] en [plaats] uit [eldersAdres] (PDOK).
+  final bool isElders;
+
+  /// Het gekozen adres bij "Ergens anders"; null zolang er geen bruikbaar
+  /// adres is.
+  final HhAdres? eldersAdres;
 
   bool get isLeeg =>
       klustype == null && omschrijving.isEmpty && foto == null && dag == null;
@@ -97,6 +108,8 @@ class HulpvraagConcept {
     String? Function()? adres,
     String? Function()? postcode,
     String? Function()? plaats,
+    bool? isElders,
+    HhAdres? Function()? eldersAdres,
   }) {
     return HulpvraagConcept(
       klustype: klustype != null ? klustype() : this.klustype,
@@ -109,6 +122,8 @@ class HulpvraagConcept {
       adres: adres != null ? adres() : this.adres,
       postcode: postcode != null ? postcode() : this.postcode,
       plaats: plaats != null ? plaats() : this.plaats,
+      isElders: isElders ?? this.isElders,
+      eldersAdres: eldersAdres != null ? eldersAdres() : this.eldersAdres,
     );
   }
 
@@ -124,7 +139,9 @@ class HulpvraagConcept {
       other.totMinuten == totMinuten &&
       other.adres == adres &&
       other.postcode == postcode &&
-      other.plaats == plaats;
+      other.plaats == plaats &&
+      other.isElders == isElders &&
+      other.eldersAdres == eldersAdres;
 
   @override
   int get hashCode => Object.hash(
@@ -138,5 +155,7 @@ class HulpvraagConcept {
     adres,
     postcode,
     plaats,
+    isElders,
+    eldersAdres,
   );
 }

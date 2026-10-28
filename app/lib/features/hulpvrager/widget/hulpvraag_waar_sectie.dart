@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/hh_fout.dart';
 import '../../../design/components/hh_invoer.dart';
+import '../../../design/components/hh_keuzerij.dart';
 import '../../../design/components/hh_knop.dart';
 import '../../../design/components/hh_laad_staat.dart';
 import '../../../design/components/hh_lege_staat.dart';
@@ -13,6 +14,9 @@ import '../../../l10n/teksten_hulpvrager_nl.dart';
 import '../../../l10n/teksten_klus_nl.dart';
 import '../../../l10n/teksten_nl.dart';
 import '../../../theme.dart';
+import '../../adres/domein/adres_invoer.dart';
+import '../../adres/model/hh_adres.dart';
+import '../../adres/widget/adres_zoeker.dart';
 import '../domein/adres.dart';
 import '../model/hh_gegevens.dart';
 import '../paden_hulpvrager.dart';
@@ -23,6 +27,10 @@ import '../provider/hulpvrager_providers.dart';
 /// wordt niet opnieuw gevraagd (B4): staat het daar compleet, dan alleen
 /// één regel "Bij jou thuis: ...". Zonder bekend adres eerst naar Mijn
 /// gegevens. Elke wijziging gaat meteen in het concept.
+///
+/// Feedbackronde 1 punt B: met een bekend adres kiest de bewoner "Bij mij
+/// thuis" of "Ergens anders". Ergens anders gaat met postcode en huisnummer
+/// via PDOK, net als Mijn gegevens; de server zoekt er zelf het punt bij.
 class HulpvraagWaarSectie extends ConsumerStatefulWidget {
   const HulpvraagWaarSectie({required this.toonFouten, super.key});
 
@@ -44,11 +52,19 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
   /// dan geen adresvelden, alleen de toelichting (3 okt).
   bool _adresBekend = false;
 
+  /// Punt B: "Ergens anders" gekozen, met het gevonden adres (binnen het
+  /// werkgebied) of null.
+  bool _isElders = false;
+  HhAdres? _eldersAdres;
+
   @override
   void initState() {
     super.initState();
     final concept = ref.read(conceptProvider);
-    if (concept.adres != null) {
+    _isElders = concept.isElders;
+    _eldersAdres = concept.eldersAdres;
+    // Bij "Ergens anders" komt het eigen adres gewoon weer uit de gegevens.
+    if (concept.adres != null && !concept.isElders) {
       _adres.text = concept.adres!;
       _postcode.text = concept.postcode ?? '';
       _plaats.text = concept.plaats ?? '';
@@ -75,8 +91,25 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
     _adresBekend = gegevens.heeftAdres;
     // Na de build: een provider wijzigen tijdens het bouwen mag niet.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _bewaar();
+      if (mounted && !_isElders) _bewaar();
     });
+  }
+
+  void _kiesElders(bool elders) {
+    setState(() => _isElders = elders);
+    if (elders) {
+      ref.read(conceptProvider.notifier).zetElders(_eldersAdres);
+    } else {
+      _bewaar();
+    }
+  }
+
+  /// Alleen een gevonden adres binnen het werkgebied telt; de zoeker meldt
+  /// zelf "nog niet in jouw buurt".
+  void _eldersGewijzigd(AdresKeuze? keuze) {
+    final adres = keuze?.adres;
+    _eldersAdres = adres != null && adres.binnenWerkgebied ? adres : null;
+    ref.read(conceptProvider.notifier).zetElders(_eldersAdres);
   }
 
   void _bewaar([String _ = '']) {
@@ -138,20 +171,28 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
     final tussen = HhRuimte.voor(HhRuimte.l, dichtheid);
 
     if (_adresBekend) {
-      final adres = stelAdresSamen(
-        adres: _adres.text,
-        postcode: _postcode.text,
-        plaats: _plaats.text,
-      );
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            TekstenKlusNl.waarAdres(adres),
-            style: tekst.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          HhKeuzerij<bool>(
+            semantiekLabel: TekstenKlusNl.waarKeuzeLabel,
+            keuzes: const [
+              HhKeuze(
+                waarde: false,
+                label: TekstenKlusNl.waarThuis,
+                icoon: Icons.home_outlined,
+              ),
+              HhKeuze(
+                waarde: true,
+                label: TekstenKlusNl.waarElders,
+                icoon: Icons.place_outlined,
+              ),
+            ],
+            geselecteerd: {_isElders},
+            onGewijzigd: (keuze) => _kiesElders(keuze.first),
           ),
-          SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
-          Text(TekstenKlusNl.waarAnders, style: tekst.bodyMedium),
+          SizedBox(height: tussen),
+          ...(_isElders ? _elders(tekst) : _thuis(tekst, dichtheid)),
         ],
       );
     }
@@ -163,6 +204,42 @@ class _HulpvraagWaarSectieState extends ConsumerState<HulpvraagWaarSectie> {
         ..._adresVelden(tussen),
       ],
     );
+  }
+
+  List<Widget> _thuis(TextTheme tekst, HhDichtheid dichtheid) {
+    final adres = stelAdresSamen(
+      adres: _adres.text,
+      postcode: _postcode.text,
+      plaats: _plaats.text,
+    );
+    return [
+      Text(
+        TekstenKlusNl.waarAdres(adres),
+        style: tekst.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      SizedBox(height: HhRuimte.voor(HhRuimte.xs, dichtheid)),
+      Text(TekstenKlusNl.waarAnders, style: tekst.bodyMedium),
+    ];
+  }
+
+  List<Widget> _elders(TextTheme tekst) {
+    final begin = _eldersAdres;
+    return [
+      Text(TekstenKlusNl.waarEldersUitleg, style: tekst.bodyLarge),
+      SizedBox(
+        height: HhRuimte.voor(HhRuimte.s, HhDichtheidScope.van(context)),
+      ),
+      AdresZoeker(
+        beginPostcode: begin?.postcode ?? '',
+        beginHuisnummer: begin?.huisnummer ?? '',
+        beginToevoeging: begin?.toevoeging ?? '',
+        beginWeergave: begin?.weergave,
+        fouttekst: widget.toonFouten && begin == null
+            ? TekstenKlusNl.waarEldersFout
+            : null,
+        onGewijzigd: _eldersGewijzigd,
+      ),
+    ];
   }
 
   /// Straat, postcode en plaats; alleen als het adres nog niet bekend is.

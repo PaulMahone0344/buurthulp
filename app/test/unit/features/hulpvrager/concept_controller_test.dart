@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heitjehulp_app/core/hh_fout.dart';
+import 'package:heitjehulp_app/core/pb/fake_adres_gateway.dart';
 import 'package:heitjehulp_app/core/result.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/hulpvraag_concept.dart';
 import 'package:heitjehulp_app/features/hulpvrager/model/nieuwe_klus.dart';
@@ -43,6 +44,32 @@ void main() {
       final compleet = container.read(conceptProvider);
       expect(compleet.isCompleet, isTrue);
       expect(naWat.adres, isNull, reason: 'tussenstate blijft zoals hij was');
+    });
+
+    test('punt B: ergens anders zonder adres maakt waar leeg', () {
+      final container = hulpvragerContainer(klusGateway: fakeKlusGateway());
+      final controller = container.read(conceptProvider.notifier);
+      controller.zetWaar(
+        adres: 'Kerkstraat 1',
+        postcode: '4001 AA',
+        plaats: 'Tiel',
+      );
+
+      controller.zetElders(null);
+      final leeg = container.read(conceptProvider);
+      expect(leeg.isElders, isTrue);
+      expect(leeg.heeftWaar, isFalse);
+
+      controller.zetElders(FakeAdresGateway.kerkstraat1);
+      final elders = container.read(conceptProvider);
+      expect(elders.adres, 'Kerkstraat 1');
+      expect(elders.postcode, '4001 MA');
+      expect(elders.heeftWaar, isTrue);
+
+      controller.zetWaar(adres: 'Thuis 2', postcode: '4003 AB', plaats: 'Tiel');
+      final thuis = container.read(conceptProvider);
+      expect(thuis.isElders, isFalse);
+      expect(thuis.eldersAdres, FakeAdresGateway.kerkstraat1);
     });
 
     test('vandaag: het tijdwiel begint twee hele uren na nu', () {

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/teksten_klus_nl.dart';
+import '../../adres/model/hh_adres.dart';
 import '../../jongere/foto_kiezer.dart';
 import '../domein/wanneer.dart';
 import '../model/hh_klustype.dart';
@@ -77,6 +78,19 @@ class ConceptController extends Notifier<HulpvraagConcept> {
       adres: () => adres,
       postcode: () => postcode,
       plaats: () => plaats,
+      isElders: false,
+    );
+  }
+
+  /// Punt B: de klus is ergens anders. Zonder bruikbaar adres blijft
+  /// "Waar?" leeg, zodat plaatsen pas kan na een gevonden adres.
+  void zetElders(HhAdres? adres) {
+    state = state.copyWith(
+      adres: () => adres?.adres ?? '',
+      postcode: () => adres?.postcode ?? '',
+      plaats: () => adres?.plaats ?? '',
+      isElders: true,
+      eldersAdres: () => adres,
     );
   }
 
