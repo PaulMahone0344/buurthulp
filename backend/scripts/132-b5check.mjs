@@ -501,6 +501,16 @@ async function secties(su, regio, tuin, licht, instellingen) {
   check(`bewoner kiest Ruud -> 200 "Het is een match!" (kreeg ${match.status})`, match.status === 200 && match.body?.melding === 'Het is een match!' && match.body?.helper_voornaam === 'Ruud', JSON.stringify(match.body));
   kNa = await su.collection('hh_klussen').getOne(k1.id);
   check('  klus geaccepteerd met Ruud als helper', kNa.status === 'geaccepteerd' && kNa.toegewezen_jongere === h25.id);
+  // Proefdraai 5 okt: de strijder kreeg het hele record van de bewoner.
+  const bewonerTijdens = await h25.client.collection('hh_users').getOne(bewoner.id);
+  check('  Ruud ziet van de bewoner GEEN geboortedatum, e-mail of exact punt',
+    !['geboortedatum', 'email', 'lat', 'lon', 'ouder_email'].some((v) => v in bewonerTijdens), Object.keys(bewonerTijdens).join(','));
+  check('  Ruud ziet tijdens de klus wel naam, adres en contactpersoon',
+    !!bewonerTijdens.naam && 'adres' in bewonerTijdens && 'contact_naam' in bewonerTijdens, Object.keys(bewonerTijdens).join(','));
+  const bewonerZelf = await bewoner.client.collection('hh_users').getOne(bewoner.id);
+  check('  de bewoner zelf ziet alles', 'geboortedatum' in bewonerZelf && 'adres' in bewonerZelf);
+  const bewonerVoorMeldkamer = await coord.client.collection('hh_users').getOne(bewoner.id);
+  check('  de meldkamer ziet alles', 'geboortedatum' in bewonerVoorMeldkamer && 'adres' in bewonerVoorMeldkamer);
   const st = Object.fromEntries((await su.collection(COLLECTIE).getFullList({ filter: su.filter('klus = {:k}', { k: k1.id }) })).map((x) => [x.helper, x.status]));
   check('  Ruud gekozen, Sanne en Daan afgewezen, Lisa (wachtte op ouder) vervallen, Mila blijft afgewezen',
     st[h25.id] === 'gekozen' && st[h30.id] === 'afgewezen' && st[h14.id] === 'afgewezen' && st[h11.id] === 'vervallen' && st[h17.id] === 'afgewezen', JSON.stringify(st));
@@ -724,6 +734,26 @@ async function secties(su, regio, tuin, licht, instellingen) {
     check('  Sanne ziet de klus wel in de lijst', (await h30.client.collection('hh_klussen').getList(1, 5, { filter: `id = "${kMeld.id}"` })).totalItems === 1);
     await herstelTijdelijk(su, 'b5_nieuwe_klus_alleen_beschikbaar');
   }
+
+  // ---------------------------------------------------------------- P
+  kop('P. Na afloop ziet de strijder het adres van de bewoner niet meer');
+  const LOOPT = ['geaccepteerd', 'onderweg', 'bezig', 'probleem'];
+  const lopend = async () =>
+    (await su.collection('hh_klussen').getFullList({ filter: su.filter('hulpvrager = {:b} && toegewezen_jongere = {:h}', { b: bewoner2.id, h: h30.id }) }))
+      .filter((k) => LOOPT.includes(k.status));
+  const open = await lopend();
+  check(`Sanne heeft een lopende klus bij Kees (${open.length})`, open.length >= 1);
+  const keesTijdens = await h30.client.collection('hh_users').getOne(bewoner2.id);
+  check('  tijdens: adres zichtbaar, geboortedatum niet', 'adres' in keesTijdens && !('geboortedatum' in keesTijdens), Object.keys(keesTijdens).join(','));
+  for (const k of open) {
+    const stappen = { geaccepteerd: ['onderweg', 'bezig', 'afgerond'], onderweg: ['bezig', 'afgerond'], bezig: ['afgerond'], probleem: [] }[k.status];
+    for (const naar of stappen) await route(h30.client, `/api/hh/klussen/${k.id}/status`, { naar });
+  }
+  check('  alle klussen van Sanne bij Kees zijn klaar', (await lopend()).length === 0);
+  const keesNa = await h30.client.collection('hh_users').getOne(bewoner2.id);
+  check('  na afloop: geen adres, postcode, telefoon, contactpersoon of geboortedatum meer',
+    !['adres', 'postcode', 'huisnummer', 'telefoon', 'contact_naam', 'contact_telefoon', 'geboortedatum'].some((v) => v in keesNa), Object.keys(keesNa).join(','));
+  check('  de naam nog wel', !!keesNa.naam);
 }
 
 main().catch(fail);

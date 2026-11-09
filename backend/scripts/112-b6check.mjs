@@ -372,6 +372,17 @@ async function main() {
   check('coordinator (met incident) ziet contactverzoek', doorCoord.contactverzoek === true);
   const plus = await mag('helper schrijft +31 6 12345678', () => schrijf(h, k1.id, 'Mijn nummer is +31 6 12345678'));
   check('+31-nummer gefilterd', plus?.tekst === `Mijn nummer is ${VERVANGING}`, `tekst=${plus?.tekst}`);
+  // Proefdraai 5 okt: nummers in woorden en gebruikersnamen gingen ongezien door.
+  for (const [tekst, verwacht] of [
+    ['Bel nul zes een twee drie vier vijf zes zeven acht', `Bel ${VERVANGING}`],
+    ['06 een twee 34 vijf zes 78', VERVANGING],
+    ['snap: daan_2011', `snap: ${VERVANGING}`],
+  ]) {
+    const verstopt = await mag(`helper schrijft "${tekst}"`, () => schrijf(h, k1.id, tekst));
+    check(`  opgeslagen als "${verwacht}"`, verstopt?.tekst === verwacht, `tekst=${verstopt?.tekst}`);
+    const rij = verstopt ? await su.collection(COLLECTIE).getOne(verstopt.id) : null;
+    check('  gefilterd en gemeld aan de meldkamer', rij?.gefilterd === true && rij?.contactverzoek === true);
+  }
 
   // ---- H -------------------------------------------------------------------
   kop('H. Meldingen: één per chat per 10 minuten, alleen voor de ontvanger');
