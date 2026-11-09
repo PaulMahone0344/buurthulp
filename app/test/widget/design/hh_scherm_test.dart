@@ -127,5 +127,63 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('een knop uit HhKopActie staat in de groene bovenbalk', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        hhWikkel(
+          const SizedBox(
+            height: 400,
+            child: HhKopActie(
+              // Zo breed als het echte belletje: de knophoogte.
+              actie: SizedBox.square(
+                dimension: 48,
+                child: Icon(Icons.notifications_none_outlined),
+              ),
+              child: HhScherm(
+                titel: 'Start',
+                toonTerug: false,
+                child: Text('inhoud'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final inBalk = find.descendant(
+        of: find.byType(HhBovenbalk),
+        matching: find.byIcon(Icons.notifications_none_outlined),
+      );
+      expect(inBalk, findsOneWidget);
+      // De titel blijft in het midden van de balk staan.
+      final balk = tester.getRect(find.byType(HhBovenbalk));
+      expect(tester.getCenter(find.text('Start')).dx, balk.center.dx);
+    });
+
+    testWidgets('zonder HhKopActie staat er niets extra in de bovenbalk', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        hhWikkel(
+          const SizedBox(
+            height: 400,
+            child: HhScherm(
+              titel: 'Start',
+              toonTerug: false,
+              child: Text('inhoud'),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byType(HhBovenbalk),
+          matching: find.byType(Icon),
+        ),
+        findsNothing,
+      );
+    });
   });
 }

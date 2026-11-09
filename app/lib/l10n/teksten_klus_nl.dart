@@ -93,7 +93,7 @@ abstract final class TekstenKlusNl {
   static const herhalenTitel = 'Herhalen';
   static const eenmalig = 'Eenmalig';
   static const wekelijks = 'Wekelijks';
-  static const tweewekelijks = 'Tweewekelijks';
+  static const tweewekelijks = 'Om de week';
   static const maandelijks = 'Maandelijks';
   static const plus = 'Plus';
   static String herhalenSlotSemantiek(String keuze) =>

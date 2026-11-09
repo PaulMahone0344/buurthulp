@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme.dart';
 import '../dichtheid_scope.dart';
 import '../lijn.dart';
+import 'hh_pas_tekst.dart';
 
 /// Een keuze in de [HhKeuzerij]: waarde, label en icoon.
 @immutable
@@ -155,10 +156,11 @@ class _KeuzeKnop<T> extends StatelessWidget {
                       color: kleur,
                     ),
                     SizedBox(height: HhRuimte.voor(HhRuimte.s, dichtheid)),
-                    Text(
+                    // Krimpt bij een lang woord in plaats van het af te breken.
+                    HhPasTekst(
                       keuze.label,
                       textAlign: TextAlign.center,
-                      style: tekst.bodyLarge!.copyWith(
+                      stijl: tekst.bodyLarge!.copyWith(
                         fontWeight: FontWeight.w600,
                         color: kleur,
                       ),

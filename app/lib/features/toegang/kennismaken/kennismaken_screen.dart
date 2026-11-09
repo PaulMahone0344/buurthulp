@@ -176,7 +176,7 @@ class _Plaatje extends StatelessWidget {
     (Icons.home_rounded, Icons.yard_outlined, Icons.shopping_bag_outlined),
     (Icons.assignment_outlined, Icons.forum_outlined, Icons.check_circle),
     (Icons.verified_user_outlined, Icons.lock_outline, Icons.mail_outline),
-    (Icons.paid_outlined, Icons.handyman_outlined, Icons.star_rounded),
+    (Icons.euro_rounded, Icons.handyman_outlined, Icons.star_rounded),
   ];
 
   @override

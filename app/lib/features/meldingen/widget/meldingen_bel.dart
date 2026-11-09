@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../design/components/hh_scherm.dart';
 import '../../../design/dichtheid_scope.dart';
 import '../../../l10n/teksten_meldingen_nl.dart';
 import '../../../theme.dart';
@@ -12,7 +13,10 @@ import '../provider/meldingen_providers.dart';
 /// Tik opent het meldingen-overzicht. Raakvlak = knophoogte uit theme.dart;
 /// de schermlezer hoort "Meldingen, 2 ongelezen".
 class MeldingenBel extends ConsumerWidget {
-  const MeldingenBel({super.key});
+  const MeldingenBel({this.kleur, super.key});
+
+  /// Kleur van het belletje. Leeg: primair (op een lichte achtergrond).
+  final Color? kleur;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,7 +47,7 @@ class MeldingenBel extends ConsumerWidget {
                     ? Icons.notifications_active_outlined
                     : Icons.notifications_none_outlined,
                 size: HhMaten.icoonKeuzerij(dichtheid),
-                color: schema.primary,
+                color: kleur ?? schema.primary,
               ),
               if (aantal > 0)
                 Positioned(
@@ -72,9 +76,9 @@ class MeldingenBel extends ConsumerWidget {
   }
 }
 
-/// Zet het belletje rechtsboven boven een tabscherm. Het kind is een gewoon
-/// scherm met eigen Scaffold (HhScherm); de bovenste veilige rand regelt de
-/// kop, zodat het kind hem niet nog een keer optelt.
+/// Zet het belletje rechts in de groene bovenbalk van een tabscherm. Het
+/// kind is een gewoon scherm met eigen Scaffold (HhScherm); de bovenbalk
+/// haalt het belletje zelf op ([HhKopActie]).
 class MeldingenKop extends StatelessWidget {
   const MeldingenKop({required this.child, super.key});
 
@@ -82,30 +86,9 @@ class MeldingenKop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dichtheid = HhDichtheidScope.van(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: EdgeInsets.only(
-              right: HhRuimte.voor(HhRuimte.s, dichtheid),
-            ),
-            child: const Align(
-              alignment: Alignment.centerRight,
-              child: MeldingenBel(),
-            ),
-          ),
-        ),
-        Expanded(
-          child: MediaQuery.removePadding(
-            context: context,
-            removeTop: true,
-            child: child,
-          ),
-        ),
-      ],
+    return HhKopActie(
+      actie: const MeldingenBel(kleur: HhKleuren.opPrimair),
+      child: child,
     );
   }
 }

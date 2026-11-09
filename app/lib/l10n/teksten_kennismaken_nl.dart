@@ -20,7 +20,7 @@ abstract final class TekstenKennismakenNl {
     HhKennismaakPagina(
       'Zo werkt het',
       'Plaats een karweitje. Strijders reageren en jij kiest wie het doet. '
-          'Klaar? Dan betaal je in de app.',
+          'Klaar? Dan vertel je hoe het ging.',
     ),
     HhKennismaakPagina(
       'Veilig',

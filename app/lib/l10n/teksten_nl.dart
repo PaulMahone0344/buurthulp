@@ -135,7 +135,7 @@ abstract final class TekstenNl {
     'De meldkamer kijkt de klus na.',
     'Strijders uit je buurt reageren. Jij kiest wie het doet.',
     'Spreek de details af in de chat.',
-    'Klaar? Dan betaal je in de app en vertel je hoe het ging.',
+    'Klaar? Dan vertel je hoe het ging.',
   ];
 
   static const hulpStappenJongere = [

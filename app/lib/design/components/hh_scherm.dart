@@ -80,6 +80,21 @@ class HhScherm extends StatelessWidget {
   }
 }
 
+/// Zet een knop rechts in de bovenbalk van het scherm eronder (het belletje
+/// op een tabscherm). Zo staat hij IN de groene balk en niet in een losse
+/// witte strook erboven, waar de klok en de batterij wit op wit stonden.
+class HhKopActie extends InheritedWidget {
+  const HhKopActie({required this.actie, required super.child, super.key});
+
+  final Widget actie;
+
+  static Widget? van(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<HhKopActie>()?.actie;
+
+  @override
+  bool updateShouldNotify(HhKopActie oud) => oud.actie != actie;
+}
+
 /// Vanaf deze tekstschaal staat de terugknop boven de titel.
 const _grootTekstGrens = 1.3;
 
@@ -101,6 +116,7 @@ class HhBovenbalk extends StatelessWidget {
     final tekst = Theme.of(context).textTheme;
     final ruimte = HhRuimte.voor(HhRuimte.s, dichtheid);
     final terug = onTerug;
+    final actie = HhKopActie.van(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -130,7 +146,16 @@ class HhBovenbalk extends StatelessWidget {
                     ),
                   );
                   if (terug == null) {
-                    return Center(child: titelTekst);
+                    if (actie == null) return Center(child: titelTekst);
+                    // Links even veel ruimte als de knop rechts: de titel
+                    // blijft in het midden.
+                    return Row(
+                      children: [
+                        SizedBox(width: HhMaten.knopHoogte(dichtheid)),
+                        Expanded(child: titelTekst),
+                        actie,
+                      ],
+                    );
                   }
                   final knop = HhTerugKnop(
                     onTerug: terug,
