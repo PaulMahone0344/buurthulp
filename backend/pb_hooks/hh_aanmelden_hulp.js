@@ -47,6 +47,59 @@ var VERBORGEN_VOOR_ANDEREN = [
   "adres_bron",
 ];
 
+/// BEWONER (proefdraai 5 okt): een strijder met een klus bij een bewoner kreeg
+/// het hele record terug, ook de geboortedatum, en bleef het zien na afloop.
+/// Deze velden van een bewoner ziet een ander NOOIT.
+var BEWONER_ALTIJD_VERBORGEN = [
+  "email",
+  "geboortedatum",
+  "ouder_email",
+  "ouder_telefoon",
+  "ouder_toestemming_op",
+  "ouder_iban_ok",
+  "werkgebied_status",
+  "lat",
+  "lon",
+  "adres_bron",
+];
+
+/// Deze velden ziet alleen de strijder van een LOPENDE klus bij die bewoner
+/// (besluit 12 sep: de toegewezen strijder ziet adres en contactpersoon).
+var BEWONER_ALLEEN_TIJDENS_KLUS = [
+  "adres",
+  "huisnummer",
+  "postcode",
+  "plaats",
+  "toevoeging",
+  "telefoon",
+  "contact_naam",
+  "contact_telefoon",
+  "woning_type",
+  "verdieping",
+  "lift",
+  "trap",
+  "bereikbaarheid",
+];
+
+/// Statussen waarin een klus een strijder heeft en loopt.
+var KLUS_LOOPT = ["geaccepteerd", "onderweg", "bezig", "probleem"];
+
+function klusLoopt(status) {
+  return KLUS_LOOPT.indexOf(String(status || "")) !== -1;
+}
+
+/// Welke velden van een bewoner gaan weg voor deze kijker? Leeg voor de
+/// bewoner zelf, de meldkamer en familie (die hoort bij de bewoner via een
+/// koppeling). [heeftLopendeKlus]: de kijker is de strijder van een klus bij
+/// deze bewoner die nu loopt.
+function bewonerVerborgenVoor(kijkerId, kijkerRol, bewonerId, heeftLopendeKlus) {
+  var rol = String(kijkerRol || "");
+  if (kijkerId && String(kijkerId) === String(bewonerId)) return [];
+  if (rol === "coordinator" || rol === "familie") return [];
+  if (heeftLopendeKlus) return BEWONER_ALTIJD_VERBORGEN.slice();
+  return BEWONER_ALTIJD_VERBORGEN.concat(BEWONER_ALLEEN_TIJDENS_KLUS);
+}
+
 /// "2008-05-14 00:00:00.000Z" -> [2008, 5, 14], of null.
 function datumDelen(tekst) {
   var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(tekst || "").trim());
@@ -266,4 +319,9 @@ module.exports = {
   wijkenPassen: wijkenPassen,
   voornaam: voornaam,
   magAllesZien: magAllesZien,
+  BEWONER_ALTIJD_VERBORGEN: BEWONER_ALTIJD_VERBORGEN,
+  BEWONER_ALLEEN_TIJDENS_KLUS: BEWONER_ALLEEN_TIJDENS_KLUS,
+  KLUS_LOOPT: KLUS_LOOPT,
+  klusLoopt: klusLoopt,
+  bewonerVerborgenVoor: bewonerVerborgenVoor,
 };

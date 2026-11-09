@@ -276,3 +276,43 @@ test('VERBORGEN_VOOR_ANDEREN: ook het punt, de toevoeging en de adresbron van ee
     assert.ok(hulp.VERBORGEN_VOOR_ANDEREN.includes(veld), veld);
   }
 });
+
+// ---- Proefdraai 5 okt: een strijder zag te veel van de bewoner -----------------
+
+test('bewoner: een ander ziet nooit geboortedatum, e-mail of het exacte punt', () => {
+  for (const loopt of [true, false]) {
+    const weg = hulp.bewonerVerborgenVoor('strijder1', 'jongere', 'bewoner1', loopt);
+    for (const veld of ['geboortedatum', 'email', 'lat', 'lon', 'ouder_email', 'ouder_telefoon']) {
+      assert.ok(weg.includes(veld), `${veld} moet weg (klus loopt: ${loopt})`);
+    }
+  }
+});
+
+test('bewoner: adres, telefoon, contactpersoon en woning alleen tijdens een lopende klus', () => {
+  const tijdens = hulp.bewonerVerborgenVoor('strijder1', 'jongere', 'bewoner1', true);
+  const erna = hulp.bewonerVerborgenVoor('strijder1', 'jongere', 'bewoner1', false);
+  for (const veld of ['adres', 'huisnummer', 'postcode', 'telefoon', 'contact_naam', 'contact_telefoon', 'bereikbaarheid']) {
+    assert.ok(!tijdens.includes(veld), `${veld} is nodig tijdens de klus`);
+    assert.ok(erna.includes(veld), `${veld} moet weg na de klus`);
+  }
+});
+
+test('bewoner: de naam blijft altijd zichtbaar', () => {
+  assert.ok(!hulp.bewonerVerborgenVoor('strijder1', 'jongere', 'bewoner1', false).includes('naam'));
+});
+
+test('bewoner: zelf, de meldkamer en familie zien alles', () => {
+  assert.deepEqual(hulp.bewonerVerborgenVoor('bewoner1', 'hulpvrager', 'bewoner1', false), []);
+  assert.deepEqual(hulp.bewonerVerborgenVoor('mk', 'coordinator', 'bewoner1', false), []);
+  assert.deepEqual(hulp.bewonerVerborgenVoor('fam', 'familie', 'bewoner1', false), []);
+});
+
+test('bewoner: een andere bewoner krijgt niets van het adres', () => {
+  const weg = hulp.bewonerVerborgenVoor('bewoner2', 'hulpvrager', 'bewoner1', false);
+  assert.ok(weg.includes('adres') && weg.includes('geboortedatum'));
+});
+
+test('klus loopt: alleen met een strijder en een lopende status', () => {
+  for (const s of ['geaccepteerd', 'onderweg', 'bezig', 'probleem']) assert.equal(hulp.klusLoopt(s), true, s);
+  for (const s of ['concept', 'open', 'afgerond', 'geannuleerd', '']) assert.equal(hulp.klusLoopt(s), false, s);
+});

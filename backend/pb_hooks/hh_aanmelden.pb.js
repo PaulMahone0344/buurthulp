@@ -50,6 +50,10 @@
 //      adres, ouder-gegevens enz. weg (VERBORGEN_VOOR_ANDEREN) en naam =
 //      alleen de voornaam. Zonder ingelogde kijker (registreren, inloggen:
 //      dat is altijd de eigenaar zelf) blijft alles staan.
+//    Bij een bewoner (rol hulpvrager), sinds de proefdraai van 5 okt:
+//    - een ander ziet nooit geboortedatum, e-mail of het exacte punt;
+//      adres, telefoon, contactpersoon en woning alleen de strijder van
+//      een klus bij die bewoner die NU loopt (hulp.bewonerVerborgenVoor).
 //
 // Gotchas (PB 0.25 JSVM): helpers BINNEN de handler via require(); $app en
 // niet e.app; e.next() op elk pad (een throw is een bewuste weigering); de
@@ -294,6 +298,53 @@ onRecordEnrich((e) => {
       e.record.set("naam", hulp.voornaam(e.record.get("naam")));
     }
   }
+
+  return e.next();
+}, "hh_users");
+
+// --------------------------------------------------------------------------
+// 3b. Bewoner verrijken: privé-velden weg voor anderen (proefdraai 5 okt)
+// --------------------------------------------------------------------------
+// Een strijder met een klus bij een bewoner mag het record lezen (rule), maar
+// krijgt nooit de geboortedatum of het e-mailadres, en adres/telefoon/
+// contactpersoon/woning alleen zolang zijn klus bij die bewoner loopt.
+onRecordEnrich((e) => {
+  if (String(e.record.get("rol") || "") !== "hulpvrager") {
+    return e.next();
+  }
+  const kijker = e.requestInfo ? e.requestInfo.auth : null;
+  // Zonder ingelogde kijker (registreren, inloggen) is het de eigenaar zelf.
+  if (!kijker || kijker.collection().name !== "hh_users") {
+    return e.next();
+  }
+  const hulp = require(`${__hooks}/hh_aanmelden_hulp.js`);
+  const kijkerRol = String(kijker.get("rol") || "");
+
+  let loopt = false;
+  if (kijkerRol === "jongere" && kijker.id !== e.record.id) {
+    try {
+      const klussen = $app.findRecordsByFilter(
+        "hh_klussen",
+        "hulpvrager = {:bewoner} && toegewezen_jongere = {:strijder}",
+        "",
+        0,
+        0,
+        { bewoner: e.record.id, strijder: kijker.id }
+      );
+      for (let i = 0; i < klussen.length; i++) {
+        if (hulp.klusLoopt(klussen[i].get("status"))) {
+          loopt = true;
+          break;
+        }
+      }
+    } catch (err) {
+      // Liever te weinig tonen dan te veel: bij een fout telt het als "geen klus".
+      console.log("[hh_aanmelden] lopende klus nakijken mislukt:", String(err));
+    }
+  }
+
+  const weg = hulp.bewonerVerborgenVoor(kijker.id, kijkerRol, e.record.id, loopt);
+  if (weg.length) e.record.hide(...weg);
 
   return e.next();
 }, "hh_users");
