@@ -110,6 +110,8 @@ const VERZOEK_WOORDEN = [
   /\b06 ?(?:nummer|nr)\b/,
   /\b(?:e ?mail|email|e ?mailadres|mailadres|mailen)\b/,
   /\bmail (?:me|mij)\b/,
+  /\bvoeg (?:me|mij) (?:even |maar |ff )?toe\b/,
+  /\badd (?:me|mij)\b/,
 ];
 
 /// Ontwijken met spaties of punten tussen de letters ("w h a t s a p p"):
@@ -138,9 +140,137 @@ function telCijfers(reeks) {
   return m ? m.length : 0;
 }
 
+// --- Nummer in woorden ("nul zes een twee ...", "06 een twee 34 vijf zes 78")
+// Gevonden in de proefdraai van 5 okt: cijfers verstopt als telwoorden gingen
+// ongezien door. Een RIJ van telwoorden en cijfers telt als nummer zodra er
+// samen MIN_CIJFERS_NUMMER cijfers in zitten.
+
+const TELWOORD_1 = ["nul", "een", "één", "eén", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen",
+  // Engels: zelfde truc in een andere taal.
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+];
+const TELWOORD_2 = [
+  "tien", "elf", "twaalf", "dertien", "veertien", "vijftien", "zestien", "zeventien", "achttien", "negentien",
+  "twintig", "dertig", "veertig", "vijftig", "zestig", "zeventig", "tachtig", "negentig",
+];
+// "vierendertig", "zesenvijftig": twee cijfers.
+const TELWOORD_SAMEN = /^(?:een|twee|drie|vier|vijf|zes|zeven|acht|negen)[eë]n(?:twintig|dertig|veertig|vijftig|zestig|zeventig|tachtig|negentig)$/;
+
+/// Vanaf zoveel telwoorden in de rij wordt hij verborgen. Met precies één
+/// telwoord ("14.30 - 15.30, een uur") alleen een seintje naar de meldkamer.
+const MIN_TELWOORDEN_VERBERGEN = 2;
+
+const STUKJE = /[a-zA-ZÀ-ÿ]+|\d+|[^a-zA-ZÀ-ÿ\d]+/g;
+const TUSSEN_TELWOORDEN = /^[ \t\-.,\/()]{1,3}$/;
+const DATUM_OVERAL = /\d{1,2}[-\/.]\d{1,2}[-\/.](?:\d{4}|\d{2})/g;
+
+/// Hoeveel cijfers staat dit woord voor? 0 = geen telwoord.
+function telwoordCijfers(woord) {
+  const w = String(woord || "").toLowerCase();
+  if (TELWOORD_1.indexOf(w) !== -1) return 1;
+  if (TELWOORD_2.indexOf(w) !== -1) return 2;
+  return TELWOORD_SAMEN.test(w) ? 2 : 0;
+}
+
+function hekjes(aantal) {
+  let uit = "";
+  for (let i = 0; i < aantal; i++) uit += "#";
+  return uit;
+}
+
+/// Zoekt rijen van telwoorden en cijfers. Geeft { tekst, verborgen, verdacht }:
+/// verborgen = er is een rij vervangen, verdacht = er is een rij gezien
+/// (ook een die alleen gemeld wordt).
+function verbergWoordNummers(invoer) {
+  const tekst = String(invoer || "");
+  // Een datum is geen stuk van een nummer: weghalen voor het zoeken (zelfde lengte).
+  const zoek = tekst.replace(DATUM_OVERAL, (stuk) => hekjes(stuk.length));
+  const weg = [];
+  let verdacht = false;
+  let rij = null;
+  const sluit = () => {
+    if (rij && rij.woorden >= 1 && rij.cijfers >= MIN_CIJFERS_NUMMER) {
+      verdacht = true;
+      if (rij.woorden >= MIN_TELWOORDEN_VERBERGEN) weg.push([rij.van, rij.tot]);
+    }
+    rij = null;
+  };
+
+  STUKJE.lastIndex = 0;
+  let m;
+  while ((m = STUKJE.exec(zoek)) !== null) {
+    const stuk = m[0];
+    const eerste = stuk.charAt(0);
+    const isCijfer = eerste >= "0" && eerste <= "9";
+    const isLetter = !isCijfer && /[a-zA-ZÀ-ÿ]/.test(eerste);
+    if (!isCijfer && !isLetter) {
+      if (!TUSSEN_TELWOORDEN.test(stuk)) sluit();
+      continue;
+    }
+    const cijfers = isCijfer ? stuk.length : telwoordCijfers(stuk);
+    if (!cijfers) {
+      sluit();
+      continue;
+    }
+    if (!rij) rij = { van: m.index, tot: 0, cijfers: 0, woorden: 0 };
+    rij.tot = m.index + stuk.length;
+    rij.cijfers += cijfers;
+    if (isLetter) rij.woorden++;
+  }
+  sluit();
+
+  let uit = tekst;
+  for (let i = weg.length - 1; i >= 0; i--) {
+    uit = uit.slice(0, weg[i][0]) + VERVANGING + uit.slice(weg[i][1]);
+  }
+  return { tekst: uit, verborgen: weg.length > 0, verdacht: verdacht };
+}
+
+// --- Gebruikersnaam ("snap: daan_2011", "@daan2011")
+// Ook uit de proefdraai. "snap", "sc", "ig", "tt" en "dc" zijn ook gewone
+// woorden of afkortingen ("Ik snap: het gras eerst"): daar moet wat volgt op
+// een gebruikersnaam lijken (cijfer, streepje, punt of @).
+
+const NAAM = "[a-z0-9](?:[a-z0-9._]*[a-z0-9_])?";
+const PLATFORM_ZEKER = new RegExp(
+  "\\b(snapchat|instagram|insta|tiktok|telegram|discord)(\\s*[:=]\\s*)@?(" + NAAM + ")",
+  "gi"
+);
+const PLATFORM_MISSCHIEN = new RegExp("\\b(snap|sc|ig|tt|dc)(\\s*[:=]\\s*)(@?)(" + NAAM + ")", "gi");
+const LOSSE_NAAM = new RegExp("(^|[\\s(,;:])@(" + NAAM + ")", "gi");
+const MIN_NAAM = 3;
+
+function lijktOpNaam(naam) {
+  return naam.length >= MIN_NAAM && /[0-9_.]/.test(naam);
+}
+
+/// Vervangt een gebruikersnaam door VERVANGING. Geeft { tekst, verborgen }.
+function verbergGebruikersnamen(invoer) {
+  let verborgen = false;
+  let tekst = String(invoer || "");
+  tekst = tekst.replace(PLATFORM_ZEKER, (heel, platform, tussen, naam) => {
+    if (naam.length < MIN_NAAM) return heel;
+    verborgen = true;
+    return platform + tussen + VERVANGING;
+  });
+  tekst = tekst.replace(PLATFORM_MISSCHIEN, (heel, platform, tussen, apenstaart, naam) => {
+    if (!(apenstaart && naam.length >= MIN_NAAM) && !lijktOpNaam(naam)) return heel;
+    verborgen = true;
+    return platform + tussen + VERVANGING;
+  });
+  tekst = tekst.replace(LOSSE_NAAM, (heel, voor, naam) => {
+    if (naam.length < MIN_NAAM) return heel;
+    verborgen = true;
+    return voor + VERVANGING;
+  });
+  return { tekst: tekst, verborgen: verborgen };
+}
+
 /// Vervangt telefoonnummers, e-mailadressen en links door VERVANGING.
+/// Ook nummers in woorden en gebruikersnamen (proefdraai 5 okt).
 /// Geeft { tekst, gefilterd, contactverzoek }; de markering contactverzoek
-/// kijkt naar de ORIGINELE tekst. Gooit nooit.
+/// kijkt naar de ORIGINELE tekst, en staat ook aan bij een verstopt nummer
+/// of een gebruikersnaam. Gooit nooit.
 function filterTekst(invoer) {
   const origineel = String(invoer == null ? "" : invoer).trim();
   let gefilterd = false;
@@ -161,10 +291,17 @@ function filterTekst(invoer) {
     return telCijfers(stuk) >= MIN_CIJFERS_NUMMER && !DATUM.test(kaal);
   });
 
+  const namen = verbergGebruikersnamen(tekst);
+  const woorden = verbergWoordNummers(namen.tekst);
+  tekst = woorden.tekst;
+  if (namen.verborgen || woorden.verborgen) gefilterd = true;
+  // Een verstopt nummer of een gebruikersnaam is altijd iets voor de meldkamer.
+  const verstopt = namen.verborgen || woorden.verdacht;
+
   return {
     tekst: tekst,
     gefilterd: gefilterd,
-    contactverzoek: origineel ? isContactverzoek(origineel) : false,
+    contactverzoek: origineel ? verstopt || isContactverzoek(origineel) : false,
   };
 }
 
@@ -444,6 +581,9 @@ module.exports = {
   STATUS_AFGELOPEN: STATUS_AFGELOPEN,
   MELDING_DICHT: MELDING_DICHT,
   filterTekst: filterTekst,
+  telwoordCijfers: telwoordCijfers,
+  verbergWoordNummers: verbergWoordNummers,
+  verbergGebruikersnamen: verbergGebruikersnamen,
   isContactverzoek: isContactverzoek,
   momentVan: momentVan,
   pbDatum: pbDatum,
